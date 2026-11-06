@@ -1,0 +1,130 @@
+{
+  "app": {
+    "name": "AI Music Studio",
+    "newProject": "Neues Projekt",
+    "openProject": "Projekt öffnen",
+    "saveProject": "Projekt speichern",
+    "settings": "Einstellungen",
+    "close": "Schließen",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "loading": "Laden..."
+  },
+  "toolbar": {
+    "play": "Wiedergabe",
+    "pause": "Pause",
+    "stop": "Stopp",
+    "record": "Aufnehmen",
+    "bpm": "BPM",
+    "metronome": "Metronom",
+    "undo": "Rückgängig",
+    "redo": "Wiederholen",
+    "volume": "Master-Lautstärke"
+  },
+  "sidebar": {
+    "timeline": "Zeitlinie",
+    "pianoRoll": "Piano-Roll",
+    "mixer": "Mixer",
+    "vocalEditor": "Vokal-Editor",
+    "instruments": "KI-Instrumente",
+    "aiChat": "KI-Chat",
+    "stemSplitter": "Stem-Trenner",
+    "videoComposer": "Video-Komponist"
+  },
+  "track": {
+    "addVocal": "Vokal-Spur hinzufügen",
+    "addInstrument": "Instrument-Spur hinzufügen",
+    "addAudio": "Audio-Spur hinzufügen",
+    "addMidi": "MIDI-Spur hinzufügen",
+    "mute": "Stummschalten",
+    "solo": "Solo",
+    "volume": "Lautstärke",
+    "pan": "Pan",
+    "rename": "Umbenennen",
+    "delete": "Löschen"
+  },
+  "vocal": {
+    "voice": "Stimme",
+    "selectVoice": "Stimme auswählen",
+    "language": "Sprache",
+    "lyrics": "Liedtext",
+    "pitch": "Tonhöhe",
+    "power": "Kraft",
+    "breathiness": "Hauchigkeit",
+    "vibrato": "Vibrato",
+    "generate": "Gesang generieren",
+    "generating": "Generiere...",
+    "cloneVoice": "Stimme klonen",
+    "blendVoices": "Stimmen mischen"
+  },
+  "instruments": {
+    "category": "Kategorie",
+    "strings": "Streicher",
+    "brass": "Blechbläser",
+    "woodwind": "Holzbläser",
+    "percussion": "Schlagzeug",
+    "select": "Instrument auswählen",
+    "generate": "Generieren",
+    "ensemble": "Ensemble-Modus"
+  },
+  "stemSplitter": {
+    "title": "Stem-Trenner",
+    "dropAudio": "Audio-Datei hier ablegen",
+    "split": "Stems trennen",
+    "vocals": "Gesang",
+    "drums": "Schlagzeug",
+    "bass": "Bass",
+    "piano": "Klavier",
+    "guitar": "Gitarre",
+    "other": "Sonstiges",
+    "export": "Stems exportieren",
+    "processing": "Verarbeite...",
+    "model": "Modell-Qualität"
+  },
+  "videoComposer": {
+    "title": "Video-Komponist",
+    "dropVideo": "Video-Datei hier ablegen",
+    "analyzeScene": "Szene analysieren",
+    "generateMusic": "Musik generieren",
+    "generateSFX": "SFX generieren",
+    "prompt": "Musikstil beschreiben...",
+    "export": "Exportieren"
+  },
+  "aiChat": {
+    "title": "KI-Assistent",
+    "placeholder": "Frag mich etwas über deine Musik...",
+    "send": "Senden",
+    "clear": "Leeren",
+    "provider": "KI-Anbieter",
+    "claude": "Claude (Anthropic)",
+    "openai": "ChatGPT (OpenAI)",
+    "model": "Modell",
+    "apiKey": "API-Schlüssel",
+    "suggestions": {
+      "1": "Akkordfolge in C-Dur generieren",
+      "2": "Liedtext für eine Strophe vorschlagen",
+      "3": "Beat-Muster erstellen",
+      "4": "Meine Melodie analysieren"
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "general": "Allgemein",
+    "audio": "Audio",
+    "ai": "KI",
+    "appearance": "Erscheinungsbild",
+    "language": "Sprache",
+    "theme": "Thema",
+    "dark": "Dunkel",
+    "light": "Hell",
+    "sampleRate": "Abtastrate",
+    "bufferSize": "Puffergröße",
+    "aiProvider": "Standard-KI-Anbieter",
+    "claudeKey": "Claude API-Schlüssel",
+    "openaiKey": "OpenAI API-Schlüssel",
+    "vstPaths": "VST-Plugin-Pfade",
+    "addVstPath": "VST-Pfad hinzufügen",
+    "scanVst": "Nach Plugins suchen",
+    "about": "Über"
+  }
+}

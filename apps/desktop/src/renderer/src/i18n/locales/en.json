@@ -1,0 +1,130 @@
+{
+  "app": {
+    "name": "AI Music Studio",
+    "newProject": "New Project",
+    "openProject": "Open Project",
+    "saveProject": "Save Project",
+    "settings": "Settings",
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading..."
+  },
+  "toolbar": {
+    "play": "Play",
+    "pause": "Pause",
+    "stop": "Stop",
+    "record": "Record",
+    "bpm": "BPM",
+    "metronome": "Metronome",
+    "undo": "Undo",
+    "redo": "Redo",
+    "volume": "Master Volume"
+  },
+  "sidebar": {
+    "timeline": "Timeline",
+    "pianoRoll": "Piano Roll",
+    "mixer": "Mixer",
+    "vocalEditor": "Vocal Editor",
+    "instruments": "AI Instruments",
+    "aiChat": "AI Chat",
+    "stemSplitter": "Stem Splitter",
+    "videoComposer": "Video Composer"
+  },
+  "track": {
+    "addVocal": "Add Vocal Track",
+    "addInstrument": "Add Instrument Track",
+    "addAudio": "Add Audio Track",
+    "addMidi": "Add MIDI Track",
+    "mute": "Mute",
+    "solo": "Solo",
+    "volume": "Volume",
+    "pan": "Pan",
+    "rename": "Rename",
+    "delete": "Delete"
+  },
+  "vocal": {
+    "voice": "Voice",
+    "selectVoice": "Select Voice",
+    "language": "Language",
+    "lyrics": "Lyrics",
+    "pitch": "Pitch",
+    "power": "Power",
+    "breathiness": "Breathiness",
+    "vibrato": "Vibrato",
+    "generate": "Generate Vocals",
+    "generating": "Generating...",
+    "cloneVoice": "Clone Voice",
+    "blendVoices": "Blend Voices"
+  },
+  "instruments": {
+    "category": "Category",
+    "strings": "Strings",
+    "brass": "Brass",
+    "woodwind": "Woodwind",
+    "percussion": "Percussion",
+    "select": "Select Instrument",
+    "generate": "Generate",
+    "ensemble": "Ensemble Mode"
+  },
+  "stemSplitter": {
+    "title": "Stem Splitter",
+    "dropAudio": "Drop an audio file here",
+    "split": "Split Stems",
+    "vocals": "Vocals",
+    "drums": "Drums",
+    "bass": "Bass",
+    "piano": "Piano",
+    "guitar": "Guitar",
+    "other": "Other",
+    "export": "Export Stems",
+    "processing": "Processing...",
+    "model": "Model Quality"
+  },
+  "videoComposer": {
+    "title": "Video Composer",
+    "dropVideo": "Drop a video file here",
+    "analyzeScene": "Analyze Scene",
+    "generateMusic": "Generate Music",
+    "generateSFX": "Generate SFX",
+    "prompt": "Describe the music style...",
+    "export": "Export"
+  },
+  "aiChat": {
+    "title": "AI Assistant",
+    "placeholder": "Ask me anything about your music...",
+    "send": "Send",
+    "clear": "Clear",
+    "provider": "AI Provider",
+    "claude": "Claude (Anthropic)",
+    "openai": "ChatGPT (OpenAI)",
+    "model": "Model",
+    "apiKey": "API Key",
+    "suggestions": {
+      "1": "Generate a chord progression in C major",
+      "2": "Suggest lyrics for a verse",
+      "3": "Create a beat pattern",
+      "4": "Analyze my melody"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "audio": "Audio",
+    "ai": "AI",
+    "appearance": "Appearance",
+    "language": "Language",
+    "theme": "Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "sampleRate": "Sample Rate",
+    "bufferSize": "Buffer Size",
+    "aiProvider": "Default AI Provider",
+    "claudeKey": "Claude API Key",
+    "openaiKey": "OpenAI API Key",
+    "vstPaths": "VST Plugin Paths",
+    "addVstPath": "Add VST Path",
+    "scanVst": "Scan for Plugins",
+    "about": "About"
+  }
+}

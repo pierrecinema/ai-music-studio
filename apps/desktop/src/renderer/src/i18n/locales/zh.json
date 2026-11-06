@@ -1,0 +1,8 @@
+{
+  "app": { "name": "AI 音乐工作室", "newProject": "新建项目", "openProject": "打开项目", "saveProject": "保存项目", "settings": "设置", "close": "关闭", "cancel": "取消", "confirm": "确认", "loading": "加载中..." },
+  "toolbar": { "play": "播放", "pause": "暂停", "stop": "停止", "record": "录音", "bpm": "BPM", "metronome": "节拍器", "undo": "撤销", "redo": "重做", "volume": "主音量" },
+  "vocal": { "voice": "声音", "selectVoice": "选择声音", "language": "语言", "lyrics": "歌词", "pitch": "音调", "power": "力度", "breathiness": "气息", "vibrato": "颤音", "generate": "生成人声", "generating": "生成中...", "cloneVoice": "克隆声音", "blendVoices": "混合声音" },
+  "stemSplitter": { "title": "音轨分离", "dropAudio": "拖入音频文件", "split": "分离音轨", "vocals": "人声", "drums": "鼓", "bass": "贝斯", "piano": "钢琴", "guitar": "吉他", "other": "其他", "export": "导出音轨", "processing": "处理中...", "model": "模型质量" },
+  "aiChat": { "title": "AI 助手", "placeholder": "问我关于你的音乐...", "send": "发送", "clear": "清除", "provider": "AI 服务商", "claude": "Claude (Anthropic)", "openai": "ChatGPT (OpenAI)", "model": "模型", "apiKey": "API 密钥", "suggestions": { "1": "生成 C 大调和弦进行", "2": "为歌词提供建议", "3": "创建节拍模式", "4": "分析我的旋律" } },
+  "settings": { "title": "设置", "general": "常规", "audio": "音频", "ai": "人工智能", "appearance": "外观", "language": "语言", "theme": "主题", "dark": "深色", "light": "浅色", "sampleRate": "采样率", "bufferSize": "缓冲区大小", "aiProvider": "默认 AI 服务商", "claudeKey": "Claude API 密钥", "openaiKey": "OpenAI API 密钥", "vstPaths": "VST 插件路径", "addVstPath": "添加 VST 路径", "scanVst": "扫描插件", "about": "关于" }
+}

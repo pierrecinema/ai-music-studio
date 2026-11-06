@@ -1,0 +1,8 @@
+{
+  "app": { "name": "AI ミュージックスタジオ", "newProject": "新規プロジェクト", "openProject": "プロジェクトを開く", "saveProject": "プロジェクトを保存", "settings": "設定", "close": "閉じる", "cancel": "キャンセル", "confirm": "確認", "loading": "読み込み中..." },
+  "toolbar": { "play": "再生", "pause": "一時停止", "stop": "停止", "record": "録音", "bpm": "BPM", "metronome": "メトロノーム", "undo": "元に戻す", "redo": "やり直す", "volume": "マスターボリューム" },
+  "vocal": { "voice": "ボイス", "selectVoice": "ボイスを選択", "language": "言語", "lyrics": "歌詞", "pitch": "ピッチ", "power": "パワー", "breathiness": "ブレス", "vibrato": "ビブラート", "generate": "ボーカルを生成", "generating": "生成中...", "cloneVoice": "ボイスをクローン", "blendVoices": "ボイスをブレンド" },
+  "stemSplitter": { "title": "ステム分離", "dropAudio": "音声ファイルをドロップ", "split": "ステムを分離", "vocals": "ボーカル", "drums": "ドラム", "bass": "ベース", "piano": "ピアノ", "guitar": "ギター", "other": "その他", "export": "ステムをエクスポート", "processing": "処理中...", "model": "モデル品質" },
+  "aiChat": { "title": "AIアシスタント", "placeholder": "音楽について質問してください...", "send": "送信", "clear": "クリア", "provider": "AIプロバイダー", "claude": "Claude (Anthropic)", "openai": "ChatGPT (OpenAI)", "model": "モデル", "apiKey": "APIキー", "suggestions": { "1": "ハ長調のコード進行を生成", "2": "詩の歌詞を提案", "3": "ビートパターンを作成", "4": "メロディーを分析" } },
+  "settings": { "title": "設定", "general": "一般", "audio": "オーディオ", "ai": "AI", "appearance": "外観", "language": "言語", "theme": "テーマ", "dark": "ダーク", "light": "ライト", "sampleRate": "サンプルレート", "bufferSize": "バッファサイズ", "aiProvider": "デフォルトAIプロバイダー", "claudeKey": "Claude APIキー", "openaiKey": "OpenAI APIキー", "vstPaths": "VSTプラグインパス", "addVstPath": "VSTパスを追加", "scanVst": "プラグインをスキャン", "about": "バージョン情報" }
+}

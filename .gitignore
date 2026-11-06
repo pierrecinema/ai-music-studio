@@ -1,0 +1,17 @@
+node_modules/
+dist/
+out/
+.env
+.env.local
+*.pyc
+__pycache__/
+.venv/
+venv/
+*.egg-info/
+.DS_Store
+Thumbs.db
+*.log
+release/
+*.db
+models/weights/
+apps/server/models/weights/

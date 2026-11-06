@@ -1,0 +1,8 @@
+{
+  "app": { "name": "AI 뮤직 스튜디오", "newProject": "새 프로젝트", "openProject": "프로젝트 열기", "saveProject": "프로젝트 저장", "settings": "설정", "close": "닫기", "cancel": "취소", "confirm": "확인", "loading": "로딩 중..." },
+  "toolbar": { "play": "재생", "pause": "일시정지", "stop": "정지", "record": "녹음", "bpm": "BPM", "metronome": "메트로놈", "undo": "실행 취소", "redo": "다시 실행", "volume": "마스터 볼륨" },
+  "vocal": { "voice": "보이스", "selectVoice": "보이스 선택", "language": "언어", "lyrics": "가사", "pitch": "피치", "power": "파워", "breathiness": "숨소리", "vibrato": "비브라토", "generate": "보컬 생성", "generating": "생성 중...", "cloneVoice": "보이스 클론", "blendVoices": "보이스 블렌드" },
+  "stemSplitter": { "title": "스템 분리", "dropAudio": "오디오 파일을 드롭하세요", "split": "스템 분리", "vocals": "보컬", "drums": "드럼", "bass": "베이스", "piano": "피아노", "guitar": "기타", "other": "기타", "export": "스템 내보내기", "processing": "처리 중...", "model": "모델 품질" },
+  "aiChat": { "title": "AI 어시스턴트", "placeholder": "음악에 대해 질문하세요...", "send": "전송", "clear": "지우기", "provider": "AI 제공자", "claude": "Claude (Anthropic)", "openai": "ChatGPT (OpenAI)", "model": "모델", "apiKey": "API 키", "suggestions": { "1": "다장조 코드 진행 생성", "2": "절 가사 제안", "3": "비트 패턴 생성", "4": "내 멜로디 분석" } },
+  "settings": { "title": "설정", "general": "일반", "audio": "오디오", "ai": "AI", "appearance": "외관", "language": "언어", "theme": "테마", "dark": "다크", "light": "라이트", "sampleRate": "샘플레이트", "bufferSize": "버퍼 크기", "aiProvider": "기본 AI 제공자", "claudeKey": "Claude API 키", "openaiKey": "OpenAI API 키", "vstPaths": "VST 플러그인 경로", "addVstPath": "VST 경로 추가", "scanVst": "플러그인 검색", "about": "정보" }
+}

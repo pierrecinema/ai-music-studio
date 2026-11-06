@@ -15,3 +15,5 @@ release/
 *.db
 models/weights/
 apps/server/models/weights/
+
+*.tsbuildinfo

@@ -97,8 +97,8 @@ function UpdatesTab(): React.ReactElement {
     } } }
     wa.api.updater.onChecking(() => setPhase('checking'))
     wa.api.updater.onAvailable(i => { setPhase('available'); setInfo({ version: i.version }) })
-    wa.api.updater.onNotAvailable(() => setPhase('idle'))
-    wa.api.updater.onProgress(p => { setPhase('downloading'); setInfo({ percent: p.percent, bps: p.bytesPerSecond }) })
+    wa.api.updater.onNotAvailable(() => { setPhase('idle'); setInfo({}) })
+    wa.api.updater.onProgress(p => { setPhase('downloading'); setInfo(prev => ({ ...prev, percent: p.percent, bps: p.bytesPerSecond })) })
     wa.api.updater.onDownloaded(i => { setPhase('ready'); setInfo({ version: i.version }) })
     wa.api.updater.onError(m => { setPhase('error'); setInfo({ message: m }) })
   }, [])
@@ -139,6 +139,21 @@ function UpdatesTab(): React.ReactElement {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Versions */}
+      <div style={{
+        background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', borderRadius: 8,
+        padding: '12px 16px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 16px', fontSize: 12
+      }}>
+        <span style={{ color: 'var(--text-muted)' }}>Installierte Version</span>
+        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>v{__APP_VERSION__}</span>
+        <span style={{ color: 'var(--text-muted)' }}>Verfügbares Update</span>
+        <span style={{ color: info.version ? 'var(--accent-light)' : 'var(--text-secondary)', fontWeight: 600 }}>
+          {info.version
+            ? `v${info.version}${phase === 'ready' ? ' (heruntergeladen)' : ''}`
+            : phase === 'checking' ? 'wird gesucht…' : 'keins gefunden'}
+        </span>
       </div>
 
       {/* Actions */}

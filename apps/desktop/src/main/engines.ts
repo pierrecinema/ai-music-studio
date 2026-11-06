@@ -1,4 +1,4 @@
-import { spawn, spawnSync, ChildProcess } from 'child_process'
+import { spawn, execFile, ChildProcess } from 'child_process'
 import { existsSync, mkdirSync, rmSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
@@ -43,20 +43,37 @@ export function venvPython(): string {
   return join(venvDir(), 'Scripts', 'python.exe')
 }
 
+// pip's download cache for our installs: kept apart from the shared one in %LOCALAPPDATA%\pip so that
+// a multi-GB torch download does not pile up there, and emptied after a successful install.
+export function pipCacheDir(): string {
+  return join(app.getPath('userData'), 'engines', 'pip-cache')
+}
+
 export function hasVenv(): boolean {
   return existsSync(venvPython())
 }
 
-export function findPython(): PythonCmd | null {
+// Everything below runs other programs. It must be asynchronous: a synchronous call freezes
+// the whole app (window, dialogs, menus) for as long as the program needs.
+function capture(cmd: string, args: string[], timeout = 15000): Promise<{ code: number; out: string }> {
+  return new Promise((resolve) => {
+    execFile(cmd, args, { encoding: 'utf-8', windowsHide: true, timeout, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
+      const code = err ? (typeof (err as NodeJS.ErrnoException).code === 'number' ? ((err as unknown as { code: number }).code) : 1) : 0
+      resolve({ code, out: `${stdout}${stderr}` })
+    })
+  })
+}
+
+export async function findPython(): Promise<PythonCmd | null> {
   // Prefer versions that have wheels for the ML packages; the newest Python often does not yet.
   const candidates: Array<[string, string[]]> = [
     ['py', ['-3.11']], ['py', ['-3.12']], ['py', ['-3.10']], ['py', ['-3.13']],
     ['py', ['-3']], ['python', []], ['python3', []]
   ]
   for (const [cmd, pre] of candidates) {
-    const r = spawnSync(cmd, [...pre, '--version'], { encoding: 'utf-8', windowsHide: true })
-    const m = /Python (\d+)\.(\d+)\.(\d+)/.exec(`${r.stdout}${r.stderr}`)
-    if (r.status === 0 && m) {
+    const r = await capture(cmd, [...pre, '--version'], 8000)
+    const m = /Python (\d+)\.(\d+)\.(\d+)/.exec(r.out)
+    if (r.code === 0 && m) {
       const [maj, min] = [Number(m[1]), Number(m[2])]
       if (maj > MIN_PYTHON[0] || (maj === MIN_PYTHON[0] && min >= MIN_PYTHON[1])) {
         return { cmd, args: pre, version: `${m[1]}.${m[2]}.${m[3]}` }
@@ -66,7 +83,7 @@ export function findPython(): PythonCmd | null {
   return null
 }
 
-export function detectGpu(): 'nvidia' | 'amd' | 'none' {
+async function detectGpuNow(): Promise<'nvidia' | 'amd' | 'none'> {
   // wmic is removed from recent Windows 11, so ask PowerShell first. Laptops often list
   // an integrated and a discrete chip: NVIDIA wins, then AMD.
   const attempts: Array<[string, string[]]> = [
@@ -74,33 +91,37 @@ export function detectGpu(): 'nvidia' | 'amd' | 'none' {
     ['wmic', ['path', 'win32_VideoController', 'get', 'name']]
   ]
   for (const [cmd, args] of attempts) {
-    try {
-      const r = spawnSync(cmd, args, { encoding: 'utf-8', windowsHide: true, timeout: 8000 })
-      const out = (r.stdout ?? '').toLowerCase()
-      if (!out.trim()) continue
-      if (/nvidia|geforce|rtx|gtx|quadro/.test(out)) return 'nvidia'
-      if (/radeon|amd/.test(out)) return 'amd'
-      return 'none'
-    } catch { /* try the next one */ }
+    const out = (await capture(cmd, args, 8000)).out.toLowerCase()
+    if (!out.trim()) continue
+    if (/nvidia|geforce|rtx|gtx|quadro/.test(out)) return 'nvidia'
+    if (/radeon|amd/.test(out)) return 'amd'
+    return 'none'
   }
   return 'none'
 }
 
-function installedPackages(): Set<string> {
-  if (!hasVenv()) return new Set()
-  const r = spawnSync(venvPython(), ['-m', 'pip', 'list', '--format=json'], {
-    encoding: 'utf-8', windowsHide: true, timeout: 30000
-  })
-  try {
-    return new Set((JSON.parse(r.stdout) as Array<{ name: string }>).map(p => p.name.toLowerCase().replace(/_/g, '-')))
-  } catch {
-    return new Set()
-  }
+// the graphics card does not change while the app runs: ask once
+let gpuOnce: Promise<'nvidia' | 'amd' | 'none'> | null = null
+export function detectGpu(): Promise<'nvidia' | 'amd' | 'none'> {
+  gpuOnce ??= detectGpuNow()
+  return gpuOnce
 }
 
-export function getStatus(serverReady: boolean): EngineStatus {
-  const py = findPython()
-  const have = installedPackages()
+let pkgCache: { at: number; names: Set<string> } | null = null
+async function installedPackages(): Promise<Set<string>> {
+  if (!hasVenv()) return new Set()
+  if (pkgCache && Date.now() - pkgCache.at < 5000) return pkgCache.names
+  const r = await capture(venvPython(), ['-m', 'pip', 'list', '--format=json'], 60000)
+  let names = new Set<string>()
+  try {
+    names = new Set((JSON.parse(r.out) as Array<{ name: string }>).map(p => p.name.toLowerCase().replace(/_/g, '-')))
+  } catch { /* leave empty */ }
+  pkgCache = { at: Date.now(), names }
+  return names
+}
+
+export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
+  const [py, have, gpu] = await Promise.all([findPython(), installedPackages(), detectGpu()])
   const installed: Record<string, boolean> = {}
   for (const [g, names] of Object.entries(GROUP_PROBE)) installed[g] = names.some((n) => have.has(n))
   return {
@@ -108,7 +129,7 @@ export function getStatus(serverReady: boolean): EngineStatus {
     pythonVersion: py?.version ?? null,
     venvReady: hasVenv(),
     installed,
-    gpu: detectGpu(),
+    gpu,
     serverReady
   }
 }
@@ -138,9 +159,9 @@ function groupArgs(group: string, torchVariant: string): string[] | null {
   }
 }
 
-function venvPythonMinor(): number | null {
-  const r = spawnSync(venvPython(), ['--version'], { encoding: 'utf-8', windowsHide: true })
-  const m = /Python 3\.(\d+)/.exec(`${r.stdout}${r.stderr}`)
+async function venvPythonMinor(): Promise<number | null> {
+  const r = await capture(venvPython(), ['--version'], 10000)
+  const m = /Python 3\.(\d+)/.exec(r.out)
   return m ? Number(m[1]) : null
 }
 
@@ -149,7 +170,7 @@ let running: ChildProcess | null = null
 function run(cmd: string, args: string[], log: (l: string) => void): Promise<number> {
   return new Promise(resolve => {
     log(`> ${cmd} ${args.join(' ')}`)
-    const p = spawn(cmd, args, { windowsHide: true })
+    const p = spawn(cmd, args, { windowsHide: true, env: { ...process.env, PIP_CACHE_DIR: pipCacheDir() } })
     running = p
     const pipe = (d: Buffer) => d.toString().split(/\r?\n/).filter(Boolean).forEach(log)
     p.stdout?.on('data', pipe)
@@ -163,17 +184,22 @@ export function cancelInstall(): void {
   running?.kill()
 }
 
+export function isInstalling(): boolean {
+  return running !== null
+}
+
 export async function installGroups(
   groups: string[],
   torchVariant: string,
   log: (l: string) => void
 ): Promise<{ ok: boolean; error?: string }> {
-  const py = findPython()
+  const py = await findPython()
+  pkgCache = null
 
   // An environment built on a very new Python lacks wheels for several engines (basic-pitch,
   // ACE-Step). If a better interpreter is installed now, rebuild the environment with it.
   if (hasVenv() && py) {
-    const have = venvPythonMinor()
+    const have = await venvPythonMinor()
     const want = Number(py.version.split('.')[1])
     if (have !== null && have >= 13 && want <= 12 && venvDir().endsWith('venv')) {
       log(`The AI environment uses Python 3.${have}, but Python ${py.version} is available. Rebuilding the environment with it (the old one is removed).`)
@@ -190,7 +216,7 @@ export async function installGroups(
     await run(venvPython(), ['-m', 'pip', 'install', '--upgrade', 'pip'], log)
   }
 
-  const minor = venvPythonMinor()
+  const minor = await venvPythonMinor()
   // core first, torch before anything that depends on it
   const order = ['core', 'torch', 'demucs', 'basicpitch', 'matchering', 'whisper', 'video', 'acestep', 'muscriptor']
   const wanted = order.filter(g => g === 'core' || groups.includes(g))
@@ -221,5 +247,10 @@ export async function installGroups(
   if (failed.length > 0) {
     return { ok: false, error: `Done, but these packages failed: ${failed.join(', ')}. The others are installed. See the log for details.` }
   }
+  // success: the downloaded wheels are no longer needed (on failure they stay, so a retry is fast)
+  try {
+    rmSync(pipCacheDir(), { recursive: true, force: true })
+    log('Cleaned up the download cache.')
+  } catch { /* harmless */ }
   return { ok: true }
 }

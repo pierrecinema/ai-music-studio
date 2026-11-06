@@ -1,13 +1,16 @@
 import {
   copyFileSync, createReadStream, createWriteStream, existsSync, lstatSync, mkdirSync, readdirSync,
-  readlinkSync, realpathSync, renameSync, rmSync, statSync, statfsSync, symlinkSync, writeFileSync
+  readlinkSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync
 } from 'fs'
 import { dirname, join, parse, resolve, sep } from 'path'
 import { Transform } from 'stream'
 import { pipeline } from 'stream/promises'
+import { promises as fsp } from 'fs'
+import { homedir } from 'os'
+import { app } from 'electron'
 import { listLoras, LORA_DIR } from './loras'
 import { DEFAULT_MODELS_DIR, MODEL_SUBDIRS, type ModelId, modelsDir, writeSettings } from './settings'
-import { venvDir } from './engines'
+import { isInstalling, pipCacheDir, venvDir } from './engines'
 
 export type ModelStatus = 'missing' | 'partial' | 'downloading' | 'complete'
 export interface Component { name: string; bytes: number }
@@ -23,7 +26,12 @@ export interface ModelEntry {
 export interface LoraRow {
   id: string; name: string; kind: string; bytes: number; source?: string; license?: string
 }
+export type CacheId = 'pip-shared' | 'pip-app' | 'updater'
+// bytes is null while a large folder is still being counted in the background
+export interface CacheEntry { id: CacheId; name: string; description: string; path: string; bytes: number | null }
+
 export interface Overview {
+  caches: CacheEntry[]
   baseDir: string
   defaultDir: string
   usingDefault: boolean
@@ -32,7 +40,7 @@ export interface Overview {
   models: ModelEntry[]
   loras: LoraRow[]
   loraDir: string
-  env: { path: string; bytes: number }
+  env: { path: string; bytes: number | null }
 }
 
 const GB = 1024 ** 3
@@ -53,6 +61,48 @@ export function dirBytes(path: string): number {
     else if (e.isFile()) { try { total += lstatSync(p).size } catch { /* vanished */ } }
   }
   return total
+}
+
+/** Same count, but asynchronous: yields to the event loop so the app stays responsive. */
+export async function dirBytesAsync(path: string): Promise<number> {
+  let total = 0
+  const stack = [path]
+  while (stack.length) {
+    const dir = stack.pop() as string
+    let entries
+    try { entries = await fsp.readdir(dir, { withFileTypes: true }) } catch { continue }
+    await Promise.all(entries.map(async (e) => {
+      if (e.isSymbolicLink()) return
+      const p = join(dir, e.name)
+      if (e.isDirectory()) stack.push(p)
+      else if (e.isFile()) { try { total += (await fsp.lstat(p)).size } catch { /* vanished */ } }
+    }))
+  }
+  return total
+}
+
+// Folders with tens of thousands of files (the Python environment, pip's cache) take seconds to count.
+// They are counted in the background and served from memory: callers never wait for them.
+interface Slow { value: number | null; at: number; running: boolean }
+const slow = new Map<string, Slow>()
+
+/** Last known size, or null while the first count is still running. */
+export function cachedBytes(path: string, ttlMs: number): number | null {
+  let s = slow.get(path)
+  if (!s) { s = { value: null, at: 0, running: false }; slow.set(path, s) }
+  if (!s.running && Date.now() - s.at > ttlMs) {
+    s.running = true
+    const entry = s
+    void dirBytesAsync(path)
+      .then((v) => { entry.value = v })
+      .catch(() => { /* keep the old value */ })
+      .finally(() => { entry.at = Date.now(); entry.running = false })
+  }
+  return s.value
+}
+
+function setCachedBytes(path: string, value: number): void {
+  slow.set(path, { value, at: Date.now(), running: false })
 }
 
 /** Bytes of what a path points to, following symlinks (used per component of a snapshot). */
@@ -171,22 +221,72 @@ function nearestExisting(p: string): string {
   return cur
 }
 
-export function diskSpace(path: string): { free: number; total: number } {
+export async function diskSpace(path: string): Promise<{ free: number; total: number }> {
   try {
-    const s = statfsSync(nearestExisting(path))
+    const s = await fsp.statfs(nearestExisting(path))
     return { free: Number(s.bavail) * Number(s.bsize), total: Number(s.blocks) * Number(s.bsize) }
   } catch {
     return { free: 0, total: 0 }
   }
 }
 
+let spaceCache: { path: string; at: number; value: { free: number; total: number }; running: boolean } | null = null
+function cachedSpace(path: string): { free: number; total: number } {
+  if (!spaceCache || spaceCache.path !== path) spaceCache = { path, at: 0, value: { free: 0, total: 0 }, running: false }
+  const c = spaceCache
+  if (!c.running && Date.now() - c.at > 10_000) {
+    c.running = true
+    void diskSpace(path).then((v) => { c.value = v }).finally(() => { c.at = Date.now(); c.running = false })
+  }
+  return c.value
+}
+
+// ── caches: only these exact folders can ever be cleared ─────────────────────
+
+function cachePaths(): Record<CacheId, Omit<CacheEntry, 'id' | 'bytes'>> {
+  const local = process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local')
+  return {
+    'pip-shared': {
+      name: 'pip download cache',
+      description: 'Downloaded Python packages, shared with other Python programs on this PC. Only costs download time if cleared.',
+      path: join(local, 'pip', 'Cache')
+    },
+    'pip-app': {
+      name: 'Installer leftovers',
+      description: 'Packages kept after an engine install that did not finish.',
+      path: pipCacheDir()
+    },
+    updater: {
+      name: 'Downloaded app updates',
+      description: 'Installers of earlier updates. A new update is downloaded again when needed.',
+      path: join(local, `${app.getName()}-updater`)
+    }
+  }
+}
+
+export function getCaches(): CacheEntry[] {
+  return (Object.entries(cachePaths()) as Array<[CacheId, ReturnType<typeof cachePaths>[CacheId]]>)
+    .map(([id, c]) => ({ id, ...c, bytes: cachedBytes(c.path, 30_000) }))
+}
+
+export async function clearCache(id: string): Promise<number> {
+  if (isInstalling()) throw new Error('An engine install is running. Wait until it has finished.')
+  const entry = cachePaths()[id as CacheId]
+  if (!entry) throw new Error('Unknown cache.')
+  const freed = await dirBytesAsync(entry.path)
+  await fsp.rm(entry.path, { recursive: true, force: true })
+  setCachedBytes(entry.path, 0)
+  return freed
+}
+
 export function getOverview(): Overview {
   const base = modelsDir()
-  const { free, total } = diskSpace(base)
+  const { free, total } = cachedSpace(base)
   const loras = listLoras().loras.map((l) => ({
     id: l.id, name: l.name, kind: l.kind, bytes: resolvedBytes(l.path), source: l.source, license: l.license
   }))
   return {
+    caches: getCaches(),
     baseDir: base,
     defaultDir: DEFAULT_MODELS_DIR,
     usingDefault: resolve(base).toLowerCase() === resolve(DEFAULT_MODELS_DIR).toLowerCase(),
@@ -194,7 +294,7 @@ export function getOverview(): Overview {
     models: [acestepEntry(base), hfEntry(base), torchEntry(base)],
     loras,
     loraDir: LORA_DIR,
-    env: { path: venvDir(), bytes: dirBytes(venvDir()) }
+    env: { path: venvDir(), bytes: cachedBytes(venvDir(), 120_000) }
   }
 }
 
@@ -262,8 +362,9 @@ export async function moveModels(
   const subs = Object.values(MODEL_SUBDIRS).filter((s) => dirBytes(join(oldBase, s)) > 0)
   const total = subs.reduce((sum, s) => sum + dirBytes(join(oldBase, s)), 0)
   const sameDrive = lo(parse(oldBase).root) === lo(parse(target).root)
-  if (!sameDrive && diskSpace(target).free < total + GB) {
-    throw new Error(`Not enough free space: ${(total / GB).toFixed(1)} GB needed plus 1 GB reserve, ${(diskSpace(target).free / GB).toFixed(1)} GB free.`)
+  const targetFree = (await diskSpace(target)).free
+  if (!sameDrive && targetFree < total + GB) {
+    throw new Error(`Not enough free space: ${(total / GB).toFixed(1)} GB needed plus 1 GB reserve, ${(targetFree / GB).toFixed(1)} GB free.`)
   }
   for (const s of subs) {
     const d = join(target, s)

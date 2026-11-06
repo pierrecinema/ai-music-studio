@@ -1,12 +1,19 @@
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron'
+import type { IpcMainInvokeEvent, OpenDialogOptions, OpenDialogReturnValue } from 'electron'
 import { ServerManager } from './server-manager'
 import { getStatus, installGroups, cancelInstall } from './engines'
 import { listLoras, importLora, removeLora, deleteLora, LORA_DIR, type LoraEntry } from './loras'
-import { deleteModel, diskSpace, getOverview, moveModels } from './models'
+import { clearCache, deleteModel, diskSpace, getOverview, moveModels } from './models'
 import { MODEL_SUBDIRS, modelsDir, writeSettings, type ModelId } from './settings'
 import { resolve } from 'path'
 import { downloadFile, listFiles, parseRepo, searchRepos } from './huggingface'
 import * as fs from 'fs'
+
+// A dialog without a parent window can open behind the app on Windows and look like a hang.
+function openDialog(e: IpcMainInvokeEvent, options: OpenDialogOptions): Promise<OpenDialogReturnValue> {
+  const win = BrowserWindow.fromWebContents(e.sender)
+  return win ? dialog.showOpenDialog(win, options) : dialog.showOpenDialog(options)
+}
 
 export function registerIpcHandlers(serverManager: ServerManager): void {
   ipcMain.handle('server:url', () => serverManager.serverUrl)
@@ -24,8 +31,8 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     return result
   })
 
-  ipcMain.handle('dialog:open-audio', async () => {
-    const result = await dialog.showOpenDialog({
+  ipcMain.handle('dialog:open-audio', async (e) => {
+    const result = await openDialog(e, {
       filters: [
         { name: 'Audio', extensions: ['mp3', 'wav', 'flac', 'aiff', 'm4a', 'ogg'] },
         { name: 'MIDI', extensions: ['mid', 'midi'] },
@@ -50,8 +57,8 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
   let moving = false
   let moveCancelled = false
   ipcMain.handle('models:overview', () => getOverview())
-  ipcMain.handle('models:pick-dir', async () => {
-    const r = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] })
+  ipcMain.handle('models:pick-dir', async (e) => {
+    const r = await openDialog(e, { properties: ['openDirectory', 'createDirectory'] })
     return r.filePaths[0] ?? null
   })
   ipcMain.handle('models:space', (_, path: string) => diskSpace(path))
@@ -90,6 +97,9 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     } finally {
       void serverManager.start()
     }
+  })
+  ipcMain.handle('models:clear-cache', async (_, id: string) => {
+    try { return { ok: true as const, freed: await clearCache(id) } } catch (err) { return { ok: false as const, error: (err as Error).message } }
   })
   ipcMain.handle('models:delete-lora', (_, id: string) => {
     try { deleteLora(id); return { ok: true as const } } catch (err) { return { ok: false as const, error: (err as Error).message } }
@@ -137,8 +147,9 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     // only Hugging Face pages, never an arbitrary address from the page
     if (/^https:\/\/huggingface\.co\/[\w.-]+\/[\w.-]+\/?$/.test(url)) void shell.openExternal(url)
   })
-  ipcMain.handle('dialog:open-lora', async (_, mode: 'file' | 'folder') => {
-    const result = await dialog.showOpenDialog(
+  ipcMain.handle('dialog:open-lora', async (e, mode: 'file' | 'folder') => {
+    const result = await openDialog(
+      e,
       mode === 'folder'
         ? { properties: ['openDirectory'] }
         : { filters: [{ name: 'LoRA', extensions: ['safetensors', 'pt', 'bin'] }], properties: ['openFile'] }
@@ -146,8 +157,8 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     return result.filePaths[0] ?? null
   })
 
-  ipcMain.handle('dialog:open-video', async () => {
-    const result = await dialog.showOpenDialog({
+  ipcMain.handle('dialog:open-video', async (e) => {
+    const result = await openDialog(e, {
       filters: [
         { name: 'Video', extensions: ['mp4', 'mov', 'avi', 'mkv', 'webm'] }
       ],
@@ -156,14 +167,16 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     return result.filePaths[0] ?? null
   })
 
-  ipcMain.handle('dialog:save', async (_, defaultName: string) => {
-    const result = await dialog.showSaveDialog({
+  ipcMain.handle('dialog:save', async (e, defaultName: string) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const options = {
       defaultPath: defaultName,
       filters: [
         { name: 'AI Music Studio Project', extensions: ['ams'] },
         { name: 'Audio', extensions: ['wav', 'mp3'] }
       ]
-    })
+    }
+    const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options)
     return result.filePath ?? null
   })
 

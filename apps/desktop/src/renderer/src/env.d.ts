@@ -3,6 +3,7 @@ export {}
 declare global {
   const __APP_VERSION__: string
   interface ModelsOverview {
+    caches: Array<{ id: 'pip-shared' | 'pip-app' | 'updater'; name: string; description: string; path: string; bytes: number | null }>
     baseDir: string
     defaultDir: string
     usingDefault: boolean
@@ -19,7 +20,7 @@ declare global {
     }>
     loras: Array<{ id: string; name: string; kind: string; bytes: number; source?: string; license?: string }>
     loraDir: string
-    env: { path: string; bytes: number }
+    env: { path: string; bytes: number | null }
   }
   interface HfRepoInfo {
     id: string
@@ -64,6 +65,7 @@ declare global {
         cancelMove: () => Promise<void>
         delete: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>
         deleteLora: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>
+        clearCache: (id: string) => Promise<{ ok: true; freed: number } | { ok: false; error: string }>
         onProgress: (cb: (p: { copied: number; total: number; phase: string }) => void) => () => void
       }
       huggingface: {

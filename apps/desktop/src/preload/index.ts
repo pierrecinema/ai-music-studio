@@ -31,6 +31,7 @@ const api = {
     cancelMove: () => ipcRenderer.invoke('models:cancel-move'),
     delete: (id: string) => ipcRenderer.invoke('models:delete', id),
     deleteLora: (id: string) => ipcRenderer.invoke('models:delete-lora', id),
+    clearCache: (id: string) => ipcRenderer.invoke('models:clear-cache', id),
     onProgress: (cb: (p: { copied: number; total: number; phase: string }) => void) => {
       const h = (_: unknown, p: { copied: number; total: number; phase: string }) => cb(p)
       ipcRenderer.on('models:progress', h)

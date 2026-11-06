@@ -31,7 +31,13 @@ export function ModelsTab(): React.ReactElement {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const last = useRef<Record<string, { bytes: number; t: number }>>({})
 
+  const busy = useRef(false)
   const refresh = useCallback(async () => {
+    if (busy.current) return          // never queue a second scan behind a slow one
+    busy.current = true
+    try { await refreshNow() } finally { busy.current = false }
+  }, [])
+  const refreshNow = async (): Promise<void> => {
     const next = await window.api.models.overview()
     const now = Date.now()
     const r: Record<string, number> = {}
@@ -42,7 +48,7 @@ export function ModelsTab(): React.ReactElement {
     }
     setRates(r)
     setO(next)
-  }, [])
+  }
 
   useEffect(() => {
     void refresh()
@@ -76,6 +82,14 @@ export function ModelsTab(): React.ReactElement {
     setConfirmDelete(null); setError(null); setNotice(null)
     const r = await window.api.models.delete(id)
     if (r.ok) setNotice('Deleted. It is downloaded again the next time it is needed.')
+    else setError(r.error)
+    await refresh()
+  }
+
+  const clear = async (id: string): Promise<void> => {
+    setConfirmDelete(null); setError(null); setNotice(null)
+    const r = await window.api.models.clearCache(id)
+    if (r.ok) setNotice(`Freed ${fmt(r.freed)}.`)
     else setError(r.error)
     await refresh()
   }
@@ -230,11 +244,39 @@ export function ModelsTab(): React.ReactElement {
         <div style={muted}>LoRAs stay in this folder; the models folder above does not move them.</div>
       </section>
 
+      {/* caches */}
+      <section style={card}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Free up space</div>
+        {o.caches.every((c) => c.bytes === 0) ? (
+          <div style={muted}>Nothing to clean up: no leftover caches.</div>
+        ) : (
+          <div style={muted}>Caches can be cleared safely. They only cost download time if they are needed again. Your models, LoRAs and songs are not touched.</div>
+        )}
+        {o.caches.some((c) => c.bytes === null) && <div style={muted}>Calculating sizes…</div>}
+        {o.caches.filter((c) => c.bytes === null || c.bytes > 0).map((c) => (
+          <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, borderTop: '1px solid var(--border-subtle)', paddingTop: 8 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{c.name} <span style={{ color: 'var(--text-secondary)' }}>· {c.bytes === null ? 'calculating…' : fmt(c.bytes)}</span></div>
+              <div style={muted}>{c.description}</div>
+              <div style={mono}>{c.path}</div>
+            </div>
+            {confirmDelete === `cache:${c.id}` ? (
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                <button className="btn btn-primary" style={{ background: 'var(--red)' }} onClick={() => void clear(c.id)}>Clear</button>
+                <button className="btn btn-ghost" onClick={() => setConfirmDelete(null)}>No</button>
+              </div>
+            ) : (
+              <button className="btn btn-ghost" style={{ fontSize: 11, flexShrink: 0 }} disabled={c.bytes === null} onClick={() => setConfirmDelete(`cache:${c.id}`)}>Clear{c.bytes === null ? '' : ` ${fmt(c.bytes)}`}</button>
+            )}
+          </div>
+        ))}
+      </section>
+
       {/* python environment */}
       <section style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Python environment (engines)</div>
-          <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{fmt(o.env.bytes)}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{o.env.bytes === null ? 'calculating…' : fmt(o.env.bytes)}</div>
         </div>
         <div style={mono}>{o.env.path}</div>
         <div style={muted}>Managed in Settings → AI Engines.</div>

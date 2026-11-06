@@ -25,14 +25,29 @@ export function setupUpdater(win: BrowserWindow): void {
 
   autoUpdater.on('update-downloaded', (info) => send('update:downloaded', info))
 
-  autoUpdater.on('error', (err) => send('update:error', err?.message))
+  // Background checks must not pop up errors (offline, tag without a release yet, ...)
+  let manualCheck = false
+  autoUpdater.on('error', (err) => {
+    if (manualCheck) send('update:error', err?.message)
+  })
 
-  // IPC from renderer
-  ipcMain.handle('updater:check', () => autoUpdater.checkForUpdates())
-  ipcMain.handle('updater:download', () => autoUpdater.downloadUpdate())
+  const check = async (manual: boolean): Promise<void> => {
+    manualCheck = manual
+    try {
+      await autoUpdater.checkForUpdates()
+    } catch (e) {
+      log.warn('update check failed', e)
+    } finally {
+      manualCheck = false
+    }
+  }
+
+  // IPC from renderer (return only serialisable values)
+  ipcMain.handle('updater:check', () => check(true))
+  ipcMain.handle('updater:download', async () => { await autoUpdater.downloadUpdate() })
   ipcMain.handle('updater:install', () => autoUpdater.quitAndInstall())
 
   // Auto-check 5 s after launch, then every 4 h
-  setTimeout(() => autoUpdater.checkForUpdates(), 5000)
-  setInterval(() => autoUpdater.checkForUpdates(), 4 * 60 * 60 * 1000)
+  setTimeout(() => void check(false), 5000)
+  setInterval(() => void check(false), 4 * 60 * 60 * 1000)
 }

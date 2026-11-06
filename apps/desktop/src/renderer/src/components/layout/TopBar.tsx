@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAudioStore } from '../../stores/audio.store'
 import { useProjectStore } from '../../stores/project.store'
+import logo from '../../assets/logo.png'
 
 // Animated level meters for the status bar
 function LevelMeter(): React.ReactElement {
@@ -87,13 +88,15 @@ export function TopBar(): React.ReactElement {
       {/* Logo — no-drag region */}
       <div className="tb-section" style={{ marginRight: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '0 8px' }}>
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="10" fill="var(--accent)" />
-            <path d="M6 10 L10 6 L14 10 L10 14 Z" fill="white" />
-            <circle cx="10" cy="10" r="2" fill="var(--accent)" />
-          </svg>
+          <img
+            src={logo}
+            alt="AI Music Studio"
+            width={30}
+            height={30}
+            style={{ background: '#f3f0e9', borderRadius: 8, padding: 2, display: 'block' }}
+          />
           <span style={{ fontWeight: 800, fontSize: 12, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            AMS
+            AI Music Studio
           </span>
         </div>
       </div>

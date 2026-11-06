@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { ServerManager } from './server-manager'
 import { registerIpcHandlers } from './ipc-handlers'
+import { setupUpdater } from './updater'
 
 let mainWindow: BrowserWindow | null = null
 const serverManager = new ServerManager()
@@ -56,6 +57,8 @@ app.whenReady().then(async () => {
   await serverManager.start()
 
   createWindow()
+
+  if (mainWindow) setupUpdater(mainWindow)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

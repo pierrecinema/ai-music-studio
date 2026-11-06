@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { UpdateToast } from './components/updater/UpdateToast'
 import { useUIStore } from './stores/ui.store'
 import { useProjectStore } from './stores/project.store'
 import { TopBar } from './components/layout/TopBar'
@@ -150,6 +151,7 @@ export default function App(): React.ReactElement {
       </div>
 
       <StatusBar hw={hw} />
+      <UpdateToast />
     </div>
   )
 }

@@ -16,6 +16,18 @@ const api = {
   },
   shell: {
     openPath: (path: string) => ipcRenderer.invoke('shell:open-path', path)
+  },
+  updater: {
+    check: () => ipcRenderer.invoke('updater:check'),
+    download: () => ipcRenderer.invoke('updater:download'),
+    install: () => ipcRenderer.invoke('updater:install'),
+    onChecking: (cb: () => void) => ipcRenderer.on('update:checking', cb),
+    onAvailable: (cb: (info: unknown) => void) => ipcRenderer.on('update:available', (_, i) => cb(i)),
+    onNotAvailable: (cb: () => void) => ipcRenderer.on('update:not-available', cb),
+    onProgress: (cb: (p: { percent: number; bytesPerSecond: number }) => void) =>
+      ipcRenderer.on('update:progress', (_, p) => cb(p)),
+    onDownloaded: (cb: (info: unknown) => void) => ipcRenderer.on('update:downloaded', (_, i) => cb(i)),
+    onError: (cb: (msg: string) => void) => ipcRenderer.on('update:error', (_, m) => cb(m))
   }
 }
 

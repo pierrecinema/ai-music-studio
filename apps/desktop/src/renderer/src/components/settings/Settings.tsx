@@ -20,7 +20,101 @@ const LANGUAGES = [
 const CLAUDE_MODELS = ['claude-opus-4-5', 'claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-sonnet-4-6']
 const OPENAI_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1', 'o1-mini']
 
-type SettingsTab = 'general' | 'ai' | 'audio' | 'appearance'
+type SettingsTab = 'general' | 'ai' | 'audio' | 'appearance' | 'updates'
+
+type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
+
+function UpdatesTab(): React.ReactElement {
+  const [phase, setPhase] = useState<UpdatePhase>('idle')
+  const [info, setInfo] = useState<{ version?: string; percent?: number; bps?: number; message?: string }>({})
+
+  const u = (window as unknown as { api: { updater: { check: () => void; download: () => void; install: () => void } } }).api?.updater
+
+  const checkNow = () => { setPhase('checking'); u?.check() }
+  const download = () => u?.download()
+  const install = () => u?.install()
+
+  React.useEffect(() => {
+    if (!u) return
+    const wa = window as unknown as { api: { updater: {
+      onChecking: (cb: () => void) => void
+      onAvailable: (cb: (i: { version: string }) => void) => void
+      onNotAvailable: (cb: () => void) => void
+      onProgress: (cb: (p: { percent: number; bytesPerSecond: number }) => void) => void
+      onDownloaded: (cb: (i: { version: string }) => void) => void
+      onError: (cb: (m: string) => void) => void
+    } } }
+    wa.api.updater.onChecking(() => setPhase('checking'))
+    wa.api.updater.onAvailable(i => { setPhase('available'); setInfo({ version: i.version }) })
+    wa.api.updater.onNotAvailable(() => setPhase('idle'))
+    wa.api.updater.onProgress(p => { setPhase('downloading'); setInfo({ percent: p.percent, bps: p.bytesPerSecond }) })
+    wa.api.updater.onDownloaded(i => { setPhase('ready'); setInfo({ version: i.version }) })
+    wa.api.updater.onError(m => { setPhase('error'); setInfo({ message: m }) })
+  }, [])
+
+  const statusColor = phase === 'ready' ? 'var(--green)' : phase === 'error' ? 'var(--red)' : phase === 'available' ? 'var(--accent-light)' : 'var(--text-muted)'
+  const statusText = {
+    idle: 'Auf dem neuesten Stand',
+    checking: 'Suche nach Updates…',
+    available: `Update verfügbar — v${info.version}`,
+    downloading: `Lädt herunter… ${info.percent}%`,
+    ready: `v${info.version} bereit zum Installieren`,
+    error: `Fehler: ${info.message}`
+  }[phase]
+
+  return (
+    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+          AI Music Studio Updates
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+          Updates werden automatisch gesucht und im Hintergrund geladen.
+        </div>
+      </div>
+
+      {/* Status card */}
+      <div style={{
+        background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)',
+        borderRadius: 8, padding: '14px 16px',
+        display: 'flex', alignItems: 'center', gap: 12
+      }}>
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>{statusText}</div>
+          {phase === 'downloading' && (
+            <div style={{ marginTop: 8, height: 4, background: 'var(--bg-tertiary)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${info.percent}%`, background: 'var(--accent)', borderRadius: 2, transition: 'width 400ms' }} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        {(phase === 'idle' || phase === 'error') && (
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={checkNow}>
+            Jetzt suchen
+          </button>
+        )}
+        {phase === 'available' && (
+          <button className="btn btn-primary" style={{ fontSize: 11 }} onClick={download}>
+            Herunterladen
+          </button>
+        )}
+        {phase === 'ready' && (
+          <button className="btn btn-primary" style={{ fontSize: 11 }} onClick={install}>
+            Neu starten & Installieren
+          </button>
+        )}
+      </div>
+
+      <div style={{ fontSize: 10, color: 'var(--text-disabled)' }}>
+        Updates kommen von github.com/pierrecinema/ai-music-studio
+      </div>
+    </div>
+  )
+}
 
 export function Settings(): React.ReactElement {
   const { t } = useTranslation()
@@ -40,7 +134,7 @@ export function Settings(): React.ReactElement {
       {/* Tab nav */}
       <div style={{ width: 160, background: 'var(--bg-secondary)', borderRight: '1px solid var(--border)', padding: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10, padding: '0 6px' }}>{t('settings.title')}</div>
-        {(['general', 'ai', 'audio', 'appearance'] as SettingsTab[]).map(tab2 => (
+        {(['general', 'ai', 'audio', 'appearance', 'updates'] as SettingsTab[]).map(tab2 => (
           <button
             key={tab2}
             onClick={() => setTab(tab2)}
@@ -215,6 +309,8 @@ export function Settings(): React.ReactElement {
             </div>
           </div>
         )}
+
+        {tab === 'updates' && <UpdatesTab />}
       </div>
     </div>
   )

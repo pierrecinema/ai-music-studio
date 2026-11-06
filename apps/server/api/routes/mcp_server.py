@@ -305,31 +305,6 @@ async def _call_extra(name: str, args: dict):
     return None
 
 
-@router.post("")
-async def jsonrpc(body: dict):
-    """Minimal MCP JSON-RPC endpoint (initialize / tools/list / tools/call)."""
-    method, rid, params = body.get("method"), body.get("id"), body.get("params") or {}
-
-    def ok(result):
-        return {"jsonrpc": "2.0", "id": rid, "result": result}
-
-    if method == "initialize":
-        return ok({
-            "protocolVersion": "2025-03-26",
-            "capabilities": {"tools": {}},
-            "serverInfo": {"name": "ai-music-studio", "version": "0.1.0"},
-        })
-    if method == "tools/list":
-        return ok({"tools": MCP_TOOLS})
-    if method == "tools/call":
-        return ok(await call_tool({"name": params.get("name"), "arguments": params.get("arguments", {})}))
-    if method == "ping":
-        return ok({})
-    if rid is None:  # notification, no reply expected
-        return {}
-    return {"jsonrpc": "2.0", "id": rid, "error": {"code": -32601, "message": f"Method not found: {method}"}}
-
-
 @router.get("/manifest")
 async def mcp_manifest():
     """MCP server manifest for discovery."""

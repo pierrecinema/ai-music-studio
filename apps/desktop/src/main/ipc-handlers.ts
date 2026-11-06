@@ -1,6 +1,7 @@
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron'
 import { ServerManager } from './server-manager'
 import { getStatus, installGroups, cancelInstall } from './engines'
+import { listLoras, importLora, removeLora, type LoraEntry } from './loras'
 import * as fs from 'fs'
 
 export function registerIpcHandlers(serverManager: ServerManager): void {
@@ -29,6 +30,24 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
       properties: ['openFile', 'multiSelections']
     })
     return result.filePaths
+  })
+
+  ipcMain.handle('loras:list', () => listLoras())
+  ipcMain.handle('loras:import', (_, src: string, kind: LoraEntry['kind'], name?: string) => {
+    try {
+      return { ok: true as const, lora: importLora(src, kind, name) }
+    } catch (e) {
+      return { ok: false as const, error: (e as Error).message }
+    }
+  })
+  ipcMain.handle('loras:remove', (_, id: string) => removeLora(id))
+  ipcMain.handle('dialog:open-lora', async (_, mode: 'file' | 'folder') => {
+    const result = await dialog.showOpenDialog(
+      mode === 'folder'
+        ? { properties: ['openDirectory'] }
+        : { filters: [{ name: 'LoRA', extensions: ['safetensors', 'pt', 'bin'] }], properties: ['openFile'] }
+    )
+    return result.filePaths[0] ?? null
   })
 
   ipcMain.handle('dialog:open-video', async () => {

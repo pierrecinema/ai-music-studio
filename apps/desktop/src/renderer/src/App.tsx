@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { UpdateToast } from './components/updater/UpdateToast'
+import { api, baseUrl } from './lib/api'
 import { useUIStore } from './stores/ui.store'
 import { useProjectStore } from './stores/project.store'
 import { TopBar } from './components/layout/TopBar'
@@ -13,7 +14,7 @@ import { AIChat } from './components/ai-chat/AIChat'
 import { StemSplitter } from './components/stem-splitter/StemSplitter'
 import { VideoComposer } from './components/video-composer/VideoComposer'
 import { Settings } from './components/settings/Settings'
-import { MusicGenerator } from './components/music-gen/MusicGenerator'
+import { CreateMusic } from './components/create/CreateMusic'
 import { Mastering } from './components/mastering/Mastering'
 import { KaraokeExport } from './components/karaoke/KaraokeExport'
 import { WinampMode } from './components/winamp/WinampMode'
@@ -26,11 +27,13 @@ interface HardwareInfo {
   low_cpu: boolean
 }
 
-function StatusBar({ hw, onWinamp }: { hw: HardwareInfo | null; onWinamp: () => void }): React.ReactElement {
+function StatusBar({ hw, base, onWinamp, onSetup }: {
+  hw: HardwareInfo | null; base: string; onWinamp: () => void; onSetup: () => void
+}): React.ReactElement {
   const { project } = useProjectStore()
   const gpuLabel = hw
     ? `${hw.gpu || 'CPU'} · ${hw.backend.toUpperCase()}`
-    : 'AI backend offline — set up in Settings → AI Engines'
+    : 'AI backend offline — click to open Settings → AI Engines'
 
   return (
     <footer className="app-statusbar">
@@ -38,7 +41,13 @@ function StatusBar({ hw, onWinamp }: { hw: HardwareInfo | null; onWinamp: () => 
       <span style={{ color: 'var(--border-mid)' }}>·</span>
       <span>{project.name}</span>
       <span style={{ color: 'var(--border-mid)' }}>·</span>
-      <span style={{ color: !hw ? 'var(--orange)' : hw.backend === 'cpu' ? 'var(--yellow)' : 'var(--green)' }}>
+      <span
+        onClick={hw ? undefined : onSetup}
+        style={{
+          color: !hw ? 'var(--orange)' : hw.backend === 'cpu' ? 'var(--yellow)' : 'var(--green)',
+          cursor: hw ? 'default' : 'pointer'
+        }}
+      >
         {gpuLabel}
       </span>
       {hw?.low_cpu && (
@@ -54,16 +63,20 @@ function StatusBar({ hw, onWinamp }: { hw: HardwareInfo | null; onWinamp: () => 
       >
         Winamp (Ctrl+M)
       </button>
-      <span style={{ color: 'var(--accent-light)' }}>MCP: http://localhost:8765/mcp</span>
+      <span style={{ color: 'var(--accent-light)' }}>MCP: {base ? `${base}/mcp` : '…'}</span>
     </footer>
   )
 }
 
 export default function App(): React.ReactElement {
-  const { activeView, theme } = useUIStore()
+  const { theme } = useUIStore()
+  // an older version may have stored the removed 'music-gen' view
+  const activeView = useUIStore((s) => ((s.activeView as string) === 'music-gen' ? 'create' : s.activeView))
   const [hw, setHw] = useState<HardwareInfo | null>(null)
   const [chatOpen, setChatOpen] = useState(true)
   const [winamp, setWinamp] = useState(false)
+  const [base, setBase] = useState('')
+  const setActiveView = useUIStore(s => s.setActiveView)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -81,12 +94,11 @@ export default function App(): React.ReactElement {
   }, [theme])
 
   useEffect(() => {
-    // Poll backend for hardware info
+    // Poll backend for hardware info; clear it when the backend goes away
     const tryFetch = () =>
-      fetch('http://127.0.0.1:8765/health')
-        .then(r => r.json())
-        .then(d => { if (d.hardware) setHw(d.hardware) })
-        .catch(() => {})
+      Promise.all([api.health(), baseUrl()])
+        .then(([d, url]) => { setHw(d.hardware ?? null); setBase(url) })
+        .catch(() => { setHw(null); baseUrl().then(setBase) })
     tryFetch()
     const id = setInterval(tryFetch, 10000)
     return () => clearInterval(id)
@@ -101,7 +113,7 @@ export default function App(): React.ReactElement {
       case 'ai-chat':       return <AIChat />
       case 'stem-splitter': return <StemSplitter />
       case 'video-composer':return <VideoComposer />
-      case 'music-gen':     return <MusicGenerator />
+      case 'create':        return <CreateMusic />
       case 'mastering':     return <Mastering />
       case 'karaoke':       return <KaraokeExport />
       case 'settings':      return <Settings />
@@ -109,7 +121,10 @@ export default function App(): React.ReactElement {
     }
   }
 
+  // These views need room: they use the whole main area instead of the strip under the timeline
+  const FULL_VIEWS = ['create', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'video-composer', 'ai-chat']
   const panel = renderPanel()
+  const fullView = FULL_VIEWS.includes(activeView)
 
   return (
     <div className="app-shell">
@@ -119,11 +134,14 @@ export default function App(): React.ReactElement {
         <Sidebar />
 
         <main className="app-main">
-          {/* Timeline always visible at top */}
-          <Timeline />
+          {fullView ? (
+            <div style={{ flex: 1, minHeight: 0, overflow: 'auto', background: 'var(--bg-primary)' }}>{panel}</div>
+          ) : (
+            <Timeline />
+          )}
 
-          {/* Bottom panel — shows active view */}
-          {panel && (
+          {/* Bottom panel — shows the active view under the timeline */}
+          {!fullView && panel && (
             <div style={{
               flex: '0 0 auto',
               height: 320,
@@ -175,7 +193,7 @@ export default function App(): React.ReactElement {
         )}
       </div>
 
-      <StatusBar hw={hw} onWinamp={() => setWinamp(true)} />
+      <StatusBar hw={hw} base={base} onWinamp={() => setWinamp(true)} onSetup={() => { sessionStorage.setItem('ams-settings-tab', 'engines'); setActiveView('settings') }} />
       <UpdateToast />
       <WinampMode open={winamp} onClose={() => setWinamp(false)} />
     </div>

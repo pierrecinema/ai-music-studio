@@ -2,6 +2,13 @@ export {}
 
 declare global {
   const __APP_VERSION__: string
+  interface LoraInfo {
+    id: string
+    name: string
+    kind: 'style' | 'artist' | 'sound'
+    path: string
+    tags: string[]
+  }
   interface EngineStatus {
     pythonFound: boolean
     pythonVersion: string | null
@@ -14,6 +21,13 @@ declare global {
   interface Window {
     api: {
       server: { getUrl: () => Promise<string>; isReady: () => Promise<boolean> }
+      loras: {
+        list: () => Promise<{ dir: string; loras: LoraInfo[] }>
+        import: (src: string, kind: LoraInfo['kind'], name?: string) =>
+          Promise<{ ok: true; lora: LoraInfo } | { ok: false; error: string }>
+        remove: (id: string) => Promise<void>
+        pick: (mode: 'file' | 'folder') => Promise<string | null>
+      }
       engines: {
         status: () => Promise<EngineStatus>
         install: (groups: string[], torchVariant: string) => Promise<{ ok: boolean; error?: string }>

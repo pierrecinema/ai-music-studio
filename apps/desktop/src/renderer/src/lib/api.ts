@@ -1,4 +1,13 @@
-const BASE = 'http://127.0.0.1:8765'
+const DEFAULT_BASE = 'http://127.0.0.1:38765'
+
+// The main process picks a free port, so ask it every time (cheap IPC call).
+export async function baseUrl(): Promise<string> {
+  try {
+    return (await window.api.server.getUrl()) || DEFAULT_BASE
+  } catch {
+    return DEFAULT_BASE
+  }
+}
 
 export interface Resources {
   vram_gb: number; ram_gb: number; low_memory: boolean; max_duration_s: number; quant: string
@@ -6,14 +15,16 @@ export interface Resources {
 export interface Lora {
   id: string; name: string; kind: 'style' | 'artist' | 'sound'; path: string; tags: string[]
 }
+export interface MusicResult { audio_file: string; seed: number; duration: number }
 export interface MusicJob {
   id: string; status: 'queued' | 'running' | 'done' | 'error'
   audio_file?: string; error?: string; warnings: string[]; engine?: string
+  results: MusicResult[]; progress?: { done: number; total: number }
 }
 export interface KaraokeWord { text: string; start: number; end: number }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
-  const r = await fetch(`${BASE}${path}`, {
+  const r = await fetch(`${await baseUrl()}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -26,13 +37,16 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 async function get<T>(path: string): Promise<T> {
-  const r = await fetch(`${BASE}${path}`)
+  const r = await fetch(`${await baseUrl()}${path}`)
   if (!r.ok) throw new Error(r.statusText)
   return r.json()
 }
 
 export const api = {
-  health: () => get<{ status: string }>('/health'),
+  health: () => get<{
+    status: string
+    hardware?: { gpu: string; backend: string; cores: number; low_cpu: boolean }
+  }>('/health'),
 
   vocal: {
     generate: (body: {
@@ -97,13 +111,7 @@ export const api = {
 
   music: {
     status: () => get<{ engine_installed: boolean; resources: Resources }>('/music/status'),
-    loras: () => get<{ dir: string; loras: Lora[] }>('/music/loras'),
-    importLora: (body: { path: string; name?: string; kind: Lora['kind'] }) =>
-      post<Lora>('/music/loras/import', body),
-    generate: (body: {
-      prompt: string; lyrics: string; duration: number; steps: number
-      instrumental: boolean; loras: Array<{ id: string; strength: number }>
-    }) => post<{ jobId: string }>('/music/generate', body),
+    generate: (body: Record<string, unknown>) => post<{ jobId: string }>('/music/generate', body),
     job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
   },
 

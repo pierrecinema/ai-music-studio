@@ -16,6 +16,12 @@ const api = {
       return () => ipcRenderer.removeListener('engines:log', h)
     }
   },
+  loras: {
+    list: () => ipcRenderer.invoke('loras:list'),
+    import: (src: string, kind: string, name?: string) => ipcRenderer.invoke('loras:import', src, kind, name),
+    remove: (id: string) => ipcRenderer.invoke('loras:remove', id),
+    pick: (mode: 'file' | 'folder') => ipcRenderer.invoke('dialog:open-lora', mode)
+  },
   dialog: {
     openAudio: () => ipcRenderer.invoke('dialog:open-audio'),
     openVideo: () => ipcRenderer.invoke('dialog:open-video'),

@@ -2,11 +2,16 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AIProvider, AIMessage } from '../types'
 
+export const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-5-5'
+export const DEFAULT_OPENAI_MODEL = 'gpt-4o'
+
 interface AIState {
   provider: AIProvider
   claudeApiKey: string
   openaiApiKey: string
   model: string
+  claudeModel: string
+  openaiModel: string
   messages: AIMessage[]
   isThinking: boolean
 
@@ -25,14 +30,19 @@ export const useAIStore = create<AIState>()(
       provider: 'claude',
       claudeApiKey: '',
       openaiApiKey: '',
-      model: 'claude-sonnet-4-5',
+      model: DEFAULT_CLAUDE_MODEL,
+      claudeModel: DEFAULT_CLAUDE_MODEL,
+      openaiModel: DEFAULT_OPENAI_MODEL,
       messages: [],
       isThinking: false,
 
-      setProvider: (provider) => set({ provider }),
+      // `model` is the active model; each provider remembers its own choice
+      setProvider: (provider) =>
+        set((s) => ({ provider, model: provider === 'claude' ? s.claudeModel : s.openaiModel })),
       setClaudeApiKey: (claudeApiKey) => set({ claudeApiKey }),
       setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
-      setModel: (model) => set({ model }),
+      setModel: (model) =>
+        set((s) => (s.provider === 'claude' ? { model, claudeModel: model } : { model, openaiModel: model })),
       addMessage: (msg) =>
         set((s) => ({
           messages: [...s.messages, { ...msg, timestamp: Date.now() }]
@@ -42,11 +52,23 @@ export const useAIStore = create<AIState>()(
     }),
     {
       name: 'ams-ai',
+      version: 2,
+      migrate: (persisted: unknown) => {
+        // v1 stored a single shared model: keep the user's choice for the active provider
+        const p = (persisted ?? {}) as Partial<AIState>
+        return {
+          ...p,
+          claudeModel: p.provider === 'openai' ? DEFAULT_CLAUDE_MODEL : (p.model ?? DEFAULT_CLAUDE_MODEL),
+          openaiModel: p.provider === 'openai' ? (p.model ?? DEFAULT_OPENAI_MODEL) : DEFAULT_OPENAI_MODEL
+        } as AIState
+      },
       partialize: (s) => ({
         provider: s.provider,
         claudeApiKey: s.claudeApiKey,
         openaiApiKey: s.openaiApiKey,
-        model: s.model
+        model: s.model,
+        claudeModel: s.claudeModel,
+        openaiModel: s.openaiModel
       })
     }
   )

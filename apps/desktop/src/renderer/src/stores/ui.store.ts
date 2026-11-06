@@ -12,7 +12,9 @@ interface UIState {
   scrollX: number
   scrollY: number
   language: string
+  sidebarOpen: boolean
 
+  toggleSidebar: () => void
   setActiveView: (view: View) => void
   setTheme: (theme: 'dark' | 'light') => void
   setLanguage: (lang: string) => void
@@ -32,7 +34,9 @@ export const useUIStore = create<UIState>()(
       scrollX: 0,
       scrollY: 0,
       language: 'en',
+      sidebarOpen: true,
 
+      toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setActiveView: (activeView) => set({ activeView }),
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),

@@ -18,8 +18,56 @@ const LANGUAGES = [
   { code: 'ko', label: '한국어' },
 ]
 
-const CLAUDE_MODELS = ['claude-opus-4-5', 'claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-sonnet-4-6']
-const OPENAI_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1', 'o1-mini']
+const CLAUDE_MODELS = [
+  { id: 'claude-sonnet-5-5', label: 'Sonnet 5.5' },
+  { id: 'claude-opus-5-5', label: 'Opus 5.5' },
+  { id: 'claude-fable-5-1', label: 'Fable 5.1' },
+  { id: 'claude-haiku-5-5', label: 'Haiku 5.5' },
+  { id: 'claude-sonnet-4-6', label: 'Sonnet 4.6' },
+  { id: 'claude-opus-4-5', label: 'Opus 4.5' },
+  { id: 'claude-sonnet-4-5', label: 'Sonnet 4.5' },
+  { id: 'claude-haiku-4-5', label: 'Haiku 4.5' },
+]
+const OPENAI_MODELS = [
+  { id: 'gpt-4o', label: 'GPT-4o' },
+  { id: 'gpt-4o-mini', label: 'GPT-4o mini' },
+  { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+  { id: 'o1', label: 'o1' },
+  { id: 'o1-mini', label: 'o1-mini' },
+]
+const CUSTOM = '__custom__'
+
+function ModelPicker({ models, value, onChange }: {
+  models: Array<{ id: string; label: string }>
+  value: string
+  onChange: (id: string) => void
+}): React.ReactElement {
+  const known = models.some(m => m.id === value)
+  const [custom, setCustom] = useState(!known)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <select
+        value={custom ? CUSTOM : value}
+        onChange={e => {
+          if (e.target.value === CUSTOM) setCustom(true)
+          else { setCustom(false); onChange(e.target.value) }
+        }}
+        style={inputStyle}
+      >
+        {models.map(m => <option key={m.id} value={m.id}>{m.label} ({m.id})</option>)}
+        <option value={CUSTOM}>Other model ID…</option>
+      </select>
+      {custom && (
+        <input
+          value={value}
+          onChange={e => onChange(e.target.value.trim())}
+          placeholder="exact model ID"
+          style={inputStyle}
+        />
+      )}
+    </div>
+  )
+}
 
 type SettingsTab = 'general' | 'ai' | 'engines' | 'audio' | 'appearance' | 'updates'
 
@@ -121,7 +169,11 @@ export function Settings(): React.ReactElement {
   const { t } = useTranslation()
   const { theme, setTheme, language, setLanguage } = useUIStore()
   const { provider, setProvider, claudeApiKey, setClaudeApiKey, openaiApiKey, setOpenaiApiKey, model, setModel } = useAIStore()
-  const [tab, setTab] = useState<SettingsTab>('general')
+  const [tab, setTab] = useState<SettingsTab>(() => {
+    const wanted = sessionStorage.getItem('ams-settings-tab') as SettingsTab | null
+    sessionStorage.removeItem('ams-settings-tab')
+    return wanted ?? 'general'
+  })
   const [showKey, setShowKey] = useState(false)
 
   const handleLanguageChange = (code: string) => {
@@ -227,9 +279,7 @@ export function Settings(): React.ReactElement {
                 </div>
                 <div>
                   <label style={labelStyle}>{t('settings.model')}</label>
-                  <select value={model} onChange={e => setModel(e.target.value)} style={inputStyle}>
-                    {CLAUDE_MODELS.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
+                  <ModelPicker models={CLAUDE_MODELS} value={model} onChange={setModel} />
                 </div>
               </>
             )}
@@ -251,9 +301,7 @@ export function Settings(): React.ReactElement {
                 </div>
                 <div>
                   <label style={labelStyle}>{t('settings.model')}</label>
-                  <select value={model} onChange={e => setModel(e.target.value)} style={inputStyle}>
-                    {OPENAI_MODELS.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
+                  <ModelPicker models={OPENAI_MODELS} value={model} onChange={setModel} />
                 </div>
               </>
             )}

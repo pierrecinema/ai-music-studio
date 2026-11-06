@@ -17,16 +17,40 @@ def _tune_threads() -> None:
 
 _tune_threads()
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import vocal, instruments, stems, audio_to_midi, video, ai_chat, vst, mcp_server, music_gen, mastering, karaoke
+try:
+    from services.mcp_app import build_server
+    mcp_sdk_server = build_server()
+    mcp_asgi_app = mcp_sdk_server.streamable_http_app(json_response=True, stateless_http=True)
+except ImportError:
+    # Backend installed before MCP support: keep running, re-run "Install selected" to add it
+    logging.getLogger(__name__).warning("mcp package missing, MCP endpoint disabled")
+    mcp_sdk_server = None
+    mcp_asgi_app = None
 
-app = FastAPI(title="AI Music Studio Server", version="0.1.0")
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if mcp_sdk_server is None:
+        yield
+        return
+    async with mcp_sdk_server.session_manager.run():
+        yield
+
+
+app = FastAPI(title="AI Music Studio Server", version="0.1.0", lifespan=lifespan)
+
+# Only the desktop app (file:// sends Origin "null") and local dev servers may call this API
+# from a browser context; random websites must not be able to drive a local server.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["null"],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -66,7 +90,12 @@ async def health():
     return {"status": "ok", "version": "0.1.0", "hardware": hw_info}
 
 
+# Must stay last: the MCP endpoint lives at /mcp, all other routes are matched first.
+if mcp_asgi_app is not None:
+    app.mount("/", mcp_asgi_app)
+
+
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("AMS_PORT", 8765))
+    port = int(os.environ.get("AMS_PORT", 38765))
     uvicorn.run("main:app", host="127.0.0.1", port=port, log_level="info")

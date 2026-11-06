@@ -49,7 +49,7 @@ Sind mehrere Versionen installiert, nimmt die App bevorzugt 3.11, dann 3.12, 3.1
 
 ### Schritt 3: API-Schlüssel für den KI-Chat
 
-**Einstellungen → AI**: Anbieter wählen (Claude oder ChatGPT), Schlüssel eintragen, Modell wählen. Der Schlüssel wird lokal im App-Datenordner gespeichert (nicht verschlüsselt). Ohne Schlüssel funktionieren alle lokalen Funktionen, nur der KI-Chat nicht.
+**Einstellungen → AI**: Anbieter wählen (Claude oder ChatGPT), Schlüssel eintragen, Modell wählen (aktuelle Claude-Modelle sind in der Liste, jede andere Modell-ID geht über „Other model ID…“). Jeder Anbieter merkt sich sein eigenes Modell. Der Schlüssel wird lokal im App-Datenordner gespeichert (nicht verschlüsselt). Ohne Schlüssel funktionieren alle lokalen Funktionen, nur der KI-Chat nicht.
 
 ### Schritt 4: Optionale Programme
 
@@ -66,8 +66,17 @@ Nach der Installation die App neu starten, damit sie die neuen Programme im PATH
 
 ## 3. Funktionen
 
-- **Music Generator** (Seitenleiste ♫): Beschreibung und optional Text eingeben, Länge wählen, **Generate song**. Die Generierung läuft im Hintergrund, es läuft immer nur ein Auftrag.
-- **LoRA** (im Music Generator): Stil-, Künstler- oder Sound-Erweiterungen. `.safetensors`-Datei oder Ordner importieren, anhaken, Stärke einstellen. Die Engine nutzt pro Durchgang **eine** LoRA; bei mehreren wird die stärkste verwendet und die App weist darauf hin.
+- **Menü links:** Mit **«** / **»** oben klappst du es ein (nur Icons) oder aus (mit Beschriftung). Die Wahl wird gespeichert.
+- **Create music** (ganz oben im Menü, ✨): Der Song-Generator mit **Simple** (Stil, Text, Create) und **Studio** (alle Einstellungen):
+  - **Song:** Titel, Stil (mit Genre-Vorschlägen, ✨ lässt die KI den Stil verbessern)
+  - **Lyrics:** Instrumental, Sprache, Stimme (Any/Male/Female), Text mit Abschnitts-Tags wie `[Verse]`, `[Chorus]` (✨ lässt die KI Text schreiben)
+  - **Song parameters:** Länge, BPM, Tonart, Takt; „Auto“ überlässt es dem Modell, „Complete the metadata“ füllt per KI aus
+  - **Source and reference:** Quell-Track (Cover/Remix) und Klang-Referenz
+  - **LoRA**, **Quality** (Schritte, Songs × Variationen × Queue, Seed) und **Advanced** (Sprachmodell-Stufe, Rendering, LoRA je Schicht, Ausgabe: FLAC/MP3/WAV, Fades)
+  - **Into project:** legt die fertigen Songs als Audiospuren auf der Timeline an
+  
+  Die Generierung läuft im Hintergrund, immer nur ein Auftrag. Nicht jede Einstellung kennt jede Engine-Version: Was die installierte Engine nicht unterstützt, wird nicht verschwiegen, sondern unter „Results“ als „ignored“ gemeldet. Format-Umwandlung und Fades übernimmt die App selbst mit ffmpeg.
+- **LoRA** (in Create music): Stil-, Künstler- oder Sound-Erweiterungen. **Import LoRA file…** oder **folder…** wählt `.safetensors`/`.pt`/`.bin` bzw. einen Ordner und kopiert ihn in den LoRA-Ordner. Das geht auch ohne eingerichtetes Backend. Dann „+ Add LoRA“, Stärke einstellen. Die Engine nutzt pro Durchgang **eine** LoRA; bei mehreren wird die stärkste verwendet und die App weist darauf hin.
 - **Stem Splitter** (✂): Vocals, Drums, Bass, Piano, Gitarre, Rest. Modell „6 Stems“ liefert Piano und Gitarre getrennt.
 - **Mastering** (◎): eigenen Track und einen Referenztrack wählen, Ausgabe 16 oder 24 Bit.
 - **Karaoke Export** (🎙): erkennt Wörter und Zeiten, erzeugt eine erweiterte `.lrc` und ein MP4 mit hervorgehobenem Text (16:9, 9:16, 1:1). Am besten mit einer isolierten Gesangsspur.
@@ -99,7 +108,21 @@ Die Statusleiste unten zeigt GPU und Modus. Erkennung übersteuern (z. B. falsch
 
 ## 6. MCP (KI-Agenten steuern die App)
 
-Solange die App läuft, lauscht sie auf `http://127.0.0.1:8765/mcp` (JSON-RPC: `initialize`, `tools/list`, `tools/call`). Die Werkzeugliste ohne Protokoll: `http://127.0.0.1:8765/mcp/tools`. Es gibt 16 Werkzeuge, u. a. Musik generieren, LoRAs, Stems, Audio → MIDI, Mastering, Karaoke, Systeminfo. Die Anbindung an einen konkreten MCP-Client habe ich noch nicht getestet.
+Solange die App läuft **und das Backend eingerichtet ist** (Abschnitt 2), bietet sie einen MCP-Server per HTTP an: `http://127.0.0.1:38765/mcp`. Er nutzt das offizielle MCP-SDK (Streamable HTTP) und liefert 16 Werkzeuge: Musik generieren, LoRAs, Stems, Audio → MIDI, Mastering, Karaoke, Systeminfo u. a.
+
+**Port:** Standard ist 38765. Ist er belegt (z. B. durch einen Webserver), nimmt die App den nächsten freien Port. Die aktuelle Adresse steht in der Statusleiste unten rechts und in `%APPDATA%\desktop\server.json`.
+
+**In Claude Code eintragen** (einmalig, danach in jedem Projekt verfügbar):
+
+```
+claude mcp add --transport http --scope user ai-music-studio http://127.0.0.1:38765/mcp
+```
+
+Prüfen mit `claude mcp list`: Der Eintrag steht auf „Connected“, sobald die App mit eingerichtetem Backend läuft. Andere MCP-Clients, die HTTP-Server unterstützen, tragen dieselbe URL ein.
+
+Getestet ist die Verbindung mit dem offiziellen MCP-Python-Client (Verbindung, Werkzeugliste, Aufrufe, Fehlerfall).
+
+**Sicherheit:** Der Server lauscht nur auf `127.0.0.1`. Browser-Anfragen fremder Webseiten werden per CORS abgewiesen. Die MCP-Werkzeuge greifen auf Dateien zu, die du ihnen als Pfad nennst, nutze sie deshalb nur mit Agenten, denen du vertraust.
 
 ## 7. Fehlerbehebung
 
@@ -109,7 +132,9 @@ Solange die App läuft, lauscht sie auf `http://127.0.0.1:8765/mcp` (JSON-RPC: `
 | Installation eines Pakets schlägt fehl | Python-Version prüfen (3.11 empfohlen), Log in AI Engines lesen, Paket einzeln erneut versuchen. |
 | ACE-Step liefert nur Stille | ACE-Step ist nicht installiert (Hinweis erscheint im Panel) oder Git fehlt. |
 | Karaoke-Video: „ffmpeg not found“ | ffmpeg installieren, App neu starten. |
-| Port 8765 belegt | Anderes Programm beenden, App neu starten. |
+| Standard-Port belegt | Nichts zu tun: Die App sucht selbst einen freien Port (ab 38765), siehe Statusleiste. |
+| „Python 3.14 is very new …“ | Python 3.11 daneben installieren (`winget install Python.Python.3.11`), den Tab „AI Engines“ neu öffnen. |
+| Claude-Modell fehlt in der Liste | Einstellungen → AI → Modell: „Other model ID…“ wählen und die exakte ID eintragen. |
 | Update-Hinweis fehlt | Einstellungen → Updates → „Jetzt suchen“. |
 
 ## 8. Bekannte Einschränkungen (Alpha)

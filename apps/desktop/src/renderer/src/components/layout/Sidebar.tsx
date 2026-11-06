@@ -7,90 +7,83 @@ interface NavItem {
   view: View
   icon: string
   labelKey: string
+  fallback: string
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { view: 'timeline',       icon: '⊞', labelKey: 'sidebar.timeline' },
-  { view: 'piano-roll',     icon: '♪', labelKey: 'sidebar.pianoRoll' },
-  { view: 'vocal-editor',   icon: '🎤', labelKey: 'sidebar.vocalEditor' },
-  { view: 'instruments',    icon: '🎻', labelKey: 'sidebar.instruments' },
-  { view: 'mixer',          icon: '🎚', labelKey: 'sidebar.mixer' },
-  { view: 'music-gen',      icon: '♫', labelKey: 'sidebar.musicGen' },
-  { view: 'stem-splitter',  icon: '✂', labelKey: 'sidebar.stemSplitter' },
-  { view: 'mastering',      icon: '◎', labelKey: 'sidebar.mastering' },
-  { view: 'karaoke',        icon: '🎙', labelKey: 'sidebar.karaoke' },
-  { view: 'video-composer', icon: '🎬', labelKey: 'sidebar.videoComposer' },
-  { view: 'ai-chat',        icon: '✦', labelKey: 'sidebar.aiChat' },
+  { view: 'create',         icon: '✨', labelKey: 'sidebar.create',        fallback: 'Create music' },
+  { view: 'timeline',       icon: '⊞',  labelKey: 'sidebar.timeline',      fallback: 'Timeline' },
+  { view: 'piano-roll',     icon: '♪',  labelKey: 'sidebar.pianoRoll',     fallback: 'Piano Roll' },
+  { view: 'vocal-editor',   icon: '🎤', labelKey: 'sidebar.vocalEditor',   fallback: 'Vocal Editor' },
+  { view: 'instruments',    icon: '🎻', labelKey: 'sidebar.instruments',   fallback: 'AI Instruments' },
+  { view: 'mixer',          icon: '🎚', labelKey: 'sidebar.mixer',         fallback: 'Mixer' },
+  { view: 'stem-splitter',  icon: '✂',  labelKey: 'sidebar.stemSplitter',  fallback: 'Stem Splitter' },
+  { view: 'mastering',      icon: '◎',  labelKey: 'sidebar.mastering',     fallback: 'Mastering' },
+  { view: 'karaoke',        icon: '🎙', labelKey: 'sidebar.karaoke',       fallback: 'Karaoke Export' },
+  { view: 'video-composer', icon: '🎬', labelKey: 'sidebar.videoComposer', fallback: 'Video Composer' },
+  { view: 'ai-chat',        icon: '💬', labelKey: 'sidebar.aiChat',        fallback: 'AI Chat' },
 ]
 
-const LABEL_FALLBACK: Partial<Record<View, string>> = {
-  'music-gen': 'Music Generator',
-  mastering: 'Mastering',
-  karaoke: 'Karaoke Export',
-}
+const COLLAPSED = 56
+const EXPANDED = 214
 
 export function Sidebar(): React.ReactElement {
   const { t } = useTranslation()
-  const { activeView, setActiveView } = useUIStore()
+  const { activeView, setActiveView, sidebarOpen, toggleSidebar } = useUIStore()
+
+  const button = (view: View, icon: string, text: string, size = 16) => {
+    const active = activeView === view
+    return (
+      <button
+        key={view}
+        onClick={() => setActiveView(view)}
+        title={text}
+        aria-label={text}
+        style={{
+          width: '100%', height: 40, display: 'flex', alignItems: 'center',
+          justifyContent: sidebarOpen ? 'flex-start' : 'center', gap: 12,
+          padding: sidebarOpen ? '0 12px' : 0, borderRadius: 8, border: 'none', cursor: 'pointer',
+          background: active ? 'var(--accent)' : 'transparent',
+          color: active ? 'white' : 'var(--text-secondary)', fontSize: 13, fontWeight: active ? 700 : 500,
+          transition: 'background 0.15s', textAlign: 'left', overflow: 'hidden', whiteSpace: 'nowrap',
+        }}
+      >
+        <span style={{ width: 24, textAlign: 'center', fontSize: size, flexShrink: 0 }}>{icon}</span>
+        {sidebarOpen && <span className="truncate">{text}</span>}
+      </button>
+    )
+  }
 
   return (
-    <nav style={{
-      width: 56,
-      background: 'var(--bg-secondary)',
-      borderRight: '1px solid var(--border)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: '8px 0',
-      gap: 2
-    }}>
-      {NAV_ITEMS.map((item) => (
-        <button
-          key={item.view}
-          onClick={() => setActiveView(item.view)}
-          title={t(item.labelKey, { defaultValue: LABEL_FALLBACK[item.view] ?? item.view })}
-          style={{
-            width: 40,
-            height: 40,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: 8,
-            border: 'none',
-            cursor: 'pointer',
-            background: activeView === item.view ? 'var(--accent)' : 'transparent',
-            color: activeView === item.view ? 'white' : 'var(--text-muted)',
-            fontSize: 16,
-            transition: 'all 0.15s'
-          }}
-        >
-          {item.icon}
-        </button>
-      ))}
+    <nav
+      style={{
+        width: sidebarOpen ? EXPANDED : COLLAPSED, flexShrink: 0, transition: 'width 0.15s',
+        background: 'var(--bg-secondary)', borderRight: '1px solid var(--border)',
+        display: 'flex', flexDirection: 'column', padding: '8px 8px', gap: 2, overflowY: 'auto', overflowX: 'hidden',
+      }}
+    >
+      <button
+        onClick={toggleSidebar}
+        title={sidebarOpen ? 'Collapse menu' : 'Expand menu'}
+        aria-label={sidebarOpen ? 'Collapse menu' : 'Expand menu'}
+        style={{
+          width: '100%', height: 36, display: 'flex', alignItems: 'center',
+          justifyContent: sidebarOpen ? 'space-between' : 'center', padding: sidebarOpen ? '0 12px' : 0,
+          background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
+          fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4,
+        }}
+      >
+        {sidebarOpen && <span>Menu</span>}
+        <span style={{ fontSize: 15 }}>{sidebarOpen ? '«' : '»'}</span>
+      </button>
+
+      {NAV_ITEMS.map((item) =>
+        button(item.view, item.icon, t(item.labelKey, { defaultValue: item.fallback }))
+      )}
 
       <div style={{ flex: 1 }} />
 
-      {/* Settings */}
-      <button
-        onClick={() => setActiveView('settings')}
-        title={t('app.settings')}
-        style={{
-          width: 40,
-          height: 40,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: 8,
-          border: 'none',
-          cursor: 'pointer',
-          background: activeView === 'settings' ? 'var(--accent)' : 'transparent',
-          color: activeView === 'settings' ? 'white' : 'var(--text-muted)',
-          fontSize: 18
-        }}
-      >
-        ⚙
-      </button>
+      {button('settings', '⚙', t('app.settings', { defaultValue: 'Settings' }), 18)}
     </nav>
   )
 }

@@ -1,11 +1,33 @@
 import { ChildProcess, spawn } from 'child_process'
+import { writeFileSync } from 'fs'
+import { createServer } from 'net'
 import { join } from 'path'
+import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { hasVenv, venvPython, serverDir } from './engines'
 
+export const DEFAULT_PORT = 38765
+
+function canListen(port: number, host?: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const s = createServer()
+    s.once('error', () => resolve(false))
+    s.once('listening', () => s.close(() => resolve(true)))
+    s.listen(port, host)
+  })
+}
+
+// Another program (e.g. a web server) may already hold the port, on IPv4 or IPv6.
+async function findFreePort(start: number): Promise<number> {
+  for (let p = start; p < start + 50; p++) {
+    if (await canListen(p, '127.0.0.1') && await canListen(p)) return p
+  }
+  return start
+}
+
 export class ServerManager {
   private process: ChildProcess | null = null
-  private port = 8765
+  private port = DEFAULT_PORT
   private ready = false
 
   get serverUrl(): string {
@@ -26,6 +48,10 @@ export class ServerManager {
     }
 
     this.ready = false
+    this.port = await findFreePort(DEFAULT_PORT)
+    try {
+      writeFileSync(join(app.getPath('userData'), 'server.json'), JSON.stringify({ port: this.port, url: this.serverUrl }))
+    } catch { /* informational only */ }
     this.process = spawn(python, ['-u', join(serverDir(), 'main.py')], {
       cwd: serverDir(),
       env: { ...process.env, AMS_PORT: String(this.port) },

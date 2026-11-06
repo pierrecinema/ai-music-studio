@@ -38,7 +38,7 @@ public:
 
     // State shared with editor
     juce::String selectedVoiceId{"v001"};
-    juce::String serverUrl{"http://127.0.0.1:8765"};
+    juce::String serverUrl{"http://127.0.0.1:38765"};
 
 private:
     AMSClient amsClient;

@@ -80,13 +80,13 @@ jobs:
 
             ### Hardware
             - Windows 10/11 (64-bit)
-            - Runs on 8 GB VRAM / 12 GB RAM (automatic low-memory mode), older CPUs, AMD Radeon R9 290 (DirectML) or CPU
+            - Runs on 8 GB VRAM / 12 GB RAM (automatic low-memory mode) and older CPUs; AMD cards via DirectML (very old cards may need the CPU variant)
             - NVIDIA: pick the CUDA variant in AI Engines
 
             ### AI chat
             Needs an API key for Claude (Anthropic) or ChatGPT (OpenAI), set in Settings → AI.
 
             ### MCP
-            MCP clients connect to `http://127.0.0.1:8765/mcp` while the app is running.
+            MCP clients connect to `http://127.0.0.1:38765/mcp` while the app is running.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

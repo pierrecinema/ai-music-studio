@@ -35,7 +35,7 @@ public:
     bool isServerRunning();
 
 private:
-    juce::String serverUrl{"http://127.0.0.1:8765"};
+    juce::String serverUrl{"http://127.0.0.1:38765"};
 
     juce::var postJson(const juce::String& endpoint, const juce::var& body);
 };

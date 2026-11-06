@@ -34,8 +34,14 @@ async def split_stems(req: StemSplitRequest):
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
 
+        from services.hardware_detect import get_profile
+        hw = get_profile()
+        device = hw.torch_device
+        # DirectML (AMD on Windows) needs CPU for Demucs inference — DML not fully supported by torchaudio ops
+        if device == "privateuseone":
+            device = "cpu"
         with torch.no_grad():
-            sources = apply_model(model, wav[None], device="cpu")[0]
+            sources = apply_model(model, wav[None], device=device)[0]
 
         result = {}
         for i, name in enumerate(model.sources):

@@ -1,0 +1,86 @@
+name: Release Windows EXE
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 0.1.0-alpha)'
+        required: true
+        default: '0.1.0-alpha'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Windows Installer
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Node dependencies
+        run: pnpm install
+
+      - name: Type check
+        run: pnpm typecheck
+        continue-on-error: true
+
+      - name: Build Electron app + NSIS installer
+        run: pnpm build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List dist
+        run: Get-ChildItem dist -Recurse | Select-Object FullName
+        shell: pwsh
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AIMusicStudio-Windows
+          path: dist/*.exe
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.exe
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          body: |
+            ## AI Music Studio ${{ github.ref_name }}
+
+            ### System Requirements
+            - Windows 10/11 (64-bit)
+            - 4 GB RAM minimum (8 GB recommended)
+            - GPU: NVIDIA (CUDA), AMD Radeon R9 290+ (DirectML), or CPU-only
+            - Python 3.11+ for AI features (optional)
+
+            ### GPU Support
+            - **NVIDIA**: Install CUDA PyTorch after setup
+            - **AMD Radeon (R9 290/RX series)**: Install torch-directml after setup
+            - **CPU-only / older hardware**: Works out of the box
+
+            ### AI Features
+            Requires an API key for Claude (Anthropic) or ChatGPT (OpenAI) — set in Settings → AI.
+
+            ### MCP Integration
+            Connect AI agents via `http://localhost:8765/mcp/tools`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -24,9 +24,23 @@ mido>=1.3.2
 opencv-python-headless>=4.9.0
 pillow>=10.3.0
 
-# Optional: local voice synthesis (DiffSinger/VITS)
-# torch>=2.1.0  # Uncomment for local GPU models
-# torchaudio>=2.1.0
+# PyTorch — install ONE of these depending on your GPU:
+#
+#   NVIDIA CUDA (recommended if you have an NVIDIA GPU):
+#     pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+#
+#   AMD GPU on Windows (Radeon R9 290 series and newer — DirectML):
+#     pip install torch torchaudio
+#     pip install torch-directml
+#
+#   AMD GPU on Linux (ROCm 5.7+):
+#     pip install torch torchaudio --index-url https://download.pytorch.org/whl/rocm5.7
+#
+#   CPU-only / older hardware (works on any x86 CPU, dual-core+):
+#     pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+#
+# torch-directml is optional — only needed for AMD GPU acceleration on Windows
+# torch-directml>=0.2.0
 
 # Utils
 aiofiles>=23.2.1

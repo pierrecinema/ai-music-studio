@@ -40,13 +40,44 @@
   "build": {
     "appId": "com.aimusic.studio",
     "productName": "AI Music Studio",
+    "copyright": "Copyright © 2024 AI Music Studio",
+    "directories": {
+      "output": "../../dist"
+    },
+    "files": [
+      "out/**/*",
+      "resources/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../server",
+        "to": "server",
+        "filter": ["**/*", "!**/__pycache__/**", "!**/.venv/**", "!**/tests/**"]
+      }
+    ],
     "win": {
-      "target": ["nsis"],
-      "icon": "resources/icon.ico"
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "resources/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
+      "artifactName": "AIMusicStudio-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "resources/icon.ico",
+      "uninstallerIcon": "resources/icon.ico",
+      "installerHeaderIcon": "resources/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AI Music Studio",
+      "include": "resources/installer.nsh"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "pierrecinema",
+      "repo": "ai-music-studio"
     }
   }
 }

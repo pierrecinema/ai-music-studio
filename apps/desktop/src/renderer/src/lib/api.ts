@@ -9,6 +9,8 @@ export async function baseUrl(): Promise<string> {
   }
 }
 
+export type EngineState = 'checking' | 'ready' | 'missing' | 'broken'
+
 export interface Resources {
   vram_gb: number; ram_gb: number; low_memory: boolean; max_duration_s: number; quant: string
 }
@@ -110,7 +112,9 @@ export const api = {
   },
 
   music: {
-    status: () => get<{ engine_installed: boolean; resources: Resources }>('/music/status'),
+    status: () => get<{
+      engine_state: EngineState; engine_error: string; engine_installed: boolean; resources: Resources
+    }>('/music/status'),
     generate: (body: Record<string, unknown>) => post<{ jobId: string }>('/music/generate', body),
     job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
   },

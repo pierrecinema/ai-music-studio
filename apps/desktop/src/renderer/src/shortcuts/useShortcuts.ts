@@ -30,7 +30,7 @@ export function useShortcuts(): void {
       const id = map.get(combo.toLowerCase())
       if (!id) return
       // typing in a field keeps its own keys; function keys still work
-      if (isEditable(e.target) && !/^F\d+$/.test(combo)) return
+      if (isEditable(e.target) && !/^(F\d+|Escape)$/.test(combo)) return
       if (shortcutState.winampOpen && id !== 'app.winamp') return
       e.preventDefault()
       if (e.repeat && !REPEATABLE.has(id)) return

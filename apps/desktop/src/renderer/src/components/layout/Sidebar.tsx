@@ -29,14 +29,15 @@ const EXPANDED = 214
 
 export function Sidebar(): React.ReactElement {
   const { t } = useTranslation()
-  const { activeView, setActiveView, sidebarOpen, toggleSidebar } = useUIStore()
+  const { activeView, setActiveView, closeSettings, sidebarOpen, toggleSidebar } = useUIStore()
 
   const button = (view: View, icon: string, text: string, size = 16) => {
     const active = activeView === view
     return (
       <button
         key={view}
-        onClick={() => setActiveView(view)}
+        // a second click on the open Settings button closes it again
+        onClick={() => (view === 'settings' && active ? closeSettings() : setActiveView(view))}
         title={text}
         aria-label={text}
         style={{

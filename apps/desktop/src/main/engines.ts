@@ -126,7 +126,8 @@ function groupArgs(group: string, torchVariant: string): string[] | null {
     case 'core': return ['-r', join(serverDir(), 'requirements-core.txt')]
     case 'torch': return torchArgs(torchVariant)
     case 'demucs': return ['demucs']
-    case 'basicpitch': return ['basic-pitch']
+    // basic-pitch still imports pkg_resources, which setuptools 81+ no longer ships
+    case 'basicpitch': return ['basic-pitch', 'setuptools<81']
     case 'matchering': return ['matchering']
     case 'whisper': return ['faster-whisper']
     case 'acestep': return ['git+https://github.com/ace-step/ACE-Step.git']

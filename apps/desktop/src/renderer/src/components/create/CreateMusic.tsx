@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, type MusicJob, type Resources } from '../../lib/api'
+import { api, type EngineState, type MusicJob, type Resources } from '../../lib/api'
 import { useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
 import { AudioFile } from '../common/AudioFile'
@@ -181,7 +181,8 @@ export function CreateMusic(): React.ReactElement {
   const [p, setP] = useState<MusicParams>(DEFAULT_PARAMS)
   const [mode, setMode] = useState<'simple' | 'studio'>('studio')
   const [advancedOpen, setAdvancedOpen] = useState(false)
-  const [engine, setEngine] = useState<boolean | null>(null)
+  const [engine, setEngine] = useState<EngineState | null>(null)
+  const [engineError, setEngineError] = useState('')
   const [online, setOnline] = useState(true)
   const [res, setRes] = useState<Resources | null>(null)
   const [loras, setLoras] = useState<LoraInfo[]>([])
@@ -204,13 +205,30 @@ export function CreateMusic(): React.ReactElement {
     setLoraDir(l.dir)
   }, [])
 
+  const loadStatus = useCallback(async () => {
+    try {
+      const s = await api.music.status()
+      setEngine(s.engine_state)
+      setEngineError(s.engine_error)
+      setRes(s.resources)
+      setOnline(true)
+    } catch {
+      setOnline(false)
+    }
+  }, [])
+
   useEffect(() => {
     refreshLoras().catch((e) => setError(String(e)))
-    api.music.status()
-      .then((s) => { setEngine(s.engine_installed); setRes(s.resources); setOnline(true) })
-      .catch(() => setOnline(false))
+    void loadStatus()
     return () => { if (timer.current) clearInterval(timer.current) }
-  }, [refreshLoras])
+  }, [refreshLoras, loadStatus])
+
+  // the first engine check loads PyTorch and takes about half a minute: ask again until it is done
+  useEffect(() => {
+    if (engine !== 'checking') return
+    const id = window.setInterval(() => void loadStatus(), 3000)
+    return () => window.clearInterval(id)
+  }, [engine, loadStatus])
 
   const busy = job?.status === 'queued' || job?.status === 'running'
   const count = p.songs * p.variations * p.queue
@@ -334,10 +352,16 @@ export function CreateMusic(): React.ReactElement {
           </div>
           <span style={{
             fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 12, whiteSpace: 'nowrap',
-            color: !online ? 'var(--orange)' : engine ? 'var(--green)' : 'var(--yellow)',
+            color: !online ? 'var(--orange)'
+              : engine === 'ready' ? 'var(--green)'
+              : engine === 'broken' ? 'var(--red)'
+              : engine === 'missing' ? 'var(--yellow)' : 'var(--text-secondary)',
             background: 'var(--bg-tertiary)', border: '1px solid var(--border-mid)'
           }}>
-            {!online ? 'Backend offline' : engine ? 'Engine ready' : 'Engine not installed'}
+            {!online ? 'Backend offline'
+              : engine === 'ready' ? 'Engine ready'
+              : engine === 'broken' ? 'Engine error'
+              : engine === 'missing' ? 'Engine not installed' : 'Checking engine…'}
           </span>
         </div>
 
@@ -346,10 +370,18 @@ export function CreateMusic(): React.ReactElement {
             The AI backend is offline. Open Settings → AI Engines and install the core backend. LoRA import works without it.
           </div>
         )}
-        {online && engine === false && (
+        {online && engine === 'missing' && (
           <div style={{ ...hint, color: 'var(--yellow)' }}>
             ACE-Step is not installed: results are silent placeholders. Install it in Settings → AI Engines.
           </div>
+        )}
+        {online && engine === 'broken' && (
+          <div style={{ ...hint, color: 'var(--red)' }}>
+            ACE-Step is installed but cannot start: {engineError || 'unknown error'}. Songs cannot be generated until this is fixed.
+          </div>
+        )}
+        {online && engine === 'checking' && (
+          <div style={hint}>Checking the music engine. The first check loads PyTorch and takes about 30 seconds.</div>
         )}
         {res?.low_memory && (
           <div style={{ ...hint, color: 'var(--orange)' }}>

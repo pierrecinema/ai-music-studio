@@ -106,6 +106,7 @@ const HANDLERS: Record<string, () => void> = {
   'view.pianoRoll': () => toggleView('piano-roll'),
   'view.mixer': () => toggleView('mixer'),
   'view.settings': () => useUIStore.getState().setActiveView('settings'),
+  'view.closeSettings': () => useUIStore.getState().closeSettings(),
   'view.fullscreen': toggleFullscreen,
 
   'app.winamp': () => window.dispatchEvent(new CustomEvent(WINAMP_EVENT)),

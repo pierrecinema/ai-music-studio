@@ -162,6 +162,9 @@ Getestet ist die Verbindung mit dem offiziellen MCP-Python-Client (Verbindung, W
 | Statusleiste: „AI backend offline“ | Einstellungen → AI Engines: Python vorhanden? „Install selected“ ausführen. |
 | Installation eines Pakets schlägt fehl | Python-Version prüfen (3.11 empfohlen), Log in AI Engines lesen, Paket einzeln erneut versuchen. |
 | ACE-Step liefert nur Stille | ACE-Step ist nicht installiert (Hinweis erscheint im Panel) oder Git fehlt. |
+| „Engine error“ / `numpy.core.umath failed to import` | TensorFlow (kommt mit basic-pitch) verträgt sich nicht mit NumPy 2 und stört `transformers`. Ab 0.1.8 schaltet das Backend die TensorFlow-Erkennung ab. Das Panel zeigt jetzt den echten Fehlertext statt „nicht installiert“. |
+| Einstellungen lassen sich nicht schließen | Knopf ✕ oben rechts, **Esc**, oder ein zweiter Klick auf das Zahnrad im Menü. |
+| basic-pitch meldet einen Fehler | TensorFlow läuft nicht mit NumPy 2. Nimm MuScriptor für Audio → MIDI (nur nicht kommerziell). |
 | Karaoke-Video: „ffmpeg not found“ | ffmpeg installieren, App neu starten. |
 | Standard-Port belegt | Nichts zu tun: Die App sucht selbst einen freien Port (ab 38765), siehe Statusleiste. |
 | „Python 3.14 is very new …“ | Python 3.11 daneben installieren (`winget install Python.Python.3.11`), den Tab „AI Engines“ neu öffnen. |

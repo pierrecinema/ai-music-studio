@@ -40,6 +40,7 @@ export const ACTIONS: ActionDef[] = [
   { id: 'view.pianoRoll', label: 'Show / hide piano roll', group: 'Views' },
   { id: 'view.mixer', label: 'Show / hide mixer', group: 'Views' },
   { id: 'view.settings', label: 'Open settings', group: 'Views' },
+  { id: 'view.closeSettings', label: 'Close settings', group: 'Views' },
   { id: 'view.fullscreen', label: 'Full screen', group: 'Views' },
 
   { id: 'app.winamp', label: 'Winamp mode', group: 'App' },
@@ -78,6 +79,7 @@ export const PRESETS: Record<PresetId, Preset> = {
       'view.pianoRoll': ['Shift+Tab', 'F12'],
       'view.mixer': ['Ctrl+Alt+M'],
       'view.settings': ['Ctrl+,'],
+      'view.closeSettings': ['Escape'],
       'view.fullscreen': ['F11'],
       'app.winamp': ['Ctrl+M'],
     },
@@ -107,6 +109,7 @@ export const PRESETS: Record<PresetId, Preset> = {
       'zoom.out': ['G'],
       'view.pianoRoll': ['Ctrl+E'],
       'view.mixer': ['F3'],
+      'view.closeSettings': ['Escape'],
       'app.winamp': ['Ctrl+M'],
     },
   },
@@ -162,5 +165,5 @@ export function buildMap(preset: PresetId): Map<string, string> {
 }
 
 export function formatCombo(c: string): string {
-  return c.replace(/(^|\+)Num(?=\S)/g, '$1Num ')
+  return c.replace(/(^|\+)Num(?=\S)/g, '$1Num ').replace('Escape', 'Esc')
 }

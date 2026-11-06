@@ -21,6 +21,8 @@ interface UIState {
   setPianoTool: (t: 'draw' | 'select' | 'erase') => void
   setPianoZoom: (z: number) => void
   toggleSidebar: () => void
+  previousView: View
+  closeSettings: () => void
   setActiveView: (view: View) => void
   setTheme: (theme: 'dark' | 'light') => void
   setLanguage: (lang: string) => void
@@ -49,7 +51,15 @@ export const useUIStore = create<UIState>()(
       setPianoTool: (pianoTool) => set({ pianoTool }),
       setPianoZoom: (pianoZoom) => set({ pianoZoom: Math.min(4, Math.max(0.25, pianoZoom)) }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
-      setActiveView: (activeView) => set({ activeView }),
+      previousView: 'timeline',
+      // remember where we came from so Settings can be closed again (never Settings itself)
+      setActiveView: (activeView) =>
+        set((s) => ({
+          activeView,
+          previousView: s.activeView !== activeView && s.activeView !== 'settings' ? s.activeView : s.previousView
+        })),
+      closeSettings: () =>
+        set((s) => (s.activeView === 'settings' ? { activeView: s.previousView || 'timeline' } : s)),
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),
       setZoom: (zoom) => set({ zoom }),

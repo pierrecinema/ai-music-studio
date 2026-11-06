@@ -17,6 +17,12 @@ def _tune_threads() -> None:
 
 _tune_threads()
 
+# transformers auto-detects TensorFlow (installed by basic-pitch). TensorFlow needs an old NumPy,
+# so importing it crashes ACE-Step ("numpy.core.umath failed to import"). We only use PyTorch.
+os.environ.setdefault("USE_TF", "0")
+os.environ.setdefault("USE_TORCH", "1")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI

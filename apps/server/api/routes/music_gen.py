@@ -393,7 +393,12 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
         engine_kind = "ace-step"
         try:
             pipe = _get_pipeline()
-        except ImportError:
+        except ModuleNotFoundError as e:
+            if (e.name or "").split(".")[0] != "acestep":
+                job.update(status="error", warnings=warnings,
+                           error=f"ACE-Step is installed but a dependency is missing: {e.name}. "
+                                 "Open Settings → AI Engines and press Install selected again.")
+                return
             pipe = None
             engine_kind = "stub"
             warnings.append(
@@ -401,7 +406,8 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
                 "Install it in Settings → AI Engines."
             )
         except Exception as e:
-            job.update(status="error", error=str(e), warnings=warnings)
+            job.update(status="error", warnings=warnings,
+                       error=f"ACE-Step is installed but cannot start: {_short(e)}")
             return
 
         for i in range(total):
@@ -446,15 +452,45 @@ async def job_status(job_id: str):
     return job
 
 
+_engine: dict = {"state": "unknown", "error": ""}
+_engine_lock = threading.Lock()
+
+
+def _short(e: BaseException) -> str:
+    """The root cause of a (possibly wrapped) import error, in one readable line."""
+    lines = [l.strip() for l in str(e).splitlines() if l.strip()]
+    msg = lines[-1] if lines else type(e).__name__
+    if "numpy.core.umath" in msg or "_ARRAY_API" in msg:
+        msg += (" (a package was built for NumPy 1.x, usually TensorFlow from basic-pitch; "
+                "restart the app, and if it persists press Install selected again)")
+    return msg[:400]
+
+
+def _probe_engine() -> None:
+    """Really import the pipeline once: 'installed' must mean 'usable'."""
+    try:
+        import acestep.pipeline_ace_step  # type: ignore  # noqa: F401
+        _engine.update(state="ready", error="")
+    except ModuleNotFoundError as e:
+        if (e.name or "").split(".")[0] == "acestep":
+            _engine.update(state="missing", error="")
+        else:
+            _engine.update(state="broken", error=f"a dependency is missing: {e.name}")
+    except Exception as e:
+        _engine.update(state="broken", error=_short(e))
+
+
 @router.get("/status")
 async def status():
-    try:
-        import acestep  # type: ignore  # noqa: F401
-        engine = True
-    except ImportError:
-        engine = False
+    with _engine_lock:
+        if _engine["state"] == "unknown":
+            _engine["state"] = "checking"   # the first import takes ~30 s: do it in the background
+            threading.Thread(target=_probe_engine, daemon=True).start()
+    state = _engine["state"]
     return {
-        "engine_installed": engine,
+        "engine_state": state,                       # checking | ready | missing | broken
+        "engine_error": _engine["error"],
+        "engine_installed": state in ("checking", "ready", "broken"),
         "model_dir": str(MODEL_DIR),
         "lora_dir": str(LORA_DIR),
         "resources": get_resources(),

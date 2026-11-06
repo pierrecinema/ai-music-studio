@@ -3,6 +3,7 @@ import glob
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import uuid
 
@@ -29,6 +30,12 @@ class AudioToMidiRequest(BaseModel):
 
 
 def _muscriptor_cli() -> str | None:
+    # the backend runs from the app's own venv: its Scripts folder is not on PATH
+    scripts = os.path.dirname(sys.executable)
+    for name in ("muscriptor.exe", "muscriptor"):
+        candidate = os.path.join(scripts, name)
+        if os.path.exists(candidate):
+            return candidate
     return shutil.which("muscriptor")
 
 
@@ -123,7 +130,10 @@ async def convert_audio_to_midi(req: AudioToMidiRequest):
     if used == "basic-pitch":
         try:
             midi_path = _run_basic_pitch(req, out_dir)
-        except ImportError:
+        except ModuleNotFoundError as e:
+            if (e.name or "").split(".")[0] != "basic_pitch":
+                raise HTTPException(500, f"basic-pitch is installed but a dependency is missing: {e.name}. "
+                                         "Press Install selected in Settings → AI Engines again.")
             import mido
             midi_path = os.path.join(out_dir, "output.mid")
             mid = mido.MidiFile()
@@ -131,6 +141,11 @@ async def convert_audio_to_midi(req: AudioToMidiRequest):
             mid.save(midi_path)
             used = "stub"
             warnings.append("No transcription engine installed (pip install basic-pitch). Wrote an empty MIDI file.")
+        except Exception as e:
+            hint = ""
+            if "numpy" in str(e).lower() or "ml_dtypes" in str(e).lower():
+                hint = " TensorFlow (used by basic-pitch) does not work with NumPy 2: use MuScriptor instead."
+            raise HTTPException(500, f"basic-pitch failed: {str(e).strip().splitlines()[-1][:300]}.{hint}")
 
     try:
         notes = _read_notes(midi_path)

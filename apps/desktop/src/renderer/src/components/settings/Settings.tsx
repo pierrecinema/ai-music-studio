@@ -176,6 +176,7 @@ export function Settings(): React.ReactElement {
     return wanted ?? 'general'
   })
   const [showKey, setShowKey] = useState(false)
+  const closeSettings = useUIStore((s) => s.closeSettings)
 
   const handleLanguageChange = (code: string) => {
     setLanguage(code)
@@ -184,7 +185,19 @@ export function Settings(): React.ReactElement {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100%', background: 'var(--bg-primary)' }}>
+    <div style={{ display: 'flex', height: '100%', background: 'var(--bg-primary)', position: 'relative' }}>
+      {/* Close button (Esc and a second click on the Settings icon also close it) */}
+      <button
+        onClick={closeSettings}
+        title="Close settings (Esc)"
+        aria-label="Close settings"
+        style={{
+          position: 'absolute', top: 10, right: 14, zIndex: 5, width: 30, height: 30, borderRadius: 8,
+          border: '1px solid var(--border-mid)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
+          cursor: 'pointer', fontSize: 16, lineHeight: 1,
+        }}
+      >✕</button>
+
       {/* Tab nav */}
       <div style={{ width: 160, background: 'var(--bg-secondary)', borderRight: '1px solid var(--border)', padding: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10, padding: '0 6px' }}>{t('settings.title')}</div>

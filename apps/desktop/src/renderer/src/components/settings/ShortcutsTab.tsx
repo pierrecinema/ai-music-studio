@@ -36,7 +36,7 @@ export function ShortcutsTab(): React.ReactElement {
         Keyboard shortcuts
       </div>
       <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-        Many keys are the same in both DAWs. Where they differ, pick the layout you are used to. Shortcuts do not fire while you type in a text field.
+        Many keys are the same in both DAWs. Where they differ, pick the layout you are used to. Shortcuts do not fire while you type in a text field (function keys and Esc excepted).
       </div>
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

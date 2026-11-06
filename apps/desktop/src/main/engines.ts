@@ -17,17 +17,18 @@ interface PythonCmd { cmd: string; args: string[]; version: string }
 
 const MIN_PYTHON: [number, number] = [3, 10]
 
-// pip package name used to detect each group as installed
-const GROUP_PROBE: Record<string, string> = {
-  core: 'fastapi',
-  torch: 'torch',
-  demucs: 'demucs',
-  basicpitch: 'basic-pitch',
-  matchering: 'matchering',
-  whisper: 'faster-whisper',
-  acestep: 'acestep',
-  muscriptor: 'muscriptor',
-  video: 'opencv-python-headless'
+// pip package names (lower case, "_" written as "-") that show a group is installed.
+// ACE-Step is published as "ace_step", so both spellings are accepted.
+const GROUP_PROBE: Record<string, string[]> = {
+  core: ['fastapi'],
+  torch: ['torch'],
+  demucs: ['demucs'],
+  basicpitch: ['basic-pitch'],
+  matchering: ['matchering'],
+  whisper: ['faster-whisper'],
+  acestep: ['ace-step', 'acestep'],
+  muscriptor: ['muscriptor'],
+  video: ['opencv-python-headless', 'opencv-python']
 }
 
 export function serverDir(): string {
@@ -101,7 +102,7 @@ export function getStatus(serverReady: boolean): EngineStatus {
   const py = findPython()
   const have = installedPackages()
   const installed: Record<string, boolean> = {}
-  for (const [g, pkg] of Object.entries(GROUP_PROBE)) installed[g] = have.has(pkg)
+  for (const [g, names] of Object.entries(GROUP_PROBE)) installed[g] = names.some((n) => have.has(n))
   return {
     pythonFound: py !== null,
     pythonVersion: py?.version ?? null,

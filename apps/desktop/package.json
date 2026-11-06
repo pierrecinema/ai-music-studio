@@ -1,18 +1,22 @@
 {
   "name": "desktop",
-  "version": "0.1.0",
+  "version": "0.1.1-alpha",
+  "description": "AI Music Studio - open-source AI music production studio",
+  "author": "pierrecinema",
   "private": true,
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
-    "build": "electron-vite build && electron-builder",
+    "build": "electron-vite build && electron-builder --win nsis --publish never",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p src/renderer/tsconfig.json"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
+    "electron-log": "^5.1.2",
     "electron-updater": "^6.1.7",
     "i18next": "^23.7.11",
+    "nanoid": "^5.0.7",
     "i18next-electron-fs-backend": "^3.0.1",
     "openai": "^4.26.0",
     "react": "^18.2.0",

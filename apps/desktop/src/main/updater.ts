@@ -4,6 +4,7 @@ import log from 'electron-log'
 
 autoUpdater.logger = log
 autoUpdater.autoDownload = false   // ask user first
+autoUpdater.allowPrerelease = true
 autoUpdater.autoInstallOnAppQuit = true
 
 export function setupUpdater(win: BrowserWindow): void {

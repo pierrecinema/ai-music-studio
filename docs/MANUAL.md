@@ -118,6 +118,17 @@ Dazu gehören Stopp, Zurück zum Anfang, Spur duplizieren (Strg+D), neues Projek
 - Aufgenommen sind nur Kürzel für Funktionen, die die App hat. Loop, Quantisieren, Comping u. Ä. folgen, wenn es die Funktionen gibt.
 - Quellen: Ableton-Kürzel aus dem Live-12-Handbuch (Windows). Cubase-Kürzel sind die Standard-Tastenbefehle laut Steinberg-Forenliste (Stand Cubase 11), bei neueren Versionen können einzelne abweichen.
 
+## Modelle und Speicherplatz (Einstellungen → Models)
+
+Die KI-Modelle sind groß (ACE-Step allein rund 8 GB). Der Tab **Models** zeigt, was auf der Platte liegt, und lässt dich den Ort ändern:
+
+- **Anzeige:** Für jedes Modell Größe, Zustand (*Downloaded*, *Downloading…* mit Geschwindigkeit, *Incomplete*, *Not downloaded yet*) und seine Bestandteile (bei ACE-Step: Transformer, Autoencoder, Vocoder, Text-Encoder). Dazu freier Platz auf dem Laufwerk, die LoRAs und die Python-Umgebung. Die Ansicht aktualisiert sich alle paar Sekunden, du siehst einen laufenden Download also wachsen.
+- **Speicherort ändern:** **Change folder…** öffnet die Ordnerauswahl. Du entscheidest, ob die vorhandenen Modelle **verschoben** werden (empfohlen, nichts wird neu geladen) oder ob nur der neue Ordner benutzt wird (Modelle werden bei Bedarf neu geladen, die alten Dateien bleiben liegen). Beim Verschieben prüft die App den freien Platz, zeigt Fortschritt, erhält die Verknüpfungen des Hugging-Face-Aufbaus und löscht die alten Dateien erst nach vollständigem Erfolg. **Cancel** bricht ab, ohne etwas zu verändern. Das Backend startet danach automatisch neu. **Back to the default folder** stellt den Standard wieder her.
+- **Löschen:** **Delete to free space** entfernt ein Modell nach Rückfrage. Es wird beim nächsten Gebrauch neu geladen. LoRAs lassen sich einzeln löschen (die Datei wird wirklich entfernt).
+- **Alle Downloads an einem Ort:** Auch Whisper, MuScriptor (über Hugging Face) und Demucs (über PyTorch) laden in den gewählten Modelle-Ordner.
+- **Modellwahl:** Mit der aktuellen Engine ist ACE-Step v1 (3.5B) das einzige Musikmodell. Die Varianten aus ACE-Step Studio (XL, Turbo, quantisiert) brauchen eine andere Engine.
+- LoRAs bleiben im eigenen LoRA-Ordner (`%USERPROFILE%\.ai-music-studio\loras`), der Modelle-Ordner verschiebt sie nicht.
+
 ## 4. Speicherorte
 
 | Was | Wo |
@@ -125,7 +136,7 @@ Dazu gehören Stopp, Zurück zum Anfang, Spur duplizieren (Strg+D), neues Projek
 | Einstellungen, API-Schlüssel, Logs der App | `%APPDATA%\desktop` |
 | Python-Umgebung der Engines | `%APPDATA%\desktop\engines\venv` |
 | LoRAs | `%USERPROFILE%\.ai-music-studio\loras` |
-| ACE-Step-Modelle | `%USERPROFILE%\.ai-music-studio\models\ace-step` |
+| Modelle (ACE-Step, Whisper, Demucs) | Standard `%USERPROFILE%\.ai-music-studio\models`, **wählbar** unter Einstellungen → Models |
 | Ergebnisse (Songs, Stems, Mastering, Karaoke) | `%TEMP%` (Ordner `ams_music`, `ams_master`, `ams_karaoke`, …) |
 
 Ergebnisse liegen im Temp-Ordner und können von Windows aufgeräumt werden: Wichtiges bitte über **Open file** an einen festen Ort kopieren.
@@ -166,6 +177,7 @@ Getestet ist die Verbindung mit dem offiziellen MCP-Python-Client (Verbindung, W
 | Statusleiste: „AI backend offline“ | Einstellungen → AI Engines: Python vorhanden? „Install selected“ ausführen. |
 | Installation eines Pakets schlägt fehl | Python-Version prüfen (3.11 empfohlen), Log in AI Engines lesen, Paket einzeln erneut versuchen. |
 | ACE-Step liefert nur Stille | ACE-Step ist nicht installiert (Hinweis erscheint im Panel) oder Git fehlt. |
+| Fehler `Repo id must use alphanumeric chars …` mit einem LoRA | Behoben in 0.1.11: ACE-Step erwartet für ein LoRA einen Ordner mit `pytorch_lora_weights.safetensors`, die App legt ihn jetzt selbst an (`loras\.engine`). |
 | „Engine error“ / `numpy.core.umath failed to import` | TensorFlow (kommt mit basic-pitch) verträgt sich nicht mit NumPy 2 und stört `transformers`. Ab 0.1.8 schaltet das Backend die TensorFlow-Erkennung ab. Das Panel zeigt jetzt den echten Fehlertext statt „nicht installiert“. |
 | Einstellungen lassen sich nicht schließen | Knopf ✕ oben rechts, **Esc**, oder ein zweiter Klick auf das Zahnrad im Menü. |
 | basic-pitch meldet einen Fehler | TensorFlow läuft nicht mit NumPy 2. Nimm MuScriptor für Audio → MIDI (nur nicht kommerziell). |

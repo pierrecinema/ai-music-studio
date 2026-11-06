@@ -5,6 +5,7 @@ import inspect
 import json
 import os
 import random
+import re
 import shutil
 import subprocess
 import tempfile
@@ -53,7 +54,7 @@ def _scan_loras() -> list[dict]:
     items = {i["id"]: i for i in _load_index() if Path(i["path"]).exists()}
     if LORA_DIR.exists():
         for p in LORA_DIR.iterdir():
-            if p.name == "index.json":
+            if p.name == "index.json" or p.name.startswith("."):   # ".engine" holds staged adapters
                 continue
             if p.is_dir() or p.suffix.lower() in LORA_EXTS:
                 lid = p.stem if p.is_file() else p.name
@@ -62,6 +63,33 @@ def _scan_loras() -> list[dict]:
                     "path": str(p), "tags": [], "default_strength": 1.0,
                 })
     return sorted(items.values(), key=lambda x: x["name"].lower())
+
+
+def _engine_lora_dir(entry: dict) -> str:
+    """ACE-Step loads a LoRA from a FOLDER that holds pytorch_lora_weights.safetensors (or a
+    Hugging Face repo id), never from a single file. Stage single files into such a folder."""
+    p = Path(entry["path"])
+    wanted = "pytorch_lora_weights.safetensors"
+    if p.is_dir():
+        if (p / wanted).exists():
+            return str(p)
+        candidates = sorted(p.glob("*.safetensors"))
+        if not candidates:
+            raise RuntimeError(f"The LoRA folder '{p.name}' has no .safetensors file.")
+        src = candidates[0]
+    else:
+        src = p
+    stage = LORA_DIR / ".engine" / re.sub(r"[^\w.-]+", "_", entry["id"])
+    target = stage / wanted
+    stage.mkdir(parents=True, exist_ok=True)
+    if not target.exists() or target.stat().st_size != src.stat().st_size:
+        if target.exists():
+            target.unlink()
+        try:
+            os.link(src, target)            # no extra disk space on the same volume
+        except OSError:
+            shutil.copy2(src, target)
+    return str(stage)
 
 
 class LoraImport(BaseModel):
@@ -373,7 +401,11 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
     if chosen:
         # The engine loads one adapter at a time: use the strongest one.
         best, lora_weight = max(chosen, key=lambda c: c[1])
-        lora_path = best["path"]
+        try:
+            lora_path = _engine_lora_dir(best)
+        except (RuntimeError, OSError) as e:
+            job.update(status="error", warnings=warnings, error=f"Cannot prepare the LoRA '{best['name']}': {e}")
+            return
         if len(chosen) > 1:
             warnings.append(
                 f"Engine applies one LoRA per render; using '{best['name']}'. "

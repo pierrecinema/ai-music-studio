@@ -1,6 +1,6 @@
-import { cpSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs'
+import { cpSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
 import { homedir } from 'os'
-import { basename, extname, join } from 'path'
+import { basename, extname, join, resolve, sep } from 'path'
 
 // Same folder and index format the Python backend uses, so both sides see the same LoRAs.
 export const LORA_DIR = join(process.env.AMS_HOME ?? join(homedir(), '.ai-music-studio'), 'loras')
@@ -35,7 +35,7 @@ export function listLoras(): { dir: string; loras: LoraEntry[] } {
   const byId = new Map(readIndex().filter((i) => existsSync(i.path)).map((i) => [i.id, i]))
   if (existsSync(LORA_DIR)) {
     for (const name of readdirSync(LORA_DIR)) {
-      if (name === 'index.json') continue
+      if (name === 'index.json' || name.startsWith('.')) continue   // ".engine" holds staged adapters
       const full = join(LORA_DIR, name)
       const isDir = statSync(full).isDirectory()
       if (!isDir && !EXTS.has(extname(name).toLowerCase())) continue
@@ -75,4 +75,16 @@ export function importLora(
 
 export function removeLora(id: string): void {
   writeIndex(readIndex().filter((i) => i.id !== id))
+}
+
+/** Delete the LoRA file or folder from disk and from the index (only inside the LoRA folder). */
+export function deleteLora(id: string): void {
+  const entry = listLoras().loras.find((l) => l.id === id)
+  if (!entry) return
+  const target = resolve(entry.path)
+  if (!target.toLowerCase().startsWith(resolve(LORA_DIR).toLowerCase() + sep)) {
+    throw new Error('Only LoRAs inside the LoRA folder can be deleted.')
+  }
+  rmSync(target, { recursive: true, force: true })
+  removeLora(id)
 }

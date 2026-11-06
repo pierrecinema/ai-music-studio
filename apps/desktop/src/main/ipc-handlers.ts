@@ -1,7 +1,10 @@
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron'
 import { ServerManager } from './server-manager'
 import { getStatus, installGroups, cancelInstall } from './engines'
-import { listLoras, importLora, removeLora, LORA_DIR, type LoraEntry } from './loras'
+import { listLoras, importLora, removeLora, deleteLora, LORA_DIR, type LoraEntry } from './loras'
+import { deleteModel, diskSpace, getOverview, moveModels } from './models'
+import { MODEL_SUBDIRS, modelsDir, writeSettings, type ModelId } from './settings'
+import { resolve } from 'path'
 import { downloadFile, listFiles, parseRepo, searchRepos } from './huggingface'
 import * as fs from 'fs'
 
@@ -42,6 +45,55 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     }
   })
   ipcMain.handle('loras:remove', (_, id: string) => removeLora(id))
+
+  // Models and storage: overview, change folder (optionally moving the files), delete
+  let moving = false
+  let moveCancelled = false
+  ipcMain.handle('models:overview', () => getOverview())
+  ipcMain.handle('models:pick-dir', async () => {
+    const r = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] })
+    return r.filePaths[0] ?? null
+  })
+  ipcMain.handle('models:space', (_, path: string) => diskSpace(path))
+  ipcMain.handle('models:open', (_, which: 'models' | 'loras') => {
+    void shell.openPath(which === 'loras' ? LORA_DIR : modelsDir())
+  })
+  ipcMain.handle('models:move', async (e, newBase: string, move: boolean) => {
+    if (moving) return { ok: false as const, error: 'A move is already running.' }
+    moving = true
+    moveCancelled = false
+    try {
+      await serverManager.stop()          // files must not be in use while they move
+      if (move) {
+        await moveModels(newBase, (p) => e.sender.send('models:progress', p), () => moveCancelled)
+      } else {
+        fs.mkdirSync(newBase, { recursive: true })
+        writeSettings({ modelsDir: resolve(newBase) })
+      }
+      return { ok: true as const }
+    } catch (err) {
+      return { ok: false as const, error: (err as Error).message }
+    } finally {
+      moving = false
+      void serverManager.start()          // comes back with the (new or unchanged) folder
+    }
+  })
+  ipcMain.handle('models:cancel-move', () => { moveCancelled = true })
+  ipcMain.handle('models:delete', async (_, id: string) => {
+    if (!(id in MODEL_SUBDIRS)) return { ok: false as const, error: 'Unknown model.' }
+    try {
+      await serverManager.stop()
+      deleteModel(id as ModelId)
+      return { ok: true as const }
+    } catch (err) {
+      return { ok: false as const, error: (err as Error).message }
+    } finally {
+      void serverManager.start()
+    }
+  })
+  ipcMain.handle('models:delete-lora', (_, id: string) => {
+    try { deleteLora(id); return { ok: true as const } } catch (err) { return { ok: false as const, error: (err as Error).message } }
+  })
 
   // Hugging Face: search, list weight files, download into the LoRA folder (one download at a time)
   let hfAbort: AbortController | null = null

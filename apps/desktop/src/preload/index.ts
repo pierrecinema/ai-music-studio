@@ -22,6 +22,21 @@ const api = {
     remove: (id: string) => ipcRenderer.invoke('loras:remove', id),
     pick: (mode: 'file' | 'folder') => ipcRenderer.invoke('dialog:open-lora', mode)
   },
+  models: {
+    overview: () => ipcRenderer.invoke('models:overview'),
+    pickDir: () => ipcRenderer.invoke('models:pick-dir'),
+    space: (path: string) => ipcRenderer.invoke('models:space', path),
+    open: (which: 'models' | 'loras') => ipcRenderer.invoke('models:open', which),
+    move: (newBase: string, move: boolean) => ipcRenderer.invoke('models:move', newBase, move),
+    cancelMove: () => ipcRenderer.invoke('models:cancel-move'),
+    delete: (id: string) => ipcRenderer.invoke('models:delete', id),
+    deleteLora: (id: string) => ipcRenderer.invoke('models:delete-lora', id),
+    onProgress: (cb: (p: { copied: number; total: number; phase: string }) => void) => {
+      const h = (_: unknown, p: { copied: number; total: number; phase: string }) => cb(p)
+      ipcRenderer.on('models:progress', h)
+      return () => ipcRenderer.removeListener('models:progress', h)
+    }
+  },
   huggingface: {
     search: (query: string) => ipcRenderer.invoke('hf:search', query),
     files: (repo: string) => ipcRenderer.invoke('hf:files', repo),

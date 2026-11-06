@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type EngineState, type MusicJob, type Resources } from '../../lib/api'
 import { useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
+import { useUIStore } from '../../stores/ui.store'
 import { AudioFile } from '../common/AudioFile'
 import { LoraBrowser } from './LoraBrowser'
 import {
@@ -652,6 +653,15 @@ export function CreateMusic(): React.ReactElement {
         {job?.status === 'error' && <div style={{ color: 'var(--red)', fontSize: 12 }}>{job.error}</div>}
         {job?.warnings.map((w, i) => <div key={i} style={{ color: 'var(--yellow)', fontSize: 11 }}>{w}</div>)}
         {!job && !error && <div style={hint}>Your songs appear here. Describe the music on the left and press Create.</div>}
+        {busy && (
+          <div style={{ ...hint, border: '1px solid var(--border-mid)', borderRadius: 8, padding: 10 }}>
+            Working on it. The very first song also downloads the music model (about 8 GB) and can take a long time.{' '}
+            <button
+              className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 8px' }}
+              onClick={() => { sessionStorage.setItem('ams-settings-tab', 'models'); useUIStore.getState().setActiveView('settings') }}
+            >Watch it in Settings → Models</button>
+          </div>
+        )}
         {job?.results.map((r, i) => (
           <div key={r.audio_file} style={{ ...card, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)' }}>

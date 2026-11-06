@@ -2,6 +2,25 @@ export {}
 
 declare global {
   const __APP_VERSION__: string
+  interface ModelsOverview {
+    baseDir: string
+    defaultDir: string
+    usingDefault: boolean
+    free: number
+    total: number
+    models: Array<{
+      id: 'acestep' | 'huggingface' | 'torch'
+      name: string
+      description: string
+      dir: string
+      bytes: number
+      status: 'missing' | 'partial' | 'downloading' | 'complete'
+      components: Array<{ name: string; bytes: number }>
+    }>
+    loras: Array<{ id: string; name: string; kind: string; bytes: number; source?: string; license?: string }>
+    loraDir: string
+    env: { path: string; bytes: number }
+  }
   interface HfRepoInfo {
     id: string
     likes: number
@@ -35,6 +54,17 @@ declare global {
           Promise<{ ok: true; lora: LoraInfo } | { ok: false; error: string }>
         remove: (id: string) => Promise<void>
         pick: (mode: 'file' | 'folder') => Promise<string | null>
+      }
+      models: {
+        overview: () => Promise<ModelsOverview>
+        pickDir: () => Promise<string | null>
+        space: (path: string) => Promise<{ free: number; total: number }>
+        open: (which: 'models' | 'loras') => Promise<void>
+        move: (newBase: string, move: boolean) => Promise<{ ok: true } | { ok: false; error: string }>
+        cancelMove: () => Promise<void>
+        delete: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>
+        deleteLora: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>
+        onProgress: (cb: (p: { copied: number; total: number; phase: string }) => void) => () => void
       }
       huggingface: {
         search: (query: string) => Promise<{ ok: true; repos: HfRepoInfo[] } | { ok: false; error: string }>

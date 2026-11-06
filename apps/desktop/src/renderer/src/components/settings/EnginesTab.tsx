@@ -63,6 +63,12 @@ export function EnginesTab(): React.ReactElement {
           Python {status.pythonVersion} · GPU: {status.gpu} · AI backend: {status.serverReady ? 'running' : 'not running'}
         </div>
       )}
+      {status?.pythonVersion && Number(status.pythonVersion.split('.')[1]) >= 13 && (
+        <div style={{ color: 'var(--yellow)', fontSize: 11 }}>
+          Python {status.pythonVersion} is very new: some engines (PyTorch, basic-pitch, Whisper) may fail to install.
+          Python 3.11 is recommended: <code>winget install Python.Python.3.11</code>, then reopen this page.
+        </div>
+      )}
 
       <div className="panel">
         {GROUPS.map(g => {

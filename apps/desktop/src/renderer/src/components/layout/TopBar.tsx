@@ -91,9 +91,9 @@ export function TopBar(): React.ReactElement {
           <img
             src={logo}
             alt="AI Music Studio"
-            width={30}
-            height={30}
-            style={{ background: '#f3f0e9', borderRadius: 8, padding: 2, display: 'block' }}
+            width={34}
+            height={34}
+            style={{ display: 'block', filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.85))' }}
           />
           <span style={{ fontWeight: 800, fontSize: 12, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
             AI Music Studio

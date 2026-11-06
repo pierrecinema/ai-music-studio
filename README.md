@@ -17,6 +17,8 @@
 | **AI Chat** | Claude (Anthropic) or ChatGPT (OpenAI) — your choice |
 | **Multilingual** | 🇩🇪 🇬🇧 🇫🇷 🇪🇸 🇮🇹 🇵🇹 🇨🇳 🇯🇵 🇰🇷 |
 
+**Manual (German, incl. first-time setup):** [docs/MANUAL.md](docs/MANUAL.md)
+
 ## Low-resource mode (8 GB VRAM / 12 GB RAM)
 
 The backend measures VRAM/RAM at startup (`GET /health` → `hardware.resources`) and switches to

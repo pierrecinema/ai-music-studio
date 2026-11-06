@@ -47,7 +47,11 @@ export function hasVenv(): boolean {
 }
 
 export function findPython(): PythonCmd | null {
-  const candidates: Array<[string, string[]]> = [['py', ['-3']], ['python', []], ['python3', []]]
+  // Prefer versions that have wheels for the ML packages; the newest Python often does not yet.
+  const candidates: Array<[string, string[]]> = [
+    ['py', ['-3.11']], ['py', ['-3.12']], ['py', ['-3.10']], ['py', ['-3.13']],
+    ['py', ['-3']], ['python', []], ['python3', []]
+  ]
   for (const [cmd, pre] of candidates) {
     const r = spawnSync(cmd, [...pre, '--version'], { encoding: 'utf-8', windowsHide: true })
     const m = /Python (\d+)\.(\d+)\.(\d+)/.exec(`${r.stdout}${r.stderr}`)

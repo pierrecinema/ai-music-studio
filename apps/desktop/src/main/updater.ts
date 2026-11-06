@@ -28,7 +28,13 @@ export function setupUpdater(win: BrowserWindow): void {
   // Background checks must not pop up errors (offline, tag without a release yet, ...)
   let manualCheck = false
   autoUpdater.on('error', (err) => {
-    if (manualCheck) send('update:error', err?.message)
+    if (!manualCheck) return
+    const msg = err?.message ?? 'Unknown error'
+    // GitHub knows the tag for ~2 minutes before the build has attached the installer
+    const publishing = /latest\.yml/.test(msg) && /404/.test(msg)
+    send('update:error', publishing
+      ? 'A new version is being published right now. Please try again in a minute or two.'
+      : msg.split('\n')[0].slice(0, 300))
   })
 
   const check = async (manual: boolean): Promise<void> => {

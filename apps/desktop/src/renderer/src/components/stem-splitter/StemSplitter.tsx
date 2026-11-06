@@ -19,7 +19,7 @@ export function StemSplitter(): React.ReactElement {
   const [isProcessing, setIsProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<StemResult | null>(null)
-  const [model, setModel] = useState<'htdemucs' | 'htdemucs_ft' | 'mdx_extra'>('htdemucs_ft')
+  const [model, setModel] = useState<'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s'>('htdemucs_ft')
   const [stems, setStems] = useState<string[]>(['vocals', 'drums', 'bass', 'other'])
   const dropRef = useRef<HTMLDivElement>(null)
 
@@ -28,7 +28,7 @@ export function StemSplitter(): React.ReactElement {
     const f = e.dataTransfer.files[0]
     if (f) {
       setFileName(f.name)
-      setFile(f.path || f.name)
+      setFile((f as File & { path?: string }).path || f.name)
     }
   }
 
@@ -97,13 +97,16 @@ export function StemSplitter(): React.ReactElement {
         <div>
           <div style={labelStyle}>{t('stemSplitter.model')}</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {(['htdemucs', 'htdemucs_ft', 'mdx_extra'] as const).map((m) => (
+            {(['htdemucs', 'htdemucs_ft', 'mdx_extra', 'htdemucs_6s'] as const).map((m) => (
               <button
                 key={m}
-                onClick={() => setModel(m)}
+                onClick={() => {
+                  setModel(m)
+                  if (m === 'htdemucs_6s') setStems(['vocals', 'drums', 'bass', 'piano', 'guitar', 'other'])
+                }}
                 style={{ padding: '4px 10px', borderRadius: 4, border: '1px solid var(--border)', background: model === m ? 'var(--accent)' : 'var(--bg-secondary)', color: model === m ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11 }}
               >
-                {m === 'htdemucs' ? 'Fast' : m === 'htdemucs_ft' ? 'Balanced' : 'Quality'}
+                {m === 'htdemucs' ? 'Fast' : m === 'htdemucs_ft' ? 'Balanced' : m === 'mdx_extra' ? 'Quality' : '6 Stems'}
               </button>
             ))}
           </div>

@@ -17,6 +17,23 @@
 | **AI Chat** | Claude (Anthropic) or ChatGPT (OpenAI) — your choice |
 | **Multilingual** | 🇩🇪 🇬🇧 🇫🇷 🇪🇸 🇮🇹 🇵🇹 🇨🇳 🇯🇵 🇰🇷 |
 
+## Low-resource mode (8 GB VRAM / 12 GB RAM)
+
+The backend measures VRAM/RAM at startup (`GET /health` → `hardware.resources`) and switches to
+low-memory mode on small machines: CPU offload for idle model parts, fp16, shorter max song length,
+small Demucs segments, and a smaller Whisper model. Only one heavy generation runs at a time.
+Override detection with `AMS_VRAM_GB=8`.
+
+Extra engines are optional and installed separately:
+
+```bash
+pip install git+https://github.com/ace-step/ACE-Step.git   # full-song generation + LoRA
+pip install matchering faster-whisper                        # mastering, lyric timing
+# ffmpeg on PATH for karaoke video export
+```
+
+LoRAs: drop `.safetensors` files/folders into `~/.ai-music-studio/loras` or import them in the Music Generator panel.
+
 ## Architecture
 
 ```

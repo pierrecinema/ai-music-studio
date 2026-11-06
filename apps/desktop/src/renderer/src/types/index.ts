@@ -78,4 +78,4 @@ export interface StemResult {
   guitar?: string
 }
 
-export type View = 'timeline' | 'piano-roll' | 'mixer' | 'vocal-editor' | 'instruments' | 'ai-chat' | 'stem-splitter' | 'video-composer' | 'settings'
+export type View = 'timeline' | 'piano-roll' | 'mixer' | 'vocal-editor' | 'instruments' | 'ai-chat' | 'stem-splitter' | 'video-composer' | 'music-gen' | 'mastering' | 'karaoke' | 'settings'

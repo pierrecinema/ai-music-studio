@@ -20,7 +20,7 @@ _tune_threads()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes import vocal, instruments, stems, audio_to_midi, video, ai_chat, vst, mcp_server
+from api.routes import vocal, instruments, stems, audio_to_midi, video, ai_chat, vst, mcp_server, music_gen, mastering, karaoke
 
 app = FastAPI(title="AI Music Studio Server", version="0.1.0")
 
@@ -39,6 +39,9 @@ app.include_router(video.router, prefix="/video", tags=["video"])
 app.include_router(ai_chat.router, prefix="/ai", tags=["ai"])
 app.include_router(vst.router, prefix="/vst", tags=["vst"])
 app.include_router(mcp_server.router, prefix="/mcp", tags=["mcp"])
+app.include_router(music_gen.router, prefix="/music", tags=["music"])
+app.include_router(mastering.router, prefix="/mastering", tags=["mastering"])
+app.include_router(karaoke.router, prefix="/karaoke", tags=["karaoke"])
 
 
 @app.get("/health")
@@ -55,6 +58,11 @@ async def health():
         }
     except Exception:
         hw_info = {"gpu": "unknown", "backend": "cpu"}
+    try:
+        from services.resource_profile import get_resources
+        hw_info["resources"] = get_resources()
+    except Exception:
+        pass
     return {"status": "ok", "version": "0.1.0", "hardware": hw_info}
 
 

@@ -36,7 +36,7 @@ export function Timeline(): React.ReactElement {
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', truncate: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
           {track.name}
         </div>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{track.type}</div>

@@ -8,24 +8,6 @@ type UpdateState =
   | { phase: 'ready'; version: string }
   | { phase: 'error'; message: string }
 
-declare global {
-  interface Window {
-    api: {
-      updater: {
-        check: () => Promise<void>
-        download: () => Promise<void>
-        install: () => Promise<void>
-        onChecking: (cb: () => void) => void
-        onAvailable: (cb: (info: { version: string; releaseDate: string }) => void) => void
-        onNotAvailable: (cb: () => void) => void
-        onProgress: (cb: (p: { percent: number; bytesPerSecond: number }) => void) => void
-        onDownloaded: (cb: (info: { version: string }) => void) => void
-        onError: (cb: (msg: string) => void) => void
-      }
-    }
-  }
-}
-
 export function UpdateToast(): React.ReactElement | null {
   const [state, setState] = useState<UpdateState>({ phase: 'idle' })
   const [dismissed, setDismissed] = useState(false)

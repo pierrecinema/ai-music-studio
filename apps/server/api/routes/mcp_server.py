@@ -3,8 +3,8 @@ AI Music Studio MCP Server
 Exposes the studio as an MCP server so Claude and other AI agents
 can directly control tracks, generate vocals, split stems etc.
 """
-from fastapi import APIRouter
-from pydantic import BaseModel
+import json
+from fastapi import APIRouter, HTTPException
 from typing import Any
 
 router = APIRouter()
@@ -103,6 +103,95 @@ MCP_TOOLS = [
             },
             "required": ["instrumentId", "notes"]
         }
+    },
+    {
+        "name": "generate_music",
+        "description": "Generate a full song with ACE-Step (optionally with LoRA styles). Returns a jobId; poll get_music_job.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "prompt": {"type": "string"},
+                "lyrics": {"type": "string"},
+                "duration": {"type": "integer", "minimum": 5, "maximum": 600},
+                "instrumental": {"type": "boolean"},
+                "loras": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {"id": {"type": "string"}, "strength": {"type": "number"}},
+                        "required": ["id"]
+                    }
+                }
+            },
+            "required": ["prompt"]
+        }
+    },
+    {
+        "name": "get_music_job",
+        "description": "Get the status/result of a generate_music job",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"jobId": {"type": "string"}},
+            "required": ["jobId"]
+        }
+    },
+    {
+        "name": "list_loras",
+        "description": "List installed LoRA styles/artists/sounds",
+        "inputSchema": {"type": "object", "properties": {}}
+    },
+    {
+        "name": "import_lora",
+        "description": "Register a LoRA file or folder from disk",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string"},
+                "name": {"type": "string"},
+                "kind": {"type": "string", "enum": ["style", "artist", "sound"]}
+            },
+            "required": ["path"]
+        }
+    },
+    {
+        "name": "master_track",
+        "description": "Master a track so it matches a reference track (Matchering)",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "targetPath": {"type": "string"},
+                "referencePath": {"type": "string"},
+                "bitDepth": {"type": "integer", "enum": [16, 24]}
+            },
+            "required": ["targetPath", "referencePath"]
+        }
+    },
+    {
+        "name": "align_lyrics",
+        "description": "Transcribe audio with word-level timestamps",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"audioPath": {"type": "string"}, "language": {"type": "string"}},
+            "required": ["audioPath"]
+        }
+    },
+    {
+        "name": "export_karaoke",
+        "description": "Align lyrics and export an enhanced .lrc and optionally an MP4 karaoke video",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "audioPath": {"type": "string"},
+                "video": {"type": "boolean"},
+                "aspect": {"type": "string", "enum": ["16:9", "9:16", "1:1"]}
+            },
+            "required": ["audioPath"]
+        }
+    },
+    {
+        "name": "system_info",
+        "description": "Hardware and memory profile (GPU backend, VRAM/RAM, low-memory mode)",
+        "inputSchema": {"type": "object", "properties": {}}
     }
 ]
 
@@ -168,7 +257,76 @@ async def call_tool(body: dict):
         result = await generate_instrument(req)
         return {"content": [{"type": "text", "text": str(result)}]}
 
+    try:
+        extra = await _call_extra(tool_name, args)
+    except HTTPException as e:
+        return {"content": [{"type": "text", "text": f"Error: {e.detail}"}], "isError": True}
+    if extra is not None:
+        return {"content": [{"type": "text", "text": json.dumps(extra, default=str)}]}
+
     return {"content": [{"type": "text", "text": f"Unknown tool: {tool_name}"}], "isError": True}
+
+
+async def _call_extra(name: str, args: dict):
+    if name == "generate_music":
+        from api.routes.music_gen import generate_music, GenerateMusicRequest
+        return await generate_music(GenerateMusicRequest(**args))
+    if name == "get_music_job":
+        from api.routes.music_gen import job_status
+        return await job_status(args["jobId"])
+    if name == "list_loras":
+        from api.routes.music_gen import list_loras
+        return await list_loras()
+    if name == "import_lora":
+        from api.routes.music_gen import import_lora, LoraImport
+        return await import_lora(LoraImport(**args))
+    if name == "master_track":
+        from api.routes.mastering import master, MasterRequest
+        return await master(MasterRequest(**args))
+    if name == "align_lyrics":
+        from api.routes.karaoke import align, AlignRequest
+        return await align(AlignRequest(**args))
+    if name == "export_karaoke":
+        from api.routes.karaoke import align, lrc, video, AlignRequest, LrcRequest, VideoRequest, Word
+        aligned = await align(AlignRequest(audioPath=args["audioPath"]))
+        words = [Word(**w) for w in aligned["words"]]
+        result = await lrc(LrcRequest(words=words))
+        if args.get("video"):
+            result["videoFile"] = (await video(VideoRequest(
+                audioPath=args["audioPath"], words=words, aspect=args.get("aspect", "16:9")
+            )))["videoFile"]
+        return result
+    if name == "system_info":
+        from services.hardware_detect import get_profile
+        from services.resource_profile import get_resources
+        from dataclasses import asdict
+        return {"hardware": asdict(get_profile()), "resources": get_resources()}
+    return None
+
+
+@router.post("")
+async def jsonrpc(body: dict):
+    """Minimal MCP JSON-RPC endpoint (initialize / tools/list / tools/call)."""
+    method, rid, params = body.get("method"), body.get("id"), body.get("params") or {}
+
+    def ok(result):
+        return {"jsonrpc": "2.0", "id": rid, "result": result}
+
+    if method == "initialize":
+        return ok({
+            "protocolVersion": "2025-03-26",
+            "capabilities": {"tools": {}},
+            "serverInfo": {"name": "ai-music-studio", "version": "0.1.0"},
+        })
+    if method == "tools/list":
+        return ok({"tools": MCP_TOOLS})
+    if method == "tools/call":
+        return ok(await call_tool({"name": params.get("name"), "arguments": params.get("arguments", {})}))
+    if method == "ping":
+        return ok({})
+    if rid is None:  # notification, no reply expected
+        return {}
+    return {"jsonrpc": "2.0", "id": rid, "error": {"code": -32601, "message": f"Method not found: {method}"}}
 
 
 @router.get("/manifest")

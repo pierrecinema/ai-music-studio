@@ -16,6 +16,15 @@ soundfile>=0.12.1
 librosa>=0.10.2
 mutagen>=1.47.0
 
+psutil>=5.9.8
+
+# Mastering / lyric timing / karaoke (ffmpeg must be on PATH for video export)
+matchering>=2.0.6
+faster-whisper>=1.0.3
+
+# Full-song generation (ACE-Step, runs in ~8 GB VRAM with CPU offload):
+#   pip install git+https://github.com/ace-step/ACE-Step.git
+
 # MIDI
 pretty_midi>=0.2.10
 mido>=1.3.2

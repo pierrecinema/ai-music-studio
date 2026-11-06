@@ -15,10 +15,19 @@ const NAV_ITEMS: NavItem[] = [
   { view: 'vocal-editor',   icon: '🎤', labelKey: 'sidebar.vocalEditor' },
   { view: 'instruments',    icon: '🎻', labelKey: 'sidebar.instruments' },
   { view: 'mixer',          icon: '🎚', labelKey: 'sidebar.mixer' },
+  { view: 'music-gen',      icon: '♫', labelKey: 'sidebar.musicGen' },
   { view: 'stem-splitter',  icon: '✂', labelKey: 'sidebar.stemSplitter' },
+  { view: 'mastering',      icon: '◎', labelKey: 'sidebar.mastering' },
+  { view: 'karaoke',        icon: '🎙', labelKey: 'sidebar.karaoke' },
   { view: 'video-composer', icon: '🎬', labelKey: 'sidebar.videoComposer' },
   { view: 'ai-chat',        icon: '✦', labelKey: 'sidebar.aiChat' },
 ]
+
+const LABEL_FALLBACK: Partial<Record<View, string>> = {
+  'music-gen': 'Music Generator',
+  mastering: 'Mastering',
+  karaoke: 'Karaoke Export',
+}
 
 export function Sidebar(): React.ReactElement {
   const { t } = useTranslation()
@@ -39,7 +48,7 @@ export function Sidebar(): React.ReactElement {
         <button
           key={item.view}
           onClick={() => setActiveView(item.view)}
-          title={t(item.labelKey)}
+          title={t(item.labelKey, { defaultValue: LABEL_FALLBACK[item.view] ?? item.view })}
           style={{
             width: 40,
             height: 40,

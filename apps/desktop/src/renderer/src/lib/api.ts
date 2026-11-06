@@ -1,5 +1,17 @@
 const BASE = 'http://127.0.0.1:8765'
 
+export interface Resources {
+  vram_gb: number; ram_gb: number; low_memory: boolean; max_duration_s: number; quant: string
+}
+export interface Lora {
+  id: string; name: string; kind: 'style' | 'artist' | 'sound'; path: string; tags: string[]
+}
+export interface MusicJob {
+  id: string; status: 'queued' | 'running' | 'done' | 'error'
+  audio_file?: string; error?: string; warnings: string[]; engine?: string
+}
+export interface KaraokeWord { text: string; start: number; end: number }
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const r = await fetch(`${BASE}${path}`, {
     method: 'POST',
@@ -48,7 +60,7 @@ export const api = {
   stems: {
     split: (body: {
       filePath: string
-      model: 'htdemucs' | 'htdemucs_ft' | 'mdx_extra'
+      model: 'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s'
       stems: string[]
     }) => post<{ vocals?: string; drums?: string; bass?: string; other?: string; piano?: string; guitar?: string }>('/stems/split', body),
   },
@@ -80,6 +92,32 @@ export const api = {
 
     generateLyrics: (body: { style: string; theme: string; bars: number }) =>
       post<{ lyrics: string }>('/ai/generate-lyrics', body),
+  },
+
+  music: {
+    status: () => get<{ engine_installed: boolean; resources: Resources }>('/music/status'),
+    loras: () => get<{ dir: string; loras: Lora[] }>('/music/loras'),
+    importLora: (body: { path: string; name?: string; kind: Lora['kind'] }) =>
+      post<Lora>('/music/loras/import', body),
+    generate: (body: {
+      prompt: string; lyrics: string; duration: number; steps: number
+      instrumental: boolean; loras: Array<{ id: string; strength: number }>
+    }) => post<{ jobId: string }>('/music/generate', body),
+    job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
+  },
+
+  mastering: {
+    master: (body: { targetPath: string; referencePath: string; bitDepth: 16 | 24 }) =>
+      post<{ audioFile: string }>('/mastering/master', body),
+  },
+
+  karaoke: {
+    align: (body: { audioPath: string; language?: string }) =>
+      post<{ language: string; words: KaraokeWord[] }>('/karaoke/align', body),
+    lrc: (body: { words: KaraokeWord[]; title?: string }) =>
+      post<{ lrcFile: string; lrc: string }>('/karaoke/lrc', body),
+    video: (body: { audioPath: string; words: KaraokeWord[]; aspect: '16:9' | '9:16' | '1:1' }) =>
+      post<{ videoFile: string }>('/karaoke/video', body),
   },
 
   vst: {

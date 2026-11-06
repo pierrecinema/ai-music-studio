@@ -13,6 +13,9 @@ import { AIChat } from './components/ai-chat/AIChat'
 import { StemSplitter } from './components/stem-splitter/StemSplitter'
 import { VideoComposer } from './components/video-composer/VideoComposer'
 import { Settings } from './components/settings/Settings'
+import { MusicGenerator } from './components/music-gen/MusicGenerator'
+import { Mastering } from './components/mastering/Mastering'
+import { KaraokeExport } from './components/karaoke/KaraokeExport'
 
 // Hardware info fetched from backend
 interface HardwareInfo {
@@ -79,6 +82,9 @@ export default function App(): React.ReactElement {
       case 'ai-chat':       return <AIChat />
       case 'stem-splitter': return <StemSplitter />
       case 'video-composer':return <VideoComposer />
+      case 'music-gen':     return <MusicGenerator />
+      case 'mastering':     return <Mastering />
+      case 'karaoke':       return <KaraokeExport />
       case 'settings':      return <Settings />
       default:              return null
     }

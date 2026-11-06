@@ -9,7 +9,8 @@ router = APIRouter()
 class StemSplitRequest(BaseModel):
     filePath: str
     model: str = "htdemucs_ft"
-    stems: list[str] = ["vocals", "drums", "bass", "other"]
+    # htdemucs_6s additionally yields "piano" and "guitar"
+    stems: list[str] = ["vocals", "drums", "bass", "other", "piano", "guitar"]
 
 
 @router.post("/split")
@@ -40,8 +41,13 @@ async def split_stems(req: StemSplitRequest):
         # DirectML (AMD on Windows) needs CPU for Demucs inference — DML not fully supported by torchaudio ops
         if device == "privateuseone":
             device = "cpu"
+        from services.resource_profile import resources
+        res = resources()
         with torch.no_grad():
-            sources = apply_model(model, wav[None], device=device)[0]
+            sources = apply_model(
+                model, wav[None], device=device,
+                segment=res.demucs_segment_s, num_workers=res.demucs_jobs,
+            )[0]
 
         result = {}
         for i, name in enumerate(model.sources):

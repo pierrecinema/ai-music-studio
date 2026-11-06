@@ -22,6 +22,18 @@ const api = {
     remove: (id: string) => ipcRenderer.invoke('loras:remove', id),
     pick: (mode: 'file' | 'folder') => ipcRenderer.invoke('dialog:open-lora', mode)
   },
+  huggingface: {
+    search: (query: string) => ipcRenderer.invoke('hf:search', query),
+    files: (repo: string) => ipcRenderer.invoke('hf:files', repo),
+    download: (repo: string, file: string, kind: string) => ipcRenderer.invoke('hf:download', repo, file, kind),
+    cancel: () => ipcRenderer.invoke('hf:cancel'),
+    openPage: (repo: string) => ipcRenderer.invoke('shell:open-url', `https://huggingface.co/${repo}`),
+    onProgress: (cb: (p: { received: number; total: number }) => void) => {
+      const h = (_: unknown, p: { received: number; total: number }) => cb(p)
+      ipcRenderer.on('hf:progress', h)
+      return () => ipcRenderer.removeListener('hf:progress', h)
+    }
+  },
   dialog: {
     openAudio: () => ipcRenderer.invoke('dialog:open-audio'),
     openVideo: () => ipcRenderer.invoke('dialog:open-video'),

@@ -3,6 +3,7 @@ import { api, type EngineState, type MusicJob, type Resources } from '../../lib/
 import { useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
 import { AudioFile } from '../common/AudioFile'
+import { LoraBrowser } from './LoraBrowser'
 import {
   DEFAULT_PARAMS, GENRES, KEYS, LANGUAGES, LAYERS, TIME_SIGNATURES, toRequest,
   type MusicParams
@@ -183,6 +184,7 @@ export function CreateMusic(): React.ReactElement {
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [engine, setEngine] = useState<EngineState | null>(null)
   const [engineError, setEngineError] = useState('')
+  const [browserOpen, setBrowserOpen] = useState(false)
   const [online, setOnline] = useState(true)
   const [res, setRes] = useState<Resources | null>(null)
   const [loras, setLoras] = useState<LoraInfo[]>([])
@@ -338,11 +340,18 @@ export function CreateMusic(): React.ReactElement {
     setNotice(`LoRA "${r.lora.name}" imported.`)
   }
 
+  const onDownloaded = async (lora: LoraInfo) => {
+    await refreshLoras()
+    setP((s) => ({ ...s, selectedLoras: { ...s.selectedLoras, [lora.id]: 0.75 } }))
+    setNotice(`LoRA "${lora.name}" downloaded and selected.`)
+  }
+
   const unusedLoras = loras.filter((l) => !(l.id in p.selectedLoras))
   const studio = mode === 'studio'
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+      <LoraBrowser open={browserOpen} onClose={() => setBrowserOpen(false)} onImported={(l) => void onDownloaded(l)} />
       {/* ── form ── */}
       <div style={{ width: 560, maxWidth: '58%', flexShrink: 0, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
@@ -504,6 +513,7 @@ export function CreateMusic(): React.ReactElement {
               options={unusedLoras.map((l) => ({ value: l.id, label: `${l.name} (${l.kind})` }))} placeholder="+ Add LoRA" />
           )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={() => setBrowserOpen(true)}>Find LoRA on Hugging Face…</button>
             <button className="btn btn-ghost" onClick={() => importLora('file')}>Import LoRA file…</button>
             <button className="btn btn-ghost" onClick={() => importLora('folder')}>Import LoRA folder…</button>
           </div>

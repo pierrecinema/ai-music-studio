@@ -2,6 +2,14 @@ export {}
 
 declare global {
   const __APP_VERSION__: string
+  interface HfRepoInfo {
+    id: string
+    likes: number
+    downloads: number
+    gated: boolean
+    license: string
+    tags: string[]
+  }
   interface LoraInfo {
     id: string
     name: string
@@ -27,6 +35,14 @@ declare global {
           Promise<{ ok: true; lora: LoraInfo } | { ok: false; error: string }>
         remove: (id: string) => Promise<void>
         pick: (mode: 'file' | 'folder') => Promise<string | null>
+      }
+      huggingface: {
+        search: (query: string) => Promise<{ ok: true; repos: HfRepoInfo[] } | { ok: false; error: string }>
+        files: (repo: string) => Promise<{ ok: true; repo: HfRepoInfo; files: Array<{ name: string; size: number }> } | { ok: false; error: string }>
+        download: (repo: string, file: string, kind: LoraInfo['kind']) => Promise<{ ok: true; lora: LoraInfo } | { ok: false; error: string }>
+        cancel: () => Promise<void>
+        openPage: (repo: string) => Promise<void>
+        onProgress: (cb: (p: { received: number; total: number }) => void) => () => void
       }
       engines: {
         status: () => Promise<EngineStatus>

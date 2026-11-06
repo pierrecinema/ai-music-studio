@@ -14,6 +14,8 @@ export interface LoraEntry {
   path: string
   tags: string[]
   default_strength: number
+  source?: string    // e.g. "huggingface:owner/name"
+  license?: string
 }
 
 function readIndex(): LoraEntry[] {
@@ -46,7 +48,12 @@ export function listLoras(): { dir: string; loras: LoraEntry[] } {
   return { dir: LORA_DIR, loras: [...byId.values()].sort((a, b) => a.name.localeCompare(b.name)) }
 }
 
-export function importLora(src: string, kind: LoraEntry['kind'], name?: string): LoraEntry {
+export function importLora(
+  src: string,
+  kind: LoraEntry['kind'],
+  name?: string,
+  extra?: Pick<LoraEntry, 'source' | 'license'>
+): LoraEntry {
   if (!existsSync(src)) throw new Error(`Not found: ${src}`)
   const isDir = statSync(src).isDirectory()
   if (!isDir && !EXTS.has(extname(src).toLowerCase())) {
@@ -60,7 +67,7 @@ export function importLora(src: string, kind: LoraEntry['kind'], name?: string):
   }
   const id = isDir ? basename(dest) : basename(dest, extname(dest))
   const entry: LoraEntry = {
-    id, name: name?.trim() || id, kind, path: dest, tags: [], default_strength: 1
+    id, name: name?.trim() || id, kind, path: dest, tags: [], default_strength: 1, ...extra
   }
   writeIndex([...readIndex().filter((i) => i.id !== id), entry])
   return entry

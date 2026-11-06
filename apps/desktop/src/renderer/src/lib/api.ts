@@ -33,9 +33,22 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   })
   if (!r.ok) {
     const err = await r.json().catch(() => ({ detail: r.statusText }))
-    throw new Error(err.detail ?? r.statusText)
+    throw new Error(describeError(err.detail, r.statusText))
   }
   return r.json()
+}
+
+// FastAPI sends a plain string for our own errors but a list of objects for invalid input.
+function describeError(detail: unknown, fallback: string): string {
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    return detail.map((d) => {
+      const where = Array.isArray(d?.loc) ? d.loc.filter((x: unknown) => x !== 'body').join('.') : ''
+      return `${where ? where + ': ' : ''}${d?.msg ?? JSON.stringify(d)}`
+    }).join('; ')
+  }
+  if (detail && typeof detail === 'object') return JSON.stringify(detail)
+  return fallback
 }
 
 async function get<T>(path: string): Promise<T> {

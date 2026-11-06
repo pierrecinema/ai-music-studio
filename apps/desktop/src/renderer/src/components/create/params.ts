@@ -130,6 +130,14 @@ const num = (s: string): number | null => {
   return s.trim() !== '' && Number.isFinite(n) ? n : null
 }
 
+// whole numbers only (the backend rejects 128.5 for an integer field), optionally clamped
+const int = (s: string, min?: number, max?: number): number | null => {
+  const n = num(s)
+  if (n === null) return null
+  const r = Math.round(n)
+  return Math.min(max ?? r, Math.max(min ?? r, r))
+}
+
 // Request body for POST /music/generate (snake_case, matches the Python model)
 export function toRequest(p: MusicParams): Record<string, unknown> {
   return {
@@ -139,8 +147,8 @@ export function toRequest(p: MusicParams): Record<string, unknown> {
     instrumental: p.instrumental,
     language: p.language,
     voice: p.voice,
-    duration: num(p.duration),
-    bpm: num(p.bpm),
+    duration: int(p.duration, 5, 600),
+    bpm: int(p.bpm, 30, 300),
     key: p.key || null,
     time_signature: p.timeSignature || null,
     source_track: p.sourceTrack || null,
@@ -155,7 +163,7 @@ export function toRequest(p: MusicParams): Record<string, unknown> {
     variations: p.variations,
     queue: p.queue,
     randomize_seed: p.randomizeSeed,
-    seed: p.randomizeSeed ? null : num(p.seed),
+    seed: p.randomizeSeed ? null : int(p.seed),
     rewrite_style: p.rewriteStyle,
     temperature: p.temperature,
     cfg_scale: p.cfgScale,
@@ -163,7 +171,7 @@ export function toRequest(p: MusicParams): Record<string, unknown> {
     top_k: p.topK,
     melodic_variation: p.melodicVariation,
     negative_prompt: p.negativePrompt,
-    lm_seed: num(p.lmSeed),
+    lm_seed: int(p.lmSeed),
     audio_codes: p.audioCodes,
     guidance: p.guidance,
     shift: p.shift,

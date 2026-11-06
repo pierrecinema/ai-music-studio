@@ -353,7 +353,7 @@ export function CreateMusic(): React.ReactElement {
         )}
         {res?.low_memory && (
           <div style={{ ...hint, color: 'var(--orange)' }}>
-            Low-memory mode: songs are limited to {res.max_duration_s} s on this machine.
+            Low-memory mode is on: songs up to {Math.round(res.max_duration_s / 60)} minutes work, but longer ones take noticeably more time and memory.
           </div>
         )}
 

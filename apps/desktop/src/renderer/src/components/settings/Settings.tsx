@@ -5,6 +5,7 @@ import { useUIStore } from '../../stores/ui.store'
 import { useAIStore } from '../../stores/ai.store'
 import type { AIProvider } from '../../types'
 import { EnginesTab } from './EnginesTab'
+import { ShortcutsTab } from './ShortcutsTab'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -69,7 +70,7 @@ function ModelPicker({ models, value, onChange }: {
   )
 }
 
-type SettingsTab = 'general' | 'ai' | 'engines' | 'audio' | 'appearance' | 'updates'
+type SettingsTab = 'general' | 'ai' | 'engines' | 'shortcuts' | 'audio' | 'appearance' | 'updates'
 
 type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
 
@@ -187,7 +188,7 @@ export function Settings(): React.ReactElement {
       {/* Tab nav */}
       <div style={{ width: 160, background: 'var(--bg-secondary)', borderRight: '1px solid var(--border)', padding: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10, padding: '0 6px' }}>{t('settings.title')}</div>
-        {(['general', 'ai', 'engines', 'audio', 'appearance', 'updates'] as SettingsTab[]).map(tab2 => (
+        {(['general', 'ai', 'engines', 'shortcuts', 'audio', 'appearance', 'updates'] as SettingsTab[]).map(tab2 => (
           <button
             key={tab2}
             onClick={() => setTab(tab2)}
@@ -204,7 +205,7 @@ export function Settings(): React.ReactElement {
               fontWeight: tab === tab2 ? 600 : 400
             }}
           >
-            {t(`settings.${tab2}`, { defaultValue: tab2 === 'engines' ? 'AI Engines' : tab2 === 'updates' ? 'Updates' : tab2 })}
+            {t(`settings.${tab2}`, { defaultValue: tab2 === 'engines' ? 'AI Engines' : tab2 === 'shortcuts' ? 'Shortcuts' : tab2 === 'updates' ? 'Updates' : tab2 })}
           </button>
         ))}
       </div>
@@ -361,6 +362,7 @@ export function Settings(): React.ReactElement {
 
         {tab === 'updates' && <UpdatesTab />}
         {tab === 'engines' && <EnginesTab />}
+        {tab === 'shortcuts' && <ShortcutsTab />}
       </div>
     </div>
   )

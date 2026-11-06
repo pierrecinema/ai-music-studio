@@ -48,13 +48,14 @@ def detect_resources() -> ResourceProfile:
     low = (0 < vram <= 8.5) or vram == 0.0 or ram <= 12.5
 
     if vram >= 16 and ram >= 24:
-        quant, max_dur = "bf16", 600
+        quant = "bf16"
     elif vram >= 12:
-        quant, max_dur = "q8_0", 360
-    elif vram >= 7:
-        quant, max_dur = "q4_k_m", 240
+        quant = "q8_0"
     else:
-        quant, max_dur = "q4_k_m", 120
+        quant = "q4_k_m"
+    # Small machines are not capped to short songs: offloading and chunked decoding keep memory
+    # in check, a long song just takes longer. 7 minutes everywhere, 10 on big machines.
+    max_dur = 600 if (vram >= 16 and ram >= 24) else 420
 
     return ResourceProfile(
         vram_gb=round(vram, 1),
@@ -62,7 +63,7 @@ def detect_resources() -> ResourceProfile:
         low_memory=low,
         cpu_offload=low,
         half_precision=hw.half_precision or low,
-        max_duration_s=max_dur if ram > 12.5 else min(max_dur, 180),
+        max_duration_s=max_dur,
         quant=quant,
         demucs_segment_s=7 if low else 15,
         demucs_jobs=1 if low else max(1, hw.cpu_cores // 2),

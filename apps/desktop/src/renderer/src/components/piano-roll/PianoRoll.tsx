@@ -1,5 +1,6 @@
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useCallback } from 'react'
 import { useProjectStore } from '../../stores/project.store'
+import { useUIStore } from '../../stores/ui.store'
 import type { Note } from '../../types'
 
 const NOTE_HEIGHT = 14
@@ -13,8 +14,11 @@ function noteName(pitch: number) { return `${NOTE_NAMES[pitch % 12]}${Math.floor
 
 export function PianoRoll(): React.ReactElement {
   const { project, selectedTrackId, selectedClipId, addNote, updateNote, removeNote } = useProjectStore()
-  const [tool, setTool] = useState<'draw' | 'select' | 'erase'>('draw')
-  const [zoom, setZoom] = useState(1)
+  // tool and zoom live in the UI store so keyboard shortcuts can change them
+  const tool = useUIStore((s) => s.pianoTool)
+  const setTool = useUIStore((s) => s.setPianoTool)
+  const zoom = useUIStore((s) => s.pianoZoom)
+  const setZoom = useUIStore((s) => s.setPianoZoom)
   const gridRef = useRef<HTMLDivElement>(null)
   const totalPitches = 128
 

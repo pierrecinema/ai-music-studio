@@ -49,19 +49,39 @@ def _detect_cuda() -> bool:
         return False
 
 
-def _gpu_name_from_wmi() -> str:
-    """Read GPU name on Windows via WMIC (no extra deps)."""
+def _gpu_names() -> list[str]:
+    """All video controllers on Windows. wmic is gone from recent Windows 11, so PowerShell first."""
     if platform.system() != "Windows":
-        return ""
-    try:
-        result = subprocess.run(
-            ["wmic", "path", "win32_VideoController", "get", "name"],
-            capture_output=True, text=True, timeout=5
-        )
-        lines = [l.strip() for l in result.stdout.splitlines() if l.strip() and l.strip() != "Name"]
-        return lines[0] if lines else ""
-    except Exception:
-        return ""
+        return []
+    commands = [
+        ["powershell", "-NoProfile", "-NonInteractive", "-Command",
+         "(Get-CimInstance Win32_VideoController).Name"],
+        ["wmic", "path", "win32_VideoController", "get", "name"],
+    ]
+    for cmd in commands:
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=8,
+                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
+        except Exception:
+            continue
+        names = [l.strip() for l in out.splitlines() if l.strip() and l.strip().lower() != "name"]
+        if names:
+            return names
+    return []
+
+
+def _gpu_rank(name: str) -> int:
+    n = name.lower()
+    if any(k in n for k in ("nvidia", "geforce", "rtx", "gtx", "quadro")):
+        return 3          # laptops: prefer the discrete NVIDIA chip over the integrated one
+    if "radeon" in n or "amd" in n:
+        return 2
+    return 1
+
+
+def _gpu_name_from_wmi() -> str:
+    names = _gpu_names()
+    return max(names, key=_gpu_rank) if names else ""
 
 
 def detect() -> HardwareProfile:

@@ -13,7 +13,13 @@ interface UIState {
   scrollY: number
   language: string
   sidebarOpen: boolean
+  shortcutPreset: 'ableton' | 'cubase'
+  pianoTool: 'draw' | 'select' | 'erase'
+  pianoZoom: number
 
+  setShortcutPreset: (p: 'ableton' | 'cubase') => void
+  setPianoTool: (t: 'draw' | 'select' | 'erase') => void
+  setPianoZoom: (z: number) => void
   toggleSidebar: () => void
   setActiveView: (view: View) => void
   setTheme: (theme: 'dark' | 'light') => void
@@ -35,7 +41,13 @@ export const useUIStore = create<UIState>()(
       scrollY: 0,
       language: 'en',
       sidebarOpen: true,
+      shortcutPreset: 'ableton',
+      pianoTool: 'draw',
+      pianoZoom: 1,
 
+      setShortcutPreset: (shortcutPreset) => set({ shortcutPreset }),
+      setPianoTool: (pianoTool) => set({ pianoTool }),
+      setPianoZoom: (pianoZoom) => set({ pianoZoom: Math.min(4, Math.max(0.25, pianoZoom)) }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setActiveView: (activeView) => set({ activeView }),
       setTheme: (theme) => set({ theme }),

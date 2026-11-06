@@ -17,7 +17,7 @@ Updates: Die App sucht beim Start und alle 4 Stunden nach neuen Versionen und ze
 Das KI-Backend läuft in einer eigenen Python-Umgebung, die die App selbst anlegt. Dafür muss Python auf dem Rechner sein.
 
 - **Empfohlen: Python 3.11** (3.10 bis 3.12 funktionieren am zuverlässigsten).
-- Python 3.13 oder neuer ist riskant: Für PyTorch, basic-pitch und Whisper gibt es dort oft noch keine fertigen Pakete, die Installation kann scheitern.
+- Python 3.13 oder neuer ist riskant. Nachgeprüft mit Python 3.14: **basic-pitch und ACE-Step lassen sich dort nicht installieren** (ACE-Step schreibt `spacy==3.8.4` vor, das es nur bis Python 3.12 gibt). Demucs, Matchering, Whisper, OpenCV und MuScriptor gehen.
 - Beim Installieren **„Add python.exe to PATH“** anhaken.
 
 ```
@@ -25,6 +25,10 @@ winget install Python.Python.3.11
 ```
 
 Sind mehrere Versionen installiert, nimmt die App bevorzugt 3.11, dann 3.12, 3.10, 3.13.
+
+**Schon eine Umgebung mit zu neuem Python angelegt?** Installierst du danach Python 3.11 und klickst **Install selected**, baut die App ihre Umgebung automatisch mit 3.11 neu auf (die alte wird gelöscht, die Pakete werden neu geladen). Von Hand geht es auch: den Ordner `%APPDATA%\desktop\engines\venv` löschen und neu installieren.
+
+Einzelne optionale Pakete, die nicht installierbar sind, brechen die restliche Installation nicht mehr ab: Die App meldet am Ende, welche fehlen, und installiert den Rest.
 
 ### Schritt 2: KI-Engines installieren
 
@@ -45,7 +49,9 @@ Sind mehrere Versionen installiert, nimmt die App bevorzugt 3.11, dann 3.12, 3.1
 **PyTorch-Variante:**
 - **CPU**: läuft überall, ist der sichere Startpunkt.
 - **NVIDIA CUDA**: für GeForce/RTX-Karten.
-- **AMD / DirectML**: für AMD-Karten unter Windows. Bei sehr alten Karten (z. B. Radeon R9 290) ist unsicher, ob DirectML funktioniert. Starte mit CPU und probiere DirectML danach.
+- **AMD / DirectML**: optionales Zusatzpaket (`torch-directml`) für AMD-Karten unter Windows. Es gibt es nur für ältere Python-Versionen (bis 3.12). Fehlt es, behält die App PyTorch in der CPU-Version und macht weiter. Bei sehr alten Karten (z. B. Radeon R9 290) ist unsicher, ob DirectML funktioniert.
+
+Standard ist **CPU** (bei NVIDIA-Karten CUDA). Die Karte wird beim Start erkannt, auch auf Laptops mit zwei Grafikchips: Eine NVIDIA-Karte wird dem integrierten Chip vorgezogen.
 
 ### Schritt 3: API-Schlüssel für den KI-Chat
 
@@ -83,6 +89,31 @@ Nach der Installation die App neu starten, damit sie die neuen Programme im PATH
 - **Winamp-Modus**: **Strg+M** oder unten rechts „Winamp (Ctrl+M)“. Audiodateien hinzufügen. Die Musik läuft weiter, wenn du zurück ins Studio wechselst.
 - **Audio → MIDI**: Standard ist basic-pitch. Ist MuScriptor installiert, wird es automatisch bevorzugt.
 
+## Tastenkürzel (Ableton Live 12 oder Cubase)
+
+**Einstellungen → Shortcuts**: Dort wählst du per Klick die Belegung **Ableton Live 12** oder **Cubase**. Die Tabelle zeigt alle Kürzel beider DAWs nebeneinander, die gewählte ist hervorgehoben. Viele Tasten sind gleich (Leertaste, Strg+Z, Strg+D, Strg+N), andere unterscheiden sich:
+
+| Aktion | Ableton Live 12 | Cubase |
+|---|---|---|
+| Play / Pause | Leertaste | Leertaste |
+| Aufnahme | F9 | Num * |
+| Metronom | O | C |
+| Wiederherstellen (Redo) | Strg+Y | Strg+Umschalt+Z |
+| Audiospur hinzufügen | Strg+T | T |
+| MIDI-Spur hinzufügen | Strg+Umschalt+T | – |
+| Spur stumm / Solo | 0 / S | M / S |
+| Spur löschen | Entf | Umschalt+Entf |
+| Piano-Roll-Werkzeug | B (Zeichnen an/aus) | 1 Auswahl, 5 Radierer, 8 Zeichnen |
+| Zoom | + / − | H / G |
+| Piano Roll / Mixer | Umschalt+Tab / Strg+Alt+M | Strg+E / F3 |
+
+Dazu gehören Stopp, Zurück zum Anfang, Spur duplizieren (Strg+D), neues Projekt (Strg+N), Einstellungen (Strg+, bei Ableton), Vollbild (F11) und der Winamp-Modus (Strg+M in beiden). Die Liste in den Einstellungen ist vollständig.
+
+- **Rückgängig / Wiederholen** gilt für Änderungen am Projekt (Spuren, Clips, Noten, Tempo). Ein Schieberegler-Zug zählt als ein Schritt.
+- In Textfeldern tippst du normal, die Kürzel greifen dort nicht (Funktionstasten ausgenommen).
+- Aufgenommen sind nur Kürzel für Funktionen, die die App hat. Loop, Quantisieren, Comping u. Ä. folgen, wenn es die Funktionen gibt.
+- Quellen: Ableton-Kürzel aus dem Live-12-Handbuch (Windows). Cubase-Kürzel sind die Standard-Tastenbefehle laut Steinberg-Forenliste (Stand Cubase 11), bei neueren Versionen können einzelne abweichen.
+
 ## 4. Speicherorte
 
 | Was | Wo |
@@ -100,7 +131,7 @@ Ergebnisse liegen im Temp-Ordner und können von Windows aufgeräumt werden: Wic
 Das Backend misst VRAM und RAM beim Start und schaltet bei kleinen Rechnern selbst in den sparsamen Modus:
 
 - Teile des Modells werden in den Arbeitsspeicher ausgelagert, halbe Genauigkeit (fp16)
-- kürzere maximale Songlänge (der Music Generator zeigt sie an)
+- Songs bis **7 Minuten** gehen auch hier (auf großen Rechnern bis 10): Lange Songs dauern einfach länger und brauchen mehr Speicher. Läuft der Speicher aus, meldet der Auftrag einen Fehler.
 - kleinere Demucs-Abschnitte, kleineres Whisper-Modell
 - immer nur ein schwerer Auftrag gleichzeitig
 

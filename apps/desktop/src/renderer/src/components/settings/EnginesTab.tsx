@@ -26,7 +26,8 @@ export function EnginesTab(): React.ReactElement {
   const refresh = useCallback(async () => {
     const s = await window.api.engines.status()
     setStatus(s)
-    setTorch(t => (t === 'cpu' ? (s.gpu === 'nvidia' ? 'cuda' : s.gpu === 'amd' ? 'directml' : 'cpu') : t))
+    // CPU is the safe default; DirectML stays a manual choice because it needs an older Python
+    setTorch(t => (t === 'cpu' && s.gpu === 'nvidia' ? 'cuda' : t))
   }, [])
 
   useEffect(() => {
@@ -93,8 +94,11 @@ export function EnginesTab(): React.ReactElement {
           <select value={torch} onChange={e => setTorch(e.target.value)} disabled={busy}>
             <option value="cpu">CPU (works everywhere)</option>
             <option value="cuda">NVIDIA CUDA</option>
-            <option value="directml">AMD / any DirectX 12 GPU (DirectML)</option>
+            <option value="directml">AMD / any DirectX 12 GPU (DirectML, optional add-on)</option>
           </select>
+          <span style={{ display: 'block', marginTop: 4, fontSize: 10, color: 'var(--text-muted)' }}>
+            DirectML needs Python 3.12 or older. If it is not available the installer keeps the CPU build and carries on.
+          </span>
         </label>
       )}
 

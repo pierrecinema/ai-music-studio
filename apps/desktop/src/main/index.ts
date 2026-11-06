@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { ServerManager } from './server-manager'
@@ -48,6 +48,11 @@ function createWindow(): void {
 
 app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.aimusic.studio')
+
+  // The default Electron menu owns accelerators such as Ctrl+M (minimize) and the Edit/View
+  // roles, which would swallow DAW shortcuts before the page sees them.
+  Menu.setApplicationMenu(null)
+  console.log(`[app] application menu removed: ${Menu.getApplicationMenu() === null}`)
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)

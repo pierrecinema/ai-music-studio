@@ -1,5 +1,5 @@
 import { spawn, spawnSync, ChildProcess } from 'child_process'
-import { existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync, rmSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
@@ -66,14 +66,22 @@ export function findPython(): PythonCmd | null {
 }
 
 export function detectGpu(): 'nvidia' | 'amd' | 'none' {
-  try {
-    const r = spawnSync('wmic', ['path', 'win32_VideoController', 'get', 'name'], {
-      encoding: 'utf-8', windowsHide: true, timeout: 5000
-    })
-    const out = (r.stdout ?? '').toLowerCase()
-    if (/nvidia|geforce|rtx|gtx/.test(out)) return 'nvidia'
-    if (/radeon|amd/.test(out)) return 'amd'
-  } catch { /* wmic missing on newer Windows */ }
+  // wmic is removed from recent Windows 11, so ask PowerShell first. Laptops often list
+  // an integrated and a discrete chip: NVIDIA wins, then AMD.
+  const attempts: Array<[string, string[]]> = [
+    ['powershell', ['-NoProfile', '-NonInteractive', '-Command', '(Get-CimInstance Win32_VideoController).Name']],
+    ['wmic', ['path', 'win32_VideoController', 'get', 'name']]
+  ]
+  for (const [cmd, args] of attempts) {
+    try {
+      const r = spawnSync(cmd, args, { encoding: 'utf-8', windowsHide: true, timeout: 8000 })
+      const out = (r.stdout ?? '').toLowerCase()
+      if (!out.trim()) continue
+      if (/nvidia|geforce|rtx|gtx|quadro/.test(out)) return 'nvidia'
+      if (/radeon|amd/.test(out)) return 'amd'
+      return 'none'
+    } catch { /* try the next one */ }
+  }
   return 'none'
 }
 
@@ -107,7 +115,8 @@ export function getStatus(serverReady: boolean): EngineStatus {
 function torchArgs(variant: string): string[] {
   switch (variant) {
     case 'cuda': return ['torch', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cu121']
-    case 'directml': return ['torch', 'torchaudio', 'torch-directml']
+    // torch-directml is installed separately afterwards: it is optional and often missing for new Pythons
+    case 'directml': return ['torch', 'torchaudio']
     default: return ['torch', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cpu']
   }
 }
@@ -125,6 +134,12 @@ function groupArgs(group: string, torchVariant: string): string[] | null {
     case 'video': return ['opencv-python-headless', 'librosa']
     default: return null
   }
+}
+
+function venvPythonMinor(): number | null {
+  const r = spawnSync(venvPython(), ['--version'], { encoding: 'utf-8', windowsHide: true })
+  const m = /Python 3\.(\d+)/.exec(`${r.stdout}${r.stderr}`)
+  return m ? Number(m[1]) : null
 }
 
 let running: ChildProcess | null = null
@@ -151,8 +166,20 @@ export async function installGroups(
   torchVariant: string,
   log: (l: string) => void
 ): Promise<{ ok: boolean; error?: string }> {
+  const py = findPython()
+
+  // An environment built on a very new Python lacks wheels for several engines (basic-pitch,
+  // ACE-Step). If a better interpreter is installed now, rebuild the environment with it.
+  if (hasVenv() && py) {
+    const have = venvPythonMinor()
+    const want = Number(py.version.split('.')[1])
+    if (have !== null && have >= 13 && want <= 12 && venvDir().endsWith('venv')) {
+      log(`The AI environment uses Python 3.${have}, but Python ${py.version} is available. Rebuilding the environment with it (the old one is removed).`)
+      rmSync(venvDir(), { recursive: true, force: true })
+    }
+  }
+
   if (!hasVenv()) {
-    const py = findPython()
     if (!py) return { ok: false, error: `Python ${MIN_PYTHON.join('.')}+ not found. Install it from python.org and tick "Add to PATH".` }
     mkdirSync(join(venvDir(), '..'), { recursive: true })
     if (await run(py.cmd, [...py.args, '-m', 'venv', venvDir()], log) !== 0) {
@@ -161,15 +188,36 @@ export async function installGroups(
     await run(venvPython(), ['-m', 'pip', 'install', '--upgrade', 'pip'], log)
   }
 
+  const minor = venvPythonMinor()
   // core first, torch before anything that depends on it
   const order = ['core', 'torch', 'demucs', 'basicpitch', 'matchering', 'whisper', 'video', 'acestep', 'muscriptor']
   const wanted = order.filter(g => g === 'core' || groups.includes(g))
+  const failed: string[] = []
   for (const g of wanted) {
     const args = groupArgs(g, torchVariant)
     if (!args) continue
     log(`=== ${g} ===`)
     const code = await run(venvPython(), ['-m', 'pip', 'install', ...args], log)
-    if (code !== 0) return { ok: false, error: `Installing "${g}" failed (see log).` }
+    if (code !== 0) {
+      // everything else builds on these two: stop here
+      if (g === 'core' || g === 'torch') return { ok: false, error: `Installing "${g}" failed (see log).` }
+      failed.push(g)
+      log(`"${g}" could not be installed, continuing with the other packages.`)
+      if ((g === 'basicpitch' || g === 'acestep') && minor !== null && minor >= 13) {
+        log(`Hint: ${g === 'basicpitch' ? 'basic-pitch' : 'ACE-Step'} needs Python 3.12 or older (this environment uses 3.${minor}). Install Python 3.11 and press "Install selected" again.`)
+      }
+      continue
+    }
+    if (g === 'torch' && torchVariant === 'directml') {
+      log('Trying the optional DirectML add-on (torch-directml)…')
+      const dml = await run(venvPython(), ['-m', 'pip', 'install', 'torch-directml'], log)
+      if (dml !== 0) {
+        log('torch-directml is not available for this Python version. Continuing with the CPU build of PyTorch, which works fine.')
+      }
+    }
+  }
+  if (failed.length > 0) {
+    return { ok: false, error: `Done, but these packages failed: ${failed.join(', ')}. The others are installed. See the log for details.` }
   }
   return { ok: true }
 }

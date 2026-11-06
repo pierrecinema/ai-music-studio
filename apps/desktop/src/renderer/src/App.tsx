@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { UpdateToast } from './components/updater/UpdateToast'
 import { api, baseUrl } from './lib/api'
+import { useShortcuts, shortcutState } from './shortcuts/useShortcuts'
+import { WINAMP_EVENT } from './shortcuts/handlers'
 import { useUIStore } from './stores/ui.store'
 import { useProjectStore } from './stores/project.store'
 import { TopBar } from './components/layout/TopBar'
@@ -78,16 +80,14 @@ export default function App(): React.ReactElement {
   const [base, setBase] = useState('')
   const setActiveView = useUIStore(s => s.setActiveView)
 
+  // keyboard shortcuts (Ableton Live 12 or Cubase layout, chosen in Settings → Shortcuts)
+  useShortcuts()
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key.toLowerCase() === 'm') {
-        e.preventDefault()
-        setWinamp(v => !v)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const toggle = () => setWinamp(v => !v)
+    window.addEventListener(WINAMP_EVENT, toggle)
+    return () => window.removeEventListener(WINAMP_EVENT, toggle)
   }, [])
+  useEffect(() => { shortcutState.winampOpen = winamp }, [winamp])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)

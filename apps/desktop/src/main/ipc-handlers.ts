@@ -1,10 +1,23 @@
-import { ipcMain, dialog, shell } from 'electron'
+import { ipcMain, dialog, shell, BrowserWindow } from 'electron'
 import { ServerManager } from './server-manager'
+import { getStatus, installGroups, cancelInstall } from './engines'
 import * as fs from 'fs'
 
 export function registerIpcHandlers(serverManager: ServerManager): void {
   ipcMain.handle('server:url', () => serverManager.serverUrl)
   ipcMain.handle('server:ready', () => serverManager.isReady())
+
+  ipcMain.handle('engines:status', () => getStatus(serverManager.isReady()))
+  ipcMain.handle('engines:cancel', () => cancelInstall())
+  ipcMain.handle('engines:install', async (e, groups: string[], torchVariant: string) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const log = (line: string) => win?.webContents.send('engines:log', line)
+    await serverManager.stop()
+    const result = await installGroups(groups, torchVariant, log)
+    log(result.ok ? 'Done. Restarting the AI backend…' : `Failed: ${result.error}`)
+    await serverManager.start()
+    return result
+  })
 
   ipcMain.handle('dialog:open-audio', async () => {
     const result = await dialog.showOpenDialog({

@@ -1,7 +1,7 @@
 import { ChildProcess, spawn } from 'child_process'
 import { join } from 'path'
-import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
+import { hasVenv, venvPython, serverDir } from './engines'
 
 export class ServerManager {
   private process: ChildProcess | null = null
@@ -12,40 +12,38 @@ export class ServerManager {
     return `http://127.0.0.1:${this.port}`
   }
 
+  // In dev we fall back to the system Python so contributors need no setup step.
+  private pythonExecutable(): string | null {
+    if (hasVenv()) return venvPython()
+    return is.dev ? 'python' : null
+  }
+
   async start(): Promise<void> {
-    const pythonPath = is.dev
-      ? 'python'
-      : join(process.resourcesPath, 'server', 'server.exe')
+    const python = this.pythonExecutable()
+    if (!python) {
+      console.warn('[Server] No Python environment yet — open Settings → AI Engines to set it up.')
+      return
+    }
 
-    const serverScript = is.dev
-      ? join(app.getAppPath(), '../../server/main.py')
-      : join(process.resourcesPath, 'server', 'main.py')
-
-    const env = { ...process.env, AMS_PORT: String(this.port) }
-
-    this.process = spawn(is.dev ? 'python' : pythonPath, [serverScript], {
-      env,
-      stdio: ['ignore', 'pipe', 'pipe']
+    this.ready = false
+    this.process = spawn(python, ['-u', join(serverDir(), 'main.py')], {
+      cwd: serverDir(),
+      env: { ...process.env, AMS_PORT: String(this.port) },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true
     })
 
-    this.process.stdout?.on('data', (data) => {
-      const msg = data.toString()
-      if (msg.includes('Application startup complete')) {
-        this.ready = true
-      }
-      console.log('[Server]', msg.trim())
-    })
-
-    this.process.stderr?.on('data', (data) => {
-      console.error('[Server]', data.toString().trim())
-    })
+    this.process.stdout?.on('data', (d) => console.log('[Server]', d.toString().trim()))
+    this.process.stderr?.on('data', (d) => console.error('[Server]', d.toString().trim()))
+    this.process.on('error', (e) => console.error('[Server] failed to start:', e.message))
+    this.process.on('exit', () => { this.ready = false; this.process = null })
 
     await this.waitForReady()
   }
 
   private waitForReady(): Promise<void> {
     return new Promise((resolve) => {
-      if (this.ready) return resolve()
+      const started = Date.now()
       const interval = setInterval(async () => {
         try {
           const r = await fetch(`${this.serverUrl}/health`)
@@ -53,10 +51,14 @@ export class ServerManager {
             this.ready = true
             clearInterval(interval)
             resolve()
+            return
           }
-        } catch {}
+        } catch { /* not up yet */ }
+        if (Date.now() - started > 20000 || !this.process) {
+          clearInterval(interval)
+          resolve()
+        }
       }, 500)
-      setTimeout(() => { clearInterval(interval); resolve() }, 15000)
     })
   }
 
@@ -65,6 +67,12 @@ export class ServerManager {
       this.process.kill()
       this.process = null
     }
+    this.ready = false
+  }
+
+  async restart(): Promise<void> {
+    await this.stop()
+    await this.start()
   }
 
   isReady(): boolean {

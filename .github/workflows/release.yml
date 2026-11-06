@@ -67,25 +67,26 @@ jobs:
             dist/*.exe.blockmap
             dist/latest.yml
           draft: false
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          prerelease: false
+          make_latest: true
           body: |
             ## AI Music Studio ${{ github.ref_name }}
 
-            ### System Requirements
+            ### Install
+            Download `AIMusicStudio-Setup-*.exe` below and run it. Unsigned alpha: Windows SmartScreen may warn, choose "More info" then "Run anyway".
+
+            ### First start: AI engines
+            The AI backend needs Python 3.10+ (python.org, tick "Add to PATH"). Then open **Settings → AI Engines** and click **Install selected**. The app sets up its own environment, no manual pip needed.
+
+            ### Hardware
             - Windows 10/11 (64-bit)
-            - 4 GB RAM minimum (8 GB recommended)
-            - GPU: NVIDIA (CUDA), AMD Radeon R9 290+ (DirectML), or CPU-only
-            - Python 3.11+ for AI features (optional)
+            - Runs on 8 GB VRAM / 12 GB RAM (automatic low-memory mode), older CPUs, AMD Radeon R9 290 (DirectML) or CPU
+            - NVIDIA: pick the CUDA variant in AI Engines
 
-            ### GPU Support
-            - **NVIDIA**: Install CUDA PyTorch after setup
-            - **AMD Radeon (R9 290/RX series)**: Install torch-directml after setup
-            - **CPU-only / older hardware**: Works out of the box
+            ### AI chat
+            Needs an API key for Claude (Anthropic) or ChatGPT (OpenAI), set in Settings → AI.
 
-            ### AI Features
-            Requires an API key for Claude (Anthropic) or ChatGPT (OpenAI) — set in Settings → AI.
-
-            ### MCP Integration
-            Connect AI agents via `http://localhost:8765/mcp/tools`
+            ### MCP
+            MCP clients connect to `http://127.0.0.1:8765/mcp` while the app is running.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

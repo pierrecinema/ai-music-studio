@@ -6,6 +6,16 @@ const api = {
     getUrl: () => ipcRenderer.invoke('server:url'),
     isReady: () => ipcRenderer.invoke('server:ready')
   },
+  engines: {
+    status: () => ipcRenderer.invoke('engines:status'),
+    install: (groups: string[], torchVariant: string) => ipcRenderer.invoke('engines:install', groups, torchVariant),
+    cancel: () => ipcRenderer.invoke('engines:cancel'),
+    onLog: (cb: (line: string) => void) => {
+      const h = (_: unknown, line: string) => cb(line)
+      ipcRenderer.on('engines:log', h)
+      return () => ipcRenderer.removeListener('engines:log', h)
+    }
+  },
   dialog: {
     openAudio: () => ipcRenderer.invoke('dialog:open-audio'),
     openVideo: () => ipcRenderer.invoke('dialog:open-video'),

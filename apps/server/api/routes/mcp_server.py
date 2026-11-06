@@ -53,11 +53,12 @@ MCP_TOOLS = [
     },
     {
         "name": "audio_to_midi",
-        "description": "Convert an audio file to MIDI notes using basic-pitch",
+        "description": "Convert an audio file to MIDI notes (basic-pitch, or MuScriptor when installed; MuScriptor is non-commercial)",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "filePath": {"type": "string"}
+                "filePath": {"type": "string"},
+                "engine": {"type": "string", "enum": ["auto", "basic-pitch", "muscriptor"]}
             },
             "required": ["filePath"]
         }

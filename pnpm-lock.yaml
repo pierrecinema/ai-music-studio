@@ -47,6 +47,9 @@ importers:
       tone:
         specifier: ^14.7.77
         version: 14.9.17
+      webamp:
+        specifier: ^2.3.1
+        version: 2.3.1
       zustand:
         specifier: ^4.4.7
         version: 4.5.7(@types/react@18.3.31)(react@18.3.1)
@@ -76,7 +79,7 @@ importers:
         specifier: ^10.4.16
         version: 10.6.2(postcss@8.5.32)
       electron:
-        specifier: ^29.0.0
+        specifier: 29.4.6
         version: 29.4.6
       electron-builder:
         specifier: ^24.9.1
@@ -2350,6 +2353,9 @@ packages:
   web-streams-polyfill@4.0.0-beta.3:
     resolution: {integrity: sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==}
     engines: {node: '>= 14'}
+
+  webamp@2.3.1:
+    resolution: {integrity: sha512-u2NpSKYsUfDKltcvteF3vDbAzp+kDiymr5Sn0Vgfl+Uk9Kvd4GmuaF3stOxKNLbDH+RkJ2YZfus7O3W2axq4Qg==}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -4804,6 +4810,8 @@ snapshots:
   void-elements@3.1.0: {}
 
   web-streams-polyfill@4.0.0-beta.3: {}
+
+  webamp@2.3.1: {}
 
   webidl-conversions@3.0.1: {}
 

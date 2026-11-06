@@ -54,7 +54,7 @@ app.whenReady().then(async () => {
 
   registerIpcHandlers(serverManager)
 
-  await serverManager.start()
+  void serverManager.start()
 
   createWindow()
 

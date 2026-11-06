@@ -16,6 +16,7 @@ import { Settings } from './components/settings/Settings'
 import { MusicGenerator } from './components/music-gen/MusicGenerator'
 import { Mastering } from './components/mastering/Mastering'
 import { KaraokeExport } from './components/karaoke/KaraokeExport'
+import { WinampMode } from './components/winamp/WinampMode'
 
 // Hardware info fetched from backend
 interface HardwareInfo {
@@ -25,19 +26,19 @@ interface HardwareInfo {
   low_cpu: boolean
 }
 
-function StatusBar({ hw }: { hw: HardwareInfo | null }): React.ReactElement {
+function StatusBar({ hw, onWinamp }: { hw: HardwareInfo | null; onWinamp: () => void }): React.ReactElement {
   const { project } = useProjectStore()
   const gpuLabel = hw
     ? `${hw.gpu || 'CPU'} · ${hw.backend.toUpperCase()}`
-    : 'Connecting...'
+    : 'AI backend offline — set up in Settings → AI Engines'
 
   return (
     <footer className="app-statusbar">
-      <span>AI Music Studio v0.1.0-alpha</span>
+      <span>AI Music Studio v{__APP_VERSION__}</span>
       <span style={{ color: 'var(--border-mid)' }}>·</span>
       <span>{project.name}</span>
       <span style={{ color: 'var(--border-mid)' }}>·</span>
-      <span style={{ color: hw?.backend === 'cpu' ? 'var(--yellow)' : 'var(--green)' }}>
+      <span style={{ color: !hw ? 'var(--orange)' : hw.backend === 'cpu' ? 'var(--yellow)' : 'var(--green)' }}>
         {gpuLabel}
       </span>
       {hw?.low_cpu && (
@@ -47,6 +48,12 @@ function StatusBar({ hw }: { hw: HardwareInfo | null }): React.ReactElement {
         </>
       )}
       <span style={{ flex: 1 }} />
+      <button
+        onClick={onWinamp}
+        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 10 }}
+      >
+        Winamp (Ctrl+M)
+      </button>
       <span style={{ color: 'var(--accent-light)' }}>MCP: http://localhost:8765/mcp</span>
     </footer>
   )
@@ -56,6 +63,18 @@ export default function App(): React.ReactElement {
   const { activeView, theme } = useUIStore()
   const [hw, setHw] = useState<HardwareInfo | null>(null)
   const [chatOpen, setChatOpen] = useState(true)
+  const [winamp, setWinamp] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault()
+        setWinamp(v => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -156,8 +175,9 @@ export default function App(): React.ReactElement {
         )}
       </div>
 
-      <StatusBar hw={hw} />
+      <StatusBar hw={hw} onWinamp={() => setWinamp(true)} />
       <UpdateToast />
+      <WinampMode open={winamp} onClose={() => setWinamp(false)} />
     </div>
   )
 }

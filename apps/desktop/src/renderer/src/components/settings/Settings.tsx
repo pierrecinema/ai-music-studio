@@ -4,6 +4,7 @@ import i18n from '../../i18n'
 import { useUIStore } from '../../stores/ui.store'
 import { useAIStore } from '../../stores/ai.store'
 import type { AIProvider } from '../../types'
+import { EnginesTab } from './EnginesTab'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -20,7 +21,7 @@ const LANGUAGES = [
 const CLAUDE_MODELS = ['claude-opus-4-5', 'claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-sonnet-4-6']
 const OPENAI_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1', 'o1-mini']
 
-type SettingsTab = 'general' | 'ai' | 'audio' | 'appearance' | 'updates'
+type SettingsTab = 'general' | 'ai' | 'engines' | 'audio' | 'appearance' | 'updates'
 
 type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
 
@@ -134,7 +135,7 @@ export function Settings(): React.ReactElement {
       {/* Tab nav */}
       <div style={{ width: 160, background: 'var(--bg-secondary)', borderRight: '1px solid var(--border)', padding: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10, padding: '0 6px' }}>{t('settings.title')}</div>
-        {(['general', 'ai', 'audio', 'appearance', 'updates'] as SettingsTab[]).map(tab2 => (
+        {(['general', 'ai', 'engines', 'audio', 'appearance', 'updates'] as SettingsTab[]).map(tab2 => (
           <button
             key={tab2}
             onClick={() => setTab(tab2)}
@@ -151,7 +152,7 @@ export function Settings(): React.ReactElement {
               fontWeight: tab === tab2 ? 600 : 400
             }}
           >
-            {t(`settings.${tab2}`)}
+            {t(`settings.${tab2}`, { defaultValue: tab2 === 'engines' ? 'AI Engines' : tab2 === 'updates' ? 'Updates' : tab2 })}
           </button>
         ))}
       </div>
@@ -311,6 +312,7 @@ export function Settings(): React.ReactElement {
         )}
 
         {tab === 'updates' && <UpdatesTab />}
+        {tab === 'engines' && <EnginesTab />}
       </div>
     </div>
   )

@@ -136,6 +136,7 @@ export function Library(): React.ReactElement {
             </div>
           </div>
 
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} title="Rename this song" onClick={() => setRenaming(t.id)}>Rename</button>
           <button className="btn btn-ghost" style={{ fontSize: 16, color: t.favorite ? 'var(--yellow)' : 'var(--text-muted)' }} title="Favourite"
             onClick={() => void act(() => api.library.patch(t.id, { favorite: !t.favorite }))}>{t.favorite ? '★' : '☆'}</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} onClick={() => void toProject(t)}>Add to project</button>

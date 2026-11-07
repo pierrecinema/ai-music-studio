@@ -195,6 +195,8 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 ## Bibliothek
 
+**Songs umbenennen:** Direkt unter *Create music* hat jeder fertige Song ein Namensfeld über dem Player: hineinklicken, tippen, Enter oder woanders klicken, dann steht „saved“ daneben. Der Name gilt auch in der Bibliothek. In der Bibliothek geht es über den Knopf **Rename** (oder Doppelklick auf den Namen). Spuren in der Zeitleiste benennst du per Doppelklick auf den Spurnamen um.
+
 Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Musik\AI Music Studio` (nach Monaten sortiert, mit `library.json` für Titel, Stil, Modell, Seed und Länge). Unter **Library** kannst du Songs abspielen, umbenennen (Doppelklick), als Favorit markieren, suchen, in den Explorer zeigen, löschen und mit **Add to project** auf die Zeitleiste legen. Auch eigene Dateien lassen sich hinzufügen. Früher erzeugte Songs lagen nur im temporären Ordner und sind eventuell weg.
 
 ### Raster, stufenloses Verschieben, Quantisierung

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, type EngineState, type MusicEngineInfo, type MusicJob, type Resources, type Usage } from '../../lib/api'
+import { api, type EngineState, type MusicEngineInfo, type MusicJob, type MusicResult, type Resources, type Usage } from '../../lib/api'
 import { useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
@@ -180,6 +180,31 @@ async function askAI(system: string, user: string): Promise<string> {
 }
 
 // ─── main component ──────────────────────────────────────────────────────────
+
+// The name of a finished song: editable right here; it is the name in the Library as well.
+function ResultName({ result, fallback }: { result: MusicResult; fallback: string }): React.ReactElement {
+  const [name, setName] = useState(result.title || fallback)
+  const [state, setState] = useState<'idle' | 'saved' | 'failed'>('idle')
+  const id = result.library_id
+  const save = async (): Promise<void> => {
+    const v = name.trim()
+    if (!v || !id) return
+    try { await api.library.patch(id, { title: v }); setName(v); setState('saved') } catch { setState('failed') }
+    window.setTimeout(() => setState('idle'), 2500)
+  }
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
+      <input
+        value={name} disabled={!id} title={id ? 'Click to rename this song' : 'This song is not in the library, it cannot be renamed'}
+        onChange={(e) => { setName(e.target.value); setState('idle') }}
+        onBlur={() => void save()}
+        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+        style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', background: 'transparent', border: '1px solid transparent', borderBottom: '1px dashed var(--border-mid)', borderRadius: 4, padding: '2px 4px' }}
+      />
+      <span style={{ fontSize: 10, color: state === 'failed' ? 'var(--red)' : 'var(--green)', width: 40 }}>{state === 'saved' ? 'saved' : state === 'failed' ? 'failed' : ''}</span>
+    </span>
+  )
+}
 
 const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
@@ -770,9 +795,9 @@ export function CreateMusic(): React.ReactElement {
         )}
         {job?.results.map((r, i) => (
           <div key={r.audio_file} style={{ ...card, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)' }}>
-              <strong style={{ color: 'var(--text-primary)' }}>{p.title || 'Untitled'} · take {i + 1}</strong>
-              <span>seed {r.seed} · {r.duration}s</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--text-secondary)' }}>
+              <ResultName result={r} fallback={`${p.title || 'Untitled'} · take ${i + 1}`} />
+              <span style={{ flexShrink: 0 }}>seed {r.seed} · {r.duration}s</span>
             </div>
             <AudioFile path={r.audio_file} />
             <div>

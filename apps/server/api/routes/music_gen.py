@@ -415,17 +415,17 @@ def _engine_kwargs(pipe, req: GenerateMusicRequest, duration: int, seed: int,
 _cur: dict = {"job": None}
 
 
-def _keep(path: str, req: "GenerateMusicRequest", seed: int, seconds: float, engine: str) -> str:
-    """Put a finished track into the library for good and return its permanent path."""
+def _keep(path: str, req: "GenerateMusicRequest", seed: int, seconds: float, engine: str) -> dict:
+    """Put a finished track into the library for good. Returns what the UI needs: permanent path, id and title."""
     try:
         from services import library
         entry = library.add_track(path, {
             "title": req.title, "prompt": req.prompt or "", "lyrics": req.lyrics, "seed": seed,
             "duration": round(seconds, 1), "engine": engine, "source": "generated"})
-        return entry["path"]
+        return {"audio_file": entry["path"], "library_id": entry["id"], "title": entry["title"]}
     except Exception as e:  # noqa: BLE001 - the track is still usable from the temporary folder
         print(f"[library] could not save the track: {e}", flush=True)
-        return path
+        return {"audio_file": path, "library_id": None, "title": req.title or ""}
 
 
 def _device_text() -> str:
@@ -576,7 +576,7 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
                 stop_watch.set()
                 job.update(status="error", error=_short(e), warnings=warnings, results=results)
                 return
-            results.append({"audio_file": _keep(final, req, seed, seconds, req.engine), "seed": seed, "duration": round(seconds, 1)})
+            results.append({**_keep(final, req, seed, seconds, req.engine), "seed": seed, "duration": round(seconds, 1)})
             job["progress"] = {"done": i + 1, "total": total}
             job["results"] = list(results)
         stop_watch.set()
@@ -625,7 +625,7 @@ def _run_dr_job(job_id: str, req: GenerateMusicRequest) -> None:
                 except Exception as e:
                     job.update(status="error", error=_short(e), warnings=warnings, results=results)
                     return
-                results.append({"audio_file": _keep(final, req, 0, secs, "diffrhythm"), "seed": 0, "duration": round(secs, 1)})
+                results.append({**_keep(final, req, 0, secs, "diffrhythm"), "seed": 0, "duration": round(secs, 1)})
                 job["progress"] = {"done": i + 1, "total": total}
                 job["results"] = list(results)
         finally:
@@ -738,7 +738,7 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
                 except Exception as e:  # model / out-of-memory errors
                     job.update(status="error", error=str(e), warnings=warnings, results=results)
                     return
-                results.append({"audio_file": final if engine_kind == "stub" else _keep(final, req, seed, duration, "ace-step"), "seed": seed, "duration": duration})
+                results.append({**(({"audio_file": final, "library_id": None, "title": req.title or ""}) if engine_kind == "stub" else _keep(final, req, seed, duration, "ace-step")), "seed": seed, "duration": duration})
                 job["progress"] = {"done": i + 1, "total": total}
                 job["results"] = list(results)
         finally:

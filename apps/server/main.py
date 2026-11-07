@@ -106,4 +106,4 @@ if mcp_asgi_app is not None:
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("AMS_PORT", 38765))
-    uvicorn.run("main:app", host="127.0.0.1", port=port, log_level="info")
+    uvicorn.run("main:app", host="127.0.0.1", port=port, log_level="info", access_log=False)  # polling would fill the log

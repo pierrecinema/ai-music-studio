@@ -29,8 +29,11 @@ export function useShortcuts(): void {
       if (!combo) return
       const id = map.get(combo.toLowerCase())
       if (!id) return
-      // typing in a field keeps its own keys; function keys still work
-      if (isEditable(e.target) && !/^(F\d+|Escape)$/.test(combo)) return
+      // typing in a field keeps its own keys; function keys still work. A drop-down list has no use for
+      // Delete or Backspace, so those still reach the editor: after choosing a grid size the focus stays on the
+      // list, and Delete must not silently do nothing.
+      const onSelect = (e.target as HTMLElement | null)?.tagName === 'SELECT'
+      if (isEditable(e.target) && !/^(F\d+|Escape)$/.test(combo) && !(onSelect && /^(Delete|Backspace)$/.test(combo))) return
       if (shortcutState.winampOpen && id !== 'app.winamp') return
       e.preventDefault()
       if (e.repeat && !REPEATABLE.has(id)) return

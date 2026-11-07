@@ -18,9 +18,9 @@ export function GridControls({ compact = false }: { compact?: boolean }): React.
   }, [msg])
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
       <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Grid</span>
-      <select value={grid} onChange={(e) => setGrid(e.target.value)} style={{ fontSize: 11 }} title="Grid size (Ctrl+1 narrower, Ctrl+2 wider)">
+      <select value={grid} onChange={(e) => { setGrid(e.target.value); e.target.blur() }} style={{ fontSize: 11 }} title="Grid size (Ctrl+1 narrower, Ctrl+2 wider)">
         {GRID_OPTIONS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
       </select>
       <button

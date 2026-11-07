@@ -170,6 +170,7 @@ export function TopBar(): React.ReactElement {
             type="number"
             value={bpm}
             onChange={handleBpmChange}
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
             min={20} max={300}
           />
         </div>

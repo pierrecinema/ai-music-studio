@@ -7,6 +7,7 @@ import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER
 import type { Clip, Track } from '../../types'
 import { syncAll, useBeatMatch } from '../../beatmatch/store'
 import { minLength, snapBeat } from '../../edit/grid'
+import { runAction } from '../../shortcuts/handlers'
 import { GridControls } from '../../edit/GridControls'
 
 const TRACK_HEIGHT = 72
@@ -129,6 +130,14 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const [message, setMessage] = useState<string | null>(null)
   const [dropping, setDropping] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [menu, setMenu] = useState<{ x: number; y: number; kind: 'track' | 'clip'; trackId: string; clipId?: string } | null>(null)
+  useEffect(() => {
+    if (!menu) return undefined
+    const close = (): void => setMenu(null)
+    window.addEventListener('pointerdown', close)
+    window.addEventListener('keydown', close)
+    return () => { window.removeEventListener('pointerdown', close); window.removeEventListener('keydown', close) }
+  }, [menu])
   const [, rerender] = useState(0)
   useEffect(() => onBuffersChanged(() => rerender((n) => n + 1)), [])
 
@@ -278,7 +287,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
       style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', borderBottom: '1px solid var(--border)', position: 'relative', ...rootStyle }}
     >
       {/* toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '4px 8px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 }}>
         <button className="btn btn-ghost" style={tb} onClick={async () => setMessage((await pickAndImport({ trackId: selectedTrackId ?? undefined })).join(' ') || null)}>Import audio…</button>
         {(['audio', 'midi'] as const).map((t) => (
           <button key={t} className="btn btn-ghost" style={tb} onClick={() => addTrack(t)}>+ {t === 'audio' ? 'Audio' : 'MIDI'} track</button>
@@ -334,6 +343,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           {project.tracks.map((track) => (
             <div key={track.id} style={{ display: 'flex', height: TRACK_HEIGHT }}>
               <div
+                onContextMenu={(e) => { e.preventDefault(); selectTrack(track.id); selectClip(null); setMenu({ x: e.clientX, y: e.clientY, kind: 'track', trackId: track.id }) }}
                 onClick={() => { selectTrack(track.id); selectClip(null) }}
                 onDragOver={(e) => { if (e.dataTransfer.types.includes('text/ams-track')) { e.preventDefault(); e.stopPropagation() } }}
                 onDrop={(e) => {
@@ -400,6 +410,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                     <div
                       key={clip.id}
                       onPointerDown={(e) => startDrag(e, track, clip, width)}
+                      onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); selectTrack(track.id); selectClip(clip.id); setMenu({ x: e.clientX, y: e.clientY, kind: 'clip', trackId: track.id, clipId: clip.id }) }}
                       onDoubleClick={(e) => { e.stopPropagation(); openClip(track, clip) }}
                       style={{
                         position: 'absolute', left: clip.startTime * beatWidth, top: 8, width, height: TRACK_HEIGHT - 16, boxSizing: 'border-box',
@@ -430,6 +441,33 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           <Playhead scrollRef={scrollRef} beatWidth={beatWidth} />
         </div>
       </div>
+
+      {menu && (
+        <div onPointerDown={(e) => e.stopPropagation()}
+          style={{ position: 'fixed', left: menu.x, top: menu.y, zIndex: 9900, minWidth: 190, background: 'var(--bg-panel)', border: '1px solid var(--border-mid)', borderRadius: 8, padding: 4, boxShadow: '0 8px 24px #000a' }}>
+          {(menu.kind === 'track'
+            ? [
+              { label: 'Rename track', run: () => setRenaming(menu.trackId) },
+              { label: 'Duplicate track', run: () => { selectTrack(menu.trackId); runAction('edit.duplicate') } },
+              { label: 'Delete track', run: () => removeTrack(menu.trackId), danger: true }
+            ]
+            : [
+              { label: 'Split at the playhead', run: () => runAction('clip.split') },
+              { label: 'Duplicate clip', run: () => runAction('edit.duplicate') },
+              { label: 'Quantize', run: () => runAction('edit.quantize') },
+              { label: 'Delete clip', run: () => { if (menu.clipId) useProjectStore.getState().removeClip(menu.trackId, menu.clipId) }, danger: true }
+            ]
+          ).map((it) => (
+            <div key={it.label}
+              onClick={() => { it.run(); setMenu(null) }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-elevated)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+              style={{ padding: '6px 10px', borderRadius: 5, cursor: 'pointer', fontSize: 12, color: it.danger ? 'var(--red)' : 'var(--text-primary)' }}>
+              {it.label}
+            </div>
+          ))}
+        </div>
+      )}
 
       {dropping && (
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(124,58,237,0.18)', border: '2px dashed var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, pointerEvents: 'none', zIndex: 20 }}>
@@ -503,7 +541,7 @@ function MiniNotes({ clip, color }: { clip: Clip; color: string }): React.ReactE
   )
 }
 
-const tb: React.CSSProperties = { fontSize: 11, padding: '3px 10px' }
+const tb: React.CSSProperties = { fontSize: 11, padding: '3px 10px', whiteSpace: 'nowrap' }
 
 const tinyBtn: React.CSSProperties = {
   width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',

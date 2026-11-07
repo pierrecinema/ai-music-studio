@@ -18,6 +18,9 @@ import { StemSplitter } from './components/stem-splitter/StemSplitter'
 import { VideoComposer } from './components/video-composer/VideoComposer'
 import { Settings } from './components/settings/Settings'
 import { CreateMusic } from './components/create/CreateMusic'
+import { Library } from './components/library/Library'
+import { Welcome } from './components/common/Welcome'
+import { FeedbackButton } from './components/common/Feedback'
 import { Mastering } from './components/mastering/Mastering'
 import { KaraokeExport } from './components/karaoke/KaraokeExport'
 import { WinampMode } from './components/winamp/WinampMode'
@@ -88,6 +91,7 @@ function StatusBar({ hw, base, onWinamp, onSetup }: {
       >
         Winamp (Ctrl+M)
       </button>
+      <FeedbackButton />
       <span style={{ color: 'var(--accent-light)' }}>MCP: {base ? `${base}/mcp` : '…'}</span>
     </footer>
   )
@@ -137,6 +141,7 @@ export default function App(): React.ReactElement {
       case 'stem-splitter': return <StemSplitter />
       case 'video-composer':return <VideoComposer />
       case 'create':        return <CreateMusic />
+      case 'library':       return <Library />
       case 'mastering':     return <Mastering />
       case 'karaoke':       return <KaraokeExport />
       case 'settings':      return <Settings />
@@ -145,7 +150,7 @@ export default function App(): React.ReactElement {
   }
 
   // These views need room: they use the whole main area instead of the strip under the timeline
-  const FULL_VIEWS = ['create', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'video-composer', 'ai-chat']
+  const FULL_VIEWS = ['create', 'library', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'video-composer', 'ai-chat']
   const panel = renderPanel()
   const fullView = FULL_VIEWS.includes(activeView)
 
@@ -160,7 +165,7 @@ export default function App(): React.ReactElement {
           {fullView ? (
             <div style={{ flex: 1, minHeight: 0, overflow: 'auto', background: 'var(--bg-primary)' }}>{panel}</div>
           ) : (
-            <Timeline />
+            <Timeline fill={!panel} />
           )}
 
           {/* Bottom panel — shows the active view under the timeline */}
@@ -218,6 +223,7 @@ export default function App(): React.ReactElement {
 
       <StatusBar hw={hw} base={base} onWinamp={() => setWinamp(true)} onSetup={() => { sessionStorage.setItem('ams-settings-tab', 'engines'); setActiveView('settings') }} />
       <UpdateToast />
+      <Welcome />
       <WinampMode open={winamp} onClose={() => setWinamp(false)} />
     </div>
   )

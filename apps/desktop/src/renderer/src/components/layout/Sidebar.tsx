@@ -12,6 +12,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { view: 'create',         icon: '✨', labelKey: 'sidebar.create',        fallback: 'Create music' },
+  { view: 'library',        icon: '🎵', labelKey: 'sidebar.library',       fallback: 'Library' },
   { view: 'timeline',       icon: '⊞',  labelKey: 'sidebar.timeline',      fallback: 'Timeline' },
   { view: 'piano-roll',     icon: '♪',  labelKey: 'sidebar.pianoRoll',     fallback: 'Piano Roll' },
   { view: 'vocal-editor',   icon: '🎤', labelKey: 'sidebar.vocalEditor',   fallback: 'Vocal Editor' },

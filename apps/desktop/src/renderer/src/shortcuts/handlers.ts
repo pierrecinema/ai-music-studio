@@ -4,6 +4,9 @@ import { useProjectStore } from '../stores/project.store'
 import { useUIStore } from '../stores/ui.store'
 import type { Track } from '../types'
 import { markStep, redo, undo } from './history'
+import { isPlaying, pause, play, startRecording, stop } from '../audio/engine'
+import { newProject, openProject, saveProject, saveProjectAs } from '../project/io'
+import { EXPORT_EVENT, reportOpen } from '../components/layout/FileMenu'
 
 export const WINAMP_EVENT = 'ams:toggle-winamp'
 
@@ -58,24 +61,41 @@ function toggleFullscreen(): void {
 }
 
 const HANDLERS: Record<string, () => void> = {
-  'transport.playStop': () => {
-    const a = useAudioStore.getState()
-    if (a.isPlaying) a.pause()
-    else a.play()
-  },
-  'transport.play': () => useAudioStore.getState().play(),
-  'transport.stop': () => useAudioStore.getState().pause(),
-  'transport.toStart': () => useAudioStore.getState().stop(),
+  'transport.playStop': () => { if (isPlaying()) pause(); else void play() },
+  'transport.play': () => { void play() },
+  'transport.stop': () => pause(),
+  'transport.toStart': () => stop(),
   'transport.record': () => {
-    const a = useAudioStore.getState()
-    a.setRecording(!a.isRecording)
+    if (useAudioStore.getState().isRecording) pause()
+    else void startRecording().then((problem) => { if (problem) window.alert(problem) })
   },
   'transport.metronome': () => useAudioStore.getState().toggleMetronome(),
 
   'edit.undo': () => void undo(),
   'edit.redo': () => void redo(),
-  'edit.duplicate': duplicateSelectedTrack,
-  'file.new': () => useProjectStore.getState().newProject(),
+  'edit.duplicate': () => {
+    const st = useProjectStore.getState()
+    const owner = st.project.tracks.find((t) => t.clips.some((c) => c.id === st.selectedClipId))
+    if (owner && st.selectedClipId) st.duplicateClip(owner.id, st.selectedClipId)
+    else duplicateSelectedTrack()
+  },
+  'file.new': () => { newProject() },
+  'file.open': () => { void openProject().then(reportOpen) },
+  'file.save': () => { void saveProject().catch((e) => window.alert(`Saving failed: ${(e as Error).message}`)) },
+  'file.saveAs': () => { void saveProjectAs().catch((e) => window.alert(`Saving failed: ${(e as Error).message}`)) },
+  'file.export': () => window.dispatchEvent(new CustomEvent(EXPORT_EVENT)),
+  'clip.split': () => {
+    const st = useProjectStore.getState()
+    const owner = st.project.tracks.find((t) => t.clips.some((c) => c.id === st.selectedClipId))
+    if (owner && st.selectedClipId) st.splitClip(owner.id, st.selectedClipId, useAudioStore.getState().currentBeat)
+  },
+  'clip.delete': () => {
+    const st = useProjectStore.getState()
+    const owner = st.project.tracks.find((t) => t.clips.some((c) => c.id === st.selectedClipId))
+    if (owner && st.selectedClipId) { st.removeClip(owner.id, st.selectedClipId); return }
+    const t = selectedTrack()
+    if (t && (!t.clips.length || window.confirm(`Delete track "${t.name}" with ${t.clips.length} clip(s)?`))) st.removeTrack(t.id)
+  },
 
   'track.addAudio': () => addTrack('audio'),
   'track.addMidi': () => addTrack('midi'),

@@ -89,6 +89,31 @@ declare global {
       }
       fs: { readFile: (path: string) => Promise<Uint8Array> }
       shell: { openPath: (path: string) => Promise<void> }
+      project: {
+        openDialog: () => Promise<{ path: string; text: string } | null>
+        read: (path: string) => Promise<string>
+        saveDialog: (name: string) => Promise<string | null>
+        write: (path: string, text: string) => Promise<void>
+        autosaveWrite: (text: string) => Promise<void>
+        autosaveRead: () => Promise<{ text: string; mtime: number } | null>
+        autosaveClear: () => Promise<void>
+      }
+      files: {
+        exists: (paths: string[]) => Promise<boolean[]>
+        saveRecording: (bytes: Uint8Array) => Promise<string>
+        showItem: (path: string) => Promise<void>
+      }
+      exporter: {
+        saveDialog: (name: string, ext: 'wav' | 'mp3') => Promise<string | null>
+        write: (path: string, bytes: Uint8Array) => Promise<void>
+        mp3: (bytes: Uint8Array, outPath: string, kbps: number) => Promise<{ ok: boolean; error?: string }>
+      }
+      feedback: {
+        logError: (message: string) => Promise<void>
+        crashTail: () => Promise<string>
+        openIssues: () => Promise<void>
+        showCrashLog: () => Promise<void>
+      }
       updater: {
         check: () => Promise<void>
         download: () => Promise<void>

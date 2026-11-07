@@ -8,8 +8,20 @@ interface ProjectState {
   selectedTrackId: string | null
   selectedClipId: string | null
   selectedNoteIds: string[]
+  filePath: string | null      // where the project was saved (null = never saved)
+  dirty: boolean               // changed since the last save
+  cleanToken: number           // bumped when the project is replaced or saved, so that it is not counted as an edit
 
   setProject: (p: Project) => void
+  loadProject: (p: Project, filePath: string | null) => void
+  setFilePath: (path: string | null) => void
+  markClean: () => void
+  markSaved: (project: Project, filePath: string) => void
+  setBpm: (bpm: number) => void
+  selectClip: (id: string | null) => void
+  moveClip: (fromTrackId: string, clipId: string, toTrackId: string, startTime: number) => void
+  splitClip: (trackId: string, clipId: string, atBeat: number) => boolean
+  duplicateClip: (trackId: string, clipId: string) => void
   updateProject: (patch: Partial<Project>) => void
   newProject: () => void
 
@@ -51,11 +63,96 @@ export const useProjectStore = create<ProjectState>()(
     selectedTrackId: null,
     selectedClipId: null,
     selectedNoteIds: [],
+    filePath: null,
+    dirty: false,
+    cleanToken: 0,
 
     setProject: (p) => set({ project: p }),
+    loadProject: (p, filePath) =>
+      set((s) => ({ project: p, filePath, dirty: false, cleanToken: s.cleanToken + 1, selectedTrackId: null, selectedClipId: null, selectedNoteIds: [] })),
+    setFilePath: (filePath) => set({ filePath }),
+    markClean: () => set((s) => ({ dirty: false, cleanToken: s.cleanToken + 1 })),
+    markSaved: (project, filePath) => set((s) => ({ project, filePath, dirty: false, cleanToken: s.cleanToken + 1 })),
+    selectClip: (selectedClipId) => set({ selectedClipId }),
+
+    // Changing the tempo keeps audio where it is in TIME (audio is not stretched); MIDI follows the tempo.
+    setBpm: (bpm) =>
+      set((s) => {
+        const old = s.project.bpm || 120
+        if (bpm === old) return s
+        const k = bpm / old
+        const tracks = s.project.tracks.map((t) => ({
+          ...t,
+          clips: t.clips.map((c) => (c.audioFile ? { ...c, startTime: c.startTime * k, duration: c.duration * k } : c))
+        }))
+        return { project: { ...s.project, bpm, tracks, updatedAt: new Date().toISOString() } }
+      }),
+
+    moveClip: (fromTrackId, clipId, toTrackId, startTime) =>
+      set((s) => {
+        const from = s.project.tracks.find((t) => t.id === fromTrackId)
+        const clip = from?.clips.find((c) => c.id === clipId)
+        if (!from || !clip) return s
+        const moved = { ...clip, startTime: Math.max(0, startTime) }
+        const tracks = s.project.tracks.map((t) => {
+          if (t.id === fromTrackId && t.id === toTrackId) return { ...t, clips: t.clips.map((c) => (c.id === clipId ? moved : c)) }
+          if (t.id === fromTrackId) return { ...t, clips: t.clips.filter((c) => c.id !== clipId) }
+          if (t.id === toTrackId) return { ...t, clips: [...t.clips, moved] }
+          return t
+        })
+        return { project: { ...s.project, tracks }, selectedTrackId: toTrackId }
+      }),
+
+    // cut one clip in two at `atBeat` (audio keeps its place in the file through `offset`)
+    splitClip: (trackId, clipId, atBeat) => {
+      const s = get()
+      const track = s.project.tracks.find((t) => t.id === trackId)
+      const clip = track?.clips.find((c) => c.id === clipId)
+      if (!track || !clip) return false
+      const cut = atBeat - clip.startTime
+      if (cut <= 0.01 || cut >= clip.duration - 0.01) return false
+      const bpm = s.project.bpm || 120
+      const left: Clip = { ...clip, duration: cut }
+      const right: Clip = {
+        ...clip, id: nanoid(), startTime: atBeat, duration: clip.duration - cut,
+        offset: clip.audioFile ? (clip.offset ?? 0) + (cut * 60) / bpm : clip.offset,
+        notes: clip.notes
+          ? clip.notes.filter((n) => n.startTime + n.duration > cut).map((n) => ({
+              ...n, id: nanoid(), startTime: Math.max(0, n.startTime - cut),
+              duration: n.startTime < cut ? n.startTime + n.duration - cut : n.duration
+            }))
+          : undefined
+      }
+      if (left.notes) left.notes = left.notes.filter((n) => n.startTime < cut).map((n) => ({ ...n, duration: Math.min(n.duration, cut - n.startTime) }))
+      set({
+        project: {
+          ...s.project,
+          tracks: s.project.tracks.map((t) =>
+            t.id === trackId ? { ...t, clips: t.clips.flatMap((c) => (c.id === clipId ? [left, right] : [c])) } : t
+          )
+        },
+        selectedClipId: right.id
+      })
+      return true
+    },
+
+    duplicateClip: (trackId, clipId) =>
+      set((s) => {
+        const track = s.project.tracks.find((t) => t.id === trackId)
+        const clip = track?.clips.find((c) => c.id === clipId)
+        if (!track || !clip) return s
+        const copy: Clip = {
+          ...clip, id: nanoid(), startTime: clip.startTime + clip.duration,
+          notes: clip.notes?.map((n) => ({ ...n, id: nanoid() }))
+        }
+        return {
+          project: { ...s.project, tracks: s.project.tracks.map((t) => (t.id === trackId ? { ...t, clips: [...t.clips, copy] } : t)) },
+          selectedClipId: copy.id
+        }
+      }),
     updateProject: (patch) =>
       set((s) => ({ project: { ...s.project, ...patch, updatedAt: new Date().toISOString() } })),
-    newProject: () => set({ project: defaultProject(), selectedTrackId: null, selectedClipId: null, selectedNoteIds: [] }),
+    newProject: () => set((s) => ({ project: defaultProject(), filePath: null, dirty: false, cleanToken: s.cleanToken + 1, selectedTrackId: null, selectedClipId: null, selectedNoteIds: [] })),
 
     addTrack: (type) =>
       set((s) => {
@@ -84,7 +181,8 @@ export const useProjectStore = create<ProjectState>()(
     removeTrack: (id) =>
       set((s) => ({
         project: { ...s.project, tracks: s.project.tracks.filter((t) => t.id !== id) },
-        selectedTrackId: s.selectedTrackId === id ? null : s.selectedTrackId
+        selectedTrackId: s.selectedTrackId === id ? null : s.selectedTrackId,
+        selectedClipId: s.project.tracks.find((t) => t.id === id)?.clips.some((c) => c.id === s.selectedClipId) ? null : s.selectedClipId
       })),
 
     selectTrack: (id) => set({ selectedTrackId: id }),
@@ -113,6 +211,7 @@ export const useProjectStore = create<ProjectState>()(
 
     removeClip: (trackId, clipId) =>
       set((s) => ({
+        selectedClipId: s.selectedClipId === clipId ? null : s.selectedClipId,
         project: {
           ...s.project,
           tracks: s.project.tracks.map((t) =>

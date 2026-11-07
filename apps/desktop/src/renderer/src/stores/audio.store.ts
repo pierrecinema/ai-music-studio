@@ -7,6 +7,7 @@ interface AudioState {
   bpm: number
   masterVolume: number
   metronomeEnabled: boolean
+  loading: boolean          // audio files are being read before playback starts
 
   setPlaying: (v: boolean) => void
   setRecording: (v: boolean) => void
@@ -26,6 +27,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   bpm: 120,
   masterVolume: 0.8,
   metronomeEnabled: false,
+  loading: false,
 
   setPlaying: (isPlaying) => set({ isPlaying }),
   setRecording: (isRecording) => set({ isRecording }),

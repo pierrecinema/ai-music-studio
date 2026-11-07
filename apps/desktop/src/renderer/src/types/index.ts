@@ -25,10 +25,13 @@ export interface Track {
 
 export interface Clip {
   id: string
-  startTime: number
-  duration: number
+  startTime: number   // in beats
+  duration: number    // in beats
   notes?: Note[]
   audioFile?: string
+  offset?: number     // audio clips: seconds skipped at the start of the file (left trim)
+  gain?: number       // audio clips: 0..2, default 1
+  name?: string
   color?: string
 }
 
@@ -78,4 +81,4 @@ export interface StemResult {
   guitar?: string
 }
 
-export type View = 'timeline' | 'piano-roll' | 'mixer' | 'vocal-editor' | 'instruments' | 'ai-chat' | 'stem-splitter' | 'video-composer' | 'create' | 'mastering' | 'karaoke' | 'settings'
+export type View = 'library' | 'timeline' | 'piano-roll' | 'mixer' | 'vocal-editor' | 'instruments' | 'ai-chat' | 'stem-splitter' | 'video-composer' | 'create' | 'mastering' | 'karaoke' | 'settings'

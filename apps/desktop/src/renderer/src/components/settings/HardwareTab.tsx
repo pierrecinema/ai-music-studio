@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { api, type CapabilityReport } from '../../lib/api'
+import { copyText } from '../../lib/clipboard'
 
 const card: React.CSSProperties = {
   background: 'var(--bg-panel)', border: '1px solid var(--border-mid)', borderRadius: 10, padding: 14,
@@ -36,7 +37,7 @@ export function HardwareTab(): React.ReactElement {
       '== Backend log (end) ==',
       log,
     ].join('\n')
-    try { await navigator.clipboard.writeText(text); setCopied(true); window.setTimeout(() => setCopied(false), 4000) } catch { /* clipboard blocked */ }
+    if (await copyText(text)) { setCopied(true); window.setTimeout(() => setCopied(false), 4000) }
   }
 
   const load = useCallback(async (refresh: boolean) => {

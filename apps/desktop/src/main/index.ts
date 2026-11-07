@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { ServerManager } from './server-manager'
 import { registerIpcHandlers } from './ipc-handlers'
 import { setupUpdater } from './updater'
+import { registerFileHandlers, setupCrashLog } from './files-ipc'
 
 let mainWindow: BrowserWindow | null = null
 const serverManager = new ServerManager()
@@ -46,7 +47,10 @@ function createWindow(): void {
   }
 }
 
+setupCrashLog()
+
 app.whenReady().then(async () => {
+  registerFileHandlers()
   electronApp.setAppUserModelId('com.aimusic.studio')
 
   // The default Electron menu owns accelerators such as Ctrl+M (minimize) and the Edit/View

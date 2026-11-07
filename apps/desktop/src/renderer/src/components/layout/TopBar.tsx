@@ -2,64 +2,52 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAudioStore } from '../../stores/audio.store'
 import { useProjectStore } from '../../stores/project.store'
+import { masterLevel, pause, play, startRecording, stop } from '../../audio/engine'
+import { historySize, redo, undo } from '../../shortcuts/history'
+import { FileMenu } from './FileMenu'
 import logo from '../../assets/logo.png'
 
-// Animated level meters for the status bar
+// Level meter of the master output: real peaks from the audio engine, with a short fall-back
 function LevelMeter(): React.ReactElement {
-  const [levels, setLevels] = useState([0.3, 0.5, 0.4, 0.6, 0.3, 0.7, 0.5, 0.4])
+  const [level, setLevel] = useState(0)
   const { isPlaying } = useAudioStore()
 
   useEffect(() => {
-    if (!isPlaying) return
-    const id = setInterval(() => {
-      setLevels(prev => prev.map(() => Math.random() * 0.9 + 0.05))
-    }, 80)
-    return () => clearInterval(id)
+    if (!isPlaying) { setLevel(0); return }
+    let raf = 0
+    let held = 0
+    const loop = (): void => {
+      held = Math.max(masterLevel(), held * 0.9)
+      setLevel(held)
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
   }, [isPlaying])
 
+  const bars = 8
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 18, padding: '0 4px' }}>
-      {levels.map((h, i) => (
-        <div
-          key={i}
-          style={{
-            width: 3,
-            height: isPlaying ? `${h * 100}%` : '20%',
-            background: h > 0.8 ? 'var(--red)' : h > 0.6 ? 'var(--yellow)' : 'var(--green)',
-            borderRadius: 1,
-            transition: 'height 60ms ease-out'
-          }}
-        />
-      ))}
+    <div title="Master level" style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 18, padding: '0 4px' }}>
+      {Array.from({ length: bars }, (_, i) => {
+        const on = level * bars > i + 0.2
+        const hot = i >= bars - 1 ? 'var(--red)' : i >= bars - 3 ? 'var(--yellow)' : 'var(--green)'
+        return <div key={i} style={{ width: 3, height: `${30 + (i / bars) * 70}%`, background: on ? hot : 'var(--bg-elevated)', borderRadius: 1 }} />
+      })}
     </div>
   )
 }
 
-// Position display (bar:beat:tick)
+// Position display (bar.beat.tick) that follows the real play position
 function PositionDisplay(): React.ReactElement {
-  const [pos, setPos] = useState({ bar: 1, beat: 1, tick: 0 })
-  const { isPlaying } = useAudioStore()
-  const { project } = useProjectStore()
-
-  useEffect(() => {
-    if (!isPlaying) return
-    const bpm = project.bpm || 120
-    const msPerTick = (60000 / bpm) / 24
-    const id = setInterval(() => {
-      setPos(prev => {
-        let { bar, beat, tick } = prev
-        tick++
-        if (tick >= 24) { tick = 0; beat++ }
-        if (beat > 4) { beat = 1; bar++ }
-        return { bar, beat, tick }
-      })
-    }, msPerTick)
-    return () => clearInterval(id)
-  }, [isPlaying, project.bpm])
-
+  const beat = useAudioStore((s) => s.currentBeat)
+  const perBar = useProjectStore((s) => s.project.timeSignature?.[0] ?? 4)
+  const whole = Math.floor(beat)
+  const bar = Math.floor(whole / perBar) + 1
+  const inBar = (whole % perBar) + 1
+  const tick = Math.floor((beat - whole) * 24)
   return (
     <div className="tb-position">
-      {String(pos.bar).padStart(3,' ')}.{pos.beat}.{String(pos.tick).padStart(2,'0')}
+      {String(bar).padStart(3, ' ')}.{inBar}.{String(tick).padStart(2, '0')}
     </div>
   )
 }
@@ -67,19 +55,29 @@ function PositionDisplay(): React.ReactElement {
 export function TopBar(): React.ReactElement {
   const { t } = useTranslation()
   const {
-    isPlaying, isRecording, bpm,
-    play, pause, stop, setRecording,
+    isPlaying, isRecording, bpm, loading,
     setBpm, masterVolume, setMasterVolume,
     toggleMetronome, metronomeEnabled
   } = useAudioStore()
-  const { project, updateProject } = useProjectStore()
+  const project = useProjectStore((s) => s.project)
+  const dirty = useProjectStore((s) => s.dirty)
+  const setProjectBpm = useProjectStore((s) => s.setBpm)
+  // re-render when the undo history changes size
+  useProjectStore((s) => s.project)
+  const hist = historySize()
 
   const handleBpmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value)
     if (val >= 20 && val <= 300) {
       setBpm(val)
-      updateProject({ bpm: val })
+      setProjectBpm(val)
     }
+  }
+
+  const toggleRecord = async (): Promise<void> => {
+    if (isRecording) { pause(); return }
+    const problem = await startRecording()
+    if (problem) window.alert(problem)
   }
 
   return (
@@ -103,6 +101,15 @@ export function TopBar(): React.ReactElement {
 
       <div className="tb-divider" />
 
+      {/* File and undo */}
+      <div className="tb-section" style={{ gap: 3 }}>
+        <FileMenu />
+        <button className="tb-btn" onClick={() => void undo()} disabled={hist.undo === 0} data-tooltip="Undo (Ctrl+Z)" style={{ opacity: hist.undo ? 1 : 0.35, fontSize: 14 }}>↶</button>
+        <button className="tb-btn" onClick={() => void redo()} disabled={hist.redo === 0} data-tooltip="Redo (Ctrl+Y)" style={{ opacity: hist.redo ? 1 : 0.35, fontSize: 14 }}>↷</button>
+      </div>
+
+      <div className="tb-divider" />
+
       {/* Transport */}
       <div className="tb-section" style={{ gap: 3 }}>
         {/* Back to start */}
@@ -115,7 +122,8 @@ export function TopBar(): React.ReactElement {
         {/* Play/Pause */}
         <button
           className={`tb-btn${isPlaying ? ' active' : ''}`}
-          onClick={isPlaying ? pause : play}
+          title={loading ? 'Reading audio files…' : undefined}
+          onClick={() => (isPlaying ? pause() : void play())}
           data-tooltip={isPlaying ? t('toolbar.pause') : t('toolbar.play')}
           style={{ width: 36, height: 36, borderRadius: 8 }}
         >
@@ -133,7 +141,7 @@ export function TopBar(): React.ReactElement {
         {/* Record */}
         <button
           className={`tb-btn record${isRecording ? ' active' : ''}`}
-          onClick={() => setRecording(!isRecording)}
+          onClick={() => void toggleRecord()}
           data-tooltip={t('toolbar.record')}
         >
           <svg width="11" height="11" viewBox="0 0 11 11" fill="currentColor">
@@ -204,7 +212,7 @@ export function TopBar(): React.ReactElement {
 
       {/* Project name */}
       <div className="tb-section" style={{ color: 'var(--text-muted)', fontSize: 11 }}>
-        {project.name}
+        {dirty ? '• ' : ''}{project.name}
       </div>
 
       <div className="tb-divider" />

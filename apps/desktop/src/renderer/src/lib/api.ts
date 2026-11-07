@@ -54,6 +54,10 @@ export interface TrainJob {
   step?: number | null; step_total?: number | null; loss?: number; log: string[]; warning?: string; started?: number; updated?: number
   lora?: { id: string; name: string }
 }
+export interface LibraryTrack {
+  id: string; title: string; file: string; path: string; exists: boolean; created: number; duration: number | null
+  engine: string; source: string; prompt: string; lyrics: string; seed: number | null; favorite: boolean; notes: string
+}
 export interface KaraokeWord { text: string; start: number; end: number }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -80,6 +84,19 @@ function describeError(detail: unknown, fallback: string): string {
   }
   if (detail && typeof detail === 'object') return JSON.stringify(detail)
   return fallback
+}
+
+async function send<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const r = await fetch(`${await baseUrl()}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  })
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ detail: r.statusText }))
+    throw new Error(describeError(err.detail, r.statusText))
+  }
+  return r.json()
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -175,6 +192,13 @@ export const api = {
       post<{ jobId: string }>('/train/start', body),
     job: (id: string) => get<TrainJob>(`/train/jobs/${id}`),
     stop: (id: string) => post<{ stopped: boolean }>(`/train/jobs/${id}/stop`, {}),
+  },
+
+  library: {
+    list: () => get<{ dir: string; tracks: LibraryTrack[] }>('/library'),
+    patch: (id: string, body: { title?: string; favorite?: boolean; notes?: string }) => send<LibraryTrack>('PATCH', `/library/${id}`, body),
+    remove: (id: string, deleteFile = true) => send<{ removed: string }>('DELETE', `/library/${id}?delete_file=${deleteFile}`),
+    importFile: (path: string, title = '', source = 'import') => post<LibraryTrack>('/library/import', { path, title, source }),
   },
 
   system: {

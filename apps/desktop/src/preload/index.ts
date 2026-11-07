@@ -63,6 +63,31 @@ const api = {
   shell: {
     openPath: (path: string) => ipcRenderer.invoke('shell:open-path', path)
   },
+  project: {
+    openDialog: () => ipcRenderer.invoke('project:open-dialog'),
+    read: (path: string) => ipcRenderer.invoke('project:read', path),
+    saveDialog: (name: string) => ipcRenderer.invoke('project:save-dialog', name),
+    write: (path: string, text: string) => ipcRenderer.invoke('project:write', path, text),
+    autosaveWrite: (text: string) => ipcRenderer.invoke('project:autosave-write', text),
+    autosaveRead: () => ipcRenderer.invoke('project:autosave-read'),
+    autosaveClear: () => ipcRenderer.invoke('project:autosave-clear')
+  },
+  files: {
+    exists: (paths: string[]) => ipcRenderer.invoke('files:exists', paths),
+    saveRecording: (bytes: Uint8Array) => ipcRenderer.invoke('files:save-recording', bytes),
+    showItem: (path: string) => ipcRenderer.invoke('files:show-item', path)
+  },
+  exporter: {
+    saveDialog: (name: string, ext: 'wav' | 'mp3') => ipcRenderer.invoke('export:save-dialog', name, ext),
+    write: (path: string, bytes: Uint8Array) => ipcRenderer.invoke('export:write', path, bytes),
+    mp3: (bytes: Uint8Array, outPath: string, kbps: number) => ipcRenderer.invoke('export:mp3', bytes, outPath, kbps)
+  },
+  feedback: {
+    logError: (message: string) => ipcRenderer.invoke('log:renderer', message),
+    crashTail: () => ipcRenderer.invoke('log:crash-tail'),
+    openIssues: () => ipcRenderer.invoke('app:open-feedback'),
+    showCrashLog: () => ipcRenderer.invoke('app:show-crash-log')
+  },
   updater: {
     check: () => ipcRenderer.invoke('updater:check'),
     download: () => ipcRenderer.invoke('updater:download'),

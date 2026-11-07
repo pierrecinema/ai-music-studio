@@ -173,6 +173,34 @@ Du kannst ACE-Step einen eigenen Stil beibringen. Du brauchst Songs, an denen du
 
 Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training selbst wurde in dieser Version nur mit einem Ersatz-Trainer getestet, nicht mit einer echten NVIDIA-Karte.
 
+## Zeitleiste, Mixer, Klaviatur-Editor, Projekte (Grundfunktionen)
+
+**Abspielen.** Space startet und pausiert, die Stopp-Taste springt an den Anfang. Der Abspielkopf wandert über alle Spuren und die Ansicht folgt ihm. Ein Klick in das Lineal setzt den Abspielkopf. Das Metronom (♩) klickt auf jeden Schlag, auf die Eins eines Taktes höher.
+
+**Audio importieren.** *Import audio…* oder Dateien (wav, mp3, flac, ogg, m4a, aiff) aus dem Explorer auf die Zeitleiste ziehen. Ein Doppelklick auf eine leere Audiospur öffnet den Dateidialog an dieser Stelle. Jeder Clip zeigt seine Wellenform.
+
+**Clips bearbeiten.** Ziehen verschiebt (auch auf andere passende Spuren), an den Rändern ziehen kürzt (links und rechts; Audio bleibt dabei an derselben Stelle der Datei). Alles rastet auf Viertelschläge ein, **Alt** hebt das auf. **Ctrl+E** (Cubase: **Alt+X**) teilt den gewählten Clip am Abspielkopf, **Ctrl+D** dupliziert ihn, **Entf** löscht ihn (ohne gewählten Clip die gewählte Spur). Mit **Strg+Mausrad** zoomst du. Spuren benennst du mit Doppelklick auf den Namen um.
+
+**Mixer.** Lautstärke, Pan, Mute und Solo wirken beim Abspielen sofort. Die Pegelanzeigen sind echte Spitzenwerte (mit kurzer Haltemarke), auch am Master. Ein Doppelklick auf einen Regler setzt ihn zurück.
+
+**MIDI und Klaviatur-Editor.** Doppelklick auf eine leere MIDI-Spur legt einen Clip an, Doppelklick auf den Clip öffnet den Editor. Zeichnen-Werkzeug: Klick setzt eine Note (mit Klang), ziehen verschiebt, am rechten Rand ziehen ändert die Länge, **Entf** löscht. Ein Klick auf die Klaviatur links spielt den Ton. Der eingebaute Klang ist ein einfacher Synthesizer (zwei Oszillatoren mit Filter), kein Instrumentenpaket.
+
+**Aufnahme.** Die rote Taste nimmt vom Mikrofon oder Audio-Interface auf, während das Projekt läuft, und legt die Aufnahme als Clip ab. Es gibt keine Latenzkorrektur.
+
+**Tempo.** Ändert man das Tempo, bleibt Audio zeitlich an seiner Stelle (es wird nicht gestreckt); MIDI folgt dem Tempo.
+
+**Projekte.** *File → Save* (Ctrl+S) schreibt eine `.ams`-Datei. Die Audiodateien bleiben, wo sie sind (Bibliothek oder Importordner); fehlt beim Öffnen eine, meldet die App es und der Clip bleibt stumm und rot. Alle 30 Sekunden sichert die App ungespeicherte Arbeit; nach einem Absturz bietet sie beim Start an, sie wiederherzustellen. Ein Punkt im Fenstertitel zeigt ungespeicherte Änderungen. Rückgängig/Wiederholen (Ctrl+Z / Ctrl+Y) gelten für alle Änderungen am Projekt.
+
+**Export.** *File → Export audio* mischt das ganze Projekt (Mute, Solo, Lautstärke und Pan wie gehört) zu WAV (16 oder 24 Bit) oder MP3 (braucht ffmpeg; fehlt es, wird stattdessen eine WAV-Datei gespeichert). Optional normalisiert die App auf −1 dBFS und warnt, wenn der Mix übersteuert.
+
+## Bibliothek
+
+Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Musik\AI Music Studio` (nach Monaten sortiert, mit `library.json` für Titel, Stil, Modell, Seed und Länge). Unter **Library** kannst du Songs abspielen, umbenennen (Doppelklick), als Favorit markieren, suchen, in den Explorer zeigen, löschen und mit **Add to project** auf die Zeitleiste legen. Auch eigene Dateien lassen sich hinzufügen. Früher erzeugte Songs lagen nur im temporären Ordner und sind eventuell weg.
+
+## Beta-Test
+
+Wie du testest und Probleme meldest, steht in `docs/BETA.md`. Unten rechts gibt es den Knopf **Feedback**: Er sammelt Systemdaten, Engine-Status und die letzten Log-Zeilen, sendet aber nichts automatisch.
+
 ## 4. Speicherorte
 
 | Was | Wo |

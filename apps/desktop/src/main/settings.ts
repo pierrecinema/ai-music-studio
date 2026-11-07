@@ -5,6 +5,7 @@ import { app } from 'electron'
 
 interface Settings {
   modelsDir?: string
+  libraryDir?: string
 }
 
 const file = (): string => join(app.getPath('userData'), 'settings.json')
@@ -30,6 +31,13 @@ export function modelsDir(): string {
   return readSettings().modelsDir || DEFAULT_MODELS_DIR
 }
 
+/** Folder of the track library (generated songs). Documents-style location, easy to find and back up. */
+export const DEFAULT_LIBRARY_DIR = join(homedir(), 'Music', 'AI Music Studio')
+
+export function libraryDir(): string {
+  return readSettings().libraryDir || DEFAULT_LIBRARY_DIR
+}
+
 export const MODEL_SUBDIRS = { acestep: 'ace-step', huggingface: 'huggingface', torch: 'torch' } as const
 export type ModelId = keyof typeof MODEL_SUBDIRS
 
@@ -40,6 +48,7 @@ export function backendModelEnv(): Record<string, string> {
     AMS_ACESTEP_DIR: join(base, MODEL_SUBDIRS.acestep),
     HF_HOME: join(base, MODEL_SUBDIRS.huggingface),
     TORCH_HOME: join(base, MODEL_SUBDIRS.torch),
-    HF_HUB_DISABLE_SYMLINKS_WARNING: '1'
+    HF_HUB_DISABLE_SYMLINKS_WARNING: '1',
+    AMS_LIBRARY_DIR: libraryDir()
   }
 }

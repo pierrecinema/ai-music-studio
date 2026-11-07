@@ -762,6 +762,12 @@ export function CreateMusic(): React.ReactElement {
         {job?.warnings.map((w, i) => <div key={i} style={{ color: 'var(--yellow)', fontSize: 11 }}>{w}</div>)}
         {!job && !error && <div style={hint}>Your songs appear here. Describe the music on the left and press Create.</div>}
         {busy && job && <ProgressPanel job={job} />}
+        {job?.status === 'done' && job.results.length > 0 && (
+          <div style={{ ...hint, color: 'var(--green)' }}>
+            Saved in the <button className="btn btn-ghost" style={{ fontSize: 11, padding: '0 6px' }} onClick={() => useUIStore.getState().setActiveView('library')}>Library</button>
+            : you can find these songs there at any time.
+          </div>
+        )}
         {job?.results.map((r, i) => (
           <div key={r.audio_file} style={{ ...card, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)' }}>

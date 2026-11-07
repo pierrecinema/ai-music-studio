@@ -5,6 +5,7 @@ import { useProjectStore } from '../../stores/project.store'
 import { masterLevel, pause, play, startRecording, stop } from '../../audio/engine'
 import { historySize, redo, undo } from '../../shortcuts/history'
 import { FileMenu } from './FileMenu'
+import { useBeatMatch } from '../../beatmatch/store'
 import logo from '../../assets/logo.png'
 
 // Level meter of the master output: real peaks from the audio engine, with a short fall-back
@@ -65,6 +66,8 @@ export function TopBar(): React.ReactElement {
   // re-render when the undo history changes size
   useProjectStore((s) => s.project)
   const hist = historySize()
+  const autoSync = useBeatMatch((s) => s.mode === 'auto')
+  const setSyncMode = useBeatMatch((s) => s.setMode)
 
   const handleBpmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value)
@@ -170,6 +173,18 @@ export function TopBar(): React.ReactElement {
             min={20} max={300}
           />
         </div>
+      </div>
+
+      {/* Auto sync: new audio is stretched to the master BPM */}
+      <div className="tb-section" style={{ marginLeft: 4 }}>
+        <button
+          className={`tb-btn${autoSync ? ' active' : ''}`}
+          onClick={() => setSyncMode(autoSync ? 'ask' : 'auto')}
+          data-tooltip={autoSync ? 'Auto-sync is ON: new audio is stretched to the master BPM automatically' : 'Auto-sync is off: you are asked for each new audio. Click to sync new audio to the master BPM automatically.'}
+          style={{ width: 'auto', padding: '0 8px', fontSize: 10, fontWeight: 800, letterSpacing: '0.05em' }}
+        >
+          AUTO SYNC
+        </button>
       </div>
 
       {/* Time sig */}

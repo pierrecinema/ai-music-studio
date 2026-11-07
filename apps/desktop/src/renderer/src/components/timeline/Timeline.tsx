@@ -5,7 +5,7 @@ import { useUIStore } from '../../stores/ui.store'
 import { useAudioStore } from '../../stores/audio.store'
 import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER_SECOND, projectEndBeat, secToBeats, seek, sourceSecPerBeat } from '../../audio/engine'
 import type { Clip, Track } from '../../types'
-import { useBeatMatch } from '../../beatmatch/store'
+import { syncAll, useBeatMatch } from '../../beatmatch/store'
 import { minLength, snapBeat } from '../../edit/grid'
 import { GridControls } from '../../edit/GridControls'
 
@@ -128,6 +128,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const [renaming, setRenaming] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [dropping, setDropping] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [, rerender] = useState(0)
   useEffect(() => onBuffersChanged(() => rerender((n) => n + 1)), [])
 
@@ -282,6 +283,16 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         {(['audio', 'midi'] as const).map((t) => (
           <button key={t} className="btn btn-ghost" style={tb} onClick={() => addTrack(t)}>+ {t === 'audio' ? 'Audio' : 'MIDI'} track</button>
         ))}
+        <button className="btn btn-ghost" style={tb} disabled={syncing || !project.tracks.some((t) => t.clips.some((c) => c.audioFile))}
+          title="Measure all audio clips and bring every one in time with the master BPM"
+          onClick={async () => {
+            setSyncing(true)
+            const r = await syncAll((d, n, name) => setMessage(d < n ? `Syncing ${d + 1} of ${n}: ${name}…` : null))
+            setSyncing(false)
+            setMessage(`Synced ${r.synced} clip(s) to ${project.bpm} BPM${r.already ? `, ${r.already} already synced` : ''}${r.skipped.length ? `. Skipped: ${r.skipped.join('; ')}` : '.'}`)
+          }}>
+          {syncing ? 'Syncing…' : `Sync all to ${project.bpm} BPM`}
+        </button>
         <button className="btn btn-ghost" style={tb} disabled={!selectedAudioClip}
           title={selectedAudioClip ? 'Measure the tempo of the selected audio and bring it in time with the project' : 'Select an audio clip first'}
           onClick={() => selectedAudioClip && void useBeatMatch.getState().propose(selectedAudioClip.trackId, selectedAudioClip.clip.id, selectedAudioClip.clip.audioFile!, selectedAudioClip.clip.name ?? 'Audio', false, true)}>

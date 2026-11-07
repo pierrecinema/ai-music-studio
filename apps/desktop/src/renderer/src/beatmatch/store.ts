@@ -39,6 +39,17 @@ interface State {
 
 let counter = 0
 
+// one measurement per file: the same loop on several tracks, or "Sync all" run twice, must not analyse again
+const analysisCache = new Map<string, Awaited<ReturnType<typeof api.samples.analyze>>>()
+
+async function measure(path: string): Promise<Awaited<ReturnType<typeof api.samples.analyze>>> {
+  const hit = analysisCache.get(path)
+  if (hit) return hit
+  const r = await api.samples.analyze(path)
+  analysisCache.set(path, r)
+  return r
+}
+
 export const useBeatMatch = create<State>((set, get) => ({
   mode: loadMode(),
   queue: [],
@@ -57,15 +68,14 @@ export const useBeatMatch = create<State>((set, get) => ({
       set((s) => ({ queue: s.queue.map((q) => (q.id === id ? { ...q, ...patch } : q)) }))
     set((s) => ({ queue: [...s.queue, p] }))
     try {
-      const r = await api.samples.analyze(path)
+      const r = await measure(path)
       if (!r.bpm) { update({ status: 'none', message: r.note ?? 'No steady beat found.' }); return }
       update({ status: 'ready', bpm: r.bpm, firstBeat: r.first_beat ?? 0 })
-      // automatic mode: the first audio sets the project tempo, later audio is stretched to it
+      // automatic mode: every new audio is stretched to the master BPM; the master tempo itself is never changed
       if (mode === 'auto' && !force) {
         const cur = get().queue.find((q) => q.id === id)
         if (cur) {
-          if (firstAudio) matchProject(cur, r.bpm, (r.first_beat ?? 0) > 0.02)
-          else matchClip(cur, r.bpm, (r.first_beat ?? 0) > 0.02)
+          matchClip(cur, r.bpm, (r.first_beat ?? 0) > 0.02)
           set((s) => ({ queue: s.queue.filter((q) => q.id !== id) }))
         }
       }
@@ -127,4 +137,35 @@ export function matchProject(p: Proposal, bpm: number, alignFirstBeat: boolean):
     })
   }
   return true
+}
+
+export interface SyncAllResult { synced: number; already: number; skipped: string[] }
+
+/** "Sync all": measure every audio clip that is not synced yet and stretch it to the master BPM. */
+export async function syncAll(onProgress?: (done: number, total: number, name: string) => void): Promise<SyncAllResult> {
+  const project = useProjectStore.getState().project
+  const targets: Array<{ trackId: string; clipId: string; path: string; name: string }> = []
+  let already = 0
+  for (const t of project.tracks) {
+    for (const c of t.clips) {
+      if (!c.audioFile) continue
+      if (c.warpBpm) { already++; continue }
+      targets.push({ trackId: t.id, clipId: c.id, path: c.audioFile, name: c.name ?? t.name })
+    }
+  }
+  const skipped: string[] = []
+  let synced = 0
+  for (const [i, t] of targets.entries()) {
+    onProgress?.(i, targets.length, t.name)
+    try {
+      const r = await measure(t.path)
+      if (!r.bpm) { skipped.push(`${t.name}: no steady beat (one-shot or free rhythm)`); continue }
+      const p: Proposal = { id: `all${i}`, trackId: t.trackId, clipId: t.clipId, path: t.path, name: t.name, firstAudio: false, status: 'ready', bpm: r.bpm, firstBeat: r.first_beat ?? 0 }
+      if (matchClip(p, r.bpm, (r.first_beat ?? 0) > 0.02)) synced++
+    } catch (e) {
+      skipped.push(`${t.name}: ${(e as Error).message}`)
+    }
+  }
+  onProgress?.(targets.length, targets.length, '')
+  return { synced, already, skipped }
 }

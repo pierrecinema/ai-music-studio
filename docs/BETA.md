@@ -21,7 +21,8 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 9. **Samples:** Library → Samples → eine Ableton-Bibliothek verwenden, ein Loop mit „Add synced“ in ein Projekt mit anderem Tempo legen. Passt der Rhythmus, klingt es sauber?
 10. **Beat-Matching:** Ein Lied oder Loop importieren. Erscheint die Karte unten rechts, stimmt das gemessene Tempo (nach Gehör: nicht halb oder doppelt)? Klingt „Sync to“ sauber, passt „Set project to“?
 11. **Raster und Quantize:** Clips mit Snap verschieben, dann mit Alt stufenlos. Ctrl+U auf einem MIDI-Clip mit krumm gesetzten Noten. Spuren am Griff umsortieren, mit Entf löschen und mit Ctrl+Z zurückholen.
-12. **Aufnahme (Mikrofon):** Rote Taste. Wird die Aufnahme als Clip abgelegt? (Wenig getestet, besonders interessant.)
+12. **Auto Sync:** Oben „AUTO SYNC“ einschalten, Master-BPM auf z. B. 100 stellen, Loops mit anderem Tempo importieren. Werden sie ohne Rückfrage gestreckt? „Sync all“ auf einem Projekt mit mehreren Loops probieren.
+13. **Aufnahme (Mikrofon):** Rote Taste. Wird die Aufnahme als Clip abgelegt? (Wenig getestet, besonders interessant.)
 
 ## So meldest du ein Problem
 1. Unten rechts auf **Feedback** klicken.

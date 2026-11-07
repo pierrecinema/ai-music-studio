@@ -93,10 +93,10 @@ export function BeatMatchCard(): React.ReactElement | null {
       )}
 
       <div style={{ ...muted, display: 'flex', gap: 6, alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: 6 }}>
-        For new audio:
+        New audio:
         <select value={mode} onChange={(e) => setMode(e.target.value as 'ask' | 'auto' | 'off')} style={{ fontSize: 11 }}>
           <option value="ask">ask me every time</option>
-          <option value="auto">match automatically</option>
+          <option value="auto">sync automatically to the master BPM</option>
           <option value="off">never offer</option>
         </select>
       </div>

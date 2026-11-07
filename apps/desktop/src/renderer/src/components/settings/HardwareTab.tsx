@@ -48,9 +48,14 @@ export function HardwareTab(): React.ReactElement {
           This list tells you what to expect. Features marked “Slow here” still work, they just take longer.
           Nothing is blocked unless the computer truly cannot run it.
         </div>
-        <div><button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={busy} onClick={() => void load(true)}>
-          {busy ? 'Checking…' : 'Check again'}
-        </button></div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={busy} onClick={() => void load(true)}>
+            {busy ? 'Checking…' : 'Check again'}
+          </button>
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void window.api.server.showLog()}>
+            Show backend log file
+          </button>
+        </div>
       </section>
 
       {groups.map((g) => (

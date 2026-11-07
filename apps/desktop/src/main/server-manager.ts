@@ -1,13 +1,17 @@
 import { ChildProcess, spawn } from 'child_process'
-import { writeFileSync } from 'fs'
+import { appendFileSync, existsSync, mkdirSync, renameSync, statSync, writeFileSync } from 'fs'
 import { createServer } from 'net'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { hasVenv, venvPython, serverDir } from './engines'
 import { backendModelEnv } from './settings'
 
 export const DEFAULT_PORT = 38765
+
+export function backendLogPath(): string {
+  return join(app.getPath('userData'), 'logs', 'backend.log')
+}
 
 function canListen(port: number, host?: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -61,8 +65,20 @@ export class ServerManager {
       windowsHide: true
     })
 
-    this.process.stdout?.on('data', (d) => console.log('[Server]', d.toString().trim()))
-    this.process.stderr?.on('data', (d) => console.error('[Server]', d.toString().trim()))
+    // keep the backend output in a file the user can open: errors during a long job must not vanish
+    const log = backendLogPath()
+    try {
+      mkdirSync(dirname(log), { recursive: true })
+      if (existsSync(log) && statSync(log).size > 5 * 1024 * 1024) renameSync(log, log + '.old')
+      appendFileSync(log, `
+===== backend start ${new Date().toISOString()} =====
+`)
+    } catch { /* logging must never stop the app */ }
+    const sink = (d: Buffer): void => {
+      try { appendFileSync(log, d.toString()) } catch { /* ignore */ }
+    }
+    this.process.stdout?.on('data', (d) => { sink(d); console.log('[Server]', d.toString().trim()) })
+    this.process.stderr?.on('data', (d) => { sink(d); console.error('[Server]', d.toString().trim()) })
     this.process.on('error', (e) => console.error('[Server] failed to start:', e.message))
     this.process.on('exit', () => { this.ready = false; this.process = null })
 

@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, type EngineState, type MusicEngineInfo, type MusicJob, type Resources } from '../../lib/api'
+import { api, type EngineState, type MusicEngineInfo, type MusicJob, type Resources, type Usage } from '../../lib/api'
 import { useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
 import { AudioFile } from '../common/AudioFile'
 import { LoraBrowser } from './LoraBrowser'
 import { TrainLora } from './TrainLora'
+import { useMusicJob } from '../../stores/musicJob.store'
 import {
   DEFAULT_PARAMS, GENRES, KEYS, LANGUAGES, LAYERS, TIME_SIGNATURES, toRequest,
   type MusicParams
@@ -185,7 +186,15 @@ const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(Math.floor(s
 // What is happening right now, so a long wait does not look like a freeze.
 function ProgressPanel({ job }: { job: MusicJob }): React.ReactElement {
   const [now, setNow] = useState(Date.now())
+  const [usage, setUsage] = useState<Usage | null>(null)
   useEffect(() => { const id = window.setInterval(() => setNow(Date.now()), 500); return () => window.clearInterval(id) }, [])
+  useEffect(() => {
+    let alive = true
+    const tick = (): void => { api.system.usage().then((u) => { if (alive) setUsage(u) }).catch(() => { /* busy */ }) }
+    tick()
+    const id = window.setInterval(tick, 2000)
+    return () => { alive = false; window.clearInterval(id) }
+  }, [])
   const started = (job.started ?? job.created ?? now / 1000) * 1000
   const elapsed = Math.max(0, (now - started) / 1000)
   const known = job.step_total ? Math.min(1, (job.step ?? 0) / job.step_total) : null
@@ -225,6 +234,14 @@ function ProgressPanel({ job }: { job: MusicJob }): React.ReactElement {
         </span>
         <span>Running {mmss(elapsed)}</span>
       </div>
+      {job.device && <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{job.device}</div>}
+      {usage && (
+        <div style={{ display: 'flex', gap: 14, fontSize: 11, color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+          <span>CPU {Math.round(usage.cpu_percent)}% (engine {Math.round(usage.engine_cpu_percent)}%)</span>
+          <span>RAM {usage.ram_used_gb} of {usage.ram_total_gb} GB ({Math.round(usage.ram_percent)}%)</span>
+          {usage.swap_percent > 30 && <span style={{ color: 'var(--orange)' }}>Memory is full: the PC is swapping to disk, expect it to crawl.</span>}
+        </div>
+      )}
       {job.downloaded_mb !== undefined && job.downloaded_mb > 1 && job.stage === 'load' && (
         <div style={hint}>Downloaded so far: {job.downloaded_mb >= 1024 ? `${(job.downloaded_mb / 1024).toFixed(2)} GB` : `${Math.round(job.downloaded_mb)} MB`}</div>
       )}
@@ -256,14 +273,13 @@ export function CreateMusic(): React.ReactElement {
   const [trainOpen, setTrainOpen] = useState(false)
   const [loras, setLoras] = useState<LoraInfo[]>([])
   const [loraDir, setLoraDir] = useState('')
-  const [job, setJob] = useState<MusicJob | null>(null)
+  const job = useMusicJob((st) => st.job)
+  const setJob = useMusicJob.getState().setJob
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [aiBusy, setAiBusy] = useState<string | null>(null)
   const [intoProject, setIntoProject] = useState<'none' | 'new'>('none')
   const [chipSeed, setChipSeed] = useState(0)
-  const timer = useRef<number | null>(null)
-  const added = useRef<Set<string>>(new Set())
 
   const set = useCallback(<K extends keyof MusicParams>(k: K, v: MusicParams[K]) =>
     setP((s) => ({ ...s, [k]: v })), [])
@@ -289,8 +305,11 @@ export function CreateMusic(): React.ReactElement {
   useEffect(() => {
     refreshLoras().catch((e) => setError(String(e)))
     void loadStatus()
-    api.music.engines().then((r) => setEngines(r.engines)).catch(() => { /* older backend: no picker */ })
-    return () => { if (timer.current) clearInterval(timer.current) }
+    api.music.engines().then((r) => {
+      setEngines(r.engines)
+      // first visit on a small PC: start with the model that gives a track in reasonable time
+      if (!localStorage.getItem('ams-engine-chosen') && r.recommended) setP((cur) => (cur.engine === 'ace-step' ? { ...cur, engine: r.recommended } : cur))
+    }).catch(() => { /* older backend: no picker */ })
   }, [refreshLoras, loadStatus])
 
   // the first engine check loads PyTorch and takes about half a minute: ask again until it is done
@@ -327,25 +346,14 @@ export function CreateMusic(): React.ReactElement {
     setNotice(`${job.results.length} track(s) added to the project timeline.`)
   }, [p.title, p.prompt])
 
-  const poll = (jobId: string) => {
-    if (timer.current) clearInterval(timer.current)
-    timer.current = window.setInterval(async () => {
-      try {
-        const j = await api.music.job(jobId)
-        setJob(j)
-        if (j.status === 'done' || j.status === 'error') {
-          if (timer.current) clearInterval(timer.current)
-          if (j.status === 'done' && intoProject === 'new' && !added.current.has(j.id)) {
-            added.current.add(j.id)
-            addToProject(j)
-          }
-        }
-      } catch (e) {
-        if (timer.current) clearInterval(timer.current)
-        setError(String((e as Error).message))
-      }
-    }, 1500)
-  }
+  // when a job finishes while this screen is open, put the tracks on the timeline if asked
+  useEffect(() => {
+    if (job?.status !== 'done' || intoProject !== 'new') return
+    const st = useMusicJob.getState()
+    if (st.handled.includes(job.id)) return
+    st.markHandled(job.id)
+    addToProject(job)
+  }, [job, intoProject, addToProject])
 
   const create = async () => {
     setError(null); setNotice(null); setJob(null)
@@ -354,7 +362,7 @@ export function CreateMusic(): React.ReactElement {
       if (mode === 'simple') body.songs = body.variations = body.queue = 1
       const { jobId } = await api.music.generate(body)
       setJob({ id: jobId, status: 'queued', warnings: [], results: [] })
-      poll(jobId)
+      useMusicJob.getState().track(jobId)
     } catch (e) {
       setError(String((e as Error).message))
     }
@@ -480,10 +488,10 @@ export function CreateMusic(): React.ReactElement {
           />
           {engines.length > 0 && (
             <Field name="Music model" hintText="Each model shows how well your computer runs it. Models marked soon are not built in yet.">
-              <select value={p.engine} onChange={(e) => set('engine', e.target.value)} style={full}>
+              <select value={p.engine} onChange={(e) => { try { localStorage.setItem('ams-engine-chosen', '1') } catch { /* private mode */ } set('engine', e.target.value) }} style={full}>
                 {engines.map((e) => (
                   <option key={e.id} value={e.id} disabled={!e.usable}>
-                    {e.name} — {e.kind === 'planned' ? 'soon' : e.status === 'ready' ? 'runs well' : e.status === 'slow' ? 'slow here' : 'not enough memory'}
+                    {e.name}{e.recommended ? ' (recommended for this PC)' : ''} — {e.kind === 'planned' ? 'soon' : e.status === 'ready' ? 'runs well' : e.status === 'slow' ? 'slow here' : 'not enough memory'}
                   </option>
                 ))}
               </select>

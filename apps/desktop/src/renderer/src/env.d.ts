@@ -48,7 +48,7 @@ declare global {
 
   interface Window {
     api: {
-      server: { getUrl: () => Promise<string>; isReady: () => Promise<boolean> }
+      server: { getUrl: () => Promise<string>; isReady: () => Promise<boolean>; showLog: () => Promise<void> }
       loras: {
         list: () => Promise<{ dir: string; loras: LoraInfo[] }>
         import: (src: string, kind: LoraInfo['kind'], name?: string) =>

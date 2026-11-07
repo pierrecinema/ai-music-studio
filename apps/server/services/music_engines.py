@@ -32,12 +32,12 @@ class EngineInfo:
 ENGINES: list[EngineInfo] = [
     EngineInfo("ace-step", "ACE-Step v1 (3.5B)", "built-in",
                "Full songs with vocals and lyrics, up to 10 minutes. LoRA styles supported.",
-               "Apache-2.0", True, 600, 10, 8, "30 to 90 minutes per minute of music on a CPU or AMD card",
+               "Apache-2.0", True, 600, 10, 8, "many hours per song on a CPU or AMD card (the 3.5B model is too big for a small PC)",
                note="Installed from Settings → AI Engines."),
     EngineInfo("musicgen-small", "MusicGen small (300M)", "built-in",
                "Instrumental clips up to 30 s from a text description. Light enough for old PCs.",
                "Weights CC-BY-NC 4.0 (non-commercial only)", False, 30, 6, 2,
-               "about 2 to 5 minutes for 30 s on a CPU", False, "facebook/musicgen-small"),
+               "measured on an i7-3930K: about 6 minutes for a 15 s clip, so around 12 minutes for 30 s", False, "facebook/musicgen-small"),
     EngineInfo("musicgen-medium", "MusicGen medium (1.5B)", "built-in",
                "Better quality instrumentals, up to 30 s.",
                "Weights CC-BY-NC 4.0 (non-commercial only)", False, 30, 12, 8,
@@ -57,9 +57,15 @@ ENGINES: list[EngineInfo] = [
     EngineInfo("diffrhythm", "DiffRhythm", "planned",
                "Fast full-length songs with vocals (up to about 4 minutes).",
                "Apache-2.0", True, 285, 16, 8, "slow on a CPU", True, "ASLP-lab/DiffRhythm-base", "Not built in yet."),
-    EngineInfo("audioldm2", "AudioLDM 2", "planned",
-               "Music and sound from text; supports LoRA for genre and timbre control.",
-               "CC-BY-NC 4.0", False, 10, 12, 8, "slow on a CPU", True, "cvssp/audioldm2-music", "Not built in yet."),
+    EngineInfo("audioldm2-music", "AudioLDM 2 (music)", "built-in",
+               "Music clips of about 10 s from a text description (latent diffusion). Takes LoRA training well, "
+               "see the AudioLDM LoRA paper in the manual.",
+               "Research model, CC-BY-NC 4.0 (non-commercial only)", False, 10, 8, 4,
+               "roughly 3 to 10 minutes for 10 s on a CPU", False, "cvssp/audioldm2-music"),
+    EngineInfo("musicldm", "MusicLDM", "built-in",
+               "Music clips of about 10 s, trained on music only (latent diffusion).",
+               "Research model, check the model card (assume non-commercial)", False, 10, 8, 4,
+               "roughly 3 to 10 minutes for 10 s on a CPU", False, "ucsd-reach/musicldm"),
     EngineInfo("ace-step-1.5", "ACE-Step 1.5", "planned",
                "Newer ACE-Step with very fast generation and native LoRA training.",
                "Apache-2.0", True, 600, 12, 8, "slow on a CPU", True, "ACE-Step/Ace-Step1.5", "Not built in yet."),
@@ -84,8 +90,23 @@ def rate(e: EngineInfo, m: Machine) -> dict:
     return d
 
 
+def recommend(m: Machine) -> str:
+    """The engine that gives a track in reasonable time on this computer."""
+    if m.cuda and m.vram_gb >= 8 and m.ram_gb * 1.05 >= 16:
+        return "ace-step"
+    if m.cuda and m.vram_gb >= 8:
+        return "musicgen-medium"
+    return "musicgen-small"
+
+
 def catalog(m: Machine) -> list[dict]:
-    return [rate(e, m) for e in ENGINES]
+    rec = recommend(m)
+    out = []
+    for e in ENGINES:
+        d = rate(e, m)
+        d["recommended"] = e.id == rec
+        out.append(d)
+    return out
 
 
 # ── MusicGen ──────────────────────────────────────────────────────────────────
@@ -150,3 +171,45 @@ def generate_musicgen(engine_id: str, prompt: str, seconds: int, seed: int, wav_
     data = np.clip(data, -1.0, 1.0)
     wavfile.write(wav_path, rate, (data * 32767).astype(np.int16))
     return len(data) / float(rate)
+
+
+# ── AudioLDM 2 / MusicLDM (diffusers) ─────────────────────────────────────────
+
+_df: dict = {"id": None, "pipe": None, "device": "cpu"}
+_df_lock = threading.Lock()
+
+
+def generate_diffusers(engine_id: str, prompt: str, seconds: int, seed: int, wav_path: str,
+                       guidance: float = 3.5, on_step=None, steps: int = 40) -> float:
+    import numpy as np
+    import torch
+    from scipy.io import wavfile
+
+    info = next((e for e in ENGINES if e.id == engine_id), None)
+    if info is None or not info.hf_repo or info.kind != "built-in":
+        raise ValueError(f"Unknown music engine: {engine_id}")
+    with _df_lock:
+        if _df["id"] != engine_id:
+            _df.update(id=None, pipe=None)
+            if engine_id == "musicldm":
+                from diffusers import MusicLDMPipeline as Pipe
+            else:
+                from diffusers import AudioLDM2Pipeline as Pipe
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            dtype = torch.float16 if device == "cuda" else torch.float32
+            _df["pipe"] = Pipe.from_pretrained(info.hf_repo, torch_dtype=dtype).to(device)
+            _df["device"] = device
+            _df["id"] = engine_id
+        pipe, device = _df["pipe"], _df["device"]
+    seconds = max(2, min(seconds, info.max_seconds))
+    gen = torch.Generator(device=device).manual_seed(seed % (2**31))
+    if on_step:
+        on_step(0, steps)
+    out = pipe(prompt, negative_prompt="low quality, average quality", num_inference_steps=steps,
+               audio_length_in_s=float(seconds), guidance_scale=guidance, generator=gen,
+               callback=(lambda i, t, latents: on_step(i + 1, steps)) if on_step else None, callback_steps=1)
+    audio = np.asarray(out.audios[0], dtype=np.float32).reshape(-1)
+    audio = np.clip(audio, -1.0, 1.0)
+    rate = 16000                                    # both pipelines output 16 kHz mono
+    wavfile.write(wav_path, rate, (audio * 32767).astype(np.int16))
+    return len(audio) / float(rate)

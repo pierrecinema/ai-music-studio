@@ -146,7 +146,10 @@ Die Zeiten sind Schätzungen, keine Messungen. Eine NVIDIA-Karte mit CUDA macht 
 |---|---|---|
 | ACE-Step v1 | ganze Songs mit Gesang, bis 10 Minuten, LoRA | Apache-2.0 |
 | MusicGen small / medium / large | Instrumental-Clips bis 30 Sekunden, kein Gesang, kein LoRA | Modellgewichte CC-BY-NC 4.0: nur nicht-kommerziell. Das kleine Modell läuft auch auf alten PCs. Installation: Einstellungen → AI Engines → *Music generator (MusicGen, light)* |
-| Stable Audio Open, YuE, DiffRhythm, AudioLDM 2, ACE-Step 1.5 | | Stehen in der Liste mit Anforderungen, sind aber noch nicht eingebaut ("soon") |
+| AudioLDM 2 (music), MusicLDM | Instrumental-Clips um 10 Sekunden, kein Gesang | Forschungsmodelle, nur nicht-kommerziell. Laufen auf der CPU (Minuten pro Clip). AudioLDM 2 ist das Modell aus der LoRA-Arbeit im Abschnitt zu eigenen LoRAs |
+| Stable Audio Open, YuE, DiffRhythm, ACE-Step 1.5 | | Stehen in der Liste mit Anforderungen, sind aber noch nicht eingebaut ("soon") |
+
+**Welche Grafikkarte wird benutzt?** KI-Musik rechnet in PyTorch. Das nutzt Grafikkarten nur von NVIDIA (CUDA). Eine Radeon R9 290 (2013) wird von PyTorch unter Windows nicht unterstützt; der Weg über DirectML ist für diese Modelle ungetestet und würde eine ältere PyTorch-Version erzwingen. Deshalb rechnet die App auf Ihrem PC mit der CPU. Während des Erzeugens zeigt das Fortschrittsfeld in Klartext, was benutzt wird, dazu die Auslastung von CPU und RAM. Der Fortschritt bleibt in der Fußzeile sichtbar, auch wenn du die Ansicht wechselst; ein Klick bringt dich zurück. Die Ausgabe des KI-Hintergrunddienstes steht in `backend.log` (Einstellungen → Hardware → *Show backend log file*).
 
 **Fortschritt beim Erzeugen:** Während ein Song entsteht, zeigt die App die Phase (Modell laden, vorbereiten, rendern, speichern), einen Balken mit Prozent und geschätzter Restzeit, die laufende Zeit und beim ersten Start, wie viel vom Modell schon heruntergeladen ist. Wenn der Balken sich nicht bewegt, aber die Zeit läuft, arbeitet die App weiter.
 
@@ -160,6 +163,8 @@ Du kannst ACE-Step einen eigenen Stil beibringen. Du brauchst Songs, an denen du
 4. **Training.** Die App prüft deinen Computer:
    - *Train here*: nur mit NVIDIA-Grafikkarte (CUDA). Ab 8 GB Grafikspeicher möglich, 12 GB oder mehr empfohlen. Die Zahlen sind Schätzungen und ungetestet. Einmalig wird der ACE-Step-Trainer (35 MB) per Git geholt. Dafür vorher unter Einstellungen → AI Engines *LoRA training* installieren.
    - *Build bundle for another computer*: packt die umgewandelten Songs, die Einstellungen und eine Anleitung (README.txt) in eine ZIP-Datei. Damit trainierst du auf einem stärkeren PC und importierst das Ergebnis mit *Import LoRA folder*.
+
+**Rank und Überanpassung.** Eine wissenschaftliche Arbeit (Applied Sciences 2025, 15(15), 8646; AudioLDM mit LoRA auf nur 193 Beispielen) fand: Mit höherem Rank und Alpha passt das Ergebnis besser zum Text, entfernt sich aber vom echten Klang, die Überanpassung steigt. Die besten Werte für die Ähnlichkeit zu echter Musik hatten kleine Ränge (1 bis 8) und frühe Zwischenstände. Das gilt für ein anderes Modell und lässt sich nicht eins zu eins auf ACE-Step übertragen. Als Faustregel für uns: Bei wenigen Songs lieber Rank 16 oder 32 und die Länge *test* oder *normal* wählen, statt *thorough* mit Rank 256.
 
 Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training selbst wurde in dieser Version nur mit einem Ersatz-Trainer getestet, nicht mit einer echten NVIDIA-Karte.
 

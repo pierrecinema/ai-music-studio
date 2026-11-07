@@ -157,7 +157,7 @@ function groupArgs(group: string, torchVariant: string): string[] | null {
     case 'acestep': return ['git+https://github.com/ace-step/ACE-Step.git']
     case 'muscriptor': return ['muscriptor']
     case 'training': return ['datasets==3.4.1', 'peft', 'pytorch_lightning==2.5.1', 'tensorboard', 'tensorboardX']
-    case 'musicgen': return ['transformers>=4.40', 'accelerate', 'sentencepiece', 'scipy']
+    case 'musicgen': return ['transformers>=4.40', 'diffusers>=0.33', 'accelerate', 'sentencepiece', 'scipy']
     case 'video': return ['opencv-python-headless', 'librosa']
     default: return null
   }

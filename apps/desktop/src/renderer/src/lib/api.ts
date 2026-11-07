@@ -25,12 +25,17 @@ export interface MusicJob {
   // live progress from the engine
   stage?: 'load' | 'prepare' | 'render' | 'finish' | 'done'; stage_text?: string
   step?: number | null; step_total?: number | null
+  device?: string
   created?: number; started?: number; updated?: number; stage_started?: number; downloaded_mb?: number
 }
 export interface MusicEngineInfo {
   id: string; name: string; kind: 'built-in' | 'planned'; description: string; license: string
   vocals: boolean; max_seconds: number; status: 'ready' | 'slow' | 'unavailable'; reason: string; usable: boolean
-  min_ram: number; vram: number; note: string
+  min_ram: number; vram: number; note: string; recommended?: boolean
+}
+export interface Usage {
+  cpu_percent: number; engine_cpu_percent: number; ram_percent: number; ram_used_gb: number; ram_total_gb: number
+  engine_ram_gb: number; swap_percent: number
 }
 export interface CapabilityReport {
   tier: string; label: string
@@ -156,7 +161,7 @@ export const api = {
     }>('/music/status'),
     generate: (body: Record<string, unknown>) => post<{ jobId: string }>('/music/generate', body),
     job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
-    engines: () => get<{ engines: MusicEngineInfo[] }>('/music/engines'),
+    engines: () => get<{ engines: MusicEngineInfo[]; recommended: string }>('/music/engines'),
   },
 
   train: {
@@ -173,6 +178,7 @@ export const api = {
   },
 
   system: {
+    usage: () => get<Usage>('/system/usage'),
     capabilities: (refresh = false) => get<CapabilityReport>(`/system/capabilities${refresh ? '?refresh=true' : ''}`),
   },
 

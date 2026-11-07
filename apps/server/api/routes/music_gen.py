@@ -92,6 +92,31 @@ def _engine_lora_dir(entry: dict) -> str:
     return str(stage)
 
 
+def lora_compat(entry: dict) -> tuple[bool, str]:
+    """Is this LoRA made for ACE-Step v1? Its transformer names the attention layers to_q / to_k / to_v /
+    linear_q ...; LoRAs for language models (LLaMA, MusicGen, Qwen) target q_proj / k_proj / v_proj and cannot load."""
+    p = Path(entry["path"])
+    files = [p] if p.is_file() else sorted(p.glob("*.safetensors"))
+    if not files:
+        return True, ""                         # nothing to inspect: let the engine decide
+    try:
+        from safetensors import safe_open
+        with safe_open(str(files[0]), framework="pt") as f:
+            keys = list(f.keys())
+    except Exception:
+        return True, ""
+    text = " ".join(keys)
+    ace = any(t in text for t in ("to_q", "to_k", "to_v", "linear_q", "linear_k", "to_out", "speaker_embedder"))
+    llm = any(t in text for t in ("q_proj", "k_proj", "v_proj", "o_proj"))
+    if llm and not ace:
+        return False, (f"The LoRA '{entry.get('name', p.name)}' was made for a language-model architecture "
+                       "(layers q_proj, k_proj, v_proj, o_proj), not for ACE-Step. It cannot be used here, so it was skipped.")
+    if not ace:
+        return False, (f"The LoRA '{entry.get('name', p.name)}' does not contain ACE-Step layers, so it was skipped. "
+                       "Only LoRAs trained for ACE-Step v1 work with this engine.")
+    return True, ""
+
+
 class LoraImport(BaseModel):
     path: str
     name: str | None = None
@@ -247,12 +272,15 @@ def _get_pipeline():
     _mod.tqdm = _tracked          # live step counter for the UI
 
     res = resources()
+    import torch
+    on_gpu = torch.cuda.is_available()
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     _pipeline = ACEStepPipeline(
         checkpoint_dir=str(MODEL_DIR),
-        dtype="bfloat16" if res.half_precision else "float32",
+        # On a CPU the 3.5B model needs 14 GB in float32 but only 7 GB in bfloat16: small PCs must use bfloat16.
+        dtype="bfloat16" if (res.half_precision if on_gpu else res.ram_gb < 16) else "float32",
         torch_compile=False,
-        cpu_offload=res.cpu_offload,
+        cpu_offload=res.cpu_offload and on_gpu,      # offloading means GPU <-> RAM; pointless on a CPU
         overlapped_decode=res.low_memory,
     )
     return _pipeline
@@ -386,6 +414,29 @@ def _engine_kwargs(pipe, req: GenerateMusicRequest, duration: int, seed: int,
 _cur: dict = {"job": None}
 
 
+def _device_text() -> str:
+    """Plain words: what the computer is using for this job, and why not the graphics card."""
+    try:
+        import torch
+        from services.capabilities import get_report
+        m = get_report()["machine"]
+        if torch.cuda.is_available():
+            g = next((g for g in m["gpus"] if g.get("cuda")), None)
+            return f"Using the graphics card: {g['name'] if g else 'NVIDIA GPU'} (CUDA)."
+        gpu = next((g for g in m["gpus"] if g["vendor"] in ("amd", "nvidia")), None)
+        cpu = f"{m['cpu'] or 'the processor'} ({m['threads']} threads)"
+        if gpu and gpu["vendor"] == "amd":
+            why = (f"Your {gpu['name']} is not used: PyTorch cannot use AMD cards on Windows without a special "
+                   "build, and cards of this age are not supported by it.")
+        elif gpu:
+            why = f"{gpu['name']} was found but CUDA is not available in the AI environment."
+        else:
+            why = "No usable graphics card was found."
+        return f"Using the CPU only: {cpu}. {why}"
+    except Exception:
+        return "Using the CPU."
+
+
 def _stage(job: dict, stage: str, text: str, step: int | None = None, total: int | None = None) -> None:
     """Tell the UI what is happening. `step`/`total` give a real progress bar when known."""
     now = time.time()
@@ -462,6 +513,7 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
     with _gen_lock:
         job["status"] = "running"
         job["started"] = time.time()
+        job["device"] = _device_text()
         stop_watch = threading.Event()
         threading.Thread(target=_watch_downloads, args=(job, stop_watch), daemon=True).start()
         for i in range(total):
@@ -474,8 +526,13 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
                 _stage(job, "render", f"{_label}composing", done, of)
 
             try:
-                seconds = generate_musicgen(req.engine, _compose_prompt(req), duration, seed, wav,
-                                            guidance=max(1.0, min(req.cfg_scale + 1.0, 10.0)), on_step=on_step)
+                if req.engine.startswith("musicgen"):
+                    seconds = generate_musicgen(req.engine, _compose_prompt(req), duration, seed, wav,
+                                                guidance=max(1.0, min(req.cfg_scale + 1.0, 10.0)), on_step=on_step)
+                else:
+                    from services.music_engines import generate_diffusers
+                    seconds = generate_diffusers(req.engine, _compose_prompt(req), duration, seed, wav,
+                                                 on_step=on_step, steps=min(max(req.steps, 10), 100))
                 _stage(job, "finish", f"{label}saving and converting")
                 final = _finalize(wav, req, warnings if i == 0 else [])
             except Exception as e:
@@ -514,6 +571,14 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
         if u.id not in known:
             warnings.append(f"LoRA '{u.id}' not found, skipped.")
     lora_path, lora_weight = "none", 1.0
+    usable = []
+    for entry, strength in chosen:
+        ok, why = lora_compat(entry)
+        if ok:
+            usable.append((entry, strength))
+        else:
+            warnings.append(why)
+    chosen = usable
     if chosen:
         # The engine loads one adapter at a time: use the strongest one.
         best, lora_weight = max(chosen, key=lambda c: c[1])
@@ -539,6 +604,7 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
     with _gen_lock:
         job["status"] = "running"
         job["started"] = time.time()
+        job["device"] = _device_text()
         engine_kind = "ace-step"
         _cur["job"] = job
         stop_watch = threading.Event()
@@ -614,7 +680,8 @@ async def engines():
     from services.music_engines import catalog
     import asyncio
     m = await asyncio.to_thread(detect_machine, os.environ.get("AMS_ACESTEP_DIR"))
-    return {"engines": catalog(m)}
+    from services.music_engines import recommend
+    return {"engines": catalog(m), "recommended": recommend(m)}
 
 
 @router.get("/jobs/{job_id}")

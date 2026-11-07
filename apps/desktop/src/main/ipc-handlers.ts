@@ -1,6 +1,6 @@
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron'
 import type { IpcMainInvokeEvent, OpenDialogOptions, OpenDialogReturnValue } from 'electron'
-import { ServerManager } from './server-manager'
+import { ServerManager, backendLogPath } from './server-manager'
 import { getStatus, installGroups, cancelInstall } from './engines'
 import { listLoras, importLora, removeLora, deleteLora, LORA_DIR, type LoraEntry } from './loras'
 import { clearCache, deleteModel, diskSpace, getOverview, moveModels } from './models'
@@ -18,6 +18,7 @@ function openDialog(e: IpcMainInvokeEvent, options: OpenDialogOptions): Promise<
 export function registerIpcHandlers(serverManager: ServerManager): void {
   ipcMain.handle('server:url', () => serverManager.serverUrl)
   ipcMain.handle('server:ready', () => serverManager.isReady())
+  ipcMain.handle('server:show-log', () => { shell.showItemInFolder(backendLogPath()) })
 
   ipcMain.handle('engines:status', () => getStatus(serverManager.isReady()))
   ipcMain.handle('engines:cancel', () => cancelInstall())

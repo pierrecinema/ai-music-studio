@@ -4,7 +4,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   server: {
     getUrl: () => ipcRenderer.invoke('server:url'),
-    isReady: () => ipcRenderer.invoke('server:ready')
+    isReady: () => ipcRenderer.invoke('server:ready'),
+    showLog: () => ipcRenderer.invoke('server:show-log')
   },
   engines: {
     status: () => ipcRenderer.invoke('engines:status'),

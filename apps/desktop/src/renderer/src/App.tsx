@@ -3,6 +3,7 @@ import { UpdateToast } from './components/updater/UpdateToast'
 import { api, baseUrl } from './lib/api'
 import { useShortcuts, shortcutState } from './shortcuts/useShortcuts'
 import { WINAMP_EVENT } from './shortcuts/handlers'
+import { useMusicJob } from './stores/musicJob.store'
 import { useUIStore } from './stores/ui.store'
 import { useProjectStore } from './stores/project.store'
 import { TopBar } from './components/layout/TopBar'
@@ -27,6 +28,27 @@ interface HardwareInfo {
   backend: string
   cores: number
   low_cpu: boolean
+}
+
+// A running music job stays visible in every view, with a click back to it.
+function GeneratingBadge(): React.ReactElement | null {
+  const job = useMusicJob((st) => st.job)
+  const busy = job?.status === 'queued' || job?.status === 'running'
+  if (!job || (!busy && job.status !== 'error')) return null
+  const pct = job.step_total ? Math.round(((job.step ?? 0) / job.step_total) * 100) : null
+  return (
+    <>
+      <span style={{ color: 'var(--border-mid)' }}>·</span>
+      <button
+        onClick={() => useUIStore.getState().setActiveView('create')}
+        title="Back to Create music"
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700,
+          color: job.status === 'error' ? 'var(--red)' : 'var(--accent-light)' }}
+      >
+        {job.status === 'error' ? 'Music generation failed: open' : `Generating music${pct !== null ? ` ${pct}%` : '…'}${job.stage_text ? ` · ${job.stage_text.slice(0, 40)}` : ''}`}
+      </button>
+    </>
+  )
 }
 
 function StatusBar({ hw, base, onWinamp, onSetup }: {
@@ -58,6 +80,7 @@ function StatusBar({ hw, base, onWinamp, onSetup }: {
           <span style={{ color: 'var(--orange)' }}>Low-CPU mode</span>
         </>
       )}
+      <GeneratingBadge />
       <span style={{ flex: 1 }} />
       <button
         onClick={onWinamp}

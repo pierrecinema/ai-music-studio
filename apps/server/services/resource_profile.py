@@ -42,8 +42,14 @@ def _vram_gb() -> float:
 def detect_resources() -> ResourceProfile:
     hw = get_profile()
     vram = _vram_gb()
-    if vram == 0.0 and hw.gpu_vendor == "amd":
-        vram = 4.0 if "290" in (hw.gpu_name or "") else 8.0
+    if vram == 0.0:
+        # no CUDA: ask the hardware check for the real memory of the card (registry), not a guess
+        try:
+            from services.capabilities import get_report
+            gpus = get_report()["machine"]["gpus"]
+            vram = max((g["vram_gb"] for g in gpus), default=0.0)
+        except Exception:
+            pass
     ram = _ram_gb()
     low = (0 < vram <= 8.5) or vram == 0.0 or ram <= 12.5
 

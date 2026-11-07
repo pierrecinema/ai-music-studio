@@ -37,7 +37,13 @@ PRESETS = {
     "normal": (2000, "Normal: a good starting point for 10 to 30 songs."),
     "thorough": (6000, "Thorough: more songs or a stronger effect. Takes about three times as long."),
 }
-RANKS = {64: "Small file, subtle style", 128: "Balanced", 256: "Strong, the setting of the ACE-Step example"}
+RANKS = {
+    16: "Very light, least risk of copying your songs (good for small datasets)",
+    32: "Light",
+    64: "Small file, subtle style",
+    128: "Balanced",
+    256: "Strong, the setting of the ACE-Step example (needs many songs)",
+}
 
 
 def repo_dir() -> Path:

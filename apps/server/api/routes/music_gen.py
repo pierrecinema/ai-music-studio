@@ -164,6 +164,7 @@ class Dcw(BaseModel):
 
 
 class GenerateMusicRequest(BaseModel):
+    engine: str = "ace-step"                # ace-step | musicgen-small | musicgen-medium | musicgen-large
     # song
     title: str = ""
     prompt: str = ""
@@ -240,7 +241,10 @@ def _get_pipeline():
     global _pipeline
     if _pipeline is not None:
         return _pipeline
+    import acestep.pipeline_ace_step as _mod  # type: ignore
     from acestep.pipeline_ace_step import ACEStepPipeline  # type: ignore
+
+    _mod.tqdm = _tracked          # live step counter for the UI
 
     res = resources()
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -377,7 +381,119 @@ def _engine_kwargs(pipe, req: GenerateMusicRequest, duration: int, seed: int,
     return kwargs
 
 
+
+# ── live progress: what the engine is doing right now ─────────────────────────
+_cur: dict = {"job": None}
+
+
+def _stage(job: dict, stage: str, text: str, step: int | None = None, total: int | None = None) -> None:
+    """Tell the UI what is happening. `step`/`total` give a real progress bar when known."""
+    now = time.time()
+    if job.get("stage") != stage:
+        job["stage_started"] = now
+    job.update(stage=stage, stage_text=text, step=step, step_total=total, updated=now)
+
+
+def _tracked(iterable=None, total=None, **_kw):
+    """Stand-in for tqdm inside ACE-Step: reports each diffusion step to the running job."""
+    job = _cur["job"]
+    items = list(iterable) if iterable is not None else []
+    n = total or len(items)
+    for i, x in enumerate(items):
+        if job is not None and n >= 8:                 # the render loop, not the tiny helper loops
+            _stage(job, "render", job.get("render_text", "Rendering audio"), i, n)
+        yield x
+    if job is not None and n >= 8:
+        _stage(job, "render", job.get("render_text", "Rendering audio"), n, n)
+
+
+def _dir_mb(path: str) -> float:
+    total = 0
+    for root, _d, files in os.walk(path):
+        for f in files:
+            try:
+                total += os.path.getsize(os.path.join(root, f))
+            except OSError:
+                pass
+    return total / 1024**2
+
+
+def _watch_downloads(job: dict, stop: threading.Event) -> None:
+    """While a model loads for the first time, report how many MB arrived on disk."""
+    dirs = [d for d in (str(MODEL_DIR), os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")) if d]
+    start = sum(_dir_mb(d) for d in dirs if os.path.isdir(d))
+    while not stop.wait(2.0):
+        now_mb = sum(_dir_mb(d) for d in dirs if os.path.isdir(d))
+        job["downloaded_mb"] = round(max(0.0, now_mb - start), 1)
+        job["updated"] = time.time()
+
+
+
+def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
+    """MusicGen: instrumental clips of up to 30 s, works on small machines."""
+    from services.music_engines import ENGINES, generate_musicgen, musicgen_ready
+    job = _jobs[job_id]
+    warnings: list[str] = []
+    info = next((e for e in ENGINES if e.id == req.engine and e.kind == "built-in"), None)
+    if info is None:
+        job.update(status="error", error=f"Unknown or not yet available music engine: {req.engine}")
+        return
+    ok, why = musicgen_ready()
+    if not ok:
+        job.update(status="error", error="MusicGen needs the AI engines installed: open Settings → AI Engines, "
+                                         f"tick 'MusicGen' and press Install selected. ({why})")
+        return
+    duration = min(req.duration or 15, info.max_seconds)
+    if (req.duration or 15) > info.max_seconds:
+        warnings.append(f"{info.name} makes clips of up to {info.max_seconds} s; the length was shortened.")
+    if req.lyrics.strip() and not req.instrumental:
+        warnings.append(f"{info.name} cannot sing: the lyrics are ignored. Use ACE-Step for vocals.")
+    if req.loras:
+        warnings.append(f"{info.name} does not use LoRA styles; they were ignored.")
+    if req.source_track:
+        warnings.append(f"{info.name} cannot work from a source track; it was ignored.")
+
+    total = req.songs * req.variations * req.queue
+    base_seed = req.seed if req.seed is not None else random.randint(0, 2**31 - 1)
+    out_dir = Path(tempfile.gettempdir()) / "ams_music"
+    out_dir.mkdir(exist_ok=True)
+    results: list[dict] = []
+    job["progress"] = {"done": 0, "total": total}
+    with _gen_lock:
+        job["status"] = "running"
+        job["started"] = time.time()
+        stop_watch = threading.Event()
+        threading.Thread(target=_watch_downloads, args=(job, stop_watch), daemon=True).start()
+        for i in range(total):
+            seed = random.randint(0, 2**31 - 1) if req.randomize_seed else base_seed + i
+            wav = str(out_dir / f"song_{job_id}_{i + 1}.wav")
+            label = f"Clip {i + 1} of {total}: " if total > 1 else ""
+            _stage(job, "load", f"{label}loading {info.name}. The first time the model is downloaded.")
+
+            def on_step(done: int, of: int, _label: str = label) -> None:
+                _stage(job, "render", f"{_label}composing", done, of)
+
+            try:
+                seconds = generate_musicgen(req.engine, _compose_prompt(req), duration, seed, wav,
+                                            guidance=max(1.0, min(req.cfg_scale + 1.0, 10.0)), on_step=on_step)
+                _stage(job, "finish", f"{label}saving and converting")
+                final = _finalize(wav, req, warnings if i == 0 else [])
+            except Exception as e:
+                stop_watch.set()
+                job.update(status="error", error=_short(e), warnings=warnings, results=results)
+                return
+            results.append({"audio_file": final, "seed": seed, "duration": round(seconds, 1)})
+            job["progress"] = {"done": i + 1, "total": total}
+            job["results"] = list(results)
+        stop_watch.set()
+    job.update(status="done", engine=req.engine, audio_file=results[0]["audio_file"], results=results,
+               duration=results[0]["duration"], warnings=warnings, finished=time.time(),
+               stage="done", stage_text="Done", step=None, step_total=None)
+
+
 def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
+    if req.engine != "ace-step":
+        return _run_clip_job(job_id, req)
     job = _jobs[job_id]
     res = resources()
     warnings: list[str] = []
@@ -422,47 +538,62 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
 
     with _gen_lock:
         job["status"] = "running"
+        job["started"] = time.time()
         engine_kind = "ace-step"
+        _cur["job"] = job
+        stop_watch = threading.Event()
+        threading.Thread(target=_watch_downloads, args=(job, stop_watch), daemon=True).start()
         try:
-            pipe = _get_pipeline()
-        except ModuleNotFoundError as e:
-            if (e.name or "").split(".")[0] != "acestep":
-                job.update(status="error", warnings=warnings,
-                           error=f"ACE-Step is installed but a dependency is missing: {e.name}. "
-                                 "Open Settings → AI Engines and press Install selected again.")
-                return
-            pipe = None
-            engine_kind = "stub"
-            warnings.append(
-                "ACE-Step is not installed, wrote silent placeholders. "
-                "Install it in Settings → AI Engines."
-            )
-        except Exception as e:
-            job.update(status="error", warnings=warnings,
-                       error=f"ACE-Step is installed but cannot start: {_short(e)}")
-            return
-
-        for i in range(total):
-            seed = random.randint(0, 2**31 - 1) if req.randomize_seed else base_seed + i
-            wav = str(out_dir / f"song_{job_id}_{i + 1}.wav")
+            _stage(job, "load", "Loading the music model. The first time it is downloaded (several GB), "
+                                "this can take many minutes.")
             try:
-                if pipe is None:
-                    _silent_wav(wav, duration)
-                else:
-                    kwargs = _engine_kwargs(pipe, req, duration, seed, lora_path, lora_weight, wav,
-                                            warnings if i == 0 else [])
-                    pipe(**kwargs)
-                final = _finalize(wav, req, warnings if i == 0 else [])
-            except Exception as e:  # model / out-of-memory errors
-                job.update(status="error", error=str(e), warnings=warnings, results=results)
+                pipe = _get_pipeline()
+            except ModuleNotFoundError as e:
+                if (e.name or "").split(".")[0] != "acestep":
+                    job.update(status="error", warnings=warnings,
+                               error=f"ACE-Step is installed but a dependency is missing: {e.name}. "
+                                     "Open Settings → AI Engines and press Install selected again.")
+                    return
+                pipe = None
+                engine_kind = "stub"
+                warnings.append(
+                    "ACE-Step is not installed, wrote silent placeholders. "
+                    "Install it in Settings → AI Engines."
+                )
+            except Exception as e:
+                job.update(status="error", warnings=warnings,
+                           error=f"ACE-Step is installed but cannot start: {_short(e)}")
                 return
-            results.append({"audio_file": final, "seed": seed, "duration": duration})
-            job["progress"] = {"done": i + 1, "total": total}
-            job["results"] = list(results)
+
+            for i in range(total):
+                seed = random.randint(0, 2**31 - 1) if req.randomize_seed else base_seed + i
+                wav = str(out_dir / f"song_{job_id}_{i + 1}.wav")
+                label = f"Song {i + 1} of {total}: " if total > 1 else ""
+                job["render_text"] = f"{label}rendering audio"
+                _stage(job, "prepare", f"{label}preparing (loading weights into memory, the first step can take a while)")
+                try:
+                    if pipe is None:
+                        _silent_wav(wav, duration)
+                    else:
+                        kwargs = _engine_kwargs(pipe, req, duration, seed, lora_path, lora_weight, wav,
+                                                warnings if i == 0 else [])
+                        pipe(**kwargs)
+                    _stage(job, "finish", f"{label}saving and converting")
+                    final = _finalize(wav, req, warnings if i == 0 else [])
+                except Exception as e:  # model / out-of-memory errors
+                    job.update(status="error", error=str(e), warnings=warnings, results=results)
+                    return
+                results.append({"audio_file": final, "seed": seed, "duration": duration})
+                job["progress"] = {"done": i + 1, "total": total}
+                job["results"] = list(results)
+        finally:
+            stop_watch.set()
+            _cur["job"] = None
 
     job.update(
         status="done", engine=engine_kind, audio_file=results[0]["audio_file"], results=results,
         duration=duration, warnings=warnings, finished=time.time(),
+        stage="done", stage_text="Done", step=None, step_total=None,
     )
 
 
@@ -474,6 +605,16 @@ async def generate_music(req: GenerateMusicRequest):
     _jobs[job_id] = {"id": job_id, "status": "queued", "created": time.time(), "warnings": [], "results": []}
     threading.Thread(target=_run_job, args=(job_id, req), daemon=True).start()
     return {"jobId": job_id}
+
+
+@router.get("/engines")
+async def engines():
+    """Every music generator with a verdict for this computer."""
+    from services.capabilities import get_report, detect_machine
+    from services.music_engines import catalog
+    import asyncio
+    m = await asyncio.to_thread(detect_machine, os.environ.get("AMS_ACESTEP_DIR"))
+    return {"engines": catalog(m)}
 
 
 @router.get("/jobs/{job_id}")

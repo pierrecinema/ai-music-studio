@@ -11,6 +11,7 @@ const GROUPS: Group[] = [
   { id: 'whisper', name: 'Lyric timing (faster-whisper)', desc: 'Word timestamps for karaoke export.', recommended: true },
   { id: 'video', name: 'Video analysis', desc: 'OpenCV + librosa for the video composer.' },
   { id: 'acestep', name: 'Music generator (ACE-Step)', desc: 'Full songs + LoRA. Needs Git installed. Model weights download on first use.', note: 'Large download.' },
+  { id: 'musicgen', name: 'Music generator (MusicGen, light)', desc: 'Instrumental clips up to 30 s. Small model runs on old PCs.', note: 'Model weights are CC-BY-NC 4.0: non-commercial use only. Downloads 2 to 13 GB on first use depending on the model.' },
   { id: 'muscriptor', name: 'Audio → MIDI (MuScriptor)', desc: 'More accurate transcription.', note: 'CC BY-NC 4.0: non-commercial use only, and only for music you have the rights to transcribe.' },
 ]
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, type EngineState, type MusicJob, type Resources } from '../../lib/api'
+import { api, type EngineState, type MusicEngineInfo, type MusicJob, type Resources } from '../../lib/api'
 import { useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
@@ -179,6 +179,69 @@ async function askAI(system: string, user: string): Promise<string> {
 
 // ─── main component ──────────────────────────────────────────────────────────
 
+const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+
+// What is happening right now, so a long wait does not look like a freeze.
+function ProgressPanel({ job }: { job: MusicJob }): React.ReactElement {
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => { const id = window.setInterval(() => setNow(Date.now()), 500); return () => window.clearInterval(id) }, [])
+  const started = (job.started ?? job.created ?? now / 1000) * 1000
+  const elapsed = Math.max(0, (now - started) / 1000)
+  const known = job.step_total ? Math.min(1, (job.step ?? 0) / job.step_total) : null
+  const songs = job.progress && job.progress.total > 1 ? job.progress : null
+  const overall = known === null ? null : songs ? (songs.done + known) / songs.total : known
+  // seconds left, only once there is enough to extrapolate from
+  const stageElapsed = job.stage_started ? Math.max(0, now / 1000 - job.stage_started) : 0
+  const eta = known !== null && known > 0.05 && stageElapsed > 3 ? (stageElapsed / known) * (1 - known) : null
+  const quiet = job.updated ? (now / 1000 - job.updated) : 0
+  const stages: Array<[string, string]> = [['load', 'Load model'], ['prepare', 'Prepare'], ['render', 'Render'], ['finish', 'Save']]
+  const at = Math.max(0, stages.findIndex(([k]) => k === job.stage))
+  return (
+    <div style={{ border: '1px solid var(--border-mid)', borderRadius: 8, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 6, fontSize: 11, flexWrap: 'wrap' }}>
+        {stages.map(([k, name], i) => (
+          <span key={k} style={{ padding: '2px 8px', borderRadius: 10,
+            background: i === at ? 'var(--accent)' : 'var(--bg-elevated)',
+            color: i === at ? '#fff' : i < at ? 'var(--green)' : 'var(--text-muted)' }}>
+            {i < at ? '✓ ' : ''}{name}
+          </span>
+        ))}
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{job.stage_text ?? 'Starting…'}</div>
+      <div style={{ height: 8, background: 'var(--bg-tertiary)', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
+        {overall !== null ? (
+          <div style={{ height: '100%', width: `${Math.round(overall * 100)}%`, background: 'var(--accent)', transition: 'width 400ms' }} />
+        ) : (
+          <div style={{ position: 'absolute', top: 0, bottom: 0, width: '30%', background: 'var(--accent)', borderRadius: 4,
+            animation: 'ams-indeterminate 1.4s ease-in-out infinite' }} />
+        )}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-secondary)', flexWrap: 'wrap', gap: 6 }}>
+        <span>
+          {known !== null ? `${Math.round(known * 100)}%` : 'Working…'}
+          {songs ? ` · song ${Math.min(songs.done + 1, songs.total)} of ${songs.total}` : ''}
+          {eta !== null ? ` · about ${mmss(eta)} left` : ''}
+        </span>
+        <span>Running {mmss(elapsed)}</span>
+      </div>
+      {job.downloaded_mb !== undefined && job.downloaded_mb > 1 && job.stage === 'load' && (
+        <div style={hint}>Downloaded so far: {job.downloaded_mb >= 1024 ? `${(job.downloaded_mb / 1024).toFixed(2)} GB` : `${Math.round(job.downloaded_mb)} MB`}</div>
+      )}
+      <div style={hint}>
+        {job.stage === 'load' || job.stage === 'prepare'
+          ? 'The first start loads the music model and can take many minutes on an older PC. Nothing is stuck while this counter runs.'
+          : quiet > 60 ? 'No news from the engine for a minute. It is still computing; very long songs on slow hardware pause between steps.'
+          : 'Rendering uses the whole computer, so other programs may feel slower meanwhile.'}
+        {' '}
+        <button className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 8px' }}
+          onClick={() => { sessionStorage.setItem('ams-settings-tab', 'models'); useUIStore.getState().setActiveView('settings') }}>
+          Watch downloads in Settings → Models
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function CreateMusic(): React.ReactElement {
   const [p, setP] = useState<MusicParams>(DEFAULT_PARAMS)
   const [mode, setMode] = useState<'simple' | 'studio'>('studio')
@@ -188,6 +251,7 @@ export function CreateMusic(): React.ReactElement {
   const [browserOpen, setBrowserOpen] = useState(false)
   const [online, setOnline] = useState(true)
   const [res, setRes] = useState<Resources | null>(null)
+  const [engines, setEngines] = useState<MusicEngineInfo[]>([])
   const [loras, setLoras] = useState<LoraInfo[]>([])
   const [loraDir, setLoraDir] = useState('')
   const [job, setJob] = useState<MusicJob | null>(null)
@@ -223,6 +287,7 @@ export function CreateMusic(): React.ReactElement {
   useEffect(() => {
     refreshLoras().catch((e) => setError(String(e)))
     void loadStatus()
+    api.music.engines().then((r) => setEngines(r.engines)).catch(() => { /* older backend: no picker */ })
     return () => { if (timer.current) clearInterval(timer.current) }
   }, [refreshLoras, loadStatus])
 
@@ -410,6 +475,28 @@ export function CreateMusic(): React.ReactElement {
             value={p.title} onChange={(e) => set('title', e.target.value)} placeholder="Untitled"
             style={{ ...full, fontSize: 18, fontWeight: 700, background: 'transparent', border: 'none', padding: '0 0 4px' }}
           />
+          {engines.length > 0 && (
+            <Field name="Music model" hintText="Each model shows how well your computer runs it. Models marked soon are not built in yet.">
+              <select value={p.engine} onChange={(e) => set('engine', e.target.value)} style={full}>
+                {engines.map((e) => (
+                  <option key={e.id} value={e.id} disabled={!e.usable}>
+                    {e.name} — {e.kind === 'planned' ? 'soon' : e.status === 'ready' ? 'runs well' : e.status === 'slow' ? 'slow here' : 'not enough memory'}
+                  </option>
+                ))}
+              </select>
+              {(() => {
+                const cur = engines.find((e) => e.id === p.engine)
+                if (!cur) return null
+                return (
+                  <div style={{ ...hint, marginTop: 4 }}>
+                    {cur.description}{cur.reason ? ` ${cur.reason}` : ''}
+                    {cur.license ? ` Licence: ${cur.license}.` : ''}
+                    {!cur.vocals ? ' Instrumental only.' : ''}
+                  </div>
+                )
+              })()}
+            </Field>
+          )}
           <Field name="Style" hintText="A description of the music: genre, mood, instruments, tempo.">
             <textarea value={p.prompt} onChange={(e) => set('prompt', e.target.value)} rows={4} style={full}
               placeholder="e.g. deep house, warm bass, dreamy pads, 122 bpm" />
@@ -639,7 +726,7 @@ export function CreateMusic(): React.ReactElement {
             disabled={busy || (!p.prompt.trim() && !p.lyrics.trim() && !p.sourceTrack) || !online}
             style={{ width: '100%', justifyContent: 'center', padding: '14px 0', fontSize: 15, fontWeight: 800 }}>
             {busy
-              ? `Generating… ${job?.progress ? `${job.progress.done}/${job.progress.total}` : ''}`
+              ? `Generating… ${job?.progress ? `${job.progress.done}/${job.progress.total}` : ''}${job?.step && job.step_total ? `  ${Math.round((job.step / job.step_total) * 100)}%` : ''}`
               : `Create${count > 1 ? `  (${count})` : ''}`}
           </button>
         </div>
@@ -653,15 +740,7 @@ export function CreateMusic(): React.ReactElement {
         {job?.status === 'error' && <div style={{ color: 'var(--red)', fontSize: 12 }}>{job.error}</div>}
         {job?.warnings.map((w, i) => <div key={i} style={{ color: 'var(--yellow)', fontSize: 11 }}>{w}</div>)}
         {!job && !error && <div style={hint}>Your songs appear here. Describe the music on the left and press Create.</div>}
-        {busy && (
-          <div style={{ ...hint, border: '1px solid var(--border-mid)', borderRadius: 8, padding: 10 }}>
-            Working on it. The very first song also downloads the music model (about 8 GB) and can take a long time.{' '}
-            <button
-              className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 8px' }}
-              onClick={() => { sessionStorage.setItem('ams-settings-tab', 'models'); useUIStore.getState().setActiveView('settings') }}
-            >Watch it in Settings → Models</button>
-          </div>
-        )}
+        {busy && job && <ProgressPanel job={job} />}
         {job?.results.map((r, i) => (
           <div key={r.audio_file} style={{ ...card, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)' }}>

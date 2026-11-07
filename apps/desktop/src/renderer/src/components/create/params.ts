@@ -1,4 +1,5 @@
 export interface MusicParams {
+  engine: string
   title: string
   prompt: string
   lyrics: string
@@ -60,6 +61,7 @@ export const LAYERS: Array<{ key: LayerKey; label: string }> = [
 ]
 
 export const DEFAULT_PARAMS: MusicParams = {
+  engine: 'ace-step',
   title: '',
   prompt: '',
   lyrics: '',
@@ -141,6 +143,7 @@ const int = (s: string, min?: number, max?: number): number | null => {
 // Request body for POST /music/generate (snake_case, matches the Python model)
 export function toRequest(p: MusicParams): Record<string, unknown> {
   return {
+    engine: p.engine,
     title: p.title,
     prompt: p.prompt,
     lyrics: p.lyrics,

@@ -7,6 +7,7 @@ import type { AIProvider } from '../../types'
 import { EnginesTab } from './EnginesTab'
 import { ShortcutsTab } from './ShortcutsTab'
 import { ModelsTab } from './ModelsTab'
+import { HardwareTab } from './HardwareTab'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -71,7 +72,7 @@ function ModelPicker({ models, value, onChange }: {
   )
 }
 
-type SettingsTab = 'general' | 'ai' | 'engines' | 'models' | 'shortcuts' | 'audio' | 'appearance' | 'updates'
+type SettingsTab = 'general' | 'ai' | 'engines' | 'hardware' | 'models' | 'shortcuts' | 'audio' | 'appearance' | 'updates'
 
 type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
 
@@ -217,7 +218,7 @@ export function Settings(): React.ReactElement {
       {/* Tab nav */}
       <div style={{ width: 160, background: 'var(--bg-secondary)', borderRight: '1px solid var(--border)', padding: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10, padding: '0 6px' }}>{t('settings.title')}</div>
-        {(['general', 'ai', 'engines', 'models', 'shortcuts', 'audio', 'appearance', 'updates'] as SettingsTab[]).map(tab2 => (
+        {(['general', 'ai', 'engines', 'hardware', 'models', 'shortcuts', 'audio', 'appearance', 'updates'] as SettingsTab[]).map(tab2 => (
           <button
             key={tab2}
             onClick={() => setTab(tab2)}
@@ -234,7 +235,7 @@ export function Settings(): React.ReactElement {
               fontWeight: tab === tab2 ? 600 : 400
             }}
           >
-            {t(`settings.${tab2}`, { defaultValue: tab2 === 'engines' ? 'AI Engines' : tab2 === 'models' ? 'Models' : tab2 === 'shortcuts' ? 'Shortcuts' : tab2 === 'updates' ? 'Updates' : tab2 })}
+            {t(`settings.${tab2}`, { defaultValue: tab2 === 'engines' ? 'AI Engines' : tab2 === 'hardware' ? 'Hardware' : tab2 === 'models' ? 'Models' : tab2 === 'shortcuts' ? 'Shortcuts' : tab2 === 'updates' ? 'Updates' : tab2 })}
           </button>
         ))}
       </div>
@@ -391,6 +392,7 @@ export function Settings(): React.ReactElement {
 
         {tab === 'updates' && <UpdatesTab />}
         {tab === 'engines' && <EnginesTab />}
+        {tab === 'hardware' && <HardwareTab />}
         {tab === 'models' && <ModelsTab />}
         {tab === 'shortcuts' && <ShortcutsTab />}
       </div>

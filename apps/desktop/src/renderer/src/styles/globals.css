@@ -377,3 +377,5 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 /* ─── Utilities ──────────────────────────────────────────────── */
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .flex-center { display: flex; align-items: center; justify-content: center; }
+
+@keyframes ams-indeterminate { 0% { left: -30%; } 100% { left: 100%; } }

@@ -130,6 +130,26 @@ Die KI-Modelle sind groß (ACE-Step allein rund 8 GB). Der Tab **Models** zeigt,
 - **Modellwahl:** Mit der aktuellen Engine ist ACE-Step v1 (3.5B) das einzige Musikmodell. Die Varianten aus ACE-Step Studio (XL, Turbo, quantisiert) brauchen eine andere Engine.
 - LoRAs bleiben im eigenen LoRA-Ordner (`%USERPROFILE%\.ai-music-studio\loras`), der Modelle-Ordner verschiebt sie nicht.
 
+## Hardware-Check und Musikmodelle (Einstellungen → Hardware)
+
+Die App prüft beim Start deinen Computer (Prozessor, RAM, Grafikkarte mit Speicher, freier Platz) und stuft ihn ein: *Entry*, *Capable*, *Standard*, *Pro* oder *Studio*. Unter **Einstellungen → Hardware** siehst du für jede Funktion:
+
+- **Runs well**: läuft angenehm.
+- **Slow here**: läuft, dauert aber lange. Der Grund und eine grobe Zeitangabe stehen dabei (zum Beispiel "30 bis 90 Minuten pro Minute Musik auf der CPU").
+- **Not possible**: der Computer kann es wirklich nicht, mit Begründung (zum Beispiel zu wenig RAM).
+
+Die Zeiten sind Schätzungen, keine Messungen. Eine NVIDIA-Karte mit CUDA macht die KI-Musik um ein Vielfaches schneller. AMD-Karten und reine CPU-Rechner funktionieren, sind aber langsam.
+
+**Music model** (in *Create music* oben im Kasten *Song*): Du wählst das Modell, jeweils mit Bewertung für deinen PC.
+
+| Modell | Kann | Hinweis |
+|---|---|---|
+| ACE-Step v1 | ganze Songs mit Gesang, bis 10 Minuten, LoRA | Apache-2.0 |
+| MusicGen small / medium / large | Instrumental-Clips bis 30 Sekunden, kein Gesang, kein LoRA | Modellgewichte CC-BY-NC 4.0: nur nicht-kommerziell. Das kleine Modell läuft auch auf alten PCs. Installation: Einstellungen → AI Engines → *Music generator (MusicGen, light)* |
+| Stable Audio Open, YuE, DiffRhythm, AudioLDM 2, ACE-Step 1.5 | | Stehen in der Liste mit Anforderungen, sind aber noch nicht eingebaut ("soon") |
+
+**Fortschritt beim Erzeugen:** Während ein Song entsteht, zeigt die App die Phase (Modell laden, vorbereiten, rendern, speichern), einen Balken mit Prozent und geschätzter Restzeit, die laufende Zeit und beim ersten Start, wie viel vom Modell schon heruntergeladen ist. Wenn der Balken sich nicht bewegt, aber die Zeit läuft, arbeitet die App weiter.
+
 ## 4. Speicherorte
 
 | Was | Wo |

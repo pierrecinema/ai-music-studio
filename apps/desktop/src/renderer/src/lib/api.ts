@@ -22,6 +22,21 @@ export interface MusicJob {
   id: string; status: 'queued' | 'running' | 'done' | 'error'
   audio_file?: string; error?: string; warnings: string[]; engine?: string
   results: MusicResult[]; progress?: { done: number; total: number }
+  // live progress from the engine
+  stage?: 'load' | 'prepare' | 'render' | 'finish' | 'done'; stage_text?: string
+  step?: number | null; step_total?: number | null
+  created?: number; started?: number; updated?: number; stage_started?: number; downloaded_mb?: number
+}
+export interface MusicEngineInfo {
+  id: string; name: string; kind: 'built-in' | 'planned'; description: string; license: string
+  vocals: boolean; max_seconds: number; status: 'ready' | 'slow' | 'unavailable'; reason: string; usable: boolean
+  min_ram: number; vram: number; note: string
+}
+export interface CapabilityReport {
+  tier: string; label: string
+  machine: { cpu: string; threads: number; ram_gb: number; disk_free_gb: number; cuda: boolean; directml: boolean
+    gpus: Array<{ name: string; vendor: string; vram_gb: number; cuda: boolean }> }
+  features: Array<{ id: string; name: string; group: string; need: string; status: 'ready' | 'slow' | 'unavailable'; reason: string }>
 }
 export interface KaraokeWord { text: string; start: number; end: number }
 
@@ -130,6 +145,11 @@ export const api = {
     }>('/music/status'),
     generate: (body: Record<string, unknown>) => post<{ jobId: string }>('/music/generate', body),
     job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
+    engines: () => get<{ engines: MusicEngineInfo[] }>('/music/engines'),
+  },
+
+  system: {
+    capabilities: (refresh = false) => get<CapabilityReport>(`/system/capabilities${refresh ? '?refresh=true' : ''}`),
   },
 
   mastering: {

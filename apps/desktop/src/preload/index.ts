@@ -5,7 +5,8 @@ const api = {
   server: {
     getUrl: () => ipcRenderer.invoke('server:url'),
     isReady: () => ipcRenderer.invoke('server:ready'),
-    showLog: () => ipcRenderer.invoke('server:show-log')
+    showLog: () => ipcRenderer.invoke('server:show-log'),
+    logTail: () => ipcRenderer.invoke('server:log-tail')
   },
   engines: {
     status: () => ipcRenderer.invoke('engines:status'),

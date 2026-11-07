@@ -17,6 +17,8 @@ The heavy part, the 300M-parameter transformer that predicts the audio tokens, r
 import json
 import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import time
 import warnings
 
@@ -56,25 +58,36 @@ def main(req_path: str) -> None:
     plain_decode = encoder.decode
     encoder.decode = lambda codes, *a, **k: plain_decode(codes.cpu(), *a, **k)
 
-    wanted = int(req["seconds"] * 50)
-    say(stage="render", text=f"Composing on {name}", step=0, total=wanted)
+    plain_encode = encoder.encode
 
-    class Tick(StoppingCriteria):
-        def __call__(self, input_ids, scores, **kw):
-            say(stage="render", step=min(int(input_ids.shape[-1]), wanted), total=wanted)
-            return False
+    def cpu_encode(*a, **k):
+        to_cpu = lambda v: v.cpu() if torch.is_tensor(v) else v    # noqa: E731 - the prompt audio arrives on the GPU
+        out = plain_encode(*[to_cpu(v) for v in a], **{kk: to_cpu(vv) for kk, vv in k.items()})
+        to_gpu = lambda v: v.to(dml) if torch.is_tensor(v) else ([to_gpu(i) for i in v] if isinstance(v, list) else v)  # noqa: E731
+        if isinstance(out, tuple):
+            return tuple(to_gpu(v) for v in out)
+        for key in list(out.keys()):                                  # the model lives on the GPU: hand the codes back
+            out[key] = to_gpu(out[key])
+        return out
 
-    inputs = processor(text=[req["prompt"]], padding=True, return_tensors="pt")
-    inputs = {k: v.to(dml) for k, v in inputs.items()}
-    torch.manual_seed(int(req["seed"]) % (2**31))
-    with torch.no_grad():
-        audio = model.generate(**inputs, do_sample=True, guidance_scale=float(req.get("guidance", 3.0)),
-                               max_new_tokens=wanted, stopping_criteria=StoppingCriteriaList([Tick()]))
+    encoder.encode = cpu_encode
+    from musicgen_long import generate_long, total_tokens
+    total = total_tokens(int(req["seconds"]))
+    say(stage="render", text=f"Composing on {name}", step=0, total=total)
+
+    def make_stop(tick):
+        class Tick(StoppingCriteria):
+            def __call__(self, input_ids, scores, **kw):
+                tick(int(input_ids.shape[-1]))
+                return False
+        return StoppingCriteriaList([Tick()])
+
     rate = model.config.audio_encoder.sampling_rate
-    data = audio[0].detach().float().cpu().numpy()
-    data = data.T if data.ndim == 2 else data
-    data = np.clip(data, -1.0, 1.0)
-    wavfile.write(req["out"], rate, (data * 32767).astype(np.int16))
+    data = generate_long(model, processor, dml, req["prompt"], int(req["seconds"]), int(req["seed"]),
+                         float(req.get("guidance", 3.0)), rate,
+                         on_step=lambda d, t: say(stage="render", step=d, total=t),
+                         to_device=lambda v: v.to(dml), make_stop=make_stop)
+    wavfile.write(req["out"], rate, (np.clip(data, -1.0, 1.0) * 32767).astype(np.int16))
     say(done=True, seconds=len(data) / float(rate), device=name)
 
 

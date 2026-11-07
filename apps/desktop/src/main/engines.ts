@@ -28,7 +28,7 @@ const GROUP_PROBE: Record<string, string[]> = {
   whisper: ['faster-whisper'],
   acestep: ['ace-step', 'acestep'],
   muscriptor: ['muscriptor'],
-  musicgen: ['sentencepiece'],
+  musicgen: ['transformers'],   // MusicGen runs as soon as transformers is there (ACE-Step brings it)
   training: ['peft', 'pytorch-lightning'],
   video: ['opencv-python-headless', 'opencv-python']
 }
@@ -166,7 +166,9 @@ function groupArgs(group: string, torchVariant: string): string[] | null {
     case 'torch': return torchArgs(torchVariant)
     case 'demucs': return ['demucs']
     // basic-pitch still imports pkg_resources, which setuptools 81+ no longer ships
-    case 'basicpitch': return ['basic-pitch', 'setuptools<81']
+    // basic-pitch itself is installed separately with --no-deps (see installGroups): its TensorFlow dependency
+    // forces NumPy 1.x, which breaks every other engine. It runs fine on its bundled ONNX model instead.
+    case 'basicpitch': return ['librosa', 'mir_eval', 'pretty_midi', 'resampy', 'scikit-learn', 'scipy', 'onnxruntime', 'typing_extensions', 'setuptools<81']
     case 'matchering': return ['matchering']
     case 'whisper': return ['faster-whisper']
     case 'acestep': return ['git+https://github.com/ace-step/ACE-Step.git']
@@ -259,7 +261,14 @@ export async function installGroups(
     const args = groupArgs(g, torchVariant)
     if (!args) continue
     log(`=== ${g} ===`)
-    const code = await run(venvPython(), ['-m', 'pip', 'install', ...args], log)
+    if (g === 'basicpitch') {
+      // an earlier install may have left TensorFlow behind, which breaks with NumPy 2: remove it
+      await run(venvPython(), ['-m', 'pip', 'uninstall', '-y', 'tensorflow', 'tensorflow-intel', 'tensorflow-cpu'], log)
+    }
+    let code = await run(venvPython(), ['-m', 'pip', 'install', ...args], log)
+    if (code === 0 && g === 'basicpitch') {
+      code = await run(venvPython(), ['-m', 'pip', 'install', '--no-deps', 'basic-pitch'], log)
+    }
     if (code !== 0) {
       // everything else builds on these two: stop here
       if (g === 'core' || g === 'torch') return { ok: false, error: `Installing "${g}" failed (see log).` }

@@ -36,16 +36,16 @@ ENGINES: list[EngineInfo] = [
                "Apache-2.0", True, 600, 10, 8, "many hours per song on a CPU or AMD card (the 3.5B model is too big for a small PC)",
                note="Installed from Settings → AI Engines."),
     EngineInfo("musicgen-small", "MusicGen small (300M)", "built-in",
-               "Instrumental clips up to 30 s from a text description. Light enough for old PCs.",
-               "Weights CC-BY-NC 4.0 (non-commercial only)", False, 30, 6, 2,
+               "Instrumental tracks from a text description, light enough for old PCs. Up to 30 s in one go; longer tracks are built in 20 s steps and take proportionally longer.",
+               "Weights CC-BY-NC 4.0 (non-commercial only)", False, 600, 6, 2,
                "measured on an i7-3930K: about 6 minutes for a 15 s clip, so around 12 minutes for 30 s", False, "facebook/musicgen-small"),
     EngineInfo("musicgen-medium", "MusicGen medium (1.5B)", "built-in",
-               "Better quality instrumentals, up to 30 s.",
-               "Weights CC-BY-NC 4.0 (non-commercial only)", False, 30, 12, 8,
+               "Better quality instrumentals. Up to 30 s in one go, longer tracks in 20 s steps.",
+               "Weights CC-BY-NC 4.0 (non-commercial only)", False, 600, 12, 8,
                "10 to 25 minutes for 30 s on a CPU", True, "facebook/musicgen-medium"),
     EngineInfo("musicgen-large", "MusicGen large (3.3B)", "built-in",
-               "Best MusicGen quality, up to 30 s. Needs a strong GPU.",
-               "Weights CC-BY-NC 4.0 (non-commercial only)", False, 30, 16, 16,
+               "Best MusicGen quality. Needs a strong GPU.",
+               "Weights CC-BY-NC 4.0 (non-commercial only)", False, 600, 16, 16,
                "not practical on a CPU", True, "facebook/musicgen-large"),
     EngineInfo("stable-audio-open", "Stable Audio Open (1.1B)", "planned",
                "Sound effects, loops and short music up to 47 s. Needs a free Hugging Face account to accept the licence.",
@@ -114,6 +114,9 @@ def catalog(m: Machine) -> list[dict]:
     return out
 
 
+LONG_MAX_SECONDS = 600      # tracks above 30 s are built in steps (services/musicgen_long.py)
+
+
 # ── MusicGen ──────────────────────────────────────────────────────────────────
 
 _mg: dict = {"id": None, "model": None, "processor": None, "device": "cpu"}
@@ -153,28 +156,22 @@ def generate_musicgen(engine_id: str, prompt: str, seconds: int, seed: int, wav_
             _mg["id"] = engine_id
         model, processor, device = _mg["model"], _mg["processor"], _mg["device"]
 
-    seconds = max(1, min(seconds, info.max_seconds))
-    torch.manual_seed(seed % (2**31))
-    inputs = processor(text=[prompt], padding=True, return_tensors="pt").to(device)
+    from services.musicgen_long import generate_long
     from transformers import StoppingCriteria, StoppingCriteriaList
-    wanted = int(seconds * 50)
 
-    class _Tick(StoppingCriteria):          # called once per generated token: gives a real progress bar
-        def __call__(self, input_ids, scores, **kw):
-            if on_step:
-                on_step(min(int(input_ids.shape[-1]), wanted), wanted)
-            return False
-
-    if on_step:
-        on_step(0, wanted)
-    with torch.no_grad():
-        audio = model.generate(**inputs, do_sample=True, guidance_scale=guidance,
-                               max_new_tokens=wanted, stopping_criteria=StoppingCriteriaList([_Tick()]))
+    seconds = max(1, min(seconds, LONG_MAX_SECONDS))
     rate = model.config.audio_encoder.sampling_rate
-    data = audio[0].detach().float().cpu().numpy()      # (channels, samples)
-    data = data.T if data.ndim == 2 else data
-    data = np.clip(data, -1.0, 1.0)
-    wavfile.write(wav_path, rate, (data * 32767).astype(np.int16))
+
+    def make_stop(tick):
+        class _Tick(StoppingCriteria):          # called once per generated token: gives a real progress bar
+            def __call__(self, input_ids, scores, **kw):
+                tick(int(input_ids.shape[-1]))
+                return False
+        return StoppingCriteriaList([_Tick()])
+
+    data = generate_long(model, processor, device, prompt, seconds, seed, guidance, rate, on_step=on_step,
+                         to_device=lambda v: v.to(device), make_stop=make_stop)
+    wavfile.write(wav_path, rate, (np.clip(data, -1.0, 1.0) * 32767).astype(np.int16))
     return len(data) / float(rate)
 
 
@@ -243,7 +240,7 @@ def generate_dml(engine_id: str, prompt: str, seconds: int, seed: int, wav_path:
     import tempfile
 
     info = next(e for e in ENGINES if e.id == engine_id)
-    req = {"repo": info.hf_repo, "prompt": prompt, "seconds": max(1, min(seconds, info.max_seconds)),
+    req = {"repo": info.hf_repo, "prompt": prompt, "seconds": max(1, min(seconds, LONG_MAX_SECONDS)),
            "seed": seed, "guidance": guidance, "out": wav_path}
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
         json.dump(req, f)

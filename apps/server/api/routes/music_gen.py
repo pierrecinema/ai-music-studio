@@ -497,7 +497,13 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
         return
     duration = min(req.duration or 15, info.max_seconds)
     if (req.duration or 15) > info.max_seconds:
-        warnings.append(f"{info.name} makes clips of up to {info.max_seconds} s; the length was shortened.")
+        warnings.append(f"{info.name} makes up to {info.max_seconds} s; the length was shortened.")
+    if info.id.startswith("musicgen") and duration > 30:
+        from services.musicgen_long import plan
+        n = len(plan(duration))
+        warnings.append(f"A {duration} s track is made in {n} steps (30 s first, then 20 s each, joined with a short crossfade). "
+                        "It takes about as many times longer as there are steps; the progress bar shows the real pace. "
+                        "The style can drift a little between steps.")
     if req.lyrics.strip() and not req.instrumental:
         warnings.append(f"{info.name} cannot sing: the lyrics are ignored. Use ACE-Step for vocals.")
     if req.loras:

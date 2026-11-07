@@ -17,6 +17,27 @@ export function HardwareTab(): React.ReactElement {
   const [r, setR] = useState<CapabilityReport | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  // everything needed to understand a problem on this computer, in one paste (no personal files, no keys)
+  const copyDiagnostics = async (): Promise<void> => {
+    const cap = r ? JSON.stringify({ tier: r.tier, machine: r.machine, features: r.features.map((f) => `${f.id}: ${f.status} ${f.reason}`) }, null, 1) : 'no hardware report'
+    const eng = await window.api.engines.status().catch(() => null)
+    const log = await window.api.server.logTail().catch(() => '')
+    const text = [
+      `AI Music Studio v${__APP_VERSION__}`,
+      '',
+      '== Hardware ==',
+      cap,
+      '',
+      '== Engines ==',
+      JSON.stringify(eng, null, 1),
+      '',
+      '== Backend log (end) ==',
+      log,
+    ].join('\n')
+    try { await navigator.clipboard.writeText(text); setCopied(true); window.setTimeout(() => setCopied(false), 4000) } catch { /* clipboard blocked */ }
+  }
 
   const load = useCallback(async (refresh: boolean) => {
     setBusy(true); setError(null)
@@ -54,6 +75,9 @@ export function HardwareTab(): React.ReactElement {
           </button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void window.api.server.showLog()}>
             Show backend log file
+          </button>
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void copyDiagnostics()}>
+            {copied ? 'Copied: paste it into the chat' : 'Copy diagnostics'}
           </button>
         </div>
       </section>

@@ -18,6 +18,14 @@ function openDialog(e: IpcMainInvokeEvent, options: OpenDialogOptions): Promise<
 export function registerIpcHandlers(serverManager: ServerManager): void {
   ipcMain.handle('server:url', () => serverManager.serverUrl)
   ipcMain.handle('server:ready', () => serverManager.isReady())
+  // the end of the backend log without the polling noise, for "Copy diagnostics"
+  ipcMain.handle('server:log-tail', () => {
+    try {
+      const raw = fs.readFileSync(backendLogPath(), 'utf-8')
+      const lines = raw.split(/\r?\n/).filter((l) => l && !/"(GET|POST) \/(music\/jobs|system\/usage|health)/.test(l))
+      return lines.slice(-80).join('\n')
+    } catch { return '(no backend log yet)' }
+  })
   ipcMain.handle('server:show-log', () => { shell.showItemInFolder(backendLogPath()) })
 
   ipcMain.handle('engines:status', () => getStatus(serverManager.isReady()))

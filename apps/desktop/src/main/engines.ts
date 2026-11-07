@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, rmSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
+import { modelsDir } from './settings'
 
 export interface EngineStatus {
   pythonFound: boolean
@@ -63,6 +64,24 @@ export function dmlPython(): string {
 
 export function hasDml(): boolean {
   return existsSync(join(dmlDir(), 'Lib', 'site-packages', 'torch_directml'))
+}
+
+// DiffRhythm: full songs in one go. It is not a pip package: its repository is cloned next to the models
+// and runs in its own environment (it pins PyTorch 2.6 and old library versions).
+export function drDir(): string {
+  return join(app.getPath('userData'), 'engines', 'venv-dr')
+}
+
+export function drPython(): string {
+  return join(drDir(), 'Scripts', 'python.exe')
+}
+
+export function drRepo(): string {
+  return join(modelsDir(), 'diffrhythm', 'DiffRhythm')
+}
+
+export function hasDr(): boolean {
+  return existsSync(drPython()) && existsSync(join(drRepo(), 'infer', 'infer.py'))
 }
 
 export function hasVenv(): boolean {
@@ -141,6 +160,7 @@ export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   const installed: Record<string, boolean> = {}
   for (const [g, names] of Object.entries(GROUP_PROBE)) installed[g] = names.some((n) => have.has(n))
   installed.gpuamd = hasDml()
+  installed.diffrhythm = hasDr()
   return {
     pythonFound: py !== null,
     pythonVersion: py?.version ?? null,
@@ -207,6 +227,35 @@ export function cancelInstall(): void {
 
 export function isInstalling(): boolean {
   return running !== null
+}
+
+async function installDiffRhythm(py: PythonCmd | null, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
+  if (!py) return { ok: false, error: 'Python 3.10 to 3.12 was not found.' }
+  if (Number(py.version.split('.')[1]) > 12) {
+    return { ok: false, error: `DiffRhythm needs Python 3.12 or older (found ${py.version}). Install Python 3.10 or 3.11.` }
+  }
+  const git = await capture('git', ['--version'], 8000)
+  if (git.code !== 0) return { ok: false, error: 'Git is needed once to fetch DiffRhythm. Install Git and try again.' }
+  if (!hasDr() && !existsSync(join(drRepo(), 'infer', 'infer.py'))) {
+    mkdirSync(join(drRepo(), '..'), { recursive: true })
+    if (await run('git', ['clone', '--depth', '1', 'https://github.com/ASLP-lab/DiffRhythm.git', drRepo()], log) !== 0) {
+      return { ok: false, error: 'Could not fetch DiffRhythm from GitHub.' }
+    }
+  }
+  if (!existsSync(drPython())) {
+    mkdirSync(join(drDir(), '..'), { recursive: true })
+    if (await run(py.cmd, [...py.args, '-m', 'venv', drDir()], log) !== 0) return { ok: false, error: 'Could not create the DiffRhythm environment.' }
+    await run(drPython(), ['-m', 'pip', 'install', '--upgrade', 'pip'], log)
+  }
+  log('DiffRhythm pins PyTorch 2.6: installing the CUDA build for NVIDIA cards.')
+  if (await run(drPython(), ['-m', 'pip', 'install', 'torch==2.6.0', 'torchaudio==2.6.0', '--index-url', 'https://download.pytorch.org/whl/cu124'], log) !== 0) {
+    return { ok: false, error: 'Installing PyTorch for DiffRhythm failed (see log).' }
+  }
+  if (await run(drPython(), ['-m', 'pip', 'install', '-r', join(drRepo(), 'requirements.txt')], log) !== 0) {
+    return { ok: false, error: 'Installing the DiffRhythm packages failed (see log).' }
+  }
+  log('Also needed on Windows: eSpeak NG (https://github.com/espeak-ng/espeak-ng/releases, the .msi). Install it once, then DiffRhythm can sing.')
+  return { ok: true }
 }
 
 async function installDml(py: PythonCmd | null, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
@@ -284,6 +333,11 @@ export async function installGroups(
     log('=== gpuamd (graphics card support for AMD and Intel) ===')
     const r = await installDml(py, log)
     if (!r.ok) { failed.push('gpuamd'); log(r.error ?? 'failed') }
+  }
+  if (groups.includes('diffrhythm')) {
+    log('=== diffrhythm (full songs in one go, needs an NVIDIA card) ===')
+    const r = await installDiffRhythm(py, log)
+    if (!r.ok) { failed.push('diffrhythm'); log(r.error ?? 'failed') }
   }
   if (failed.length > 0) {
     return { ok: false, error: `Done, but these packages failed: ${failed.join(', ')}. The others are installed. See the log for details.` }

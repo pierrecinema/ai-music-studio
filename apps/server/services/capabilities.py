@@ -214,6 +214,8 @@ FEATURES: list[Feature] = [
             cpu_hint="on the CPU or an old AMD card expect many hours per song (the 3.5B model is too big for a small PC)"),
     Feature("music_light", "Light music (MusicGen small, 15 to 30 s clips)", "AI music", "any computer; AMD and Intel graphics cards via DirectML",
             ram=8, min_ram=6, cpu_hint="about 7 minutes for a 15 s clip on a fast older CPU"),
+    Feature("songs_oneshot", "Full songs of 95 s to 4:45 in one go (DiffRhythm, experimental)", "AI music",
+            "NVIDIA GPU with 8 GB or more", cuda=True, vram=8, ram=16, min_ram=10, min_vram_cuda=8, cpu_ok=False),
     Feature("music_long", "Songs longer than 4 minutes", "AI music", "12 GB+ GPU memory", cuda=True, vram=12, ram=24, min_ram=12,
             cpu_hint="possible, but very slow"),
     Feature("lora_use", "Use LoRA styles", "AI music", "same as Create music", cuda=True, vram=10, ram=16, min_ram=10,

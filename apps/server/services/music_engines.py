@@ -55,9 +55,12 @@ ENGINES: list[EngineInfo] = [
                "Full songs with vocals from lyrics, multi-minute. Very heavy.",
                "Apache-2.0", True, 300, 32, 24, "not practical on a CPU", True,
                "m-a-p/YuE-s1-7B-anneal-en-cot", "Not built in yet."),
-    EngineInfo("diffrhythm", "DiffRhythm", "planned",
-               "Fast full-length songs with vocals (up to about 4 minutes).",
-               "Apache-2.0", True, 285, 16, 8, "slow on a CPU", True, "ASLP-lab/DiffRhythm-base", "Not built in yet."),
+    EngineInfo("diffrhythm", "DiffRhythm 1.2 (full songs, experimental)", "built-in",
+               "Full songs with vocals from your lyrics: 95 s, or any length from 96 s up to 4 min 45 s in ONE go, "
+               "style from a text description. Needs lyrics. Written from the project's code and not yet tested "
+               "on real hardware by the developer: feedback welcome.",
+               "Apache-2.0 (code and DiT weights)", True, 285, 16, 8, "not supported on a CPU by the authors", True,
+               "ASLP-lab/DiffRhythm-1_2-full", "Needs an NVIDIA graphics card with 8 GB or more."),
     EngineInfo("audioldm2-music", "AudioLDM 2 (music)", "built-in",
                "Music clips of about 10 s from a text description (latent diffusion). Takes LoRA training well, "
                "see the AudioLDM LoRA paper in the manual.",
@@ -86,6 +89,18 @@ def rate(e: EngineInfo, m: Machine) -> dict:
         status, why = "slow", e.cpu_speed + "."
     else:
         status, why = "ready", ""
+    if e.id == "diffrhythm":
+        if not m.cuda:
+            status = "unavailable"
+            why = ("Needs an NVIDIA graphics card with CUDA (the authors name nothing for CPU or AMD). "
+                   + (f"This PC has {m.best_gpu.name}." if m.best_gpu else "No dedicated graphics card found."))
+        elif m.vram_gb < 8:
+            status, why = "unavailable", f"Needs at least 8 GB graphics memory; this GPU has {m.vram_gb:g} GB."
+        else:
+            status = "ready" if m.vram_gb >= 12 else "slow"
+            why = "" if m.vram_gb >= 12 else "8 GB is the stated minimum (with chunked decoding)."
+            if dr_python() is None:
+                why = (why + " Not installed yet: Settings → AI Engines → DiffRhythm.").strip()
     gpu_note = ""
     if e.id == "musicgen-small" and dml_python() is not None and status != "unavailable":
         status, why = "ready", "Runs on your graphics card through DirectML: about 2.5 minutes per 15 s clip (measured on an AMD Radeon R9 290)."
@@ -277,3 +292,99 @@ def generate_dml(engine_id: str, prompt: str, seconds: int, seed: int, wav_path:
     if seconds_out is None:
         raise RuntimeError(error or f"The graphics card worker stopped (exit code {code}).")
     return seconds_out
+
+
+# ── DiffRhythm (own environment, cloned repository, subprocess) ──────────────
+
+def dr_python() -> str | None:
+    p = os.environ.get("AMS_DR_PYTHON")
+    return p if p and os.path.exists(p) else None
+
+
+def dr_repo() -> str | None:
+    p = os.environ.get("AMS_DR_REPO")
+    return p if p and os.path.exists(os.path.join(p, "infer", "infer.py")) else None
+
+
+def lyrics_to_lrc(lyrics: str, seconds: int) -> str:
+    """DiffRhythm reads lyrics as '[mm:ss.xx]text' lines (fixed column slices). Spread plain lines over the song."""
+    import re
+    lines = [l.strip() for l in lyrics.splitlines()]
+    lines = [l for l in lines if l and not re.fullmatch(r"\[[^\]]*\]", l)]     # drop [Verse] / [Chorus] tags
+    if not lines:
+        return ""
+    start, end = 4.0, max(8.0, seconds - 14.0)          # leave room for an intro and an outro
+    out = []
+    for i, text in enumerate(lines):
+        t = start if len(lines) == 1 else start + i * (end - start) / (len(lines) - 1)
+        out.append(f"[{int(t // 60):02d}:{t % 60:05.2f}]{text}")
+    return "\n".join(out) + "\n"
+
+
+def generate_diffrhythm(prompt: str, lyrics: str, seconds: int, wav_path: str, on_stage=None, on_step=None,
+                        log=print) -> float:
+    """Run DiffRhythm's infer.py. Returns the length of the written song in seconds."""
+    import re
+    import shutil
+    import subprocess
+    import tempfile
+    import wave
+
+    py, repo = dr_python(), dr_repo()
+    if not py or not repo:
+        raise RuntimeError("DiffRhythm is not installed. Open Settings → AI Engines, tick DiffRhythm and press Install selected.")
+    lrc = lyrics_to_lrc(lyrics, seconds)
+    if not lrc:
+        raise RuntimeError("DiffRhythm sings your lyrics: please enter lyrics (one line per sung line).")
+    seconds = 95 if seconds <= 95 else min(seconds, 285)          # the model takes exactly 95 or 96 to 285 s
+    work = tempfile.mkdtemp(prefix="ams_dr_")
+    lrc_path = os.path.join(work, "lyrics.lrc")
+    with open(lrc_path, "w", encoding="utf-8") as f:
+        f.write(lrc)
+    out_dir = os.path.join(work, "out")
+    env = dict(os.environ, PYTHONPATH=repo, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1")
+    # on Windows the phonemizer needs the eSpeak NG library; its installer puts it here
+    esp = r"C:\Program Files\eSpeak NG"
+    if os.path.isdir(esp):
+        env.setdefault("PHONEMIZER_ESPEAK_LIBRARY", os.path.join(esp, "libespeak-ng.dll"))
+        env.setdefault("PHONEMIZER_ESPEAK_PATH", esp)
+    elif os.name == "nt" and not env.get("PHONEMIZER_ESPEAK_LIBRARY"):
+        raise RuntimeError("DiffRhythm needs eSpeak NG. Install it from https://github.com/espeak-ng/espeak-ng/releases "
+                           "(the .msi), then try again.")
+    cmd = [py, os.path.join("infer", "infer.py"), "--lrc-path", lrc_path, "--ref-prompt", prompt or "pop",
+           "--audio-length", str(seconds), "--output-dir", out_dir, "--chunked"]
+    if on_stage:
+        on_stage("load", "Loading DiffRhythm. The first time it downloads the models (several GB).")
+    proc = subprocess.Popen(cmd, cwd=repo, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                            encoding="utf-8", errors="replace", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    tail: list[str] = []
+    bar = re.compile(r"(\d+)/(\d+)\s*\[")
+    assert proc.stdout is not None
+    buf = ""
+    while True:                                     # tqdm redraws its line with \r
+        ch = proc.stdout.read(1)
+        if ch == "":
+            break
+        if ch in ("\r", "\n"):
+            line = buf.strip()
+            buf = ""
+            if not line:
+                continue
+            tail.append(line[-300:])
+            del tail[:-30]
+            log("[DiffRhythm] " + line[:300])
+            m = bar.search(line)
+            if m and on_step:
+                if on_stage:
+                    on_stage("render", "Composing the song")
+                on_step(int(m.group(1)), int(m.group(2)))
+        else:
+            buf += ch
+    code = proc.wait()
+    produced = os.path.join(out_dir, "output.wav")
+    if code != 0 or not os.path.exists(produced):
+        raise RuntimeError("DiffRhythm failed: " + " | ".join(tail[-3:]))
+    shutil.copyfile(produced, wav_path)
+    shutil.rmtree(work, ignore_errors=True)
+    with wave.open(wav_path, "rb") as w:
+        return w.getnframes() / float(w.getframerate())

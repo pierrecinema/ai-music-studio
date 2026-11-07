@@ -572,7 +572,59 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
                stage="done", stage_text="Done", step=None, step_total=None)
 
 
+def _run_dr_job(job_id: str, req: GenerateMusicRequest) -> None:
+    """DiffRhythm: a whole song with vocals from lyrics, in one go (needs an NVIDIA card)."""
+    from services.music_engines import generate_diffrhythm
+    job = _jobs[job_id]
+    warnings: list[str] = []
+    wanted = req.duration or 95
+    if wanted < 95:
+        warnings.append("DiffRhythm makes songs of at least 95 s; the length was raised to 95 s.")
+    if wanted > 285:
+        warnings.append("DiffRhythm makes songs of up to 4 min 45 s; the length was shortened.")
+    if req.loras:
+        warnings.append("DiffRhythm does not use LoRA styles; they were ignored.")
+    if req.source_track:
+        warnings.append("DiffRhythm cannot work from a source track here; it was ignored.")
+    total = req.songs * req.variations * req.queue
+    out_dir = Path(tempfile.gettempdir()) / "ams_music"
+    out_dir.mkdir(exist_ok=True)
+    results: list[dict] = []
+    job["progress"] = {"done": 0, "total": total}
+    with _gen_lock:
+        job["status"] = "running"
+        job["started"] = time.time()
+        job["device"] = _device_text()
+        stop_watch = threading.Event()
+        threading.Thread(target=_watch_downloads, args=(job, stop_watch), daemon=True).start()
+        try:
+            for i in range(total):
+                wav = str(out_dir / f"song_{job_id}_{i + 1}.wav")
+                label = f"Song {i + 1} of {total}: " if total > 1 else ""
+                _stage(job, "load", f"{label}starting DiffRhythm")
+                try:
+                    secs = generate_diffrhythm(
+                        _compose_prompt(req), req.lyrics, wanted, wav,
+                        on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
+                        on_step=lambda d, t: _stage(job, "render", f"{label}composing the song", d, t))
+                    _stage(job, "finish", f"{label}saving and converting")
+                    final = _finalize(wav, req, warnings if i == 0 else [])
+                except Exception as e:
+                    job.update(status="error", error=_short(e), warnings=warnings, results=results)
+                    return
+                results.append({"audio_file": final, "seed": 0, "duration": round(secs, 1)})
+                job["progress"] = {"done": i + 1, "total": total}
+                job["results"] = list(results)
+        finally:
+            stop_watch.set()
+    job.update(status="done", engine="diffrhythm", audio_file=results[0]["audio_file"], results=results,
+               duration=results[0]["duration"], warnings=warnings, finished=time.time(),
+               stage="done", stage_text="Done", step=None, step_total=None)
+
+
 def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
+    if req.engine == "diffrhythm":
+        return _run_dr_job(job_id, req)
     if req.engine != "ace-step":
         return _run_clip_job(job_id, req)
     job = _jobs[job_id]

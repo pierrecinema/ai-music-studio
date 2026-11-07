@@ -211,7 +211,9 @@ FEATURES: list[Feature] = [
             cpu_hint="roughly the length of the song on the CPU"),
     Feature("music_gen", "Create music (ACE-Step)", "AI music", "NVIDIA GPU with 8 GB+ for minutes-fast songs",
             cuda=True, vram=8, ram=16, min_ram=10,
-            cpu_hint="on the CPU or an AMD card expect 30 to 90 minutes per minute of music"),
+            cpu_hint="on the CPU or an old AMD card expect many hours per song (the 3.5B model is too big for a small PC)"),
+    Feature("music_light", "Light music (MusicGen small, 15 to 30 s clips)", "AI music", "any computer; AMD and Intel graphics cards via DirectML",
+            ram=8, min_ram=6, cpu_hint="about 7 minutes for a 15 s clip on a fast older CPU"),
     Feature("music_long", "Songs longer than 4 minutes", "AI music", "12 GB+ GPU memory", cuda=True, vram=12, ram=24, min_ram=12,
             cpu_hint="possible, but very slow"),
     Feature("lora_use", "Use LoRA styles", "AI music", "same as Create music", cuda=True, vram=10, ram=16, min_ram=10,
@@ -246,7 +248,8 @@ def evaluate(f: Feature, m: Machine) -> dict:
             status = "slow"
             why = f.cpu_hint or "Runs on the CPU and takes long."
             if m.best_gpu and m.best_gpu.vendor == "amd":
-                why += " AMD cards only run the DirectML path, not the full speed."
+                why += (" ACE-Step cannot use an AMD card (it needs more video memory than old cards have). "
+                        "MusicGen small can: see 'Light music' below.")
         elif short_vram:
             status = "slow"
             why = f"This GPU has {v:g} GB; {f.vram:g} GB is comfortable. It will swap to system memory and be slower."
@@ -257,6 +260,12 @@ def evaluate(f: Feature, m: Machine) -> dict:
             status = "slow" if f.cpu_hint and f.id in ("stems", "karaoke") else "ready"
             why = f.cpu_hint if status == "slow" else ""
 
+    if f.id == "music_light" and os.environ.get("AMS_DML_PYTHON") and os.path.exists(os.environ["AMS_DML_PYTHON"])             and status != "unavailable":
+        status, why = "ready", "Runs on your graphics card through DirectML: about 2.5 minutes for a 15 s clip (measured on an AMD Radeon R9 290)."
+    elif f.id == "music_light" and status != "unavailable" and m.best_gpu and m.best_gpu.vendor in ("amd", "intel") and not m.cuda:
+        status = "slow"
+        why = (why + " Install 'Graphics card support' in Settings → AI Engines to use your " + m.best_gpu.name +
+               " (about 3 times faster).").strip()
     d = asdict(f)
     d.update(status=status, reason=why)
     return d

@@ -270,6 +270,7 @@ export function CreateMusic(): React.ReactElement {
   const [online, setOnline] = useState(true)
   const [res, setRes] = useState<Resources | null>(null)
   const [engines, setEngines] = useState<MusicEngineInfo[]>([])
+  const [gpuModels, setGpuModels] = useState<string[]>([])
   const [trainOpen, setTrainOpen] = useState(false)
   const [loras, setLoras] = useState<LoraInfo[]>([])
   const [loraDir, setLoraDir] = useState('')
@@ -307,6 +308,7 @@ export function CreateMusic(): React.ReactElement {
     void loadStatus()
     api.music.engines().then((r) => {
       setEngines(r.engines)
+      setGpuModels(r.gpu_path ? r.gpu_models : [])
       // first visit on a small PC: start with the model that gives a track in reasonable time
       if (!localStorage.getItem('ams-engine-chosen') && r.recommended) setP((cur) => (cur.engine === 'ace-step' ? { ...cur, engine: r.recommended } : cur))
     }).catch(() => { /* older backend: no picker */ })
@@ -495,6 +497,13 @@ export function CreateMusic(): React.ReactElement {
                   </option>
                 ))}
               </select>
+              {gpuModels.includes(p.engine) && (
+                <select value={p.compute} onChange={(e) => set('compute', e.target.value as MusicParams['compute'])} style={{ ...full, marginTop: 6 }}>
+                  <option value="auto">Compute: automatic (graphics card if possible)</option>
+                  <option value="gpu">Compute: graphics card (DirectML)</option>
+                  <option value="cpu">Compute: processor only</option>
+                </select>
+              )}
               {(() => {
                 const cur = engines.find((e) => e.id === p.engine)
                 if (!cur) return null

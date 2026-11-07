@@ -51,6 +51,20 @@ export function pipCacheDir(): string {
   return join(app.getPath('userData'), 'engines', 'pip-cache')
 }
 
+// A second, separate environment for graphics cards of AMD and Intel (DirectX 12 via torch-directml).
+// torch-directml needs PyTorch 2.4.1, which must not replace the PyTorch of the main environment.
+export function dmlDir(): string {
+  return join(app.getPath('userData'), 'engines', 'venv-dml')
+}
+
+export function dmlPython(): string {
+  return join(dmlDir(), 'Scripts', 'python.exe')
+}
+
+export function hasDml(): boolean {
+  return existsSync(join(dmlDir(), 'Lib', 'site-packages', 'torch_directml'))
+}
+
 export function hasVenv(): boolean {
   return existsSync(venvPython())
 }
@@ -126,6 +140,7 @@ export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   const [py, have, gpu] = await Promise.all([findPython(), installedPackages(), detectGpu()])
   const installed: Record<string, boolean> = {}
   for (const [g, names] of Object.entries(GROUP_PROBE)) installed[g] = names.some((n) => have.has(n))
+  installed.gpuamd = hasDml()
   return {
     pythonFound: py !== null,
     pythonVersion: py?.version ?? null,
@@ -192,6 +207,21 @@ export function isInstalling(): boolean {
   return running !== null
 }
 
+async function installDml(py: PythonCmd | null, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
+  if (!py) return { ok: false, error: 'Python 3.11 was not found.' }
+  const minor = Number(py.version.split('.')[1])
+  if (minor > 12) {
+    return { ok: false, error: `The graphics card add-on needs Python 3.12 or older (found ${py.version}). Install Python 3.11 and try again.` }
+  }
+  if (!existsSync(dmlPython())) {
+    mkdirSync(join(dmlDir(), '..'), { recursive: true })
+    if (await run(py.cmd, [...py.args, '-m', 'venv', dmlDir()], log) !== 0) return { ok: false, error: 'Could not create the graphics card environment.' }
+    await run(dmlPython(), ['-m', 'pip', 'install', '--upgrade', 'pip'], log)
+  }
+  const code = await run(dmlPython(), ['-m', 'pip', 'install', 'torch-directml', 'numpy<2', 'transformers>=4.40,<5', 'scipy', 'sentencepiece', 'accelerate'], log)
+  return code === 0 ? { ok: true } : { ok: false, error: 'Installing the graphics card add-on failed (see log).' }
+}
+
 export async function installGroups(
   groups: string[],
   torchVariant: string,
@@ -240,13 +270,11 @@ export async function installGroups(
       }
       continue
     }
-    if (g === 'torch' && torchVariant === 'directml') {
-      log('Trying the optional DirectML add-on (torch-directml)…')
-      const dml = await run(venvPython(), ['-m', 'pip', 'install', 'torch-directml'], log)
-      if (dml !== 0) {
-        log('torch-directml is not available for this Python version. Continuing with the CPU build of PyTorch, which works fine.')
-      }
-    }
+  }
+  if (groups.includes('gpuamd')) {
+    log('=== gpuamd (graphics card support for AMD and Intel) ===')
+    const r = await installDml(py, log)
+    if (!r.ok) { failed.push('gpuamd'); log(r.error ?? 'failed') }
   }
   if (failed.length > 0) {
     return { ok: false, error: `Done, but these packages failed: ${failed.join(', ')}. The others are installed. See the log for details.` }

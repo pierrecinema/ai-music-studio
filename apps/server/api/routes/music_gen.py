@@ -189,6 +189,7 @@ class Dcw(BaseModel):
 
 
 class GenerateMusicRequest(BaseModel):
+    compute: str = "auto"                   # auto | gpu | cpu
     engine: str = "ace-step"                # ace-step | musicgen-small | musicgen-medium | musicgen-large
     # song
     title: str = ""
@@ -526,7 +527,24 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
                 _stage(job, "render", f"{_label}composing", done, of)
 
             try:
-                if req.engine.startswith("musicgen"):
+                from services.music_engines import can_use_dml, generate_dml
+                use_gpu = req.compute != "cpu" and can_use_dml(req.engine)
+                if req.compute == "gpu" and not can_use_dml(req.engine):
+                    warnings.append("The graphics card path is not installed for this model; using the processor. "
+                                    "Install it in Settings → AI Engines.")
+                if use_gpu:
+                    job["device"] = "Using the graphics card through DirectML. Slower parts run on the processor."
+                    try:
+                        seconds = generate_dml(req.engine, _compose_prompt(req), duration, seed, wav,
+                                               guidance=max(1.0, min(req.cfg_scale + 1.0, 10.0)), on_step=on_step,
+                                               on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"))
+                    except Exception as e:  # fall back: a track on the CPU beats an error
+                        warnings.append(f"The graphics card failed ({_short(e)}); continuing on the processor.")
+                        job["device"] = _device_text()
+                        use_gpu = False
+                if use_gpu:
+                    pass
+                elif req.engine.startswith("musicgen"):
                     seconds = generate_musicgen(req.engine, _compose_prompt(req), duration, seed, wav,
                                                 guidance=max(1.0, min(req.cfg_scale + 1.0, 10.0)), on_step=on_step)
                 else:
@@ -681,7 +699,9 @@ async def engines():
     import asyncio
     m = await asyncio.to_thread(detect_machine, os.environ.get("AMS_ACESTEP_DIR"))
     from services.music_engines import recommend
-    return {"engines": catalog(m), "recommended": recommend(m)}
+    from services.music_engines import DML_ENGINES, dml_python
+    return {"engines": catalog(m), "recommended": recommend(m), "gpu_path": dml_python() is not None,
+            "gpu_models": sorted(DML_ENGINES)}
 
 
 @router.get("/jobs/{job_id}")

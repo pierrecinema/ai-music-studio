@@ -1,5 +1,6 @@
 export interface MusicParams {
   engine: string
+  compute: 'auto' | 'gpu' | 'cpu'
   title: string
   prompt: string
   lyrics: string
@@ -62,6 +63,7 @@ export const LAYERS: Array<{ key: LayerKey; label: string }> = [
 
 export const DEFAULT_PARAMS: MusicParams = {
   engine: 'ace-step',
+  compute: 'auto',
   title: '',
   prompt: '',
   lyrics: '',
@@ -144,6 +146,7 @@ const int = (s: string, min?: number, max?: number): number | null => {
 export function toRequest(p: MusicParams): Record<string, unknown> {
   return {
     engine: p.engine,
+    compute: p.compute,
     title: p.title,
     prompt: p.prompt,
     lyrics: p.lyrics,

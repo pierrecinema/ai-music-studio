@@ -12,6 +12,7 @@ const GROUPS: Group[] = [
   { id: 'video', name: 'Video analysis', desc: 'OpenCV + librosa for the video composer.' },
   { id: 'acestep', name: 'Music generator (ACE-Step)', desc: 'Full songs + LoRA. Needs Git installed. Model weights download on first use.', note: 'Large download.' },
   { id: 'musicgen', name: 'Light music generators (MusicGen, AudioLDM 2, MusicLDM)', desc: 'Instrumental clips of 10 to 30 s. They run on old PCs without a graphics card, but take minutes.', note: 'Model weights are for non-commercial use (CC-BY-NC). Each model downloads 2 to 13 GB on first use.' },
+  { id: 'gpuamd', name: 'Graphics card support (AMD / Intel, DirectX 12)', desc: 'Lets MusicGen small compose on your graphics card, about 3 times faster than the processor on an AMD Radeon R9 290. Installs its own environment (about 1.5 GB).', note: 'Experimental: torch-directml is a 2024 preview build. Only MusicGen small uses it so far; ACE-Step needs more graphics memory than old cards have.' },
   { id: 'training', name: 'LoRA training (ACE-Step)', desc: 'Packages for training your own LoRA. Needs an NVIDIA graphics card to run; without one you can still build a bundle for another PC.', note: 'The trainer itself (35 MB) is fetched once from the ACE-Step project when you start a training. Needs Git.' },
   { id: 'muscriptor', name: 'Audio → MIDI (MuScriptor)', desc: 'More accurate transcription.', note: 'CC BY-NC 4.0: non-commercial use only, and only for music you have the rights to transcribe.' },
 ]

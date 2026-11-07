@@ -31,7 +31,7 @@ export interface MusicJob {
 export interface MusicEngineInfo {
   id: string; name: string; kind: 'built-in' | 'planned'; description: string; license: string
   vocals: boolean; max_seconds: number; status: 'ready' | 'slow' | 'unavailable'; reason: string; usable: boolean
-  min_ram: number; vram: number; note: string; recommended?: boolean
+  min_ram: number; vram: number; note: string; recommended?: boolean; accel?: string
 }
 export interface Usage {
   cpu_percent: number; engine_cpu_percent: number; ram_percent: number; ram_used_gb: number; ram_total_gb: number
@@ -161,7 +161,7 @@ export const api = {
     }>('/music/status'),
     generate: (body: Record<string, unknown>) => post<{ jobId: string }>('/music/generate', body),
     job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
-    engines: () => get<{ engines: MusicEngineInfo[]; recommended: string }>('/music/engines'),
+    engines: () => get<{ engines: MusicEngineInfo[]; recommended: string; gpu_path: boolean; gpu_models: string[] }>('/music/engines'),
   },
 
   train: {

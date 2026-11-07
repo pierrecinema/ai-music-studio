@@ -6,6 +6,7 @@ exists and what hardware they would need; they are marked as not yet built in.
 """
 from __future__ import annotations
 
+import os
 import threading
 from dataclasses import dataclass, asdict
 
@@ -85,8 +86,12 @@ def rate(e: EngineInfo, m: Machine) -> dict:
         status, why = "slow", e.cpu_speed + "."
     else:
         status, why = "ready", ""
+    gpu_note = ""
+    if e.id == "musicgen-small" and dml_python() is not None and status != "unavailable":
+        status, why = "ready", "Runs on your graphics card through DirectML: about 2.5 minutes per 15 s clip (measured on an AMD Radeon R9 290)."
+        gpu_note = "gpu"
     d = asdict(e)
-    d.update(status=status, reason=why, usable=(e.kind == "built-in" and status != "unavailable"))
+    d.update(status=status, reason=why, usable=(e.kind == "built-in" and status != "unavailable"), accel=gpu_note)
     return d
 
 
@@ -213,3 +218,65 @@ def generate_diffusers(engine_id: str, prompt: str, seconds: int, seed: int, wav
     rate = 16000                                    # both pipelines output 16 kHz mono
     wavfile.write(wav_path, rate, (audio * 32767).astype(np.int16))
     return len(audio) / float(rate)
+
+
+# ── graphics card path (AMD / Intel through DirectML) ────────────────────────
+
+def dml_python() -> str | None:
+    """Python of the separate DirectML environment, if the user installed it."""
+    p = os.environ.get("AMS_DML_PYTHON")
+    return p if p and os.path.exists(p) else None
+
+
+DML_ENGINES = {"musicgen-small"}      # measured to work; larger models do not fit 4 GB cards in fp32
+
+
+def can_use_dml(engine_id: str) -> bool:
+    return dml_python() is not None and engine_id in DML_ENGINES
+
+
+def generate_dml(engine_id: str, prompt: str, seconds: int, seed: int, wav_path: str,
+                 guidance: float = 3.0, on_step=None, on_stage=None) -> float:
+    """Run MusicGen in the DirectML environment (a separate process) and stream its progress."""
+    import json
+    import subprocess
+    import tempfile
+
+    info = next(e for e in ENGINES if e.id == engine_id)
+    req = {"repo": info.hf_repo, "prompt": prompt, "seconds": max(1, min(seconds, info.max_seconds)),
+           "seed": seed, "guidance": guidance, "out": wav_path}
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+        json.dump(req, f)
+        req_path = f.name
+    worker = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dml_worker.py")
+    proc = subprocess.Popen([dml_python(), worker, req_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            text=True, encoding="utf-8", errors="replace",
+                            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    seconds_out, error = None, None
+    assert proc.stdout is not None
+    for line in proc.stdout:
+        line = line.strip()
+        if not line.startswith("{"):
+            continue                              # library warnings
+        try:
+            m = json.loads(line)
+        except ValueError:
+            continue
+        if "error" in m:
+            error = m["error"]
+        elif m.get("done"):
+            seconds_out = float(m["seconds"])
+        elif m.get("stage") == "load" and on_stage:
+            on_stage("load", m.get("text", "Loading the model onto the graphics card"))
+        elif m.get("step") is not None and on_step:
+            if m.get("text") and on_stage:
+                on_stage("render", m["text"])
+            on_step(m["step"], m["total"])
+    code = proc.wait()
+    try:
+        os.unlink(req_path)
+    except OSError:
+        pass
+    if seconds_out is None:
+        raise RuntimeError(error or f"The graphics card worker stopped (exit code {code}).")
+    return seconds_out

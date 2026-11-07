@@ -29,6 +29,7 @@ const GROUP_PROBE: Record<string, string[]> = {
   acestep: ['ace-step', 'acestep'],
   muscriptor: ['muscriptor'],
   musicgen: ['sentencepiece'],
+  training: ['peft', 'pytorch-lightning'],
   video: ['opencv-python-headless', 'opencv-python']
 }
 
@@ -155,6 +156,7 @@ function groupArgs(group: string, torchVariant: string): string[] | null {
     case 'whisper': return ['faster-whisper']
     case 'acestep': return ['git+https://github.com/ace-step/ACE-Step.git']
     case 'muscriptor': return ['muscriptor']
+    case 'training': return ['datasets==3.4.1', 'peft', 'pytorch_lightning==2.5.1', 'tensorboard', 'tensorboardX']
     case 'musicgen': return ['transformers>=4.40', 'accelerate', 'sentencepiece', 'scipy']
     case 'video': return ['opencv-python-headless', 'librosa']
     default: return null
@@ -220,7 +222,7 @@ export async function installGroups(
 
   const minor = await venvPythonMinor()
   // core first, torch before anything that depends on it
-  const order = ['core', 'torch', 'demucs', 'basicpitch', 'matchering', 'whisper', 'video', 'acestep', 'musicgen', 'muscriptor']
+  const order = ['core', 'torch', 'demucs', 'basicpitch', 'matchering', 'whisper', 'video', 'acestep', 'musicgen', 'training', 'muscriptor']
   const wanted = order.filter(g => g === 'core' || groups.includes(g))
   const failed: string[] = []
   for (const g of wanted) {

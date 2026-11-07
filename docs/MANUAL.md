@@ -150,6 +150,19 @@ Die Zeiten sind Schätzungen, keine Messungen. Eine NVIDIA-Karte mit CUDA macht 
 
 **Fortschritt beim Erzeugen:** Während ein Song entsteht, zeigt die App die Phase (Modell laden, vorbereiten, rendern, speichern), einen Balken mit Prozent und geschätzter Restzeit, die laufende Zeit und beim ersten Start, wie viel vom Modell schon heruntergeladen ist. Wenn der Balken sich nicht bewegt, aber die Zeit läuft, arbeitet die App weiter.
 
+## Eigene LoRAs trainieren (Create music → LoRA → "Train your own LoRA…")
+
+Du kannst ACE-Step einen eigenen Stil beibringen. Du brauchst Songs, an denen du die Rechte hast.
+
+1. **Ordner mit Songs wählen.** Textdateien neben einem Song werden erkannt: `song_prompt.txt` (Stil-Tags), `song_lyrics.txt` oder `song.txt` (Text).
+2. **Jeden Song beschreiben.** Stil-Tags, durch Komma getrennt: Genre, Stimmung, Instrumente, Tempo, Gesang. Leerer Text bedeutet Instrumental. Für einen Stil sind mindestens 8 bis 10 Songs, besser 30 Minuten Musik sinnvoll; die App warnt bei weniger.
+3. **Länge und Stärke wählen** (test / normal / thorough, Rank 64 / 128 / 256).
+4. **Training.** Die App prüft deinen Computer:
+   - *Train here*: nur mit NVIDIA-Grafikkarte (CUDA). Ab 8 GB Grafikspeicher möglich, 12 GB oder mehr empfohlen. Die Zahlen sind Schätzungen und ungetestet. Einmalig wird der ACE-Step-Trainer (35 MB) per Git geholt. Dafür vorher unter Einstellungen → AI Engines *LoRA training* installieren.
+   - *Build bundle for another computer*: packt die umgewandelten Songs, die Einstellungen und eine Anleitung (README.txt) in eine ZIP-Datei. Damit trainierst du auf einem stärkeren PC und importierst das Ergebnis mit *Import LoRA folder*.
+
+Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training selbst wurde in dieser Version nur mit einem Ersatz-Trainer getestet, nicht mit einer echten NVIDIA-Karte.
+
 ## 4. Speicherorte
 
 | Was | Wo |

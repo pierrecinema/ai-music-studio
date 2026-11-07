@@ -12,6 +12,7 @@ const GROUPS: Group[] = [
   { id: 'video', name: 'Video analysis', desc: 'OpenCV + librosa for the video composer.' },
   { id: 'acestep', name: 'Music generator (ACE-Step)', desc: 'Full songs + LoRA. Needs Git installed. Model weights download on first use.', note: 'Large download.' },
   { id: 'musicgen', name: 'Music generator (MusicGen, light)', desc: 'Instrumental clips up to 30 s. Small model runs on old PCs.', note: 'Model weights are CC-BY-NC 4.0: non-commercial use only. Downloads 2 to 13 GB on first use depending on the model.' },
+  { id: 'training', name: 'LoRA training (ACE-Step)', desc: 'Packages for training your own LoRA. Needs an NVIDIA graphics card to run; without one you can still build a bundle for another PC.', note: 'The trainer itself (35 MB) is fetched once from the ACE-Step project when you start a training. Needs Git.' },
   { id: 'muscriptor', name: 'Audio → MIDI (MuScriptor)', desc: 'More accurate transcription.', note: 'CC BY-NC 4.0: non-commercial use only, and only for music you have the rights to transcribe.' },
 ]
 

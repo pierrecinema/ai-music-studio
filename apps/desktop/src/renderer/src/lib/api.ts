@@ -38,6 +38,17 @@ export interface CapabilityReport {
     gpus: Array<{ name: string; vendor: string; vram_gb: number; cuda: boolean }> }
   features: Array<{ id: string; name: string; group: string; need: string; status: 'ready' | 'slow' | 'unavailable'; reason: string }>
 }
+export interface TrainItem { path: string; name: string; seconds: number | null; caption: string; lyrics: string; caption_found: boolean; guess: string }
+export interface TrainPlan { preset: string; preset_text: string; rank: number; rank_text: string; max_steps: number; save_every: number; repeat_count: number; precision: string }
+export interface TrainOptions {
+  verdict: { status: 'ready' | 'slow' | 'unavailable'; reason: string }
+  presets: Record<string, { steps: number; text: string }>; ranks: Record<string, string>; plan: TrainPlan
+}
+export interface TrainJob {
+  id: string; status: 'queued' | 'running' | 'done' | 'error' | 'stopped'; error?: string; stage: string; stage_text: string
+  step?: number | null; step_total?: number | null; loss?: number; log: string[]; warning?: string; started?: number; updated?: number
+  lora?: { id: string; name: string }
+}
 export interface KaraokeWord { text: string; start: number; end: number }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -146,6 +157,19 @@ export const api = {
     generate: (body: Record<string, unknown>) => post<{ jobId: string }>('/music/generate', body),
     job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
     engines: () => get<{ engines: MusicEngineInfo[] }>('/music/engines'),
+  },
+
+  train: {
+    options: (songs: number) => get<TrainOptions>(`/train/options?songs=${songs}`),
+    scan: (folder: string) => post<{ items: TrainItem[] }>('/train/scan', { folder }),
+    dataset: (body: { name: string; items: Array<{ path: string; caption: string; lyrics: string; seconds: number | null }>; shared_tags: string }) =>
+      post<{ name: string; dir: string; songs: number; minutes: number; warnings: string[] }>('/train/dataset', body),
+    exportBundle: (body: { name: string; dataset_dir: string; songs: number; preset: string; rank: number }) =>
+      post<{ folder: string; zip: string }>('/train/export', body),
+    start: (body: { name: string; dataset_dir: string; songs: number; preset: string; rank: number }) =>
+      post<{ jobId: string }>('/train/start', body),
+    job: (id: string) => get<TrainJob>(`/train/jobs/${id}`),
+    stop: (id: string) => post<{ stopped: boolean }>(`/train/jobs/${id}/stop`, {}),
   },
 
   system: {

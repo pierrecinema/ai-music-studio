@@ -5,6 +5,7 @@ import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
 import { AudioFile } from '../common/AudioFile'
 import { LoraBrowser } from './LoraBrowser'
+import { TrainLora } from './TrainLora'
 import {
   DEFAULT_PARAMS, GENRES, KEYS, LANGUAGES, LAYERS, TIME_SIGNATURES, toRequest,
   type MusicParams
@@ -252,6 +253,7 @@ export function CreateMusic(): React.ReactElement {
   const [online, setOnline] = useState(true)
   const [res, setRes] = useState<Resources | null>(null)
   const [engines, setEngines] = useState<MusicEngineInfo[]>([])
+  const [trainOpen, setTrainOpen] = useState(false)
   const [loras, setLoras] = useState<LoraInfo[]>([])
   const [loraDir, setLoraDir] = useState('')
   const [job, setJob] = useState<MusicJob | null>(null)
@@ -417,6 +419,7 @@ export function CreateMusic(): React.ReactElement {
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+      <TrainLora open={trainOpen} onClose={() => setTrainOpen(false)} onDone={(id) => { void refreshLoras(); setNotice('LoRA ' + id + ' trained and added to your list.') }} />
       <LoraBrowser open={browserOpen} onClose={() => setBrowserOpen(false)} onImported={(l) => void onDownloaded(l)} />
       {/* ── form ── */}
       <div style={{ width: 560, maxWidth: '58%', flexShrink: 0, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -604,6 +607,7 @@ export function CreateMusic(): React.ReactElement {
             <button className="btn btn-primary" onClick={() => setBrowserOpen(true)}>Find LoRA on Hugging Face…</button>
             <button className="btn btn-ghost" onClick={() => importLora('file')}>Import LoRA file…</button>
             <button className="btn btn-ghost" onClick={() => importLora('folder')}>Import LoRA folder…</button>
+            <button className="btn btn-ghost" onClick={() => setTrainOpen(true)}>Train your own LoRA…</button>
           </div>
           <span style={hint}>Folder: {loraDir || '…'}. The engine applies one LoRA per render (the strongest).</span>
         </Card>

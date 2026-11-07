@@ -5,6 +5,7 @@ import { useAudioStore } from '../../stores/audio.store'
 import { useUIStore } from '../../stores/ui.store'
 import { importAudioFiles } from '../timeline/Timeline'
 import { SamplesTab } from './SamplesTab'
+import { seedAnalysis } from '../../beatmatch/store'
 
 const muted: React.CSSProperties = { fontSize: 11, color: 'var(--text-muted)' }
 const mmss = (s: number | null): string => (s == null ? '?' : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`)
@@ -24,6 +25,9 @@ export function Library(): React.ReactElement {
   const [playing, setPlaying] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [tab, setTab] = useState<'tracks' | 'samples'>('tracks')
+  // where a song lands on the timeline: always bar 1 (all songs start together), or at the playhead
+  const [insertAt, setInsertAt] = useState<'bar1' | 'playhead'>(() => { try { return localStorage.getItem('ams-insert-at') === 'playhead' ? 'playhead' : 'bar1' } catch { return 'bar1' } })
+  const chooseInsert = (v: 'bar1' | 'playhead'): void => { setInsertAt(v); try { localStorage.setItem('ams-insert-at', v) } catch { /* storage unavailable */ } }
   const audio = useRef<HTMLAudioElement | null>(null)
   const url = useRef<string | null>(null)
   const setActiveView = useUIStore((s) => s.setActiveView)
@@ -61,7 +65,8 @@ export function Library(): React.ReactElement {
   }
 
   const toProject = async (t: LibraryTrack): Promise<void> => {
-    const problems = await importAudioFiles([t.path], { startBeat: useAudioStore.getState().currentBeat })
+    seedAnalysis(t.path, t)                                   // tempo and first beat are known: no new measurement
+    const problems = await importAudioFiles([t.path], { startBeat: insertAt === 'bar1' ? 0 : useAudioStore.getState().currentBeat })
     if (problems.length) { setError(problems.join(' ')); return }
     const tracks = useProjectStore.getState().project.tracks
     useProjectStore.getState().updateTrack(tracks[tracks.length - 1].id, { name: t.title })
@@ -103,6 +108,11 @@ export function Library(): React.ReactElement {
           for (const p of paths) await act(() => api.library.importFile(p))
         }}>Add files to the library…</button>
         <span style={{ flex: 1 }} />
+        <label style={{ ...muted, display: 'flex', gap: 4, alignItems: 'center' }}>Insert at
+          <select value={insertAt} onChange={(e) => { chooseInsert(e.target.value as 'bar1' | 'playhead'); e.target.blur() }} style={{ fontSize: 11 }}>
+            <option value="bar1">bar 1</option><option value="playhead">the playhead</option>
+          </select>
+        </label>
         <span style={muted}>{shown.length} of {tracks.length} tracks</span>
       </div>}
 
@@ -132,7 +142,7 @@ export function Library(): React.ReactElement {
             )}
             <div style={{ ...muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.prompt}>{t.prompt || '—'}</div>
             <div style={muted}>
-              {mmss(t.duration)} · {ENGINE[t.engine] ?? (t.engine || t.source)} · {new Date(t.created * 1000).toLocaleString()}{t.seed ? ` · seed ${t.seed}` : ''}
+              {mmss(t.duration)} · {t.bpm ? `${Math.round(t.bpm)} BPM · ` : ''}{ENGINE[t.engine] ?? (t.engine || t.source)} · {new Date(t.created * 1000).toLocaleString()}{t.seed ? ` · seed ${t.seed}` : ''}
             </div>
           </div>
 

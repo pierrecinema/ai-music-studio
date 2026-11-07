@@ -195,6 +195,10 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 ## Bibliothek
 
+**Jeder erzeugte Song beginnt auf Schlag 1.** Bevor ein Song gespeichert wird, misst die App Tempo und ersten Schlag und schneidet alles vor dem ersten Schlag ab (Stille, Einblendung, halber Schlag Vorlauf). Die gespeicherte Datei beginnt also genau auf Takt 1, und die App merkt sich Tempo und Anfang in der Bibliothek (zu sehen als „120 BPM“ neben dem Song). Im Ergebnisfeld steht dazu eine Zeile, wie viel abgeschnitten wurde. Grenzen: Es wird nur ein Vorlauf bis 6 Sekunden entfernt und nur, wenn er kürzer als etwa ein Schlag ist oder aus Stille besteht (ein echter Auftakt oder ein längeres Intro bleibt erhalten, damit keine Noten verloren gehen). Musik ohne erkennbaren Schlag (Ambient) verliert nur die Stille am Anfang. Songs, die schon vor dieser Version gespeichert wurden, bleiben unverändert.
+
+**Auf der Zeitleiste:** *Add to project* (Bibliothek und Create music) legt Songs immer auf **Takt 1** (Position 0), sodass mehrere Songs gemeinsam starten. In der Bibliothek kannst du stattdessen *Insert at: the playhead* wählen. Weil Tempo und erster Schlag bekannt sind, erscheint die Beat-Matching-Karte sofort, ohne neue Messung.
+
 **Songs umbenennen:** Direkt unter *Create music* hat jeder fertige Song ein Namensfeld über dem Player: hineinklicken, tippen, Enter oder woanders klicken, dann steht „saved“ daneben. Der Name gilt auch in der Bibliothek. In der Bibliothek geht es über den Knopf **Rename** (oder Doppelklick auf den Namen). Spuren in der Zeitleiste benennst du per Doppelklick auf den Spurnamen um.
 
 Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Musik\AI Music Studio` (nach Monaten sortiert, mit `library.json` für Titel, Stil, Modell, Seed und Länge). Unter **Library** kannst du Songs abspielen, umbenennen (Doppelklick), als Favorit markieren, suchen, in den Explorer zeigen, löschen und mit **Add to project** auf die Zeitleiste legen. Auch eigene Dateien lassen sich hinzufügen. Früher erzeugte Songs lagen nur im temporären Ordner und sind eventuell weg.

@@ -52,6 +52,11 @@ async function measure(path: string): Promise<Awaited<ReturnType<typeof api.samp
   return r
 }
 
+/** Remember what is already known about a file (the library measured it when the track was saved). */
+export function seedAnalysis(path: string, known: { bpm?: number | null; first_beat?: number | null }): void {
+  if (known.bpm) analysisCache.set(path, { bpm: known.bpm, first_beat: known.first_beat ?? 0, duration: null })
+}
+
 export const useBeatMatch = create<State>((set, get) => ({
   mode: loadMode(),
   queue: [],

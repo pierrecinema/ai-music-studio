@@ -311,7 +311,25 @@ def _wav_seconds(path: str) -> float | None:
         return None
 
 
+_start_info: dict[str, dict] = {}      # final file -> what the start alignment found (tempo, first beat)
+
+
 def _finalize(wav_path: str, req: GenerateMusicRequest, warnings: list[str]) -> str:
+    """Cut the track to start on its first beat, convert to the wanted format and apply fades (ffmpeg)."""
+    info: dict = {}
+    try:
+        from services.startalign import align_start
+        info = align_start(wav_path)
+        if info.get("trimmed"):
+            warnings.append(f"The track started {info['trimmed']} s before its first beat: that was cut off, it starts on beat 1.")
+    except Exception as e:  # noqa: BLE001 - never lose a track because of this step
+        print(f"[start-align] skipped: {e}", flush=True)
+    final = _finalize_file(wav_path, req, warnings)
+    _start_info[final] = info
+    return final
+
+
+def _finalize_file(wav_path: str, req: GenerateMusicRequest, warnings: list[str]) -> str:
     """Convert to the wanted format and apply fades with ffmpeg (if available)."""
     wants_convert = req.output_format != "wav"
     wants_fade = req.fade_in > 0 or req.fade_out > 0
@@ -419,10 +437,16 @@ def _keep(path: str, req: "GenerateMusicRequest", seed: int, seconds: float, eng
     """Put a finished track into the library for good. Returns what the UI needs: permanent path, id and title."""
     try:
         from services import library
+        info = _start_info.pop(path, {})
         entry = library.add_track(path, {
             "title": req.title, "prompt": req.prompt or "", "lyrics": req.lyrics, "seed": seed,
-            "duration": round(seconds, 1), "engine": engine, "source": "generated"})
-        return {"audio_file": entry["path"], "library_id": entry["id"], "title": entry["title"]}
+            "duration": round(seconds, 1), "engine": engine, "source": "generated",
+            "bpm": info.get("bpm"), "first_beat": info.get("first_beat")})
+        out = {"audio_file": entry["path"], "library_id": entry["id"], "title": entry["title"],
+               "bpm": info.get("bpm"), "first_beat": info.get("first_beat")}
+        if entry.get("duration"):
+            out["duration"] = entry["duration"]          # the real length, after the start was cut
+        return out
     except Exception as e:  # noqa: BLE001 - the track is still usable from the temporary folder
         print(f"[library] could not save the track: {e}", flush=True)
         return {"audio_file": path, "library_id": None, "title": req.title or ""}
@@ -576,7 +600,7 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
                 stop_watch.set()
                 job.update(status="error", error=_short(e), warnings=warnings, results=results)
                 return
-            results.append({**_keep(final, req, seed, seconds, req.engine), "seed": seed, "duration": round(seconds, 1)})
+            results.append({"seed": seed, "duration": round(seconds, 1), **_keep(final, req, seed, seconds, req.engine)})
             job["progress"] = {"done": i + 1, "total": total}
             job["results"] = list(results)
         stop_watch.set()
@@ -625,7 +649,7 @@ def _run_dr_job(job_id: str, req: GenerateMusicRequest) -> None:
                 except Exception as e:
                     job.update(status="error", error=_short(e), warnings=warnings, results=results)
                     return
-                results.append({**_keep(final, req, 0, secs, "diffrhythm"), "seed": 0, "duration": round(secs, 1)})
+                results.append({"seed": 0, "duration": round(secs, 1), **_keep(final, req, 0, secs, "diffrhythm")})
                 job["progress"] = {"done": i + 1, "total": total}
                 job["results"] = list(results)
         finally:
@@ -738,7 +762,7 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
                 except Exception as e:  # model / out-of-memory errors
                     job.update(status="error", error=str(e), warnings=warnings, results=results)
                     return
-                results.append({**(({"audio_file": final, "library_id": None, "title": req.title or ""}) if engine_kind == "stub" else _keep(final, req, seed, duration, "ace-step")), "seed": seed, "duration": duration})
+                results.append({"seed": seed, "duration": duration, **(({"audio_file": final, "library_id": None, "title": req.title or ""}) if engine_kind == "stub" else _keep(final, req, seed, duration, "ace-step"))})
                 job["progress"] = {"done": i + 1, "total": total}
                 job["results"] = list(results)
         finally:

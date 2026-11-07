@@ -94,6 +94,8 @@ def add_track(src: str, meta: dict) -> dict:
         "prompt": meta.get("prompt", ""),
         "lyrics": meta.get("lyrics", ""),
         "seed": meta.get("seed"),
+        "bpm": meta.get("bpm"),                       # measured tempo (None: no steady beat)
+        "first_beat": meta.get("first_beat"),         # seconds into the file; 0 = starts on beat 1
         "favorite": False,
         "notes": "",
     }

@@ -6,6 +6,8 @@ import { useUIStore } from '../../stores/ui.store'
 import { AudioFile } from '../common/AudioFile'
 import { LoraBrowser } from './LoraBrowser'
 import { TrainLora } from './TrainLora'
+import { importAudioFiles } from '../timeline/Timeline'
+import { seedAnalysis } from '../../beatmatch/store'
 import { useMusicJob } from '../../stores/musicJob.store'
 import {
   DEFAULT_PARAMS, GENRES, KEYS, LANGUAGES, LAYERS, TIME_SIGNATURES, toRequest,
@@ -360,17 +362,19 @@ export function CreateMusic(): React.ReactElement {
     return a.slice(0, 6)
   }, [chipSeed])
 
+  // every song lands on bar 1 (so that several songs start together) and is beat matched like any new audio
   const addToProject = useCallback((job: MusicJob) => {
-    const store = useProjectStore.getState()
-    job.results.forEach((r, i) => {
-      store.addTrack('audio')
-      const tracks = useProjectStore.getState().project.tracks
-      const track = tracks[tracks.length - 1]
-      const bpm = useProjectStore.getState().project.bpm || 120
-      store.updateTrack(track.id, { name: `${p.title || p.prompt.split(',')[0] || 'Song'} ${i + 1}`.trim() })
-      store.addClip(track.id, { startTime: 0, duration: (r.duration * bpm) / 60, audioFile: r.audio_file })
-    })
-    setNotice(`${job.results.length} track(s) added to the project timeline.`)
+    void (async () => {
+      for (const [i, r] of job.results.entries()) {
+        seedAnalysis(r.audio_file, r)                          // the tempo was measured when the song was saved
+        const problems = await importAudioFiles([r.audio_file], { startBeat: 0 })
+        if (problems.length) { setError(problems.join(' ')); return }
+        const tracks = useProjectStore.getState().project.tracks
+        const track = tracks[tracks.length - 1]
+        useProjectStore.getState().updateTrack(track.id, { name: (r.title || `${p.title || p.prompt.split(',')[0] || 'Song'} ${i + 1}`).trim() })
+      }
+      setNotice(`${job.results.length} song(s) added at bar 1 of the timeline.`)
+    })()
   }, [p.title, p.prompt])
 
   // when a job finishes while this screen is open, put the tracks on the timeline if asked

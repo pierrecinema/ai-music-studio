@@ -17,7 +17,7 @@ export interface Resources {
 export interface Lora {
   id: string; name: string; kind: 'style' | 'artist' | 'sound'; path: string; tags: string[]
 }
-export interface MusicResult { audio_file: string; seed: number; duration: number; library_id?: string | null; title?: string }
+export interface MusicResult { audio_file: string; seed: number; duration: number; library_id?: string | null; title?: string; bpm?: number | null; first_beat?: number | null }
 export interface MusicJob {
   id: string; status: 'queued' | 'running' | 'done' | 'error'
   audio_file?: string; error?: string; warnings: string[]; engine?: string
@@ -57,6 +57,7 @@ export interface TrainJob {
 export interface LibraryTrack {
   id: string; title: string; file: string; path: string; exists: boolean; created: number; duration: number | null
   engine: string; source: string; prompt: string; lyrics: string; seed: number | null; favorite: boolean; notes: string
+  bpm?: number | null; first_beat?: number | null     // measured when the track was saved; first_beat 0 = starts on beat 1
 }
 export interface SampleEntry { path: string; name: string; folder: string; root: string; size: number; bpm: number | null }
 export interface KaraokeWord { text: string; start: number; end: number }

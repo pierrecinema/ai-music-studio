@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid'
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
 import { useAudioStore } from '../../stores/audio.store'
-import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER_SECOND, projectEndBeat, secToBeats, seek } from '../../audio/engine'
+import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER_SECOND, projectEndBeat, secToBeats, seek, sourceSecPerBeat } from '../../audio/engine'
 import type { Clip, Track } from '../../types'
 
 const TRACK_HEIGHT = 72
@@ -20,7 +20,7 @@ const NOTE_TYPES: Track['type'][] = ['midi', 'instrument', 'vocal']
 
 export async function importAudioFiles(
   paths: string[],
-  at?: { trackId?: string; startBeat?: number }
+  at?: { trackId?: string; startBeat?: number; warpBpm?: number }
 ): Promise<string[]> {
   const problems: string[] = []
   let startBeat = at?.startBeat ?? useAudioStore.getState().currentBeat
@@ -37,15 +37,19 @@ export async function importAudioFiles(
       trackId = tracks[tracks.length - 1].id
       useProjectStore.getState().updateTrack(trackId, { name })
     }
+    const warp = at?.warpBpm && buf.duration >= 1 ? at.warpBpm : undefined      // one-shots are not stretched
     useProjectStore.getState().addClip(trackId!, {
-      startTime: startBeat, duration: secToBeats(buf.duration, store.project.bpm), audioFile: path, name
+      startTime: startBeat,
+      // a synced sample is measured in its own tempo: a 2-bar loop stays 8 beats long at any project tempo
+      duration: secToBeats(buf.duration, warp ?? store.project.bpm),
+      audioFile: path, name, warpBpm: warp
     })
     useProjectStore.getState().selectTrack(trackId!)
   }
   return problems
 }
 
-export async function pickAndImport(at?: { trackId?: string; startBeat?: number }): Promise<string[]> {
+export async function pickAndImport(at?: { trackId?: string; startBeat?: number; warpBpm?: number }): Promise<string[]> {
   const paths = await window.api.dialog.openAudio()
   return paths.length ? importAudioFiles(paths, at) : []
 }
@@ -71,7 +75,7 @@ const Waveform = React.memo(function Waveform({ clip, color, bpm, width }: { cli
     g.clearRect(0, 0, w, h)
     g.fillStyle = color
     const startIdx = (clip.offset ?? 0) * PEAKS_PER_SECOND
-    const spanIdx = ((clip.duration * 60) / (bpm || 120)) * PEAKS_PER_SECOND
+    const spanIdx = clip.duration * sourceSecPerBeat(clip.warpBpm, bpm) * PEAKS_PER_SECOND
     const per = spanIdx / w
     const mid = h / 2
     for (let x = 0; x < w; x++) {
@@ -82,7 +86,7 @@ const Waveform = React.memo(function Waveform({ clip, color, bpm, width }: { cli
       const half = Math.min(mid, Math.max(m > 0.002 ? 1 : 0, m * mid * 0.95))
       if (half > 0) g.fillRect(x, mid - half, 1, half * 2)
     }
-  }, [path, clip.offset, clip.duration, width, bpm, color, version])
+  }, [path, clip.offset, clip.duration, clip.warpBpm, width, bpm, color, version])
 
   if (!path || !peaksOf(path)) return null
   return <canvas ref={ref} style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', opacity: 0.75, pointerEvents: 'none' }} />
@@ -159,7 +163,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         let dur = Math.max(SNAP, snap(o.startTime + o.duration + dBeats, free) - o.startTime)
         if (o.audioFile) {
           const buf = bufferOf(o.audioFile)
-          if (buf) dur = Math.min(dur, secToBeats(buf.duration - (o.offset ?? 0), bpm))
+          if (buf) dur = Math.min(dur, (buf.duration - (o.offset ?? 0)) / sourceSecPerBeat(o.warpBpm, bpm))
         }
         updateClip(d.trackId, d.clipId, { duration: dur })
       } else {
@@ -167,9 +171,9 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         let start = Math.min(end - SNAP, Math.max(0, snap(o.startTime + dBeats, free)))
         let offset = o.offset
         if (o.audioFile) {
-          const shift = ((start - o.startTime) * 60) / bpm
+          const shift = (start - o.startTime) * sourceSecPerBeat(o.warpBpm, bpm)
           const newOffset = (o.offset ?? 0) + shift
-          if (newOffset < 0) { start = o.startTime - ((o.offset ?? 0) * bpm) / 60; offset = 0 } else offset = newOffset
+          if (newOffset < 0) { start = o.startTime - (o.offset ?? 0) / sourceSecPerBeat(o.warpBpm, bpm); offset = 0 } else offset = newOffset
         }
         updateClip(d.trackId, d.clipId, { startTime: start, duration: end - start, offset })
       }
@@ -357,7 +361,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                       {clip.audioFile && !missing && <Waveform clip={clip} color={track.color} bpm={bpm} width={width} />}
                       {clip.notes && <MiniNotes clip={clip} color={track.color} />}
                       <span style={{ position: 'relative', fontSize: 11, color: missing ? 'var(--red)' : '#fff', fontWeight: 600, padding: '2px 8px', whiteSpace: 'nowrap', textShadow: '0 1px 2px #000a', pointerEvents: 'none' }}>
-                        {missing ? `Missing: ${clip.name ?? clip.audioFile}` : clip.name ?? (clip.notes ? `${clip.notes.length} notes` : 'Clip')}
+                        {missing ? `Missing: ${clip.name ?? clip.audioFile}` : `${clip.name ?? (clip.notes ? `${clip.notes.length} notes` : 'Clip')}${clip.warpBpm ? ` · synced from ${Math.round(clip.warpBpm)} BPM` : ''}`}
                       </span>
                       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: HANDLE, cursor: 'ew-resize' }} />
                       <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: HANDLE, cursor: 'ew-resize' }} />

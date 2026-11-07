@@ -31,6 +31,7 @@ export interface Clip {
   audioFile?: string
   offset?: number     // audio clips: seconds skipped at the start of the file (left trim)
   gain?: number       // audio clips: 0..2, default 1
+  warpBpm?: number    // synced samples: the tempo the file was made at; it is stretched to the project tempo
   name?: string
   color?: string
 }

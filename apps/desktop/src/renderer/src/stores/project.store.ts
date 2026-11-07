@@ -83,7 +83,7 @@ export const useProjectStore = create<ProjectState>()(
         const k = bpm / old
         const tracks = s.project.tracks.map((t) => ({
           ...t,
-          clips: t.clips.map((c) => (c.audioFile ? { ...c, startTime: c.startTime * k, duration: c.duration * k } : c))
+          clips: t.clips.map((c) => (c.audioFile && !c.warpBpm ? { ...c, startTime: c.startTime * k, duration: c.duration * k } : c))      // synced samples keep their beats
         }))
         return { project: { ...s.project, bpm, tracks, updatedAt: new Date().toISOString() } }
       }),
@@ -115,7 +115,7 @@ export const useProjectStore = create<ProjectState>()(
       const left: Clip = { ...clip, duration: cut }
       const right: Clip = {
         ...clip, id: nanoid(), startTime: atBeat, duration: clip.duration - cut,
-        offset: clip.audioFile ? (clip.offset ?? 0) + (cut * 60) / bpm : clip.offset,
+        offset: clip.audioFile ? (clip.offset ?? 0) + (cut * 60) / (clip.warpBpm || bpm) : clip.offset,
         notes: clip.notes
           ? clip.notes.filter((n) => n.startTime + n.duration > cut).map((n) => ({
               ...n, id: nanoid(), startTime: Math.max(0, n.startTime - cut),

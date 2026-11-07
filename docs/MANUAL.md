@@ -197,6 +197,16 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Musik\AI Music Studio` (nach Monaten sortiert, mit `library.json` für Titel, Stil, Modell, Seed und Länge). Unter **Library** kannst du Songs abspielen, umbenennen (Doppelklick), als Favorit markieren, suchen, in den Explorer zeigen, löschen und mit **Add to project** auf die Zeitleiste legen. Auch eigene Dateien lassen sich hinzufügen. Früher erzeugte Songs lagen nur im temporären Ordner und sind eventuell weg.
 
+### Samples (Ableton und andere), tempo-synchron einfügen
+
+Unter **Library → Samples** legst du Sample-Ordner fest. Die App erkennt installierte **Ableton-Live-Bibliotheken** (Core Library, User Library, Factory Packs) und bietet sie mit *Use this library* an; jeder andere Ordner geht über *Add folder…*. Es wird nichts kopiert: die Dateien bleiben, wo sie sind, die App merkt sich nur die Ordner. Die Suche läuft über Dateiname und Ordnername und findet auch in großen Bibliotheken sofort (die Core Library von Live 11 mit rund 2500 Dateien wird in unter 2 Sekunden eingelesen).
+
+- **Tempo:** Es wird aus dem Namen gelesen („Dark Garage 130 bpm“, Ordner „120 BPM“). Fehlt es, misst *BPM?* das Tempo mit einem Beat-Tracker (kann halb oder doppelt so schnell liegen: nach Gehör prüfen).
+- **Add synced:** legt das Sample auf die gewählte Audiospur (sonst auf eine neue) an die Position des Abspielkopfs und **dehnt oder staucht es auf das Projekttempo, ohne die Tonhöhe zu ändern** (WSOLA-Zeitstreckung). Ein Loop behält seine Länge in Schlägen: ein 2-Takt-Loop bleibt bei jedem Tempo 8 Schläge lang. Ändert man später das Projekttempo, folgt er. Beispiel: ein 120-BPM-Loop in einem 150-BPM-Projekt spielt Kicks im Abstand von 0,4 statt 0,5 Sekunden, Tonhöhe und Pegel bleiben gleich.
+- **Add as is:** fügt das Sample unverändert ein. **One-Shots** (unter 1 Sekunde) werden nie gestreckt.
+- **Vorhören:** Mit „Preview at project tempo“ hörst du den Loop schon im Projekttempo.
+- Grenzen: Gestreckt wird bis 90 Sekunden Länge und bei Faktoren zwischen etwa 0,6 und 1,7 klingt es gut, bei Extremen hörbar „gläsern“. Die Ableton-Analysedateien (`.asd`, Warp-Marker) werden nicht gelesen. Ableton-Packs im proprietären Format (`.alp`, `.adg`, `.adv`) sind keine Audiodateien und erscheinen nicht; nur die enthaltenen WAV/AIFF-Dateien.
+
 ## Beta-Test
 
 Wie du testest und Probleme meldest, steht in `docs/BETA.md`. Unten rechts gibt es den Knopf **Feedback**: Er sammelt Systemdaten, Engine-Status und die letzten Log-Zeilen, sendet aber nichts automatisch.

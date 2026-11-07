@@ -18,7 +18,8 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 6. **Speichern:** Ctrl+S, Programm schließen, wieder öffnen (File → Open). Ist alles da?
 7. **Export:** File → Export audio. Passt die Datei zu dem, was du hörst?
 8. **Rückgängig:** Ctrl+Z / Ctrl+Y nach verschiedenen Aktionen.
-9. **Aufnahme (Mikrofon):** Rote Taste. Wird die Aufnahme als Clip abgelegt? (Wenig getestet, besonders interessant.)
+9. **Samples:** Library → Samples → eine Ableton-Bibliothek verwenden, ein Loop mit „Add synced“ in ein Projekt mit anderem Tempo legen. Passt der Rhythmus, klingt es sauber?
+10. **Aufnahme (Mikrofon):** Rote Taste. Wird die Aufnahme als Clip abgelegt? (Wenig getestet, besonders interessant.)
 
 ## So meldest du ein Problem
 1. Unten rechts auf **Feedback** klicken.

@@ -58,6 +58,7 @@ export interface LibraryTrack {
   id: string; title: string; file: string; path: string; exists: boolean; created: number; duration: number | null
   engine: string; source: string; prompt: string; lyrics: string; seed: number | null; favorite: boolean; notes: string
 }
+export interface SampleEntry { path: string; name: string; folder: string; root: string; size: number; bpm: number | null }
 export interface KaraokeWord { text: string; start: number; end: number }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -192,6 +193,15 @@ export const api = {
       post<{ jobId: string }>('/train/start', body),
     job: (id: string) => get<TrainJob>(`/train/jobs/${id}`),
     stop: (id: string) => post<{ stopped: boolean }>(`/train/jobs/${id}/stop`, {}),
+  },
+
+  samples: {
+    folders: () => get<{ folders: string[]; ableton: string[] }>('/samples/folders'),
+    addFolder: (path: string) => post<{ folders: string[] }>('/samples/folders', { path }),
+    removeFolder: (path: string) => send<{ folders: string[] }>('DELETE', `/samples/folders?path=${encodeURIComponent(path)}`),
+    search: (q: string, root?: string, bpm?: number) =>
+      get<{ total: number; count: number; items: SampleEntry[] }>(`/samples?q=${encodeURIComponent(q)}${root ? `&root=${encodeURIComponent(root)}` : ''}${bpm ? `&bpm=${bpm}` : ''}`),
+    analyze: (path: string) => post<{ bpm: number | null; alternatives?: number[]; duration: number | null; note?: string }>('/samples/analyze', { path }),
   },
 
   library: {

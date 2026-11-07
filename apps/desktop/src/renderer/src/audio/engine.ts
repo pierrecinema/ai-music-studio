@@ -8,6 +8,7 @@ import { useProjectStore } from '../stores/project.store'
 import type { Project, Track } from '../types'
 import { playClick, playSynthNote, type Timbre } from './synth'
 import { encodeWav, peakOf } from './wav'
+import { MAX_STRETCH_SECONDS, stretchBuffer } from './stretch'
 
 // ── files → buffers ──────────────────────────────────────────────────────────
 
@@ -49,6 +50,41 @@ export function loadBuffer(path: string): Promise<AudioBuffer | null> {
 
 export function bufferOf(path: string): AudioBuffer | undefined {
   return buffers.get(path)
+}
+
+// ── synced samples: stretched copies of a file for the current project tempo ──
+
+const warped = new Map<string, AudioBuffer>()
+const warping = new Map<string, Promise<AudioBuffer | null>>()
+const warpKey = (path: string, source: number, project: number): string => `${path}|${source}|${project}`
+
+// seconds of the FILE per beat of the clip: a synced sample is measured in its own tempo
+export const sourceSecPerBeat = (clipWarpBpm: number | undefined, projectBpm: number): number => 60 / (clipWarpBpm || projectBpm || 120)
+
+export async function loadWarped(path: string, sourceBpm: number, projectBpm: number): Promise<AudioBuffer | null> {
+  const key = warpKey(path, sourceBpm, projectBpm)
+  const have = warped.get(key)
+  if (have) return have
+  let p = warping.get(key)
+  if (!p) {
+    p = (async () => {
+      const raw = await loadBuffer(path)
+      if (!raw) return null
+      if (raw.duration > MAX_STRETCH_SECONDS) return raw          // too long to stretch: plays unchanged
+      try {
+        const out = await stretchBuffer(raw, sourceBpm / projectBpm)
+        warped.set(key, out)
+        return out
+      } catch (e) {
+        console.warn('[audio] cannot sync', path, e)
+        return raw
+      } finally {
+        warping.delete(key)
+      }
+    })()
+    warping.set(key, p)
+  }
+  return p
 }
 
 export function forgetBuffer(path: string): void {
@@ -165,10 +201,13 @@ export function scheduleProject(
       const skip = Math.max(0, -clipStart)                         // playing from the middle of the clip
 
       if (clip.audioFile) {
-        const buf = buffers.get(clip.audioFile)
+        const synced = clip.warpBpm ? warped.get(warpKey(clip.audioFile, clip.warpBpm, project.bpm)) : undefined
+        const buf = synced ?? buffers.get(clip.audioFile)
         if (!buf) continue
         const len = clipLen - skip
-        const offset = (clip.offset ?? 0) + skip
+        // `offset` counts seconds of the original file: a stretched copy is longer or shorter in the same proportion
+        const stretch = synced && clip.warpBpm ? clip.warpBpm / project.bpm : 1
+        const offset = (clip.offset ?? 0) * stretch + skip
         if (len <= 0 || offset >= buf.duration) continue
         const src = ctx.createBufferSource()
         src.buffer = buf
@@ -260,14 +299,22 @@ export function currentBeat(): number {
 
 async function loadAllFiles(p: Project): Promise<void> {
   const files = new Set<string>()
-  for (const t of p.tracks) for (const c of t.clips) if (c.audioFile) files.add(c.audioFile)
+  const synced = new Map<string, [string, number]>()
+  for (const t of p.tracks) {
+    for (const c of t.clips) {
+      if (!c.audioFile) continue
+      files.add(c.audioFile)
+      if (c.warpBpm) synced.set(warpKey(c.audioFile, c.warpBpm, p.bpm), [c.audioFile, c.warpBpm])
+    }
+  }
   await Promise.all([...files].map((f) => loadBuffer(f)))
+  await Promise.all([...synced.values()].map(([f, b]) => loadWarped(f, b, p.bpm)))
 }
 
 function structureSignature(p: Project): string {
   return p.bpm + '|' + p.tracks.map((t) =>
     `${t.id}:${t.type}:${t.name}:` + t.clips.map((c) =>
-      `${c.id},${c.startTime},${c.duration},${c.offset ?? 0},${c.audioFile ?? ''},${c.gain ?? 1},` +
+      `${c.id},${c.startTime},${c.duration},${c.offset ?? 0},${c.audioFile ?? ''},${c.gain ?? 1},${c.warpBpm ?? 0},` +
       (c.notes ?? []).map((n) => `${n.pitch}/${n.startTime}/${n.duration}/${n.velocity}`).join(';')
     ).join('~')
   ).join('#')
@@ -424,6 +471,32 @@ export function trackLevel(trackId: string): number {
 
 export function masterLevel(): number {
   return playing && masterAnalyser ? peakOfAnalyser(masterAnalyser) : 0
+}
+
+// ── sample preview (library): optionally at the project tempo ──────────────────
+
+let previewing: AudioBufferSourceNode | null = null
+
+export function stopPreview(): void {
+  try { previewing?.stop() } catch { /* already over */ }
+  previewing = null
+}
+
+// plays a file through the master; with `sourceBpm` it is stretched to the project tempo first
+export async function previewSample(path: string, sourceBpm?: number): Promise<{ seconds: number; ended: Promise<void> } | null> {
+  stopPreview()
+  const c = ensureContext()
+  if (c.state === 'suspended') await c.resume()
+  const bpm = useProjectStore.getState().project.bpm
+  const buf = sourceBpm ? await loadWarped(path, sourceBpm, bpm) : await loadBuffer(path)
+  if (!buf) return null
+  const src = c.createBufferSource()
+  src.buffer = buf
+  src.connect(master!)
+  const ended = new Promise<void>((res) => { src.onended = () => { if (previewing === src) previewing = null; res() } })
+  src.start()
+  previewing = src
+  return { seconds: buf.duration, ended }
 }
 
 // ── note preview (piano roll) ────────────────────────────────────────────────

@@ -28,7 +28,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes import vocal, instruments, stems, audio_to_midi, video, ai_chat, vst, mcp_server, music_gen, mastering, karaoke, system, train, library
+from api.routes import vocal, instruments, stems, audio_to_midi, video, ai_chat, vst, mcp_server, music_gen, mastering, karaoke, system, train, library, samples
 try:
     from services.mcp_app import build_server
     mcp_sdk_server = build_server()
@@ -75,6 +75,7 @@ app.include_router(karaoke.router, prefix="/karaoke", tags=["karaoke"])
 app.include_router(system.router, prefix="/system", tags=["system"])
 app.include_router(train.router, prefix="/train", tags=["train"])
 app.include_router(library.router, prefix="/library", tags=["library"])
+app.include_router(samples.router, prefix="/samples", tags=["samples"])
 
 
 @app.get("/health")

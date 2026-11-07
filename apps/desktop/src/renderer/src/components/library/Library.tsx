@@ -4,6 +4,7 @@ import { useProjectStore } from '../../stores/project.store'
 import { useAudioStore } from '../../stores/audio.store'
 import { useUIStore } from '../../stores/ui.store'
 import { importAudioFiles } from '../timeline/Timeline'
+import { SamplesTab } from './SamplesTab'
 
 const muted: React.CSSProperties = { fontSize: 11, color: 'var(--text-muted)' }
 const mmss = (s: number | null): string => (s == null ? '?' : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`)
@@ -22,6 +23,7 @@ export function Library(): React.ReactElement {
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [playing, setPlaying] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [tab, setTab] = useState<'tracks' | 'samples'>('tracks')
   const audio = useRef<HTMLAudioElement | null>(null)
   const url = useRef<string | null>(null)
   const setActiveView = useUIStore((s) => s.setActiveView)
@@ -81,7 +83,17 @@ export function Library(): React.ReactElement {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 6 }}>
+        {(['tracks', 'samples'] as const).map((t) => (
+          <button key={t} className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`} onClick={() => { audio.current?.pause(); setPlaying(null); setTab(t) }}>
+            {t === 'tracks' ? 'My tracks' : 'Samples (Ableton and others)'}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'samples' && <SamplesTab />}
+
+      {tab === 'tracks' && <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search title, style or model…" style={{ width: 280 }} />
         <label style={{ ...muted, display: 'flex', gap: 4, alignItems: 'center' }}>
           <input type="checkbox" checked={onlyFav} onChange={(e) => setOnlyFav(e.target.checked)} /> Favourites only
@@ -92,18 +104,18 @@ export function Library(): React.ReactElement {
         }}>Add files to the library…</button>
         <span style={{ flex: 1 }} />
         <span style={muted}>{shown.length} of {tracks.length} tracks</span>
-      </div>
+      </div>}
 
-      {error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
-      {notice && <div style={{ color: 'var(--green)', fontSize: 12 }}>{notice} <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} onClick={() => setActiveView('timeline')}>Show timeline</button></div>}
+      {tab === 'tracks' && error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
+      {tab === 'tracks' && notice && <div style={{ color: 'var(--green)', fontSize: 12 }}>{notice} <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} onClick={() => setActiveView('timeline')}>Show timeline</button></div>}
 
-      {tracks.length === 0 && !error && (
+      {tab === 'tracks' && tracks.length === 0 && !error && (
         <div style={{ ...muted, border: '1px dashed var(--border-mid)', borderRadius: 10, padding: 24, lineHeight: 1.7 }}>
           No tracks yet. Songs made in <b>Create music</b> appear here automatically.
         </div>
       )}
 
-      {shown.map((t) => (
+      {tab === 'tracks' && shown.map((t) => (
         <div key={t.id} style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-mid)', borderRadius: 10, padding: 12, display: 'flex', gap: 12, alignItems: 'center', opacity: t.exists ? 1 : 0.55 }}>
           <button className="btn btn-primary" style={{ width: 38, height: 38, borderRadius: 19, padding: 0, justifyContent: 'center' }} disabled={!t.exists}
             title={playing === t.id ? 'Stop' : 'Play'} onClick={() => void play(t)}>{playing === t.id ? '■' : '▶'}</button>

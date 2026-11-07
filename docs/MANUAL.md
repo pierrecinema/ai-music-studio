@@ -197,6 +197,19 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Musik\AI Music Studio` (nach Monaten sortiert, mit `library.json` für Titel, Stil, Modell, Seed und Länge). Unter **Library** kannst du Songs abspielen, umbenennen (Doppelklick), als Favorit markieren, suchen, in den Explorer zeigen, löschen und mit **Add to project** auf die Zeitleiste legen. Auch eigene Dateien lassen sich hinzufügen. Früher erzeugte Songs lagen nur im temporären Ordner und sind eventuell weg.
 
+### Beat-Matching: neues Audio in den Takt bringen
+
+Sobald Audio auf die Zeitleiste kommt (Import, Drag-and-drop, aus der Bibliothek oder als Sample), misst die App **Tempo und ersten Schlag** und zeigt unten rechts die Karte *Beat matching*:
+
+- **Sync to … BPM:** dehnt oder staucht das Audio auf das Projekttempo, ohne die Tonhöhe zu ändern. Das Audio merkt sich sein eigenes Tempo (`warpBpm`) und folgt später auch Tempoänderungen des Projekts.
+- **Set project to … BPM:** setzt das Projekttempo auf das Tempo des Audios (die beste Wahl für das erste Audio eines Projekts; die Karte hebt sie dann hervor). Anderes Audio bleibt zeitlich an seiner Stelle.
+- **Put the first beat on the grid:** schneidet Stille oder Vorspann vor dem ersten Schlag weg (nicht zerstörend: den linken Rand kannst du zurückziehen) und rastet den Clip auf einen Schlag ein.
+- **÷2 / ×2:** Beat-Tracker finden manchmal die halbe oder doppelte Geschwindigkeit; hier korrigierst du das, bevor du übernimmst. Du kannst das Tempo auch von Hand eintippen, falls nichts gefunden wurde (Ambient, freier Rhythmus).
+- **Keep as is** lässt alles unverändert. Unten wählst du, ob die App *jedes Mal fragt*, **automatisch angleicht** (erstes Audio setzt das Projekttempo, weiteres wird gestreckt) oder *nie anbietet*.
+- Später kannst du jeden Audio-Clip über **Beat match…** in der Zeitleisten-Leiste neu messen und angleichen. Alles ist mit Strg+Z rückgängig zu machen.
+
+Gemessen am Beispiel: Ein 90-BPM-Loop in einem 120-BPM-Projekt wird 18 Schläge lang und seine Kicks liegen im Abstand von 0,497 s (Soll 0,5 s). Das Tempo wird aus den Schlagzeiten per Ausgleichsgerade bestimmt und rastet auf ganze BPM ein, wenn es nahe daran liegt; bei sehr unregelmäßiger Musik (Live-Aufnahmen mit Temposchwankung) bleibt die Genauigkeit begrenzt, dort hilft nur Anpassen von Hand.
+
 ### Samples (Ableton und andere), tempo-synchron einfügen
 
 Unter **Library → Samples** legst du Sample-Ordner fest. Die App erkennt installierte **Ableton-Live-Bibliotheken** (Core Library, User Library, Factory Packs) und bietet sie mit *Use this library* an; jeder andere Ordner geht über *Add folder…*. Es wird nichts kopiert: die Dateien bleiben, wo sie sind, die App merkt sich nur die Ordner. Die Suche läuft über Dateiname und Ordnername und findet auch in großen Bibliotheken sofort (die Core Library von Live 11 mit rund 2500 Dateien wird in unter 2 Sekunden eingelesen).

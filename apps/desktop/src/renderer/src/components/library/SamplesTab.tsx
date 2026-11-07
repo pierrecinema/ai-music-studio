@@ -98,7 +98,8 @@ export function SamplesTab(): React.ReactElement {
     const problems = await importAudioFiles([e.path], {
       trackId: sel?.type === 'audio' ? sel.id : undefined,
       startBeat: useAudioStore.getState().currentBeat,
-      warpBpm: sync && bpm ? bpm : undefined
+      warpBpm: sync && bpm ? bpm : undefined,
+      noBeatMatch: !sync                                     // “Add as is” means: leave it alone
     })
     if (problems.length) { setError(problems.join(' ')); return }
     const tracks = useProjectStore.getState().project.tracks

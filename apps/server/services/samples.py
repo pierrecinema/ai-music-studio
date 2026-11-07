@@ -152,18 +152,17 @@ def search(query: str = "", root: str | None = None, bpm: float | None = None, l
 
 
 def analyze(path: str) -> dict:
-    """Measure the tempo with a beat tracker (first 60 seconds). Returns the guess and the usual alternatives."""
+    """Measure tempo and the time of the first beat (first 90 seconds).
+
+    A beat tracker alone is only good to a few percent, which is audible when a loop is stretched. So the
+    beat times are fitted with a straight line (beat k happens at a + k * interval); outliers are dropped,
+    the slope gives the tempo and the intercept the phase. Near-whole tempos snap to the whole number,
+    because loops and songs are almost always made at those.
+    """
     import numpy as np
     import librosa
-    y, sr = librosa.load(path, sr=22050, mono=True, duration=60)
-    if len(y) < sr:                                                  # under a second: a one-shot, no tempo
-        return {"bpm": None, "duration": round(len(y) / sr, 2), "note": "Too short to have a tempo (a one-shot)."}
-    tempo, _beats = librosa.beat.beat_track(y=y, sr=sr)
-    t = float(np.atleast_1d(tempo)[0])
-    while t < 70:
-        t *= 2
-    while t > 180:
-        t /= 2
+    hop = 256
+    y, sr = librosa.load(path, sr=22050, mono=True, duration=90)
     total = None
     try:
         import soundfile as sf
@@ -171,4 +170,39 @@ def analyze(path: str) -> dict:
         total = round(i.frames / float(i.samplerate), 2)
     except Exception:
         pass
-    return {"bpm": round(t, 1), "alternatives": [round(t / 2, 1), round(t * 2, 1)], "duration": total}
+    if len(y) < sr:                                                  # under a second: a one-shot, no tempo
+        return {"bpm": None, "first_beat": None, "duration": round(len(y) / sr, 2), "note": "Too short to have a tempo (a one-shot)."}
+    env = librosa.onset.onset_strength(y=y, sr=sr, hop_length=hop)
+    tempo, beats = librosa.beat.beat_track(onset_envelope=env, sr=sr, hop_length=hop, units="frames")
+    times = librosa.frames_to_time(beats, sr=sr, hop_length=hop)
+    guess = float(np.atleast_1d(tempo)[0])
+    if len(times) < 3 or guess <= 0:
+        return {"bpm": None, "first_beat": None, "duration": total, "note": "No clear beat found (no steady rhythm)."}
+    bpm, phase, interval = guess, float(times[0]), 60.0 / guess
+    if len(times) >= 6:
+        k = np.arange(len(times))
+        slope, icpt = np.polyfit(k, times, 1)
+        res = times - (icpt + slope * k)
+        keep = np.abs(res) < max(0.03, 2 * float(np.std(res)))
+        if keep.sum() >= 5:
+            slope, icpt = np.polyfit(k[keep], times[keep], 1)
+        if slope > 0 and abs(60.0 / slope - guess) / guess < 0.08:
+            bpm, interval, phase = 60.0 / slope, float(slope), float(icpt)
+    while bpm < 70:
+        bpm, interval = bpm * 2, interval / 2
+    while bpm > 180:
+        bpm, interval = bpm / 2, interval * 2
+    if abs(bpm - round(bpm)) < 0.35:
+        bpm = float(round(bpm))
+        interval = 60.0 / bpm
+    first = phase % interval if phase < 0 or phase > interval else phase      # the first beat inside the file
+    # snap the phase to the nearest real onset (within 60 ms): the line fit is smoother, the onset is exact
+    onsets = librosa.onset.onset_detect(onset_envelope=env, sr=sr, hop_length=hop, units="time", backtrack=True)
+    if len(onsets):
+        near = onsets[np.argmin(np.abs(onsets - first))]
+        if abs(near - first) < 0.06:
+            first = float(near)
+    return {
+        "bpm": round(bpm, 2), "first_beat": round(max(0.0, first), 3), "beats": int(len(times)),
+        "alternatives": [round(bpm / 2, 2), round(bpm * 2, 2)], "duration": total,
+    }

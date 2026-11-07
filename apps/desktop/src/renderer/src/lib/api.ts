@@ -201,7 +201,7 @@ export const api = {
     removeFolder: (path: string) => send<{ folders: string[] }>('DELETE', `/samples/folders?path=${encodeURIComponent(path)}`),
     search: (q: string, root?: string, bpm?: number) =>
       get<{ total: number; count: number; items: SampleEntry[] }>(`/samples?q=${encodeURIComponent(q)}${root ? `&root=${encodeURIComponent(root)}` : ''}${bpm ? `&bpm=${bpm}` : ''}`),
-    analyze: (path: string) => post<{ bpm: number | null; alternatives?: number[]; duration: number | null; note?: string }>('/samples/analyze', { path }),
+    analyze: (path: string) => post<{ bpm: number | null; first_beat?: number | null; beats?: number; alternatives?: number[]; duration: number | null; note?: string }>('/samples/analyze', { path }),
   },
 
   library: {

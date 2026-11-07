@@ -19,7 +19,8 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 7. **Export:** File → Export audio. Passt die Datei zu dem, was du hörst?
 8. **Rückgängig:** Ctrl+Z / Ctrl+Y nach verschiedenen Aktionen.
 9. **Samples:** Library → Samples → eine Ableton-Bibliothek verwenden, ein Loop mit „Add synced“ in ein Projekt mit anderem Tempo legen. Passt der Rhythmus, klingt es sauber?
-10. **Aufnahme (Mikrofon):** Rote Taste. Wird die Aufnahme als Clip abgelegt? (Wenig getestet, besonders interessant.)
+10. **Beat-Matching:** Ein Lied oder Loop importieren. Erscheint die Karte unten rechts, stimmt das gemessene Tempo (nach Gehör: nicht halb oder doppelt)? Klingt „Sync to“ sauber, passt „Set project to“?
+11. **Aufnahme (Mikrofon):** Rote Taste. Wird die Aufnahme als Clip abgelegt? (Wenig getestet, besonders interessant.)
 
 ## So meldest du ein Problem
 1. Unten rechts auf **Feedback** klicken.

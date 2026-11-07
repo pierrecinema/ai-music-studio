@@ -20,6 +20,7 @@ import { Settings } from './components/settings/Settings'
 import { CreateMusic } from './components/create/CreateMusic'
 import { Library } from './components/library/Library'
 import { Welcome } from './components/common/Welcome'
+import { BeatMatchCard } from './beatmatch/BeatMatchCard'
 import { FeedbackButton } from './components/common/Feedback'
 import { Mastering } from './components/mastering/Mastering'
 import { KaraokeExport } from './components/karaoke/KaraokeExport'
@@ -224,6 +225,7 @@ export default function App(): React.ReactElement {
       <StatusBar hw={hw} base={base} onWinamp={() => setWinamp(true)} onSetup={() => { sessionStorage.setItem('ams-settings-tab', 'engines'); setActiveView('settings') }} />
       <UpdateToast />
       <Welcome />
+      <BeatMatchCard />
       <WinampMode open={winamp} onClose={() => setWinamp(false)} />
     </div>
   )

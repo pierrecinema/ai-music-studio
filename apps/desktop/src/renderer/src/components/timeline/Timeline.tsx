@@ -5,6 +5,7 @@ import { useUIStore } from '../../stores/ui.store'
 import { useAudioStore } from '../../stores/audio.store'
 import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER_SECOND, projectEndBeat, secToBeats, seek, sourceSecPerBeat } from '../../audio/engine'
 import type { Clip, Track } from '../../types'
+import { useBeatMatch } from '../../beatmatch/store'
 
 const TRACK_HEIGHT = 72
 const HEADER_WIDTH = 200
@@ -20,7 +21,7 @@ const NOTE_TYPES: Track['type'][] = ['midi', 'instrument', 'vocal']
 
 export async function importAudioFiles(
   paths: string[],
-  at?: { trackId?: string; startBeat?: number; warpBpm?: number }
+  at?: { trackId?: string; startBeat?: number; warpBpm?: number; noBeatMatch?: boolean }
 ): Promise<string[]> {
   const problems: string[] = []
   let startBeat = at?.startBeat ?? useAudioStore.getState().currentBeat
@@ -38,6 +39,7 @@ export async function importAudioFiles(
       useProjectStore.getState().updateTrack(trackId, { name })
     }
     const warp = at?.warpBpm && buf.duration >= 1 ? at.warpBpm : undefined      // one-shots are not stretched
+    const hadAudio = useProjectStore.getState().project.tracks.some((t) => t.clips.some((c) => c.audioFile))
     useProjectStore.getState().addClip(trackId!, {
       startTime: startBeat,
       // a synced sample is measured in its own tempo: a 2-bar loop stays 8 beats long at any project tempo
@@ -45,6 +47,12 @@ export async function importAudioFiles(
       audioFile: path, name, warpBpm: warp
     })
     useProjectStore.getState().selectTrack(trackId!)
+    // new audio: offer to bring it in time with the project (not for one-shots or already synced samples)
+    if (!warp && !at?.noBeatMatch && buf.duration >= 1) {
+      const t = useProjectStore.getState().project.tracks.find((x) => x.id === trackId)
+      const created = t?.clips[t.clips.length - 1]
+      if (created) void useBeatMatch.getState().propose(trackId!, created.id, path, name, !hadAudio)
+    }
   }
   return problems
 }
@@ -251,6 +259,13 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
     : { height: 240, flexShrink: 0 }
 
   const empty = project.tracks.length === 0
+  const selectedAudioClip = (() => {
+    for (const t of project.tracks) {
+      const c = t.clips.find((x) => x.id === selectedClipId && x.audioFile)
+      if (c) return { trackId: t.id, clip: c }
+    }
+    return null
+  })()
 
   return (
     <div
@@ -265,6 +280,11 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         {(['audio', 'midi'] as const).map((t) => (
           <button key={t} className="btn btn-ghost" style={tb} onClick={() => addTrack(t)}>+ {t === 'audio' ? 'Audio' : 'MIDI'} track</button>
         ))}
+        <button className="btn btn-ghost" style={tb} disabled={!selectedAudioClip}
+          title={selectedAudioClip ? 'Measure the tempo of the selected audio and bring it in time with the project' : 'Select an audio clip first'}
+          onClick={() => selectedAudioClip && void useBeatMatch.getState().propose(selectedAudioClip.trackId, selectedAudioClip.clip.id, selectedAudioClip.clip.audioFile!, selectedAudioClip.clip.name ?? 'Audio', false, true)}>
+          Beat match…
+        </button>
         <span style={{ flex: 1 }} />
         {loadingAudio && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>Reading audio files…</span>}
         {message && <span style={{ fontSize: 11, color: 'var(--yellow)', maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={message}>{message}</span>}

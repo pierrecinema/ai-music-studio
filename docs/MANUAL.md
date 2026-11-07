@@ -208,6 +208,17 @@ Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Mu
 - **Spuren und Clips löschen:** per **Rechtsklick** auf den Spurkopf oder den Clip (Menü mit *Delete track* / *Delete clip*, dazu Umbenennen, Duplizieren, Teilen, Quantize), mit dem ×-Knopf im Spurkopf oder mit der Entf-Taste (nach einem Klick auf den Spurkopf bzw. den Clip). Die Entf-Taste funktioniert auch dann, wenn zuletzt ein Auswahlfeld (zum Beispiel das Raster) angeklickt war; früher schluckte das Auswahlfeld die Taste, und es sah aus, als ließe sich nichts löschen. Es kommt keine Rückfrage mehr, **Ctrl+Z bringt die Spur zurück**. Entf löscht einen gewählten Clip; der Klick auf einen Spurkopf hebt die Auswahl eines Clips einer anderen Spur auf, damit Entf nicht den falschen Clip trifft.
 - **Clip-Leiste** (erscheint, sobald ein Audio-Clip gewählt ist): *Gain* (Doppelklick setzt auf 0 dB zurück) sowie *Fade in* und *Fade out* in Sekunden.
 
+### Sync wie in DJ-Programmen: Tempo und Takt
+
+Wie bei SYNC in rekordbox, Traktor oder Serato geht es um zwei Dinge: das **Tempo** (alle Spuren laufen mit dem Master-BPM) und die **Phase** (die Schläge liegen genau auf den Schlägen des Projekts, sonst „schleppen“ zwei Kicks gegeneinander, auch wenn das Tempo stimmt).
+
+- **Beat-Grid:** Jede gemessene Audiospur speichert ihr Raster (Tempo und Zeit des ersten Schlags). Auf der Wellenform siehst du es als **weiße Linien**: eine pro Schlag, jeder vierte stärker. Liegen die Linien zweier Spuren untereinander, laufen sie synchron.
+- **SYNC (Clip-Leiste):** streckt das Audio auf das Master-BPM (ohne Tonhöhenänderung) **und** verschiebt es so, dass sein erster Schlag auf einen Schlag des Projekts fällt. Der Vorspann bleibt erhalten, die Spur wird nur verschoben; nur am Anfang der Zeitleiste (Position 0) wird Vorspann abgeschnitten, nicht zerstörend.
+- **MASTER (Clip-Leiste):** macht das Tempo dieser Spur zum Projekttempo. Alle synchronen Spuren folgen sofort.
+- **Tempo-Feld (Clip-Leiste):** Der Beat-Tracker liegt bei Live-Musik manchmal um 0,1 bis 0,5 BPM daneben, dann driften zwei Spuren nach ein paar Takten auseinander. Tippe das richtige Tempo ein (oder ÷2 / ×2); der Clip wird sofort neu gestreckt.
+- **AUTO SYNC** (obere Leiste): Beim Einschalten werden **alle vorhandenen Audiospuren** auf das Master-BPM gebracht und eingerastet; danach jede neue Spur automatisch. **Sync all** (Zeitleiste) macht dasselbe auf Knopfdruck. Rechtsklick auf einen Clip: *SYNC to the master BPM* und *Make this the MASTER tempo*.
+- Grenzen: Der Beat-Tracker erkennt kein „Takt-Eins“ (Downbeat): es wird Schlag auf Schlag synchronisiert, nicht Takt auf Takt. Bei langen Stücken, die aus mehreren Teilen zusammengesetzt wurden (zum Beispiel MusicGen-Tracks über 30 Sekunden), kann der Rhythmus an den Nahtstellen springen; ein einziges Raster passt dann nur abschnittsweise. Dafür den Clip an den Nahten teilen (Ctrl+E) und die Teile einzeln synchronisieren.
+
 ### Beat-Matching: neues Audio in den Takt bringen
 
 Sobald Audio auf die Zeitleiste kommt (Import, Drag-and-drop, aus der Bibliothek oder als Sample), misst die App **Tempo und ersten Schlag** und zeigt unten rechts die Karte *Beat matching*:

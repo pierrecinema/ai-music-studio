@@ -5,7 +5,7 @@ import { useUIStore } from '../../stores/ui.store'
 import { useAudioStore } from '../../stores/audio.store'
 import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER_SECOND, projectEndBeat, secToBeats, seek, sourceSecPerBeat } from '../../audio/engine'
 import type { Clip, Track } from '../../types'
-import { syncAll, useBeatMatch } from '../../beatmatch/store'
+import { makeMaster, retune, runSyncAll, syncOne, useBeatMatch } from '../../beatmatch/store'
 import { minLength, snapBeat } from '../../edit/grid'
 import { runAction } from '../../shortcuts/handlers'
 import { GridControls } from '../../edit/GridControls'
@@ -49,11 +49,13 @@ export async function importAudioFiles(
       audioFile: path, name, warpBpm: warp
     })
     useProjectStore.getState().selectTrack(trackId!)
+    // the new clip is selected, so its clip bar (gain, fades, SYNC, MASTER) is right there
+    const t = useProjectStore.getState().project.tracks.find((x) => x.id === trackId)
+    const created = t?.clips[t.clips.length - 1]
+    if (created) useProjectStore.getState().selectClip(created.id)
     // new audio: offer to bring it in time with the project (not for one-shots or already synced samples)
-    if (!warp && !at?.noBeatMatch && buf.duration >= 1) {
-      const t = useProjectStore.getState().project.tracks.find((x) => x.id === trackId)
-      const created = t?.clips[t.clips.length - 1]
-      if (created) void useBeatMatch.getState().propose(trackId!, created.id, path, name, !hadAudio)
+    if (created && !warp && !at?.noBeatMatch && buf.duration >= 1) {
+      void useBeatMatch.getState().propose(trackId!, created.id, path, name, !hadAudio)
     }
   }
   return problems
@@ -96,7 +98,22 @@ const Waveform = React.memo(function Waveform({ clip, color, bpm, width }: { cli
       const half = Math.min(mid, Math.max(m > 0.002 ? 1 : 0, m * mid * 0.95))
       if (half > 0) g.fillRect(x, mid - half, 1, half * 2)
     }
-  }, [path, clip.offset, clip.duration, clip.warpBpm, width, bpm, color, version])
+    // the beat grid of a measured clip: one line per beat, a stronger one every fourth beat
+    if (clip.warpBpm && clip.gridFirst !== undefined) {
+      const secPerBeat = 60 / clip.warpBpm
+      const off = clip.offset ?? 0
+      const spanSec = spanIdx / PEAKS_PER_SECOND
+      const k0 = Math.max(0, Math.ceil((off - clip.gridFirst) / secPerBeat - 1e-6))
+      for (let k = k0; ; k++) {
+        const t = clip.gridFirst + k * secPerBeat - off
+        if (t > spanSec + 1e-6) break
+        const x = Math.round((t / spanSec) * w)
+        g.fillStyle = k % 4 === 0 ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)'
+        g.fillRect(x, 0, 1, k % 4 === 0 ? h : Math.round(h * 0.45))
+      }
+      g.fillStyle = color
+    }
+  }, [path, clip.offset, clip.duration, clip.warpBpm, clip.gridFirst, width, bpm, color, version])
 
   if (!path || !peaksOf(path)) return null
   return <canvas ref={ref} style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', opacity: 0.75, pointerEvents: 'none' }} />
@@ -130,6 +147,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const [message, setMessage] = useState<string | null>(null)
   const [dropping, setDropping] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const notice = useBeatMatch((s) => s.notice)
   const [menu, setMenu] = useState<{ x: number; y: number; kind: 'track' | 'clip'; trackId: string; clipId?: string } | null>(null)
   useEffect(() => {
     if (!menu) return undefined
@@ -294,12 +312,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         ))}
         <button className="btn btn-ghost" style={tb} disabled={syncing || !project.tracks.some((t) => t.clips.some((c) => c.audioFile))}
           title="Measure all audio clips and bring every one in time with the master BPM"
-          onClick={async () => {
-            setSyncing(true)
-            const r = await syncAll((d, n, name) => setMessage(d < n ? `Syncing ${d + 1} of ${n}: ${name}…` : null))
-            setSyncing(false)
-            setMessage(`Synced ${r.synced} clip(s) to ${project.bpm} BPM${r.already ? `, ${r.already} already synced` : ''}${r.skipped.length ? `. Skipped: ${r.skipped.join('; ')}` : '.'}`)
-          }}>
+          onClick={async () => { setSyncing(true); setMessage(null); await runSyncAll(); setSyncing(false) }}>
           {syncing ? 'Syncing…' : `Sync all to ${project.bpm} BPM`}
         </button>
         <button className="btn btn-ghost" style={tb} disabled={!selectedAudioClip}
@@ -310,7 +323,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         <GridControls />
         <span style={{ flex: 1 }} />
         {loadingAudio && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>Reading audio files…</span>}
-        {message && <span style={{ fontSize: 11, color: 'var(--yellow)', maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={message}>{message}</span>}
+        {(message ?? notice) && <span style={{ fontSize: 11, color: 'var(--yellow)', maxWidth: 520, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={message ?? notice ?? ''}>{message ?? notice}</span>}
         <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Zoom</span>
         <input type="range" min={0.25} max={4} step={0.05} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 70, accentColor: 'var(--accent)' }} />
       </div>
@@ -452,6 +465,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
               { label: 'Delete track', run: () => removeTrack(menu.trackId), danger: true }
             ]
             : [
+              { label: 'SYNC to the master BPM', run: () => { void syncOne(menu.trackId, menu.clipId!).then((m) => useBeatMatch.getState().setNotice(m)) } },
+              { label: 'Make this the MASTER tempo', run: () => { void makeMaster(menu.trackId, menu.clipId!).then((m) => useBeatMatch.getState().setNotice(m)) } },
               { label: 'Split at the playhead', run: () => runAction('clip.split') },
               { label: 'Duplicate clip', run: () => runAction('edit.duplicate') },
               { label: 'Quantize', run: () => runAction('edit.quantize') },
@@ -496,6 +511,7 @@ function Playhead({ scrollRef, beatWidth }: { scrollRef: React.RefObject<HTMLDiv
 // Gain and fades of the selected audio clip
 function ClipInspector({ trackId, clip, bpm }: { trackId: string; clip: Clip; bpm: number }): React.ReactElement {
   const updateClip = useProjectStore((s) => s.updateClip)
+  const [busy, setBusy] = useState(false)
   const gain = clip.gain ?? 1
   const db = gain <= 0.001 ? '-inf' : (20 * Math.log10(gain)).toFixed(1)
   const sec = (beats: number | undefined): string => (((beats ?? 0) * 60) / bpm).toFixed(2)
@@ -511,6 +527,22 @@ function ClipInspector({ trackId, clip, bpm }: { trackId: string; clip: Clip; bp
           onChange={(e) => updateClip(trackId, clip.id, { gain: Number(e.target.value) })} onDoubleClick={() => updateClip(trackId, clip.id, { gain: 1 })} />
         <span style={{ width: 52 }}>{db} dB</span>
       </label>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        {clip.warpBpm ? (
+          <>
+            <span title="Tempo of this audio: correct it by hand if the measurement is slightly off">Tempo</span>
+            <input key={`bp${clip.id}${clip.warpBpm}`} defaultValue={String(clip.warpBpm)} style={{ width: 56 }}
+              onBlur={(e) => { const v = parseFloat(e.target.value.replace(',', '.')); if (v && v !== clip.warpBpm) retune(trackId, clip.id, v) }}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} />
+            <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 6px' }} title="Half speed" onClick={() => retune(trackId, clip.id, clip.warpBpm! / 2)}>÷2</button>
+            <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 6px' }} title="Double speed" onClick={() => retune(trackId, clip.id, clip.warpBpm! * 2)}>×2</button>
+          </>
+        ) : <span style={{ color: 'var(--text-muted)' }}>not synced</span>}
+        <button className="btn btn-primary" style={{ fontSize: 10, padding: '1px 8px' }} disabled={busy} title="Stretch this audio to the master BPM and put its beats on the project beats"
+          onClick={async () => { setBusy(true); useBeatMatch.getState().setNotice(await syncOne(trackId, clip.id)); setBusy(false) }}>SYNC</button>
+        <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} disabled={busy} title="Make the project tempo the tempo of this audio"
+          onClick={async () => { setBusy(true); useBeatMatch.getState().setNotice(await makeMaster(trackId, clip.id)); setBusy(false) }}>MASTER</button>
+      </span>
       <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>Fade in
         <input key={`fi${clip.id}${clip.fadeIn ?? 0}`} defaultValue={sec(clip.fadeIn)} style={{ width: 46 }} onBlur={(e) => setFade('fadeIn', e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} /> s
       </label>

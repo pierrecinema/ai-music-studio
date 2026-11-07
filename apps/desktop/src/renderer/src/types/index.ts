@@ -33,6 +33,7 @@ export interface Clip {
   gain?: number       // audio clips: 0..2, default 1
   fadeIn?: number     // audio clips: fade-in length in beats
   fadeOut?: number    // audio clips: fade-out length in beats
+  gridFirst?: number  // beat grid: time of the first beat in the FILE (seconds); with warpBpm it gives every beat of the clip
   warpBpm?: number    // synced samples: the tempo the file was made at; it is stretched to the project tempo
   name?: string
   color?: string

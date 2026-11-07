@@ -22,7 +22,8 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 10. **Beat-Matching:** Ein Lied oder Loop importieren. Erscheint die Karte unten rechts, stimmt das gemessene Tempo (nach Gehör: nicht halb oder doppelt)? Klingt „Sync to“ sauber, passt „Set project to“?
 11. **Raster und Quantize:** Clips mit Snap verschieben, dann mit Alt stufenlos. Ctrl+U auf einem MIDI-Clip mit krumm gesetzten Noten. Spuren am Griff umsortieren, mit Entf löschen und mit Ctrl+Z zurückholen.
 12. **Auto Sync:** Oben „AUTO SYNC“ einschalten, Master-BPM auf z. B. 100 stellen, Loops mit anderem Tempo importieren. Werden sie ohne Rückfrage gestreckt? „Sync all“ auf einem Projekt mit mehreren Loops probieren.
-13. **Aufnahme (Mikrofon):** Rote Taste. Wird die Aufnahme als Clip abgelegt? (Wenig getestet, besonders interessant.)
+13. **DJ-Sync:** Zwei Loops mit unterschiedlichem Tempo laden, AUTO SYNC einschalten. Liegen die weißen Beat-Linien beider Spuren untereinander? Hört man beim Abspielen keinen Kick, der „schleppt“? Tempo-Feld im Clip: Korrektur um 0,2 BPM, driftet es danach weniger?
+14. **Aufnahme (Mikrofon):** Rote Taste. Wird die Aufnahme als Clip abgelegt? (Wenig getestet, besonders interessant.)
 
 ## So meldest du ein Problem
 1. Unten rechts auf **Feedback** klicken.

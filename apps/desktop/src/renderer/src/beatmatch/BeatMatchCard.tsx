@@ -74,7 +74,7 @@ export function BeatMatchCard(): React.ReactElement | null {
           </div>
           <label style={{ ...muted, display: 'flex', gap: 6, alignItems: 'center' }}>
             <input type="checkbox" checked={align} onChange={(e) => setAlign(e.target.checked)} />
-            Put the first beat on the grid (cuts the lead-in; you can pull the edge back)
+            Put its beats on the project beats (moves the clip a little; at the very start the lead-in is cut)
           </label>
           {same && <div style={{ ...muted, color: 'var(--green)' }}>Already the same tempo as the project: no stretching needed.</div>}
           {note && <div style={{ ...muted, color: 'var(--red)' }}>{note}</div>}

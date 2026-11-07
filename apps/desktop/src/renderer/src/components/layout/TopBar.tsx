@@ -5,7 +5,7 @@ import { useProjectStore } from '../../stores/project.store'
 import { masterLevel, pause, play, startRecording, stop } from '../../audio/engine'
 import { historySize, redo, undo } from '../../shortcuts/history'
 import { FileMenu } from './FileMenu'
-import { useBeatMatch } from '../../beatmatch/store'
+import { runSyncAll, useBeatMatch } from '../../beatmatch/store'
 import logo from '../../assets/logo.png'
 
 // Level meter of the master output: real peaks from the audio engine, with a short fall-back
@@ -180,8 +180,8 @@ export function TopBar(): React.ReactElement {
       <div className="tb-section" style={{ marginLeft: 4 }}>
         <button
           className={`tb-btn${autoSync ? ' active' : ''}`}
-          onClick={() => setSyncMode(autoSync ? 'ask' : 'auto')}
-          data-tooltip={autoSync ? 'Auto-sync is ON: new audio is stretched to the master BPM automatically' : 'Auto-sync is off: you are asked for each new audio. Click to sync new audio to the master BPM automatically.'}
+          onClick={() => { const on = !autoSync; setSyncMode(on ? 'auto' : 'ask'); if (on) void runSyncAll() }}
+          data-tooltip={autoSync ? 'Auto-sync is ON: every audio is kept in time with the master BPM, beats on the grid' : 'Auto-sync is off. Click: all audio in the project is synced to the master BPM now, and new audio automatically.'}
           style={{ width: 'auto', padding: '0 8px', fontSize: 10, fontWeight: 800, letterSpacing: '0.05em' }}
         >
           AUTO SYNC

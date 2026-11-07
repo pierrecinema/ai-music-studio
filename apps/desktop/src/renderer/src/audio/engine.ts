@@ -214,10 +214,13 @@ export function scheduleProject(
         const g = ctx.createGain()
         const at = when + Math.max(0, clipStart)
         const peakGain = Math.max(0, Math.min(2, clip.gain ?? 1))
-        const fade = Math.min(0.006, len / 4)                      // tiny fades remove clicks at the cut
+        const click = Math.min(0.006, len / 4)                     // tiny fades remove clicks at the cut
+        // the fades the user set (in beats); each is at most half of the clip
+        const fadeIn = Math.max(click, Math.min(len / 2, (clip.fadeIn ?? 0) * spb - skip))
+        const fadeOut = Math.max(click, Math.min(len / 2, (clip.fadeOut ?? 0) * spb))
         g.gain.setValueAtTime(0, at)
-        g.gain.linearRampToValueAtTime(peakGain, at + fade)
-        g.gain.setValueAtTime(peakGain, at + len - fade)
+        g.gain.linearRampToValueAtTime(peakGain, at + fadeIn)
+        g.gain.setValueAtTime(peakGain, at + len - fadeOut)
         g.gain.linearRampToValueAtTime(0, at + len)
         src.connect(g).connect(strip.bus)
         src.start(at, offset, Math.min(len, buf.duration - offset))
@@ -314,7 +317,7 @@ async function loadAllFiles(p: Project): Promise<void> {
 function structureSignature(p: Project): string {
   return p.bpm + '|' + p.tracks.map((t) =>
     `${t.id}:${t.type}:${t.name}:` + t.clips.map((c) =>
-      `${c.id},${c.startTime},${c.duration},${c.offset ?? 0},${c.audioFile ?? ''},${c.gain ?? 1},${c.warpBpm ?? 0},` +
+      `${c.id},${c.startTime},${c.duration},${c.offset ?? 0},${c.audioFile ?? ''},${c.gain ?? 1},${c.warpBpm ?? 0},${c.fadeIn ?? 0},${c.fadeOut ?? 0},` +
       (c.notes ?? []).map((n) => `${n.pitch}/${n.startTime}/${n.duration}/${n.velocity}`).join(';')
     ).join('~')
   ).join('#')

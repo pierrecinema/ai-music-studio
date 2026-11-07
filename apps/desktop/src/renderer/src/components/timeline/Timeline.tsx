@@ -6,12 +6,13 @@ import { useAudioStore } from '../../stores/audio.store'
 import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER_SECOND, projectEndBeat, secToBeats, seek, sourceSecPerBeat } from '../../audio/engine'
 import type { Clip, Track } from '../../types'
 import { useBeatMatch } from '../../beatmatch/store'
+import { minLength, snapBeat } from '../../edit/grid'
+import { GridControls } from '../../edit/GridControls'
 
 const TRACK_HEIGHT = 72
 const HEADER_WIDTH = 200
 const RULER_HEIGHT = 24
 const BEAT_WIDTH = 80
-const SNAP = 0.25
 const HANDLE = 6
 
 const AUDIO_TYPES: Track['type'][] = ['audio', 'vocal', 'instrument']
@@ -116,7 +117,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const project = useProjectStore((s) => s.project)
   const selectedTrackId = useProjectStore((s) => s.selectedTrackId)
   const selectedClipId = useProjectStore((s) => s.selectedClipId)
-  const { addTrack, updateTrack, removeTrack, selectTrack, selectClip, updateClip, moveClip, addClip } = useProjectStore.getState()
+  const { addTrack, updateTrack, removeTrack, selectTrack, selectClip, updateClip, moveClip, addClip, moveTrack } = useProjectStore.getState()
   const zoom = useUIStore((s) => s.zoom)
   const setZoom = useUIStore((s) => s.setZoom)
   const setActiveView = useUIStore((s) => s.setActiveView)
@@ -133,7 +134,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const bpm = project.bpm || 120
   const beatWidth = BEAT_WIDTH * zoom
   const totalBeats = Math.max(128, Math.ceil(projectEndBeat(project)) + 32)
-  const snap = (b: number, free: boolean): number => (free ? b : Math.round(b / SNAP) * SNAP)
+  const snap = (b: number, free: boolean): number => snapBeat(b, free)         // free = Alt held, or Snap is off
 
   const beatAt = useCallback((clientX: number): number => {
     const rect = lanesRef.current!.getBoundingClientRect()
@@ -168,7 +169,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         moveClip(from?.id ?? d.trackId, d.clipId, toId, Math.max(0, start))
         d.trackId = toId
       } else if (d.kind === 'trimR') {
-        let dur = Math.max(SNAP, snap(o.startTime + o.duration + dBeats, free) - o.startTime)
+        let dur = Math.max(minLength(), snap(o.startTime + o.duration + dBeats, free) - o.startTime)
         if (o.audioFile) {
           const buf = bufferOf(o.audioFile)
           if (buf) dur = Math.min(dur, (buf.duration - (o.offset ?? 0)) / sourceSecPerBeat(o.warpBpm, bpm))
@@ -176,7 +177,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         updateClip(d.trackId, d.clipId, { duration: dur })
       } else {
         const end = o.startTime + o.duration
-        let start = Math.min(end - SNAP, Math.max(0, snap(o.startTime + dBeats, free)))
+        let start = Math.min(end - minLength(), Math.max(0, snap(o.startTime + dBeats, free)))
         let offset = o.offset
         if (o.audioFile) {
           const shift = (start - o.startTime) * sourceSecPerBeat(o.warpBpm, bpm)
@@ -229,6 +230,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   // ── drag and drop of files from the desktop ────────────────────────────────
 
   const onDrop = async (e: React.DragEvent): Promise<void> => {
+    if (!e.dataTransfer.types.includes('Files')) return
     e.preventDefault()
     setDropping(false)
     const files = [...e.dataTransfer.files].filter((f) => /\.(wav|mp3|flac|ogg|opus|m4a|aif|aiff)$/i.test(f.name))
@@ -269,7 +271,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
 
   return (
     <div
-      onDragOver={(e) => { e.preventDefault(); setDropping(true) }}
+      onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDropping(true) } }}
       onDragLeave={() => setDropping(false)}
       onDrop={(e) => void onDrop(e)}
       style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', borderBottom: '1px solid var(--border)', position: 'relative', ...rootStyle }}
@@ -285,12 +287,15 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           onClick={() => selectedAudioClip && void useBeatMatch.getState().propose(selectedAudioClip.trackId, selectedAudioClip.clip.id, selectedAudioClip.clip.audioFile!, selectedAudioClip.clip.name ?? 'Audio', false, true)}>
           Beat match…
         </button>
+        <GridControls />
         <span style={{ flex: 1 }} />
         {loadingAudio && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>Reading audio files…</span>}
         {message && <span style={{ fontSize: 11, color: 'var(--yellow)', maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={message}>{message}</span>}
         <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Zoom</span>
         <input type="range" min={0.25} max={4} step={0.05} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 70, accentColor: 'var(--accent)' }} />
       </div>
+
+      {selectedAudioClip && <ClipInspector trackId={selectedAudioClip.trackId} clip={selectedAudioClip.clip} bpm={bpm} />}
 
       <div ref={scrollRef} onWheel={onWheel} style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
         <div style={{ width: HEADER_WIDTH + totalBeats * beatWidth, minHeight: '100%', position: 'relative' }}>
@@ -318,7 +323,14 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           {project.tracks.map((track) => (
             <div key={track.id} style={{ display: 'flex', height: TRACK_HEIGHT }}>
               <div
-                onClick={() => selectTrack(track.id)}
+                onClick={() => { selectTrack(track.id); selectClip(null) }}
+                onDragOver={(e) => { if (e.dataTransfer.types.includes('text/ams-track')) { e.preventDefault(); e.stopPropagation() } }}
+                onDrop={(e) => {
+                  const id = e.dataTransfer.getData('text/ams-track')
+                  if (!id) return
+                  e.preventDefault(); e.stopPropagation()
+                  moveTrack(id, project.tracks.findIndex((t) => t.id === track.id))
+                }}
                 style={{
                   width: HEADER_WIDTH, flexShrink: 0, position: 'sticky', left: 0, zIndex: 4, boxSizing: 'border-box',
                   borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', borderLeft: `3px solid ${track.color}`,
@@ -326,6 +338,12 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                   background: selectedTrackId === track.id ? 'var(--bg-hover)' : 'var(--bg-secondary)'
                 }}
               >
+                <span
+                  draggable
+                  onDragStart={(e) => { e.dataTransfer.setData('text/ams-track', track.id); e.dataTransfer.effectAllowed = 'move' }}
+                  onClick={(e) => e.stopPropagation()}
+                  title="Drag to change the order of the tracks" style={{ cursor: 'grab', color: 'var(--text-muted)', fontSize: 12, userSelect: 'none' }}
+                >⋮⋮</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {renaming === track.id ? (
                     <input
@@ -345,8 +363,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                   <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { muted: !track.muted }) }} style={{ ...tinyBtn, color: track.muted ? '#f59e0b' : 'var(--text-muted)' }} title="Mute">M</button>
                   <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { soloed: !track.soloed }) }} style={{ ...tinyBtn, color: track.soloed ? 'var(--accent-light)' : 'var(--text-muted)' }} title="Solo">S</button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); if (!track.clips.length || window.confirm(`Delete track "${track.name}" with ${track.clips.length} clip(s)?`)) removeTrack(track.id) }}
-                    style={{ ...tinyBtn, color: 'var(--text-muted)' }} title="Delete track"
+                    onClick={(e) => { e.stopPropagation(); removeTrack(track.id) }}
+                    style={{ ...tinyBtn, color: 'var(--text-muted)' }} title="Delete track (Ctrl+Z brings it back)"
                   >×</button>
                 </div>
                 <input
@@ -424,6 +442,34 @@ function Playhead({ scrollRef, beatWidth }: { scrollRef: React.RefObject<HTMLDiv
     }
   }, [beat, playing, beatWidth, scrollRef])
   return <div style={{ position: 'absolute', left: HEADER_WIDTH + beat * beatWidth, top: 0, width: 2, height: '100%', background: 'var(--accent)', zIndex: 7, pointerEvents: 'none' }} />
+}
+
+// Gain and fades of the selected audio clip
+function ClipInspector({ trackId, clip, bpm }: { trackId: string; clip: Clip; bpm: number }): React.ReactElement {
+  const updateClip = useProjectStore((s) => s.updateClip)
+  const gain = clip.gain ?? 1
+  const db = gain <= 0.001 ? '-inf' : (20 * Math.log10(gain)).toFixed(1)
+  const sec = (beats: number | undefined): string => (((beats ?? 0) * 60) / bpm).toFixed(2)
+  const setFade = (key: 'fadeIn' | 'fadeOut', seconds: string): void => {
+    const v = Math.max(0, Math.min(clip.duration / 2, ((parseFloat(seconds.replace(',', '.')) || 0) * bpm) / 60))
+    updateClip(trackId, clip.id, { [key]: v })
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '3px 10px', borderBottom: '1px solid var(--border)', background: 'var(--bg-panel)', fontSize: 11, color: 'var(--text-secondary)', flexShrink: 0, flexWrap: 'wrap' }}>
+      <b style={{ color: 'var(--text-primary)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clip.name ?? 'Clip'}</b>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>Gain
+        <input type="range" min={0} max={2} step={0.01} value={gain} style={{ width: 90, accentColor: 'var(--accent)' }}
+          onChange={(e) => updateClip(trackId, clip.id, { gain: Number(e.target.value) })} onDoubleClick={() => updateClip(trackId, clip.id, { gain: 1 })} />
+        <span style={{ width: 52 }}>{db} dB</span>
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>Fade in
+        <input key={`fi${clip.id}${clip.fadeIn ?? 0}`} defaultValue={sec(clip.fadeIn)} style={{ width: 46 }} onBlur={(e) => setFade('fadeIn', e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} /> s
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>Fade out
+        <input key={`fo${clip.id}${clip.fadeOut ?? 0}`} defaultValue={sec(clip.fadeOut)} style={{ width: 46 }} onBlur={(e) => setFade('fadeOut', e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} /> s
+      </label>
+    </div>
+  )
 }
 
 // a tiny picture of the notes inside a MIDI clip

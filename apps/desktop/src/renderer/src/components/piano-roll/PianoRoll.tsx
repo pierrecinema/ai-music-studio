@@ -4,12 +4,13 @@ import { useUIStore } from '../../stores/ui.store'
 import { useAudioStore } from '../../stores/audio.store'
 import { previewNote } from '../../audio/engine'
 import type { Note } from '../../types'
+import { minLength, snapBeat, snapStep } from '../../edit/grid'
+import { GridControls } from '../../edit/GridControls'
 
 const NOTE_HEIGHT = 14
 const PIANO_WIDTH = 56
 const BEAT_WIDTH = 80
 const TOTAL_PITCHES = 128
-const SNAP = 0.25
 const EDGE = 6
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const BLACK_NOTES = [1, 3, 6, 8, 10]
@@ -41,6 +42,8 @@ export function PianoRoll(): React.ReactElement {
   const drag = useRef<NoteDrag | null>(null)
   const lastLength = useRef(0.5)
   const [selected, setSelected] = useState<string | null>(null)
+  // the selected note is shared with the store so that Quantize and the arrow keys act on it
+  const select = (id: string | null): void => { setSelected(id); useProjectStore.getState().selectNotes(id ? [id] : []) }
 
   const track = project.tracks.find((t) => t.id === selectedTrackId)
   const clip = track?.clips.find((c) => c.id === selectedClipId && !c.audioFile) ?? track?.clips.find((c) => !c.audioFile)
@@ -60,7 +63,7 @@ export function PianoRoll(): React.ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clip?.id])
 
-  const snap = (b: number, free: boolean): number => (free ? b : Math.floor(b / SNAP + 1e-6) * SNAP)
+  const snap = (b: number, free: boolean): number => snapBeat(b, free, 'floor')    // free = Alt held, or Snap is off
 
   const pointer = (e: { clientX: number; clientY: number }): { beat: number; pitch: number } => {
     const rect = gridRef.current!.getBoundingClientRect()
@@ -84,7 +87,7 @@ export function PianoRoll(): React.ReactElement {
 
   const onGridDown = (e: React.PointerEvent<HTMLDivElement>): void => {
     if (e.target !== e.currentTarget && !(e.target as HTMLElement).dataset.bg) return
-    setSelected(null)
+    select(null)
     if (tool !== 'draw' || !track) return
     const target = ensureClip()
     if (!target) return
@@ -95,11 +98,11 @@ export function PianoRoll(): React.ReactElement {
       const clipNow = useProjectStore.getState().project.tracks.find((t) => t.id === target.trackId)?.clips.find((c) => c.id === target.clipId)
       if (clipNow) useProjectStore.getState().updateClip(target.trackId, target.clipId, { duration: Math.ceil(start + lastLength.current) })
     }
-    addNote(target.trackId, target.clipId, { pitch: p.pitch, startTime: start, duration: lastLength.current, velocity: 100 })
+    addNote(target.trackId, target.clipId, { pitch: p.pitch, startTime: start, duration: Math.max(snapStep() || 0, lastLength.current), velocity: 100 })
     void previewNote(p.pitch, 100, track)
     const added = useProjectStore.getState().project.tracks.find((t) => t.id === target.trackId)?.clips.find((c) => c.id === target.clipId)?.notes?.slice(-1)[0]
     if (added) {
-      setSelected(added.id)
+      select(added.id)
       drag.current = { noteId: added.id, kind: 'resize', startX: e.clientX, startY: e.clientY, orig: { ...added }, moved: false }
     }
   }
@@ -108,7 +111,7 @@ export function PianoRoll(): React.ReactElement {
     e.stopPropagation()
     if (!track || !clip) return
     if (tool === 'erase') { removeNote(track.id, clip.id, note.id); return }
-    setSelected(note.id)
+    select(note.id)
     void previewNote(note.pitch, note.velocity, track)
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const nearEnd = e.clientX > rect.right - EDGE
@@ -123,11 +126,11 @@ export function PianoRoll(): React.ReactElement {
       d.moved = true
       const dBeats = (e.clientX - d.startX) / beatWidth
       if (d.kind === 'resize') {
-        const dur = Math.max(SNAP, (e.altKey ? d.orig.duration + dBeats : Math.round((d.orig.duration + dBeats) / SNAP) * SNAP))
+        const dur = Math.max(minLength(), snapBeat(d.orig.duration + dBeats, e.altKey))
         lastLength.current = dur
         updateNote(track.id, clip.id, d.noteId, { duration: dur })
       } else {
-        const start = Math.max(0, e.altKey ? d.orig.startTime + dBeats : Math.round((d.orig.startTime + dBeats) / SNAP) * SNAP)
+        const start = Math.max(0, snapBeat(d.orig.startTime + dBeats, e.altKey))
         const dPitch = -Math.round((e.clientY - d.startY) / NOTE_HEIGHT)
         const pitch = Math.max(0, Math.min(127, d.orig.pitch + dPitch))
         if (pitch !== (drag.current as NoteDrag & { lastPitch?: number }).lastPitch) {
@@ -152,7 +155,7 @@ export function PianoRoll(): React.ReactElement {
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.stopPropagation()
         removeNote(track.id, clip.id, selected)
-        setSelected(null)
+        select(null)
       }
     }
     window.addEventListener('keydown', onKey, true)
@@ -180,6 +183,7 @@ export function PianoRoll(): React.ReactElement {
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
+        <GridControls />
         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
           {clip ? `${track.name} · ${clip.name ?? 'clip'} · ${notes.length} notes` : 'No clip yet: click in the grid to create one'}
         </span>

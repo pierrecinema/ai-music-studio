@@ -197,6 +197,15 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Musik\AI Music Studio` (nach Monaten sortiert, mit `library.json` für Titel, Stil, Modell, Seed und Länge). Unter **Library** kannst du Songs abspielen, umbenennen (Doppelklick), als Favorit markieren, suchen, in den Explorer zeigen, löschen und mit **Add to project** auf die Zeitleiste legen. Auch eigene Dateien lassen sich hinzufügen. Früher erzeugte Songs lagen nur im temporären Ordner und sind eventuell weg.
 
+### Raster, stufenloses Verschieben, Quantisierung
+
+- **Grid** (Leiste der Zeitleiste und des Klaviatur-Editors): Rastergröße von *1 Bar* bis *1/64*, dazu Triolen (1/8 und 1/16) und *Off (free)*. **Snap** schaltet das Einrasten an oder aus (Ctrl+4). **Stufenlos** verschiebst du immer, wenn Snap aus ist, oder für einen einzelnen Zug mit gedrückter **Alt**-Taste. Das Raster gilt für Verschieben, Kürzen und Teilen von Clips sowie für Noten (zeichnen, verschieben, Länge).
+- **Tastatur:** Ctrl+1 engeres, Ctrl+2 weiteres Raster, Ctrl+3 Triole an/aus. **Pfeil links/rechts** schiebt den gewählten Clip (oder die gewählte Note) um einen Rasterschritt, bei ausgeschaltetem Snap um eine feine Stufe (1/64 Schlag). Im Klaviatur-Editor verschieben **Pfeil hoch/runter** die gewählte Note um einen Halbton.
+- **Quantize** (Ctrl+U; Einstellungen mit dem Zahnrad oder Ctrl+Shift+U): Bei MIDI rücken die Noten des gewählten Clips (oder die gewählte Note) zum Raster. *Strength* bestimmt, wie weit (100 % = genau aufs Raster, 50 % = halber Weg), *Swing* verzögert jeden zweiten Rasterschritt, und mit *Quantize note ends* ändern sich auch die Notenlängen. Bei **Audio** gibt es keine Noten: Quantize rastet den Clipanfang ein (die Rhythmik innerhalb der Aufnahme bleibt unverändert; dafür gibt es das Beat-Matching). Warp-Marker wie in Ableton gibt es noch nicht.
+- **Spuren umsortieren:** am Griff `⋮⋮` links im Spurkopf ziehen.
+- **Spuren löschen:** der ×-Knopf im Spurkopf oder die Entf-Taste (nach einem Klick auf den Spurkopf). Es kommt keine Rückfrage mehr, **Ctrl+Z bringt die Spur zurück**. Entf löscht einen gewählten Clip; der Klick auf einen Spurkopf hebt die Auswahl eines Clips einer anderen Spur auf, damit Entf nicht den falschen Clip trifft.
+- **Clip-Leiste** (erscheint, sobald ein Audio-Clip gewählt ist): *Gain* (Doppelklick setzt auf 0 dB zurück) sowie *Fade in* und *Fade out* in Sekunden.
+
 ### Beat-Matching: neues Audio in den Takt bringen
 
 Sobald Audio auf die Zeitleiste kommt (Import, Drag-and-drop, aus der Bibliothek oder als Sample), misst die App **Tempo und ersten Schlag** und zeigt unten rechts die Karte *Beat matching*:

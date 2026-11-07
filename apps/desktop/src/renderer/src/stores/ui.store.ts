@@ -16,7 +16,11 @@ interface UIState {
   shortcutPreset: 'ableton' | 'cubase'
   pianoTool: 'draw' | 'select' | 'erase'
   pianoZoom: number
+  grid: string          // id of a grid size (see edit/grid.ts)
+  snap: boolean         // snap to the grid while moving, trimming and drawing
 
+  setGrid: (id: string) => void
+  toggleSnap: () => void
   setShortcutPreset: (p: 'ableton' | 'cubase') => void
   setPianoTool: (t: 'draw' | 'select' | 'erase') => void
   setPianoZoom: (z: number) => void
@@ -46,7 +50,11 @@ export const useUIStore = create<UIState>()(
       shortcutPreset: 'ableton',
       pianoTool: 'draw',
       pianoZoom: 1,
+      grid: '1/16',
+      snap: true,
 
+      setGrid: (grid) => set({ grid }),
+      toggleSnap: () => set((s) => ({ snap: !s.snap })),
       setShortcutPreset: (shortcutPreset) => set({ shortcutPreset }),
       setPianoTool: (pianoTool) => set({ pianoTool }),
       setPianoZoom: (pianoZoom) => set({ pianoZoom: Math.min(4, Math.max(0.25, pianoZoom)) }),

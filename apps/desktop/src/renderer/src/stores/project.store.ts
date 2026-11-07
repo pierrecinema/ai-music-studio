@@ -29,6 +29,8 @@ interface ProjectState {
   updateTrack: (id: string, patch: Partial<Track>) => void
   removeTrack: (id: string) => void
   selectTrack: (id: string | null) => void
+  moveTrack: (id: string, toIndex: number) => void
+  selectNotes: (ids: string[]) => void
 
   addClip: (trackId: string, clip: Omit<Clip, 'id'>) => void
   updateClip: (trackId: string, clipId: string, patch: Partial<Clip>) => void
@@ -185,7 +187,24 @@ export const useProjectStore = create<ProjectState>()(
         selectedClipId: s.project.tracks.find((t) => t.id === id)?.clips.some((c) => c.id === s.selectedClipId) ? null : s.selectedClipId
       })),
 
-    selectTrack: (id) => set({ selectedTrackId: id }),
+    // choosing a track must not leave a clip of ANOTHER track selected: Delete would remove that clip
+    selectTrack: (id) =>
+      set((s) => {
+        const owner = s.project.tracks.find((t) => t.clips.some((c) => c.id === s.selectedClipId))
+        return { selectedTrackId: id, selectedClipId: owner && owner.id !== id ? null : s.selectedClipId }
+      }),
+
+    moveTrack: (id, toIndex) =>
+      set((s) => {
+        const from = s.project.tracks.findIndex((t) => t.id === id)
+        if (from < 0) return s
+        const tracks = [...s.project.tracks]
+        const [t] = tracks.splice(from, 1)
+        tracks.splice(Math.max(0, Math.min(tracks.length, toIndex)), 0, t)
+        return { project: { ...s.project, tracks } }
+      }),
+
+    selectNotes: (ids) => set({ selectedNoteIds: ids }),
 
     addClip: (trackId, clip) =>
       set((s) => ({

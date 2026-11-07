@@ -2,10 +2,12 @@ import { nanoid } from 'nanoid'
 import { useAudioStore } from '../stores/audio.store'
 import { useProjectStore } from '../stores/project.store'
 import { useUIStore } from '../stores/ui.store'
-import type { Track } from '../types'
+import type { Note, Track } from '../types'
 import { markStep, redo, undo } from './history'
 import { isPlaying, pause, play, startRecording, stop } from '../audio/engine'
 import { newProject, openProject, saveProject, saveProjectAs } from '../project/io'
+import { narrowerGrid, nudgeStep, tripletToggle, widerGrid } from '../edit/grid'
+import { openQuantizeDialog, quantizeSelection } from '../edit/quantize'
 import { EXPORT_EVENT, reportOpen } from '../components/layout/FileMenu'
 
 export const WINAMP_EVENT = 'ams:toggle-winamp'
@@ -60,7 +62,56 @@ function toggleFullscreen(): void {
   else void document.documentElement.requestFullscreen()
 }
 
+// the clip whose notes the piano roll shows: the selected clip, or the first MIDI clip of the selected track
+function noteClip(): { trackId: string; clipId: string; notes: Note[] } | null {
+  const st = useProjectStore.getState()
+  for (const t of st.project.tracks) {
+    const c = t.clips.find((x) => x.id === st.selectedClipId && !x.audioFile)
+    if (c) return { trackId: t.id, clipId: c.id, notes: c.notes ?? [] }
+  }
+  const t = st.project.tracks.find((x) => x.id === st.selectedTrackId)
+  const c = t?.clips.find((x) => !x.audioFile)
+  return t && c ? { trackId: t.id, clipId: c.id, notes: c.notes ?? [] } : null
+}
+
+// arrow keys: move the selected notes (in the piano roll) or the selected clip by one grid step
+function nudge(direction: 1 | -1): void {
+  const st = useProjectStore.getState()
+  const step = nudgeStep() * direction
+  if (useUIStore.getState().activeView === 'piano-roll' && st.selectedNoteIds.length) {
+    const nc = noteClip()
+    if (!nc) return
+    for (const n of nc.notes) {
+      if (st.selectedNoteIds.includes(n.id)) st.updateNote(nc.trackId, nc.clipId, n.id, { startTime: Math.max(0, n.startTime + step) })
+    }
+    return
+  }
+  const owner = st.project.tracks.find((t) => t.clips.some((c) => c.id === st.selectedClipId))
+  const clip = owner?.clips.find((c) => c.id === st.selectedClipId)
+  if (owner && clip) st.moveClip(owner.id, clip.id, owner.id, Math.max(0, clip.startTime + step))
+}
+
+function transpose(semitones: number): void {
+  const st = useProjectStore.getState()
+  const nc = noteClip()
+  if (!nc || !st.selectedNoteIds.length) return
+  for (const n of nc.notes) {
+    if (st.selectedNoteIds.includes(n.id)) st.updateNote(nc.trackId, nc.clipId, n.id, { pitch: Math.max(0, Math.min(127, n.pitch + semitones)) })
+  }
+}
+
 const HANDLERS: Record<string, () => void> = {
+  'grid.toggle': () => useUIStore.getState().toggleSnap(),
+  'grid.triplet': () => useUIStore.getState().setGrid(tripletToggle(useUIStore.getState().grid)),
+  'grid.narrow': () => useUIStore.getState().setGrid(narrowerGrid(useUIStore.getState().grid)),
+  'grid.widen': () => useUIStore.getState().setGrid(widerGrid(useUIStore.getState().grid)),
+  'edit.quantize': () => { quantizeSelection() },
+  'edit.quantizeSettings': () => openQuantizeDialog(),
+  'clip.nudgeLeft': () => nudge(-1),
+  'clip.nudgeRight': () => nudge(1),
+  'note.up': () => transpose(1),
+  'note.down': () => transpose(-1),
+
   'transport.playStop': () => { if (isPlaying()) pause(); else void play() },
   'transport.play': () => { void play() },
   'transport.stop': () => pause(),
@@ -94,7 +145,7 @@ const HANDLERS: Record<string, () => void> = {
     const owner = st.project.tracks.find((t) => t.clips.some((c) => c.id === st.selectedClipId))
     if (owner && st.selectedClipId) { st.removeClip(owner.id, st.selectedClipId); return }
     const t = selectedTrack()
-    if (t && (!t.clips.length || window.confirm(`Delete track "${t.name}" with ${t.clips.length} clip(s)?`))) st.removeTrack(t.id)
+    if (t) st.removeTrack(t.id)                       // no question: Ctrl+Z brings the track back
   },
 
   'track.addAudio': () => addTrack('audio'),

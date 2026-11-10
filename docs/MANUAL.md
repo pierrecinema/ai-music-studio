@@ -6,7 +6,7 @@ Stand: Version 0.1.5 (Alpha). Windows 10/11, 64 Bit.
 
 1. `AIMusicStudio-Setup-<Version>.exe` von der [Releases-Seite](https://github.com/pierrecinema/ai-music-studio/releases) laden und starten.
 2. Der Installer ist nicht signiert. Wenn Windows SmartScreen warnt: **Weitere Informationen → Trotzdem ausführen**.
-3. Die App startet auch ohne weitere Einrichtung (Oberfläche, Timeline, Piano Roll, Winamp-Modus). Die KI-Funktionen brauchen das Backend, siehe Abschnitt 2.
+3. Die App startet auch ohne weitere Einrichtung (Oberfläche, Studio, Piano Roll, Winamp-Modus). Die KI-Funktionen brauchen das Backend, siehe Abschnitt 2.
 
 Updates: Die App sucht beim Start und alle 4 Stunden nach neuen Versionen und zeigt unten rechts einen Hinweis. Manuell: **Einstellungen → Updates**.
 
@@ -75,11 +75,12 @@ Nach der Installation die App neu starten, damit sie die neuen Programme im PATH
 - **Menü links:** Mit **«** / **»** oben klappst du es ein (nur Icons) oder aus (mit Beschriftung). Die Wahl wird gespeichert.
 - **Create music** (ganz oben im Menü, ✨): Der Song-Generator mit **Simple** (Stil, Text, Create) und **Studio** (alle Einstellungen):
   - **Song:** Titel, Stil (mit Genre-Vorschlägen, ✨ lässt die KI den Stil verbessern)
-  - **Lyrics:** Instrumental, Sprache, Stimme (Any/Male/Female), Text mit Abschnitts-Tags wie `[Verse]`, `[Chorus]` (✨ lässt die KI Text schreiben)
+  - **Lyrics:** Instrumental, **A cappella (voice only)**, Sprache, Stimme (Any/Male/Female), Text mit Abschnitts-Tags wie `[Verse]`, `[Chorus]` (✨ lässt die KI Text schreiben)
   - **Song parameters:** Länge, BPM, Tonart, Takt; „Auto“ überlässt es dem Modell, „Complete the metadata“ füllt per KI aus
   - **Source and reference:** Quell-Track (Cover/Remix) und Klang-Referenz
   - **LoRA**, **Quality** (Schritte, Songs × Variationen × Queue, Seed) und **Advanced** (Sprachmodell-Stufe, Rendering, LoRA je Schicht, Ausgabe: FLAC/MP3/WAV, Fades)
-  - **Into project:** legt die fertigen Songs als Audiospuren auf der Timeline an
+  - **Into project:** legt die fertigen Songs als Audiospuren im Studio an
+  - **A cappella (voice only):** Der Text wird **nur gesungen, ohne Instrumente**. Die App sagt dem Modell „a cappella, keine Instrumente“ und trennt nach dem Rendern die Stimme mit Demucs von allem, was das Modell trotzdem dazugelegt hat (Pad, Klick, Hall). Heraus kommt eine saubere, trockene Gesangsspur für Remixe oder einen eigenen Beat. Dafür braucht es Text und ein Modell, das singen kann: **ACE-Step** oder **DiffRhythm** (MusicGen und die anderen können nicht singen). Stil, Stimme (Male/Female), Sprache, BPM und Tonart gelten wie gewohnt. Ohne installiertes Demucs (Einstellungen → AI Engines, Stem Splitter) bleibt der Song so, wie das Modell ihn gerendert hat, und die App weist darauf hin.
   
   Die Generierung läuft im Hintergrund, immer nur ein Auftrag. Nicht jede Einstellung kennt jede Engine-Version: Was die installierte Engine nicht unterstützt, wird nicht verschwiegen, sondern unter „Results“ als „ignored“ gemeldet. Format-Umwandlung und Fades übernimmt die App selbst mit ffmpeg.
 - **LoRA** (in Create music): Stil-, Künstler- oder Sound-Erweiterungen. **Import LoRA file…** oder **folder…** wählt `.safetensors`/`.pt`/`.bin` bzw. einen Ordner und kopiert ihn in den LoRA-Ordner. Das geht auch ohne eingerichtetes Backend. Dann „+ Add LoRA“, Stärke einstellen. Die Engine nutzt pro Durchgang **eine** LoRA; bei mehreren wird die stärkste verwendet und die App weist darauf hin.
@@ -173,11 +174,11 @@ Du kannst ACE-Step einen eigenen Stil beibringen. Du brauchst Songs, an denen du
 
 Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training selbst wurde in dieser Version nur mit einem Ersatz-Trainer getestet, nicht mit einer echten NVIDIA-Karte.
 
-## Zeitleiste, Mixer, Klaviatur-Editor, Projekte (Grundfunktionen)
+## Studio (früher Zeitleiste), Mixer, Klaviatur-Editor, Projekte (Grundfunktionen)
 
 **Abspielen.** Space startet und pausiert, die Stopp-Taste springt an den Anfang. Der Abspielkopf wandert über alle Spuren und die Ansicht folgt ihm. Ein Klick in das Lineal setzt den Abspielkopf. Das Metronom (♩) klickt auf jeden Schlag, auf die Eins eines Taktes höher.
 
-**Audio importieren.** *Import audio…* oder Dateien (wav, mp3, flac, ogg, m4a, aiff) aus dem Explorer auf die Zeitleiste ziehen. Ein Doppelklick auf eine leere Audiospur öffnet den Dateidialog an dieser Stelle. Jeder Clip zeigt seine Wellenform.
+**Audio importieren.** *Import audio…* oder Dateien (wav, mp3, flac, ogg, m4a, aiff) aus dem Explorer ins Studio ziehen. Ein Doppelklick auf eine leere Audiospur öffnet den Dateidialog an dieser Stelle. Jeder Clip zeigt seine Wellenform.
 
 **Clips bearbeiten.** Ziehen verschiebt (auch auf andere passende Spuren), an den Rändern ziehen kürzt (links und rechts; Audio bleibt dabei an derselben Stelle der Datei). Alles rastet auf Viertelschläge ein, **Alt** hebt das auf. **Ctrl+E** (Cubase: **Alt+X**) teilt den gewählten Clip am Abspielkopf, **Ctrl+D** dupliziert ihn, **Entf** löscht ihn (ohne gewählten Clip die gewählte Spur). Mit **Strg+Mausrad** zoomst du. Spuren benennst du mit Doppelklick auf den Namen um.
 
@@ -195,17 +196,19 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 ## Bibliothek
 
-**Jeder erzeugte Song beginnt auf Schlag 1.** Bevor ein Song gespeichert wird, misst die App Tempo und ersten Schlag und schneidet alles vor dem ersten Schlag ab (Stille, Einblendung, halber Schlag Vorlauf). Die gespeicherte Datei beginnt also genau auf Takt 1, und die App merkt sich Tempo und Anfang in der Bibliothek (zu sehen als „120 BPM“ neben dem Song). Im Ergebnisfeld steht dazu eine Zeile, wie viel abgeschnitten wurde. Grenzen: Es wird nur ein Vorlauf bis 6 Sekunden entfernt und nur, wenn er kürzer als etwa ein Schlag ist oder aus Stille besteht (ein echter Auftakt oder ein längeres Intro bleibt erhalten, damit keine Noten verloren gehen). Musik ohne erkennbaren Schlag (Ambient) verliert nur die Stille am Anfang. Songs, die schon vor dieser Version gespeichert wurden, bleiben unverändert.
+**Jeder erzeugte Song beginnt auf Schlag 1.** Bevor ein Song gespeichert wird, misst die App Tempo und ersten Schlag und schneidet alles vor dem ersten Schlag ab (Stille, Einblendung, halber Schlag Vorlauf). Die gespeicherte Datei beginnt also genau auf Takt 1, und die App merkt sich Tempo und Anfang in der Bibliothek (zu sehen als „120 BPM“ neben dem Song). Im Ergebnisfeld steht dazu eine Zeile, wie viel abgeschnitten wurde. Grenzen: Es wird nur ein Vorlauf bis 6 Sekunden entfernt und nur, wenn er kürzer als etwa ein Schlag ist oder aus Stille besteht (ein echter Auftakt oder ein längeres Intro bleibt erhalten, damit keine Noten verloren gehen). Musik ohne erkennbaren Schlag (Ambient) verliert nur die Stille am Anfang. Songs, die schon vor dieser Version gespeichert wurden, bleiben zunächst unverändert.
 
-**Auf der Zeitleiste:** *Add to project* (Bibliothek und Create music) legt Songs immer auf **Takt 1** (Position 0), sodass mehrere Songs gemeinsam starten. In der Bibliothek kannst du stattdessen *Insert at: the playhead* wählen. Weil Tempo und erster Schlag bekannt sind, erscheint die Beat-Matching-Karte sofort, ohne neue Messung.
+**Ältere Songs nachträglich auf Schlag 1 bringen:** In der Bibliothek steht oben **Start all on beat 1 (Anzahl)**, wenn es noch ungeprüfte ältere Songs gibt. Nach der Rückfrage „Yes, cut“ schneidet die App bei allen erzeugten Songs den Vorlauf ab (gleiche Regeln wie oben). Bei einzelnen Songs geht das mit dem Knopf **Start on beat 1**. Stems und importierte Dateien fasst „Start all“ nicht an, damit die Stems eines Songs zueinander im Takt bleiben. **Die Originale bleiben erhalten** (im Unterordner `originals`): Ein geschnittener Song zeigt „cut 0.30 s to beat 1“ und den Knopf **Restore original**, der die unveränderte Datei zurückholt. MP3- und FLAC-Dateien werden beim Schneiden als WAV gespeichert. Ein Projekt, das den Song schon vorher enthielt, hört danach den geschnittenen Anfang; schiebe den Clip dort bei Bedarf neu auf Takt 1.
 
-**Songs umbenennen:** Direkt unter *Create music* hat jeder fertige Song ein Namensfeld über dem Player: hineinklicken, tippen, Enter oder woanders klicken, dann steht „saved“ daneben. Der Name gilt auch in der Bibliothek. In der Bibliothek geht es über den Knopf **Rename** (oder Doppelklick auf den Namen). Spuren in der Zeitleiste benennst du per Doppelklick auf den Spurnamen um.
+**Im Studio:** *Add to project* (Bibliothek und Create music) legt Songs immer auf **Takt 1** (Position 0), sodass mehrere Songs gemeinsam starten. In der Bibliothek kannst du stattdessen *Insert at: the playhead* wählen. Weil Tempo und erster Schlag bekannt sind, erscheint die Beat-Matching-Karte sofort, ohne neue Messung.
 
-Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Musik\AI Music Studio` (nach Monaten sortiert, mit `library.json` für Titel, Stil, Modell, Seed und Länge). Unter **Library** kannst du Songs abspielen, umbenennen (Doppelklick), als Favorit markieren, suchen, in den Explorer zeigen, löschen und mit **Add to project** auf die Zeitleiste legen. Auch eigene Dateien lassen sich hinzufügen. Früher erzeugte Songs lagen nur im temporären Ordner und sind eventuell weg.
+**Songs umbenennen:** Direkt unter *Create music* hat jeder fertige Song ein Namensfeld über dem Player: hineinklicken, tippen, Enter oder woanders klicken, dann steht „saved“ daneben. Der Name gilt auch in der Bibliothek. In der Bibliothek geht es über den Knopf **Rename** (oder Doppelklick auf den Namen). Spuren im Studio benennst du per Doppelklick auf den Spurnamen um.
+
+Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Musik\AI Music Studio` (nach Monaten sortiert, mit `library.json` für Titel, Stil, Modell, Seed und Länge). Unter **Library** kannst du Songs abspielen, umbenennen (Doppelklick), als Favorit markieren, suchen, in den Explorer zeigen, löschen und mit **Add to project** ins Studio legen. Auch eigene Dateien lassen sich hinzufügen. Früher erzeugte Songs lagen nur im temporären Ordner und sind eventuell weg.
 
 ### Raster, stufenloses Verschieben, Quantisierung
 
-- **Grid** (Leiste der Zeitleiste und des Klaviatur-Editors): Rastergröße von *1 Bar* bis *1/64*, dazu Triolen (1/8 und 1/16) und *Off (free)*. **Snap** schaltet das Einrasten an oder aus (Ctrl+4). **Stufenlos** verschiebst du immer, wenn Snap aus ist, oder für einen einzelnen Zug mit gedrückter **Alt**-Taste. Das Raster gilt für Verschieben, Kürzen und Teilen von Clips sowie für Noten (zeichnen, verschieben, Länge).
+- **Grid** (Leiste im Studio und des Klaviatur-Editors): Rastergröße von *1 Bar* bis *1/64*, dazu Triolen (1/8 und 1/16) und *Off (free)*. **Snap** schaltet das Einrasten an oder aus (Ctrl+4). **Stufenlos** verschiebst du immer, wenn Snap aus ist, oder für einen einzelnen Zug mit gedrückter **Alt**-Taste. Das Raster gilt für Verschieben, Kürzen und Teilen von Clips sowie für Noten (zeichnen, verschieben, Länge).
 - **Tastatur:** Ctrl+1 engeres, Ctrl+2 weiteres Raster, Ctrl+3 Triole an/aus. **Pfeil links/rechts** schiebt den gewählten Clip (oder die gewählte Note) um einen Rasterschritt, bei ausgeschaltetem Snap um eine feine Stufe (1/64 Schlag). Im Klaviatur-Editor verschieben **Pfeil hoch/runter** die gewählte Note um einen Halbton.
 - **Quantize** (Ctrl+U; Einstellungen mit dem Zahnrad oder Ctrl+Shift+U): Bei MIDI rücken die Noten des gewählten Clips (oder die gewählte Note) zum Raster. *Strength* bestimmt, wie weit (100 % = genau aufs Raster, 50 % = halber Weg), *Swing* verzögert jeden zweiten Rasterschritt, und mit *Quantize note ends* ändern sich auch die Notenlängen. Bei **Audio** gibt es keine Noten: Quantize rastet den Clipanfang ein (die Rhythmik innerhalb der Aufnahme bleibt unverändert; dafür gibt es das Beat-Matching). Warp-Marker wie in Ableton gibt es noch nicht.
 - **Spuren umsortieren:** am Griff `⋮⋮` links im Spurkopf ziehen.
@@ -217,24 +220,24 @@ Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Mu
 Wie bei SYNC in rekordbox, Traktor oder Serato geht es um zwei Dinge: das **Tempo** (alle Spuren laufen mit dem Master-BPM) und die **Phase** (die Schläge liegen genau auf den Schlägen des Projekts, sonst „schleppen“ zwei Kicks gegeneinander, auch wenn das Tempo stimmt).
 
 - **Beat-Grid:** Jede gemessene Audiospur speichert ihr Raster (Tempo und Zeit des ersten Schlags). Auf der Wellenform siehst du es als **weiße Linien**: eine pro Schlag, jeder vierte stärker. Liegen die Linien zweier Spuren untereinander, laufen sie synchron.
-- **SYNC (Clip-Leiste):** streckt das Audio auf das Master-BPM (ohne Tonhöhenänderung) **und** verschiebt es so, dass sein erster Schlag auf einen Schlag des Projekts fällt. Der Vorspann bleibt erhalten, die Spur wird nur verschoben; nur am Anfang der Zeitleiste (Position 0) wird Vorspann abgeschnitten, nicht zerstörend.
+- **SYNC (Clip-Leiste):** streckt das Audio auf das Master-BPM (ohne Tonhöhenänderung) **und** verschiebt es so, dass sein erster Schlag auf einen Schlag des Projekts fällt. Der Vorspann bleibt erhalten, die Spur wird nur verschoben; nur am Anfang des Studios (Position 0) wird Vorspann abgeschnitten, nicht zerstörend.
 - **MASTER (Clip-Leiste):** macht das Tempo dieser Spur zum Projekttempo. Alle synchronen Spuren folgen sofort.
 - **Tempo-Feld (Clip-Leiste):** Der Beat-Tracker liegt bei Live-Musik manchmal um 0,1 bis 0,5 BPM daneben, dann driften zwei Spuren nach ein paar Takten auseinander. Tippe das richtige Tempo ein (oder ÷2 / ×2); der Clip wird sofort neu gestreckt.
-- **AUTO SYNC** (obere Leiste): Beim Einschalten werden **alle vorhandenen Audiospuren** auf das Master-BPM gebracht und eingerastet; danach jede neue Spur automatisch. **Sync all** (Zeitleiste) macht dasselbe auf Knopfdruck. Rechtsklick auf einen Clip: *SYNC to the master BPM* und *Make this the MASTER tempo*.
+- **AUTO SYNC** (obere Leiste): Beim Einschalten werden **alle vorhandenen Audiospuren** auf das Master-BPM gebracht und eingerastet; danach jede neue Spur automatisch. **Sync all** (Studio) macht dasselbe auf Knopfdruck. Rechtsklick auf einen Clip: *SYNC to the master BPM* und *Make this the MASTER tempo*.
 - Grenzen: Der Beat-Tracker erkennt kein „Takt-Eins“ (Downbeat): es wird Schlag auf Schlag synchronisiert, nicht Takt auf Takt. Bei langen Stücken, die aus mehreren Teilen zusammengesetzt wurden (zum Beispiel MusicGen-Tracks über 30 Sekunden), kann der Rhythmus an den Nahtstellen springen; ein einziges Raster passt dann nur abschnittsweise. Dafür den Clip an den Nahten teilen (Ctrl+E) und die Teile einzeln synchronisieren.
 
 ### Beat-Matching: neues Audio in den Takt bringen
 
-Sobald Audio auf die Zeitleiste kommt (Import, Drag-and-drop, aus der Bibliothek oder als Sample), misst die App **Tempo und ersten Schlag** und zeigt unten rechts die Karte *Beat matching*:
+Sobald Audio ins Studio kommt (Import, Drag-and-drop, aus der Bibliothek oder als Sample), misst die App **Tempo und ersten Schlag** und zeigt unten rechts die Karte *Beat matching*:
 
 - **Sync to … BPM:** dehnt oder staucht das Audio auf das Projekttempo, ohne die Tonhöhe zu ändern. Das Audio merkt sich sein eigenes Tempo (`warpBpm`) und folgt später auch Tempoänderungen des Projekts.
 - **Set project to … BPM:** setzt das Projekttempo auf das Tempo des Audios (die beste Wahl für das erste Audio eines Projekts; die Karte hebt sie dann hervor). Anderes Audio bleibt zeitlich an seiner Stelle.
 - **Put the first beat on the grid:** schneidet Stille oder Vorspann vor dem ersten Schlag weg (nicht zerstörend: den linken Rand kannst du zurückziehen) und rastet den Clip auf einen Schlag ein.
 - **÷2 / ×2:** Beat-Tracker finden manchmal die halbe oder doppelte Geschwindigkeit; hier korrigierst du das, bevor du übernimmst. Du kannst das Tempo auch von Hand eintippen, falls nichts gefunden wurde (Ambient, freier Rhythmus).
 - **AUTO SYNC** (Knopf in der oberen Leiste neben dem Tempo): Ist er an, wird **jedes neue Audio automatisch auf das eingestellte Master-BPM gestreckt**, ohne Rückfrage (die Karte erscheint dann nicht). Das Master-Tempo wird dabei nie verändert, auch nicht vom ersten Audio. Ist er aus, fragt die App für jedes neue Audio (oder bietet es nie an, je nach Auswahl auf der Karte).
-- **Sync all to … BPM** (Leiste der Zeitleiste): misst alle Audio-Clips, die noch nicht synchron sind, und bringt jeden auf das Master-BPM. Schon synchrone Clips werden übersprungen, und ein zweiter Druck meldet nur „already synced“. Clips ohne erkennbaren Rhythmus (One-Shots, freie Klänge) werden mit Begründung übersprungen. Jede Datei wird nur einmal gemessen.
+- **Sync all to … BPM** (Leiste im Studio): misst alle Audio-Clips, die noch nicht synchron sind, und bringt jeden auf das Master-BPM. Schon synchrone Clips werden übersprungen, und ein zweiter Druck meldet nur „already synced“. Clips ohne erkennbaren Rhythmus (One-Shots, freie Klänge) werden mit Begründung übersprungen. Jede Datei wird nur einmal gemessen.
 - **Keep as is** lässt alles unverändert. Unten wählst du, ob die App *jedes Mal fragt*, **automatisch angleicht** (erstes Audio setzt das Projekttempo, weiteres wird gestreckt) oder *nie anbietet*.
-- Später kannst du jeden Audio-Clip über **Beat match…** in der Zeitleisten-Leiste neu messen und angleichen. Alles ist mit Strg+Z rückgängig zu machen.
+- Später kannst du jeden Audio-Clip über **Beat match…** in der Studio-Leiste neu messen und angleichen. Alles ist mit Strg+Z rückgängig zu machen.
 
 Gemessen am Beispiel: Ein 90-BPM-Loop in einem 120-BPM-Projekt wird 18 Schläge lang und seine Kicks liegen im Abstand von 0,497 s (Soll 0,5 s). Das Tempo wird aus den Schlagzeiten per Ausgleichsgerade bestimmt und rastet auf ganze BPM ein, wenn es nahe daran liegt; bei sehr unregelmäßiger Musik (Live-Aufnahmen mit Temposchwankung) bleibt die Genauigkeit begrenzt, dort hilft nur Anpassen von Hand.
 

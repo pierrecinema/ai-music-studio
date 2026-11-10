@@ -196,6 +196,7 @@ class GenerateMusicRequest(BaseModel):
     prompt: str = ""
     lyrics: str = ""
     instrumental: bool = False
+    acapella: bool = False                  # only the voice: sung lyrics without any instruments
     language: str | None = None
     voice: str = "any"                      # any | male | female
     # song parameters (None = let the engine decide)
@@ -287,8 +288,14 @@ def _get_pipeline():
     return _pipeline
 
 
+ACAPELLA_TAGS = "a cappella, solo vocals only, unaccompanied voice, no instruments, no drums, no music, dry studio vocal"
+ACAPELLA_NEGATIVE = "instruments, drums, percussion, bass, guitar, piano, synth, strings, beat, accompaniment"
+
+
 def _compose_prompt(req: GenerateMusicRequest) -> str:
     parts = [req.prompt.strip()] if req.prompt.strip() else []
+    if req.acapella:
+        parts.insert(0, ACAPELLA_TAGS)
     if req.bpm:
         parts.append(f"{req.bpm} bpm")
     if req.key:
@@ -317,6 +324,11 @@ _start_info: dict[str, dict] = {}      # final file -> what the start alignment 
 def _finalize(wav_path: str, req: GenerateMusicRequest, warnings: list[str]) -> str:
     """Cut the track to start on its first beat, convert to the wanted format and apply fades (ffmpeg)."""
     info: dict = {}
+    if req.acapella:
+        from services.vocal_isolate import isolate_vocals
+        done, note = isolate_vocals(wav_path)
+        if note:
+            warnings.append(note)
     try:
         from services.startalign import align_start
         info = align_start(wav_path)
@@ -780,6 +792,13 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
 async def generate_music(req: GenerateMusicRequest):
     if not req.prompt.strip() and not req.lyrics.strip() and not req.source_track:
         raise HTTPException(400, "Describe the music (style) or provide lyrics.")
+    if req.acapella:
+        if not req.lyrics.strip():
+            raise HTTPException(400, "A cappella needs lyrics: write the text that should be sung.")
+        if req.engine not in ("ace-step", "diffrhythm"):
+            raise HTTPException(400, "A cappella needs a model that can sing: choose ACE-Step or DiffRhythm.")
+        req.instrumental = False
+        req.negative_prompt = ", ".join(p for p in (req.negative_prompt.strip(), ACAPELLA_NEGATIVE) if p)
     job_id = uuid.uuid4().hex[:10]
     _jobs[job_id] = {"id": job_id, "status": "queued", "created": time.time(), "warnings": [], "results": []}
     threading.Thread(target=_run_job, args=(job_id, req), daemon=True).start()

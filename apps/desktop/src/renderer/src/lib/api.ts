@@ -58,6 +58,7 @@ export interface LibraryTrack {
   id: string; title: string; file: string; path: string; exists: boolean; created: number; duration: number | null
   engine: string; source: string; prompt: string; lyrics: string; seed: number | null; favorite: boolean; notes: string
   bpm?: number | null; first_beat?: number | null     // measured when the track was saved; first_beat 0 = starts on beat 1
+  aligned?: boolean; original?: string; trimmed?: number   // checked for beat 1; `original` = saved untouched file
 }
 export interface SampleEntry { path: string; name: string; folder: string; root: string; size: number; bpm: number | null }
 export interface KaraokeWord { text: string; start: number; end: number }
@@ -210,6 +211,9 @@ export const api = {
     patch: (id: string, body: { title?: string; favorite?: boolean; notes?: string }) => send<LibraryTrack>('PATCH', `/library/${id}`, body),
     remove: (id: string, deleteFile = true) => send<{ removed: string }>('DELETE', `/library/${id}?delete_file=${deleteFile}`),
     importFile: (path: string, title = '', source = 'import') => post<LibraryTrack>('/library/import', { path, title, source }),
+    align: (id: string) => post<{ track: LibraryTrack; trimmed: number; message: string }>(`/library/${id}/align`, {}),
+    restore: (id: string) => post<LibraryTrack>(`/library/${id}/restore`, {}),
+    alignAll: () => post<{ checked: number; trimmed: number; failed: string[] }>('/library/align-all', {}),
   },
 
   system: {

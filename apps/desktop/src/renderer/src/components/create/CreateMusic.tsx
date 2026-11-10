@@ -564,7 +564,21 @@ export function CreateMusic(): React.ReactElement {
           <IconBtn title="Write lyrics with AI" onClick={aiLyrics} disabled={aiBusy !== null || p.instrumental}>{aiBusy === 'lyrics' ? '…' : '✨'}</IconBtn>
           <IconBtn title="Clear lyrics" onClick={() => set('lyrics', '')}>↺</IconBtn>
         </>}>
-          <Toggle name="Instrumental" checked={p.instrumental} onChange={(v) => set('instrumental', v)} />
+          <Toggle name="Instrumental" checked={p.instrumental} onChange={(v) => { set('instrumental', v); if (v) set('acapella', false) }} />
+          <Toggle name="A cappella (voice only)" checked={p.acapella} onChange={(v) => { set('acapella', v); if (v) set('instrumental', false) }} />
+          {p.acapella && (
+            <span style={hint}>
+              The lyrics are sung without any instruments. After rendering, the voice is separated from anything else
+              (Demucs), so you get a clean, dry a cappella for remixes or your own beat.
+              {(() => {
+                const cur = engines.find((e) => e.id === p.engine)
+                return cur && !cur.vocals
+                  ? <b style={{ color: 'var(--yellow)' }}> {cur.name} cannot sing: choose ACE-Step or DiffRhythm as the music model.</b>
+                  : null
+              })()}
+              {!p.lyrics.trim() && <b style={{ color: 'var(--yellow)' }}> Write the lyrics below (or let ✨ write them).</b>}
+            </span>
+          )}
           {!p.instrumental && (
             <>
               {studio && (

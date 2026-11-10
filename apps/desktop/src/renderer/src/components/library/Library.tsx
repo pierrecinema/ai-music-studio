@@ -25,6 +25,8 @@ export function Library(): React.ReactElement {
   const [playing, setPlaying] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [tab, setTab] = useState<'tracks' | 'samples'>('tracks')
+  const [aligning, setAligning] = useState<string | null>(null)       // a track id, or 'all'
+  const [confirmAll, setConfirmAll] = useState(false)
   // where a song lands on the timeline: always bar 1 (all songs start together), or at the playhead
   const [insertAt, setInsertAt] = useState<'bar1' | 'playhead'>(() => { try { return localStorage.getItem('ams-insert-at') === 'playhead' ? 'playhead' : 'bar1' } catch { return 'bar1' } })
   const chooseInsert = (v: 'bar1' | 'playhead'): void => { setInsertAt(v); try { localStorage.setItem('ams-insert-at', v) } catch { /* storage unavailable */ } }
@@ -70,12 +72,30 @@ export function Library(): React.ReactElement {
     if (problems.length) { setError(problems.join(' ')); return }
     const tracks = useProjectStore.getState().project.tracks
     useProjectStore.getState().updateTrack(tracks[tracks.length - 1].id, { name: t.title })
-    setNotice(`"${t.title}" was added to the project timeline.`)
+    setNotice(`"${t.title}" was added to the Studio.`)
   }
 
   const act = async (fn: () => Promise<unknown>): Promise<void> => {
     try { await fn(); await load() } catch (e) { setError((e as Error).message) }
   }
+
+  // songs made before 0.11.0 can start with a little lead-in: cut it so that they start on beat 1
+  const stopIfPlaying = (id?: string): void => { if (!id || playing === id) { audio.current?.pause(); setPlaying(null) } }
+  const alignOne = async (t: LibraryTrack): Promise<void> => {
+    stopIfPlaying(t.id); setAligning(t.id); setError(null)
+    try { const r = await api.library.align(t.id); setNotice(`"${t.title}": ${r.message}`) } catch (e) { setError((e as Error).message) }
+    setAligning(null); await load()
+  }
+  const alignEverything = async (): Promise<void> => {
+    stopIfPlaying(); setConfirmAll(false); setAligning('all'); setError(null)
+    try {
+      const r = await api.library.alignAll()
+      setNotice(r.checked === 0 ? 'All songs already start on beat 1.'
+        : `${r.checked} songs checked, ${r.trimmed} cut to start on beat 1. The originals are kept (Restore original).${r.failed.length ? ` ${r.failed.length} failed.` : ''}`)
+    } catch (e) { setError((e as Error).message) }
+    setAligning(null); await load()
+  }
+  const unaligned = tracks.filter((t) => t.exists && !t.aligned && (t.source || 'generated') === 'generated').length
 
   return (
     <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 980 }}>
@@ -107,6 +127,17 @@ export function Library(): React.ReactElement {
           const paths = await window.api.dialog.openAudio()
           for (const p of paths) await act(() => api.library.importFile(p))
         }}>Add files to the library…</button>
+        {unaligned > 0 && (confirmAll ? (
+          <span style={{ ...muted, display: 'flex', gap: 4, alignItems: 'center' }}>
+            Cut the lead-in of {unaligned} older songs? The originals are kept.
+            <button className="btn btn-primary" style={{ fontSize: 11 }} onClick={() => void alignEverything()}>Yes, cut</button>
+            <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setConfirmAll(false)}>No</button>
+          </span>
+        ) : (
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={aligning !== null}
+            title="Songs made before version 0.11 may start with a little silence or lead-in. This cuts it, so that every song starts exactly on beat 1. Stems and imported files are not touched."
+            onClick={() => setConfirmAll(true)}>{aligning === 'all' ? 'Cutting…' : `Start all on beat 1 (${unaligned})`}</button>
+        ))}
         <span style={{ flex: 1 }} />
         <label style={{ ...muted, display: 'flex', gap: 4, alignItems: 'center' }}>Insert at
           <select value={insertAt} onChange={(e) => { chooseInsert(e.target.value as 'bar1' | 'playhead'); e.target.blur() }} style={{ fontSize: 11 }}>
@@ -117,7 +148,7 @@ export function Library(): React.ReactElement {
       </div>}
 
       {tab === 'tracks' && error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
-      {tab === 'tracks' && notice && <div style={{ color: 'var(--green)', fontSize: 12 }}>{notice} <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} onClick={() => setActiveView('timeline')}>Show timeline</button></div>}
+      {tab === 'tracks' && notice && <div style={{ color: 'var(--green)', fontSize: 12 }}>{notice} <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} onClick={() => setActiveView('timeline')}>Show Studio</button></div>}
 
       {tab === 'tracks' && tracks.length === 0 && !error && (
         <div style={{ ...muted, border: '1px dashed var(--border-mid)', borderRadius: 10, padding: 24, lineHeight: 1.7 }}>
@@ -142,11 +173,18 @@ export function Library(): React.ReactElement {
             )}
             <div style={{ ...muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.prompt}>{t.prompt || '—'}</div>
             <div style={muted}>
-              {mmss(t.duration)} · {t.bpm ? `${Math.round(t.bpm)} BPM · ` : ''}{ENGINE[t.engine] ?? (t.engine || t.source)} · {new Date(t.created * 1000).toLocaleString()}{t.seed ? ` · seed ${t.seed}` : ''}
+              {mmss(t.duration)} · {t.bpm ? `${Math.round(t.bpm)} BPM · ` : ''}{t.trimmed ? `cut ${t.trimmed.toFixed(2)} s to beat 1 · ` : ''}{ENGINE[t.engine] ?? (t.engine || t.source)} · {new Date(t.created * 1000).toLocaleString()}{t.seed ? ` · seed ${t.seed}` : ''}
             </div>
           </div>
 
           <button className="btn btn-ghost" style={{ fontSize: 11 }} title="Rename this song" onClick={() => setRenaming(t.id)}>Rename</button>
+          {t.original ? (
+            <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={aligning !== null} title="Undo the cut: put the untouched file back"
+              onClick={() => { stopIfPlaying(t.id); void act(() => api.library.restore(t.id)).then(() => setNotice(`"${t.title}": the original is back.`)) }}>Restore original</button>
+          ) : !t.aligned && t.exists ? (
+            <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={aligning !== null} title="Cut the lead-in so that the song starts exactly on beat 1 (the original is kept)"
+              onClick={() => void alignOne(t)}>{aligning === t.id ? 'Cutting…' : 'Start on beat 1'}</button>
+          ) : null}
           <button className="btn btn-ghost" style={{ fontSize: 16, color: t.favorite ? 'var(--yellow)' : 'var(--text-muted)' }} title="Favourite"
             onClick={() => void act(() => api.library.patch(t.id, { favorite: !t.favorite }))}>{t.favorite ? '★' : '☆'}</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} onClick={() => void toProject(t)}>Add to project</button>

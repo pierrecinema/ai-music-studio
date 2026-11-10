@@ -12,7 +12,7 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 ## Bitte probiere das aus (jeweils kurz)
 1. **Create music:** Beschreibe einen Song, drücke Create. Beobachte den Fortschritt. Ist der Track so lang wie eingegeben?
 2. **Bibliothek:** Taucht der Song in der Bibliothek auf? Abspielen, Umbenennen, Favorit, „Add to project“.
-3. **Zeitleiste:** Audiodateien hineinziehen. Clips verschieben, am Rand kürzen, mit **Ctrl+E** am Abspielkopf teilen, mit **Entf** löschen. Space spielt ab.
+3. **Studio** (früher Zeitleiste): Audiodateien hineinziehen. Clips verschieben, am Rand kürzen, mit **Ctrl+E** am Abspielkopf teilen, mit **Entf** löschen. Space spielt ab.
 4. **Mixer:** Lautstärke, Pan, Mute (M) und Solo (S). Bewegen sich die Pegelanzeigen?
 5. **MIDI:** „+ MIDI track“, Doppelklick auf die Spur, im Klaviatur-Editor Noten setzen (hörbar), verschieben, Länge ziehen.
 6. **Speichern:** Ctrl+S, Programm schließen, wieder öffnen (File → Open). Ist alles da?

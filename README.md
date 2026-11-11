@@ -59,6 +59,8 @@ Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Bet
 
 **Beta testers wanted** ([guide, German](docs/BETA.md)): we are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
+All changes of every version: [CHANGELOG.md](CHANGELOG.md)
+
 ### New in 0.16
 
 - **Stems are kept and exported properly:** after splitting, *Save to library* puts the stems into their own folder in the Library (tab *Stems*, grouped by song, with tags and tempo). *Export…* writes every stem as its own file in the format your DAW wants: WAV 16/24/32-bit, AIFF, FLAC or MP3.

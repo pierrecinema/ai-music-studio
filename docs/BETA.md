@@ -7,6 +7,7 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 - Windows 10 oder 11. Ein Computer mit NVIDIA-Karte ist am schnellsten; AMD, Intel und reine CPU-Rechner funktionieren langsamer
   (Einstellungen → Hardware zeigt, was dein Rechner schafft).
 - Etwa 10 bis 20 GB freien Platz für die KI-Modelle.
+- **Windows-Warnung bei der Installation:** Beim Start des Installers zeigt Windows „Der Computer wurde durch Windows geschützt“, weil der Installer noch nicht signiert ist. Das ist kein Virus. Auf **Weitere Informationen** und dann **Trotzdem ausführen** klicken.
 - Beim ersten Start: **Einstellungen → AI Engines → Install selected**. Das lädt mehrere GB. Danach geht es offline.
 
 ## Bitte probiere das aus (jeweils kurz)

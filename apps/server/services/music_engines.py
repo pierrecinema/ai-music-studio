@@ -148,9 +148,35 @@ def musicgen_ready() -> tuple[bool, str]:
         return False, f"{type(e).__name__}: {e}"
 
 
+# memory one batch row needs while generating (key/value cache of a 30 s step, with guidance), in GB
+_MG_ROW_GB = {"musicgen-small": 0.7, "musicgen-medium": 2.0, "musicgen-large": 2.8}
+MG_MAX_BATCH = 4
+
+
+def musicgen_batch_size(engine_id: str, wanted: int, available_gb: float | None = None) -> int:
+    """How many clips to make side by side on the CPU: up to 4, as many as 70 % of the free RAM allows."""
+    if wanted <= 1:
+        return 1
+    if available_gb is None:
+        try:
+            import psutil
+            available_gb = psutil.virtual_memory().available / 1024**3
+        except Exception:
+            available_gb = 4.0
+    row = _MG_ROW_GB.get(engine_id, 2.0)
+    fit = int((available_gb * 0.7) // row)
+    return max(1, min(wanted, MG_MAX_BATCH, fit))
+
+
 def generate_musicgen(engine_id: str, prompt: str, seconds: int, seed: int, wav_path: str,
                       guidance: float = 3.0, on_step=None) -> float:
     """Render one clip to a WAV file; returns its length in seconds."""
+    return generate_musicgen_batch(engine_id, prompt, seconds, seed, [wav_path], guidance, on_step)[0]
+
+
+def generate_musicgen_batch(engine_id: str, prompt: str, seconds: int, seed: int, wav_paths: list[str],
+                            guidance: float = 3.0, on_step=None) -> list[float]:
+    """Render len(wav_paths) different clips in one pass (see musicgen_long.generate_long_batch)."""
     import numpy as np
     import torch
     from scipy.io import wavfile
@@ -171,7 +197,7 @@ def generate_musicgen(engine_id: str, prompt: str, seconds: int, seed: int, wav_
             _mg["id"] = engine_id
         model, processor, device = _mg["model"], _mg["processor"], _mg["device"]
 
-    from services.musicgen_long import generate_long
+    from services.musicgen_long import generate_long_batch
     from transformers import StoppingCriteria, StoppingCriteriaList
 
     seconds = max(1, min(seconds, LONG_MAX_SECONDS))
@@ -184,10 +210,13 @@ def generate_musicgen(engine_id: str, prompt: str, seconds: int, seed: int, wav_
                 return False
         return StoppingCriteriaList([_Tick()])
 
-    data = generate_long(model, processor, device, prompt, seconds, seed, guidance, rate, on_step=on_step,
-                         to_device=lambda v: v.to(device), make_stop=make_stop)
-    wavfile.write(wav_path, rate, (np.clip(data, -1.0, 1.0) * 32767).astype(np.int16))
-    return len(data) / float(rate)
+    clips = generate_long_batch(model, processor, device, prompt, seconds, seed, guidance, rate, len(wav_paths),
+                                on_step=on_step, to_device=lambda v: v.to(device), make_stop=make_stop)
+    out = []
+    for data, wav_path in zip(clips, wav_paths):
+        wavfile.write(wav_path, rate, (np.clip(data, -1.0, 1.0) * 32767).astype(np.int16))
+        out.append(len(data) / float(rate))
+    return out
 
 
 # ── AudioLDM 2 / MusicLDM (diffusers) ─────────────────────────────────────────

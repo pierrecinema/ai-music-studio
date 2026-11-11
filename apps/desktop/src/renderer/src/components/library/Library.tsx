@@ -3,6 +3,7 @@ import { api, type LibraryTrack } from '../../lib/api'
 import { useProjectStore } from '../../stores/project.store'
 import { useAudioStore } from '../../stores/audio.store'
 import { useUIStore } from '../../stores/ui.store'
+import { WaveformSeek } from '../common/WaveformSeek'
 import { importAudioFiles } from '../timeline/Timeline'
 import { SamplesTab } from './SamplesTab'
 import { seedAnalysis } from '../../beatmatch/store'
@@ -27,6 +28,7 @@ export function Library(): React.ReactElement {
   const [renaming, setRenaming] = useState<string | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [playing, setPlaying] = useState<string | null>(null)
+  const [playBytes, setPlayBytes] = useState<Uint8Array | null>(null)     // the playing file, for its waveform
   const [notice, setNotice] = useState<string | null>(null)
   const tab = useUIStore((s) => s.libraryTab)                       // kept in the store: Stem Splitter opens the Stems tab
   const setTab = useUIStore((s) => s.setLibraryTab)
@@ -67,6 +69,7 @@ export function Library(): React.ReactElement {
     if (playing === t.id) { audio.current?.pause(); setPlaying(null); return }
     try {
       const bytes = await window.api.fs.readFile(t.path)
+      setPlayBytes(new Uint8Array(bytes))
       if (url.current) URL.revokeObjectURL(url.current)
       url.current = URL.createObjectURL(new Blob([new Uint8Array(bytes)]))
       audio.current ??= new Audio()
@@ -200,7 +203,8 @@ export function Library(): React.ReactElement {
 
   function row(t: LibraryTrack): React.ReactElement {
     return (
-        <div key={t.id} style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-mid)', borderRadius: 10, padding: 12, display: 'flex', gap: 12, alignItems: 'center', opacity: t.exists ? 1 : 0.55 }}>
+      <div key={t.id} style={{ background: 'var(--bg-panel)', border: `1px solid ${playing === t.id ? 'var(--accent)' : 'var(--border-mid)'}`, borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 10, opacity: t.exists ? 1 : 0.55 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <button className="btn btn-primary" style={{ width: 38, height: 38, borderRadius: 19, padding: 0, justifyContent: 'center' }} disabled={!t.exists}
             title={playing === t.id ? 'Stop' : 'Play'} onClick={() => void play(t)}>{playing === t.id ? '■' : '▶'}</button>
 
@@ -253,6 +257,9 @@ export function Library(): React.ReactElement {
             <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setConfirmId(t.id)}>Delete</button>
           )}
         </div>
+        {/* while it plays: the real waveform, click or drag to jump */}
+        {playing === t.id && <WaveformSeek fileKey={t.path} bytes={playBytes} audio={audio.current} />}
+      </div>
     )
   }
 }

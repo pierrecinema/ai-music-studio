@@ -14,6 +14,10 @@ in-app update right away. For every new version:
    (A cloud session cannot push tags, so use the workflow. From the desktop, pushing the tag works too.)
 4. Check that the run succeeded and the release exists, then tell the owner.
 
+Code signing (SignPath Foundation) switches on by itself in `release.yml` once the secret `SIGNPATH_API_TOKEN` and the
+variable `SIGNPATH_ORGANIZATION_ID` exist. Every signing request then waits for the owner's approval in SignPath:
+tell the owner when a release is waiting for it.
+
 The in-app update only sees **releases**, not commits: without step 3 the app says there is no update.
 
 ## Checks

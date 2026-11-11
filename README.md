@@ -22,6 +22,11 @@
 **Manual (German, incl. first-time setup):** [docs/MANUAL.md](docs/MANUAL.md)
 **Beta testing (German):** [docs/BETA.md](docs/BETA.md). We are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
+### New in 0.15
+
+- **ACE-Step 1.5 turbo (experimental): songs with vocals also without a suitable graphics card.** The 2B turbo model needs only 8 steps and runs "DiT only" (without its language model), the mode the project recommends for small machines. On the processor it is slow but works with 16 GB RAM; with an NVIDIA card choose the CUDA variant of PyTorch. Install: *Settings → AI Engines → ACE-Step 1.5* (needs Python 3.11 or 3.12 and Git; the model, about 10 GB, downloads on the first song). Written from the project documentation and not yet tested on real hardware.
+- **Code signing prepared** (SignPath Foundation): the release workflow signs the installer as soon as the project is approved.
+
 ### New in 0.14.4
 
 - **MusicGen makes several clips side by side on the CPU:** with more than one song or variation, up to 4 clips are rendered together in one pass (as many as the free memory allows). One clip alone keeps the processor busy only in short bursts, because MusicGen writes one token after the other; clips side by side share every step, so all cores have work and several clips take far less than that many times as long. The graphics card path (DirectML) still makes them one after the other.
@@ -161,6 +166,24 @@ pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 Switch language in **Settings → Appearance → Language**:
 - English, Deutsch, Français, Español, Italiano, Português, 中文, 日本語, 한국어
+
+## Code signing policy
+
+Windows installers are going to be code-signed through the [SignPath Foundation](https://signpath.org) (application in progress; until then the installer is unsigned and Windows SmartScreen warns, see *Install*). Once approved: free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+- Only installers built by the GitHub Actions workflow `.github/workflows/release.yml` from this repository are signed; nothing built elsewhere.
+- Committers and reviewers: [pierrecinema](https://github.com/pierrecinema) (owner; changes are made with the help of AI coding tools and merged by the owner's instruction)
+- Approvers (sign each release): [pierrecinema](https://github.com/pierrecinema)
+
+### Privacy
+
+This program does not send any data on its own except where the user turns a feature on:
+- **Update check:** asks GitHub for the latest release (no personal data).
+- **AI engines and models:** downloads packages from PyPI and model files from Hugging Face when you install them in *Settings → AI Engines / Models*.
+- **AI chat:** sends your chat messages to Anthropic (Claude) or OpenAI (ChatGPT) only if you enter your own API key in *Settings → AI*.
+- **Feedback / logs:** reports and detailed logs are only copied or saved on your PC; nothing is uploaded automatically.
+
+Music generation itself runs locally on your computer.
 
 ## License
 

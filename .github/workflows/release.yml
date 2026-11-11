@@ -19,6 +19,11 @@ jobs:
     name: Windows Installer
     runs-on: windows-latest
     timeout-minutes: 60
+    env:
+      # Code signing through SignPath Foundation: switched on as soon as the secret SIGNPATH_API_TOKEN and the
+      # repository variable SIGNPATH_ORGANIZATION_ID exist (Settings → Secrets and variables → Actions).
+      # Without them the installer is built and released unsigned, as before.
+      SIGNPATH_ON: ${{ secrets.SIGNPATH_API_TOKEN != '' && vars.SIGNPATH_ORGANIZATION_ID != '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +61,52 @@ jobs:
       - name: List dist
         run: Get-ChildItem dist -Recurse | Select-Object FullName
         shell: pwsh
+
+      - name: Upload the unsigned installer for signing
+        id: unsigned
+        if: env.SIGNPATH_ON == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-installer
+          path: dist/*.exe
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Sign the installer (SignPath Foundation)
+        if: env.SIGNPATH_ON == 'true'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'ai-music-studio' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: dist/signed
+
+      # The updater checks the installer against the checksum in latest.yml: after signing the file changed,
+      # so latest.yml gets the new checksum and size. The old blockmap no longer fits and is left out
+      # (the updater then downloads the whole installer, which is fine).
+      - name: Use the signed installer and update latest.yml
+        if: env.SIGNPATH_ON == 'true'
+        shell: pwsh
+        run: |
+          $signed = Get-ChildItem dist/signed -Recurse -Filter *.exe | Select-Object -First 1
+          if (-not $signed) { throw "SignPath returned no .exe" }
+          $exe = Get-Item (Join-Path dist $signed.Name)
+          Copy-Item $signed.FullName $exe.FullName -Force
+          Remove-Item dist/*.blockmap -ErrorAction SilentlyContinue
+          $sig = Get-AuthenticodeSignature $exe.FullName
+          Write-Host "Signature: $($sig.Status) $($sig.SignerCertificate.Subject)"
+          if ($sig.Status -ne 'Valid') { throw "The installer is not validly signed: $($sig.Status)" }
+          $bytes = [IO.File]::ReadAllBytes($exe.FullName)
+          $sha = [Convert]::ToBase64String([Security.Cryptography.SHA512]::Create().ComputeHash($bytes))
+          $y = Get-Content dist/latest.yml -Raw
+          $y = [regex]::Replace($y, '(?m)^(\s*sha512:\s*).*$', "`${1}$sha")
+          $y = [regex]::Replace($y, '(?m)^(\s*size:\s*).*$', "`${1}$($bytes.Length)")
+          Set-Content dist/latest.yml $y -NoNewline -Encoding utf8
+          Get-Content dist/latest.yml
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4

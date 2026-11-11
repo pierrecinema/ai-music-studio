@@ -68,6 +68,11 @@ const DE: Record<string, string> = {
   'For vocals choose a model that sings. ACE-Step runs on any PC but without an NVIDIA card it takes very long (on the processor about an hour or more per minute of music). DiffRhythm needs an NVIDIA card.':
     'Für Gesang wähle ein Modell, das singen kann. ACE-Step läuft auf jedem PC, braucht ohne NVIDIA-Karte aber sehr lange (auf dem Prozessor etwa eine Stunde oder mehr pro Minute Musik). DiffRhythm braucht eine NVIDIA-Karte.',
   'Generating…': 'Erzeuge…',
+  'Cancel': 'Abbrechen',
+  'Cancelling…': 'Wird abgebrochen…',
+  'Cancelled.': 'Abgebrochen.',
+  'finished song(s) are kept in the library.': 'fertige(r) Song(s) bleiben in der Bibliothek.',
+  'Stop creating. Songs that are already finished stay in the library.': 'Erzeugen stoppen. Bereits fertige Songs bleiben in der Bibliothek.',
   'Guidance': 'Guidance',
   'Heun': 'Heun',
   'High band': 'Höhenband',

@@ -19,13 +19,14 @@ export interface Lora {
 }
 export interface MusicResult { audio_file: string; seed: number; duration: number; library_id?: string | null; title?: string; bpm?: number | null; first_beat?: number | null }
 export interface MusicJob {
-  id: string; status: 'queued' | 'running' | 'done' | 'error'
+  id: string; status: 'queued' | 'running' | 'done' | 'error' | 'cancelled'
   audio_file?: string; error?: string; warnings: string[]; engine?: string
   results: MusicResult[]; progress?: { done: number; total: number }
   // live progress from the engine
   stage?: 'load' | 'prepare' | 'render' | 'finish' | 'done'; stage_text?: string
   step?: number | null; step_total?: number | null
   device?: string
+  cancel?: boolean                      // Cancel was pressed, the job stops at the next step
   created?: number; started?: number; updated?: number; stage_started?: number; downloaded_mb?: number
 }
 export interface MusicEngineInfo {
@@ -181,6 +182,7 @@ export const api = {
     }>('/music/status'),
     generate: (body: Record<string, unknown>) => post<{ jobId: string }>('/music/generate', body),
     job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
+    cancel: (id: string) => post<{ cancelled: boolean; status: string }>(`/music/jobs/${id}/cancel`, {}),
     engines: () => get<{ engines: MusicEngineInfo[]; recommended: string; gpu_path: boolean; gpu_models: string[] }>('/music/engines'),
   },
 

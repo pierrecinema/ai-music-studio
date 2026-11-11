@@ -504,8 +504,18 @@ def _device_text() -> str:
         return "Using the CPU."
 
 
+class Cancelled(Exception):
+    """The user pressed Cancel: raised at the next progress report and stops the job."""
+
+
+_procs: dict[str, object] = {}         # job id -> running worker process (DiffRhythm, DirectML), killed on Cancel
+
+
 def _stage(job: dict, stage: str, text: str, step: int | None = None, total: int | None = None) -> None:
-    """Tell the UI what is happening. `step`/`total` give a real progress bar when known."""
+    """Tell the UI what is happening. `step`/`total` give a real progress bar when known.
+    Every engine reports here often, so this is also where a Cancel takes effect."""
+    if job.get("cancel"):
+        raise Cancelled()
     now = time.time()
     if job.get("stage") != stage:
         job["stage_started"] = now
@@ -541,6 +551,8 @@ def _watch_downloads(job: dict, stop: threading.Event) -> None:
     dirs = [d for d in (str(MODEL_DIR), os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")) if d]
     start = sum(_dir_mb(d) for d in dirs if os.path.isdir(d))
     while not stop.wait(2.0):
+        if job.get("cancel"):
+            return
         now_mb = sum(_dir_mb(d) for d in dirs if os.path.isdir(d))
         job["downloaded_mb"] = round(max(0.0, now_mb - start), 1)
         job["updated"] = time.time()
@@ -609,8 +621,11 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
                     try:
                         seconds = generate_dml(req.engine, _compose_prompt(req), duration, seed, wav,
                                                guidance=max(1.0, min(req.cfg_scale + 1.0, 10.0)), on_step=on_step,
-                                               on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"))
+                                               on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
+                                               on_proc=lambda pr: _procs.__setitem__(job_id, pr))
                     except Exception as e:  # fall back: a track on the CPU beats an error
+                        if job.get("cancel"):
+                            raise Cancelled() from e
                         warnings.append(f"The graphics card failed ({_short(e)}); continuing on the processor.")
                         job["device"] = _device_text()
                         use_gpu = False
@@ -672,7 +687,8 @@ def _run_dr_job(job_id: str, req: GenerateMusicRequest) -> None:
                     secs = generate_diffrhythm(
                         _compose_prompt(req), req.lyrics, wanted, wav,
                         on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
-                        on_step=lambda d, t: _stage(job, "render", f"{label}composing the song", d, t))
+                        on_step=lambda d, t: _stage(job, "render", f"{label}composing the song", d, t),
+                        on_proc=lambda pr: _procs.__setitem__(job_id, pr))
                     _stage(job, "finish", f"{label}saving and converting")
                     final = _finalize(wav, req, warnings if i == 0 else [])
                 except Exception as e:
@@ -689,6 +705,25 @@ def _run_dr_job(job_id: str, req: GenerateMusicRequest) -> None:
 
 
 def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
+    job = _jobs[job_id]
+    if job.get("cancel"):
+        return
+    try:
+        _run_engine_job(job_id, req)
+    except Cancelled:
+        pass
+    except Exception as e:  # noqa: BLE001 - a job must never stay "running" forever
+        job.update(status="error", error=_short(e))
+    finally:
+        _procs.pop(job_id, None)
+        _cur["job"] = None if _cur["job"] is job else _cur["job"]
+    if job.get("cancel") and job.get("status") != "done":
+        done = len(job.get("results") or [])
+        job.update(status="cancelled", error=None, stage="done", step=None, step_total=None, finished=time.time(),
+                   stage_text="Cancelled" + (f": {done} finished song(s) kept in the library" if done else ""))
+
+
+def _run_engine_job(job_id: str, req: GenerateMusicRequest) -> None:
     if req.engine == "diffrhythm":
         return _run_dr_job(job_id, req)
     if req.engine != "ace-step":
@@ -820,6 +855,28 @@ async def generate_music(req: GenerateMusicRequest):
     _jobs[job_id] = {"id": job_id, "status": "queued", "created": time.time(), "warnings": [], "results": []}
     threading.Thread(target=_run_job, args=(job_id, req), daemon=True).start()
     return {"jobId": job_id}
+
+
+@router.post("/jobs/{job_id}/cancel")
+async def cancel_job(job_id: str):
+    """Stop a queued or running job. Songs that are already finished stay in the library."""
+    job = _jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Unknown job")
+    if job["status"] not in ("queued", "running"):
+        return {"cancelled": False, "status": job["status"]}
+    job["cancel"] = True
+    if job["status"] == "queued":       # still waiting for another job: it will not start at all
+        job.update(status="cancelled", stage="done", stage_text="Cancelled", finished=time.time())
+        return {"cancelled": True, "status": "cancelled"}
+    job["stage_text"] = "Cancelling: stops at the next step"
+    proc = _procs.get(job_id)
+    if proc is not None:
+        try:
+            proc.kill()  # type: ignore[attr-defined]
+        except Exception:  # noqa: BLE001 - already gone
+            pass
+    return {"cancelled": True, "status": job["status"]}
 
 
 @router.get("/engines")

@@ -815,6 +815,13 @@ export function CreateMusic(): React.ReactElement {
               ? `${tr('Generating…')} ${job?.progress ? `${job.progress.done}/${job.progress.total}` : ''}${job?.step && job.step_total ? `  ${Math.round((job.step / job.step_total) * 100)}%` : ''}`
               : `${tr('Create')}${count > 1 ? `  (${count})` : ''}`}
           </button>
+          {busy && job && (
+            <button className="btn btn-ghost" onClick={() => void useMusicJob.getState().cancel()} disabled={!!job.cancel}
+              title={tr('Stop creating. Songs that are already finished stay in the library.')}
+              style={{ width: '100%', justifyContent: 'center', padding: '8px 0', fontSize: 13, fontWeight: 700, color: 'var(--red)', border: '1px solid var(--red)' }}>
+              {job.cancel ? tr('Cancelling…') : `✕ ${tr('Cancel')}`}
+            </button>
+          )}
         </div>
       </div>
 
@@ -824,6 +831,11 @@ export function CreateMusic(): React.ReactElement {
         {error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
         {notice && <div style={{ color: 'var(--green)', fontSize: 12 }}>{notice}</div>}
         {job?.status === 'error' && <div style={{ color: 'var(--red)', fontSize: 12 }}>{job.error}</div>}
+        {job?.status === 'cancelled' && (
+          <div style={{ color: 'var(--yellow)', fontSize: 12 }}>
+            {tr('Cancelled.')}{job.results.length > 0 ? ` ${job.results.length} ${tr('finished song(s) are kept in the library.')}` : ''}
+          </div>
+        )}
         {job?.warnings.map((w, i) => <div key={i} style={{ color: 'var(--yellow)', fontSize: 11 }}>{w}</div>)}
         {!job && !error && <div style={hint}>{tr("Your songs appear here. Describe the music on the left and press Create.")}</div>}
         {busy && job && <ProgressPanel job={job} />}

@@ -248,7 +248,7 @@ def can_use_dml(engine_id: str) -> bool:
 
 
 def generate_dml(engine_id: str, prompt: str, seconds: int, seed: int, wav_path: str,
-                 guidance: float = 3.0, on_step=None, on_stage=None) -> float:
+                 guidance: float = 3.0, on_step=None, on_stage=None, on_proc=None) -> float:
     """Run MusicGen in the DirectML environment (a separate process) and stream its progress."""
     import json
     import subprocess
@@ -264,26 +264,32 @@ def generate_dml(engine_id: str, prompt: str, seconds: int, seed: int, wav_path:
     proc = subprocess.Popen([dml_python(), worker, req_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             text=True, encoding="utf-8", errors="replace",
                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    if on_proc:
+        on_proc(proc)                             # lets the caller stop it (Cancel button)
     seconds_out, error = None, None
     assert proc.stdout is not None
-    for line in proc.stdout:
-        line = line.strip()
-        if not line.startswith("{"):
-            continue                              # library warnings
-        try:
-            m = json.loads(line)
-        except ValueError:
-            continue
-        if "error" in m:
-            error = m["error"]
-        elif m.get("done"):
-            seconds_out = float(m["seconds"])
-        elif m.get("stage") == "load" and on_stage:
-            on_stage("load", m.get("text", "Loading the model onto the graphics card"))
-        elif m.get("step") is not None and on_step:
-            if m.get("text") and on_stage:
-                on_stage("render", m["text"])
-            on_step(m["step"], m["total"])
+    try:
+        for line in proc.stdout:
+            line = line.strip()
+            if not line.startswith("{"):
+                continue                              # library warnings
+            try:
+                m = json.loads(line)
+            except ValueError:
+                continue
+            if "error" in m:
+                error = m["error"]
+            elif m.get("done"):
+                seconds_out = float(m["seconds"])
+            elif m.get("stage") == "load" and on_stage:
+                on_stage("load", m.get("text", "Loading the model onto the graphics card"))
+            elif m.get("step") is not None and on_step:
+                if m.get("text") and on_stage:
+                    on_stage("render", m["text"])
+                on_step(m["step"], m["total"])
+    except BaseException:
+        proc.kill()          # Cancel button or an error: never leave the worker running
+        raise
     code = proc.wait()
     try:
         os.unlink(req_path)
@@ -322,7 +328,7 @@ def lyrics_to_lrc(lyrics: str, seconds: int) -> str:
 
 
 def generate_diffrhythm(prompt: str, lyrics: str, seconds: int, wav_path: str, on_stage=None, on_step=None,
-                        log=print) -> float:
+                        log=print, on_proc=None) -> float:
     """Run DiffRhythm's infer.py. Returns the length of the written song in seconds."""
     import re
     import shutil
@@ -357,29 +363,35 @@ def generate_diffrhythm(prompt: str, lyrics: str, seconds: int, wav_path: str, o
         on_stage("load", "Loading DiffRhythm. The first time it downloads the models (several GB).")
     proc = subprocess.Popen(cmd, cwd=repo, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                             encoding="utf-8", errors="replace", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    if on_proc:
+        on_proc(proc)                               # lets the caller stop it (Cancel button)
     tail: list[str] = []
     bar = re.compile(r"(\d+)/(\d+)\s*\[")
     assert proc.stdout is not None
     buf = ""
-    while True:                                     # tqdm redraws its line with \r
-        ch = proc.stdout.read(1)
-        if ch == "":
-            break
-        if ch in ("\r", "\n"):
-            line = buf.strip()
-            buf = ""
-            if not line:
-                continue
-            tail.append(line[-300:])
-            del tail[:-30]
-            log("[DiffRhythm] " + line[:300])
-            m = bar.search(line)
-            if m and on_step:
-                if on_stage:
-                    on_stage("render", "Composing the song")
-                on_step(int(m.group(1)), int(m.group(2)))
-        else:
-            buf += ch
+    try:
+        while True:                                     # tqdm redraws its line with \r
+            ch = proc.stdout.read(1)
+            if ch == "":
+                break
+            if ch in ("\r", "\n"):
+                line = buf.strip()
+                buf = ""
+                if not line:
+                    continue
+                tail.append(line[-300:])
+                del tail[:-30]
+                log("[DiffRhythm] " + line[:300])
+                m = bar.search(line)
+                if m and on_step:
+                    if on_stage:
+                        on_stage("render", "Composing the song")
+                    on_step(int(m.group(1)), int(m.group(2)))
+            else:
+                buf += ch
+    except BaseException:
+        proc.kill()          # Cancel button or an error: never leave the worker running
+        raise
     code = proc.wait()
     produced = os.path.join(out_dir, "output.wav")
     if code != 0 or not os.path.exists(produced):

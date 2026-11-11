@@ -62,7 +62,7 @@ const api = {
     readFile: (path: string) => ipcRenderer.invoke('fs:read-file', path)
   },
   shell: {
-    openProject: (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions') => ipcRenderer.invoke('shell:open-project', page),
+    openProject: (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions' | 'donate') => ipcRenderer.invoke('shell:open-project', page),
     openPath: (path: string) => ipcRenderer.invoke('shell:open-path', path)
   },
   project: {

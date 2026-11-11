@@ -1,6 +1,6 @@
 # AI Music Studio
 
-**Open-source AI-powered music studio** — an alternative to ACE Studio built with open-source tools and configurable AI backends (Claude by Anthropic or ChatGPT by OpenAI).
+**Free, open-source AI music studio for Windows:** make songs, seamless loops and stems with AI on your own PC, and arrange them in a full studio with mixer and piano roll. No account, no subscription. The AI assistant works with Claude, ChatGPT, Grok or completely free and local with Ollama.
 
 ## Easy Windows installation
 
@@ -14,6 +14,8 @@ No programming, no command line: just the installer.
 **Updates come automatically:** the app checks for new versions and installs them with one click (Settings → Updates). The SmartScreen warning only comes with the installer downloaded in the browser.
 
 Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Beta testing: [docs/BETA.md](docs/BETA.md)
+
+**Support the project:** AI Music Studio is free and stays free. A ⭐ on GitHub or a small donation via [PayPal](https://paypal.me/djpedroflores) helps to keep it going.
 
 ## Features
 
@@ -60,6 +62,11 @@ Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Bet
 **Beta testers wanted** ([guide, German](docs/BETA.md)): we are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
+
+### New in 0.16.1
+
+- **Support the project:** Settings → About has a *Donate with PayPal* button, next to the GitHub star. Everything stays free.
+- **Cloud Rendering (Pro)** appears in the menu as *Coming soon*: an optional paid extra that renders on fast NVIDIA graphics cards in the cloud. Everything you have now stays free and local.
 
 ### New in 0.16
 

@@ -14,3 +14,6 @@ Claude (Anthropic), ChatGPT (OpenAI) or Grok (xAI) with an API key, or free and 
 
 ### MCP
 MCP clients connect to `http://127.0.0.1:38765/mcp` while the app is running.
+
+### Support the project
+Free and open source. A ⭐ on GitHub or a donation via [PayPal](https://paypal.me/djpedroflores) helps to keep it going.

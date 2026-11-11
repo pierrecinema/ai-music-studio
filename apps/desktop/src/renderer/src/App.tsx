@@ -151,13 +151,15 @@ export default function App(): React.ReactElement {
       case 'library':       return <Library />
       case 'mastering':     return <Mastering />
       case 'karaoke':       return <ComingSoon name="Karaoke Export" icon="🎙" />
+      case 'cloud':         return <ComingSoon name="Cloud Rendering (Pro)" icon="☁"
+        text="Render on fast NVIDIA graphics cards in the cloud: a song in a few minutes, also on a PC without a strong graphics card. An optional paid extra; everything you have now stays free and runs on your own PC." />
       case 'settings':      return <Settings />
       default:              return null
     }
   }
 
   // These views need room: they use the whole main area instead of the strip under the timeline
-  const FULL_VIEWS = ['create', 'library', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'video-composer', 'ai-chat', 'vocal-editor', 'instruments']
+  const FULL_VIEWS = ['create', 'library', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'video-composer', 'ai-chat', 'vocal-editor', 'instruments', 'cloud']
   const panel = renderPanel()
   const fullView = FULL_VIEWS.includes(activeView)
 

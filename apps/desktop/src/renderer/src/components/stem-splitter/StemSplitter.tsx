@@ -4,6 +4,7 @@ import { api } from '../../lib/api'
 import type { StemResult } from '../../types'
 import { ExportDialog, parseTags } from '../common/ExportDialog'
 import { useUIStore } from '../../stores/ui.store'
+import { StemMixer } from './StemMixer'
 
 const STEM_COLORS: Record<string, string> = {
   vocals: '#7c3aed',
@@ -192,29 +193,9 @@ export function StemSplitter(): React.ReactElement {
       {/* Results */}
       {result && (
         <div>
-          <div style={labelStyle}>Results</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
-            {Object.entries(result).map(([stem, path]) => path && (
-              <div
-                key={stem}
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: `1px solid ${STEM_COLORS[stem] ?? 'var(--border)'}`,
-                  borderRadius: 8,
-                  padding: '12px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8
-                }}
-              >
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: STEM_COLORS[stem] ?? 'var(--border)', flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{t(`stemSplitter.${stem}`)}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>Ready to export</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <div style={labelStyle}>Results: listen, mix and export</div>
+          <StemMixer stems={result as Record<string, string>} colors={STEM_COLORS} title={title.trim() || baseName(fileName)}
+            labels={Object.fromEntries(Object.keys(result).map((s) => [s, t(`stemSplitter.${s}`)]))} />
           {/* keep them: the library (folder "Stems") or files for a DAW */}
           <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 560 }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

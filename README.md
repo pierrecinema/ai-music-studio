@@ -19,7 +19,11 @@ No programming, no command line: just the installer.
 
 Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Beta testing: [docs/BETA.md](docs/BETA.md)
 
-**Support the project:** AI Music Studio is free and stays free. A ⭐ on GitHub or a small donation via [PayPal](https://paypal.me/djpedroflores) helps to keep it going.
+### ☕ Buy me a coffee
+
+AI Music Studio is free and stays free, made in my spare time. If it saves you time or makes you a track you love, you can buy me a coffee. It keeps the project going: new features, more AI models and code signing for the installer. A ⭐ on GitHub helps too!
+
+[![Buy me a coffee with PayPal](https://img.shields.io/badge/%E2%98%95%20Buy%20me%20a%20coffee-PayPal-0070ba?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/djpedroflores)
 
 ## Features
 

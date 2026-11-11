@@ -8,7 +8,8 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 - Promo material (not in `main`): branch `promo` – YouTube video (v3, 2:12), `YouTube-Text.txt` (title, description
   under 3000 characters, chapters, hashtags, tags), soundtrack mix and sources, scripts for screenshots / video / mix.
 - YouTube tour: https://youtu.be/F1hakwjWwEc (shown at the top of the README).
-- Donations: https://paypal.me/djpedroflores (Settings → About, README, `.github/FUNDING.yml`). No paid features yet;
+- Donations: https://paypal.me/djpedroflores (Settings → About, README "Buy me a coffee", `.github/FUNDING.yml`); not in the
+  release notes (owner's wish). No paid features yet;
   "Cloud Rendering (Pro)" is only a Coming soon page.
 - Reddit drafts: `docs/reddit-posts.md` (two posts are live; waiting for feedback).
 

@@ -197,6 +197,8 @@ class GenerateMusicRequest(BaseModel):
     lyrics: str = ""
     instrumental: bool = False
     acapella: bool = False                  # only the voice: sung lyrics without any instruments
+    loop: bool = False                      # a loop of exactly loop_bars bars that repeats seamlessly
+    loop_bars: int = Field(4, ge=1, le=32)
     language: str | None = None
     voice: str = "any"                      # any | male | female
     # song parameters (None = let the engine decide)
@@ -306,10 +308,41 @@ def _ace_lyrics(req: GenerateMusicRequest) -> str:
     return text
 
 
+LOOP_TAGS = "loop, steady tempo, consistent groove, no intro, no outro"
+LOOP_DEFAULT_BPM = 120
+
+
+def beats_per_bar(sig: str | None) -> int:
+    try:
+        n = int(str(sig or "4/4").split("/")[0])
+        return n if 1 <= n <= 16 else 4
+    except ValueError:
+        return 4
+
+
+def _prepare_loop(req: GenerateMusicRequest, warnings: list[str]) -> None:
+    """A loop needs a tempo, a bit more music than its length, and a format that loops without a gap."""
+    from services.loopmake import needed_seconds
+    if not req.loop:
+        return
+    if not req.bpm:
+        req.bpm = LOOP_DEFAULT_BPM
+        warnings.append(f"No BPM given: the loop is made at {LOOP_DEFAULT_BPM} BPM.")
+    req.duration = max(10, needed_seconds(req.loop_bars, beats_per_bar(req.time_signature), req.bpm))
+    if req.output_format == "mp3":
+        req.output_format = "flac"
+        warnings.append("Loops are saved as FLAC: MP3 adds a short silence at the start and would not loop seamlessly.")
+    if req.fade_in or req.fade_out:
+        req.fade_in = req.fade_out = 0.0
+        warnings.append("Fades were switched off: a loop must play at full level at its ends.")
+
+
 def _compose_prompt(req: GenerateMusicRequest) -> str:
     parts = [req.prompt.strip()] if req.prompt.strip() else []
     if req.acapella:
         parts.insert(0, ACAPELLA_TAGS)
+    if req.loop:
+        parts.append(LOOP_TAGS)
     if req.bpm:
         parts.append(f"{req.bpm} bpm")
     if req.key:
@@ -346,6 +379,17 @@ def _finalize(wav_path: str, req: GenerateMusicRequest, warnings: list[str]) -> 
         done, note = isolate_vocals(wav_path)
         if note:
             warnings.append(note)
+    if req.loop:
+        from services.loopmake import make_loop
+        info = make_loop(wav_path, req.loop_bars, beats_per_bar(req.time_signature), float(req.bpm or LOOP_DEFAULT_BPM))
+        if info.get("note"):
+            warnings.append(info["note"])
+        if req.bpm and abs(info["bpm"] - req.bpm) > 0.5:
+            warnings.append(f"The model played at {info['bpm']:.1f} BPM instead of {req.bpm}: the loop keeps its real tempo, "
+                            "the Studio stretches it to the project tempo.")
+        final = _finalize_file(wav_path, req, warnings)
+        _start_info[final] = info
+        return final
     try:
         from services.startalign import align_start
         info = align_start(wav_path)
@@ -470,9 +514,9 @@ def _keep(path: str, req: "GenerateMusicRequest", seed: int, seconds: float, eng
         entry = library.add_track(path, {
             "title": req.title, "prompt": req.prompt or "", "lyrics": req.lyrics, "seed": seed,
             "duration": round(seconds, 1), "engine": engine, "source": "generated",
-            "bpm": info.get("bpm"), "first_beat": info.get("first_beat")})
+            "bpm": info.get("bpm"), "first_beat": info.get("first_beat"), "loop_bars": info.get("bars")})
         out = {"audio_file": entry["path"], "library_id": entry["id"], "title": entry["title"],
-               "bpm": info.get("bpm"), "first_beat": info.get("first_beat")}
+               "bpm": info.get("bpm"), "first_beat": info.get("first_beat"), "loop_bars": info.get("bars")}
         if entry.get("duration"):
             out["duration"] = entry["duration"]          # the real length, after the start was cut
         return out
@@ -716,6 +760,8 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
         job.update(status="error", error=_short(e))
     finally:
         _procs.pop(job_id, None)
+        pre = job.get("pre_warnings") or []
+        job["warnings"] = pre + [w for w in (job.get("warnings") or []) if w not in pre]
         _cur["job"] = None if _cur["job"] is job else _cur["job"]
     if job.get("cancel") and job.get("status") != "done":
         done = len(job.get("results") or [])
@@ -851,8 +897,11 @@ async def generate_music(req: GenerateMusicRequest):
             raise HTTPException(400, "A cappella needs a model that can sing: choose ACE-Step or DiffRhythm.")
         req.instrumental = False
         req.negative_prompt = ", ".join(p for p in (req.negative_prompt.strip(), ACAPELLA_NEGATIVE) if p)
+    pre: list[str] = []
+    _prepare_loop(req, pre)
     job_id = uuid.uuid4().hex[:10]
-    _jobs[job_id] = {"id": job_id, "status": "queued", "created": time.time(), "warnings": [], "results": []}
+    _jobs[job_id] = {"id": job_id, "status": "queued", "created": time.time(), "warnings": list(pre), "results": [],
+                     "pre_warnings": pre}
     threading.Thread(target=_run_job, args=(job_id, req), daemon=True).start()
     return {"jobId": job_id}
 

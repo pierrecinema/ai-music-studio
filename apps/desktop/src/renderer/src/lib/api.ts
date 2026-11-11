@@ -17,7 +17,7 @@ export interface Resources {
 export interface Lora {
   id: string; name: string; kind: 'style' | 'artist' | 'sound'; path: string; tags: string[]
 }
-export interface MusicResult { audio_file: string; seed: number; duration: number; library_id?: string | null; title?: string; bpm?: number | null; first_beat?: number | null }
+export interface MusicResult { audio_file: string; seed: number; duration: number; library_id?: string | null; title?: string; bpm?: number | null; first_beat?: number | null; loop_bars?: number | null }
 export interface MusicJob {
   id: string; status: 'queued' | 'running' | 'done' | 'error' | 'cancelled'
   audio_file?: string; error?: string; warnings: string[]; engine?: string

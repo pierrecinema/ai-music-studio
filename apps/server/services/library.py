@@ -99,6 +99,8 @@ def add_track(src: str, meta: dict) -> dict:
         "favorite": False,
         "notes": "",
     }
+    if meta.get("loop_bars"):                         # a seamless loop of this many bars (Create music → Loop)
+        entry["loop_bars"] = meta["loop_bars"]
     if "first_beat" in meta:                          # made since 0.11.0: already cut to beat 1 before saving
         entry["aligned"] = True
     with _lock:

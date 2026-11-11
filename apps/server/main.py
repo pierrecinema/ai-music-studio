@@ -4,36 +4,43 @@ import logging
 
 # Hardware-aware thread tuning for older CPUs (e.g. dual-core)
 # Must happen before any torch/numpy imports
-def cpu_threads_for_ai(logical: int, physical: int | None, override: str | None = None) -> int:
-    """Threads for PyTorch on the CPU.
+def cpu_threads_for_ai(logical: int, physical: int | None = None, override: str | None = None) -> int:
+    """Threads for PyTorch on the CPU: all of them (hyper-threads included).
 
-    One thread per physical core: the AI maths fills a core's arithmetic units, a second (hyper-)thread on the
-    same core adds little and slows both. Small CPUs without hyper-threading keep one core free for the app.
-    AMS_CPU_THREADS overrides it. (Up to 0.14 this was capped at 4, which left a 6-core/12-thread CPU at ~25 %.)
+    The owner wants the processor fully used while a model runs on it, even if the gain from hyper-threads is
+    small. The app stays responsive because the backend runs at a lower priority (_lower_priority).
+    AMS_CPU_THREADS overrides it. (Up to 0.14.0 this was capped at 4, which left a 6-core/12-thread CPU at
+    ~25 %; 0.14.1 used one thread per core, about 50 %.)
     """
     if override and override.strip().isdigit() and int(override) > 0:
         return min(int(override), logical)
-    physical = physical or max(1, logical // 2)
-    if physical < logical:              # hyper-threading: the extra threads stay free for the app and Windows
-        return physical
-    return max(1, logical - 1) if logical <= 4 else logical
+    return max(1, logical)
+
+
+def _lower_priority() -> None:
+    """Below-normal priority: the AI may take every core, the app window and Windows still come first."""
+    try:
+        import psutil
+        p = psutil.Process()
+        if os.name == "nt":
+            p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+        else:
+            p.nice(10)
+    except Exception:
+        pass
 
 
 def _tune_threads() -> None:
     try:
         logical = os.cpu_count() or 2
-        try:
-            import psutil
-            physical = psutil.cpu_count(logical=False)
-        except Exception:
-            physical = None
-        threads = cpu_threads_for_ai(logical, physical, os.environ.get("AMS_CPU_THREADS"))
+        threads = cpu_threads_for_ai(logical, None, os.environ.get("AMS_CPU_THREADS"))
         os.environ["AMS_AI_THREADS"] = str(threads)
         os.environ.setdefault("OMP_NUM_THREADS", str(threads))
         os.environ.setdefault("MKL_NUM_THREADS", str(threads))
         os.environ.setdefault("OPENBLAS_NUM_THREADS", str(threads))
     except Exception:
         pass
+    _lower_priority()
 
 _tune_threads()
 

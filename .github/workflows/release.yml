@@ -36,6 +36,28 @@ jobs:
           $v = (Get-Content apps/desktop/package.json -Raw | ConvertFrom-Json).version
           if ($v -ne '${{ inputs.version }}') { throw "Input ${{ inputs.version }} does not match package.json $v" }
 
+      # The release page starts with the changelog of this version (CHANGELOG.md, section "## <version>").
+      # Checked before the long build so a missing section fails within seconds.
+      - name: Release notes from CHANGELOG.md
+        shell: pwsh
+        run: |
+          $ver = if ('${{ github.event_name }}' -eq 'workflow_dispatch') { '${{ inputs.version }}' } else { '${{ github.ref_name }}'.TrimStart('v') }
+          $lines = Get-Content CHANGELOG.md -Encoding utf8
+          $out = New-Object System.Collections.Generic.List[string]
+          $in = $false
+          foreach ($l in $lines) {
+            if ($l -match '^## ') {
+              if ($in) { break }
+              if ($l -match ('^## ' + [regex]::Escape($ver) + '(\s|$)')) { $in = $true; continue }
+            }
+            if ($in) { $out.Add($l) }
+          }
+          $text = ($out -join "`n").Trim()
+          if (-not $text) { throw "CHANGELOG.md has no section '## $ver'. Add what changed in this version first." }
+          $static = Get-Content .github/release-notes-footer.md -Raw -Encoding utf8
+          $body = "## AI Music Studio v$ver`n`n### What's new`n`n$text`n`n$static"
+          Set-Content -Path release-notes.md -Value $body -Encoding utf8
+
       - name: Setup Node 20
         uses: actions/setup-node@v4
         with:
@@ -131,24 +153,6 @@ jobs:
           draft: false
           prerelease: false
           make_latest: true
-          body: |
-            ## AI Music Studio ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref_name }}
-
-            ### Install
-            Download `AIMusicStudio-Setup-*.exe` below and run it. Unsigned alpha: Windows SmartScreen may warn, choose "More info" then "Run anyway".
-
-            ### First start: AI engines
-            The AI backend needs Python 3.10+ (python.org, tick "Add to PATH"). Then open **Settings → AI Engines** and click **Install selected**. The app sets up its own environment, no manual pip needed.
-
-            ### Hardware
-            - Windows 10/11 (64-bit)
-            - Runs on 8 GB VRAM / 12 GB RAM (automatic low-memory mode) and older CPUs; AMD cards via DirectML (very old cards may need the CPU variant)
-            - NVIDIA: pick the CUDA variant in AI Engines
-
-            ### AI chat
-            Needs an API key for Claude (Anthropic) or ChatGPT (OpenAI), set in Settings → AI.
-
-            ### MCP
-            MCP clients connect to `http://127.0.0.1:38765/mcp` while the app is running.
+          body_path: release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

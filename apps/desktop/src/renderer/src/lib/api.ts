@@ -147,6 +147,13 @@ export const api = {
       model: 'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s'
       stems: string[]
     }) => post<{ vocals?: string; drums?: string; bass?: string; other?: string; piano?: string; guitar?: string }>('/stems/split', body),
+    // the same split in the background, with progress (Stem Splitter view)
+    start: (body: { filePath: string; model: 'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s'; stems: string[] }) =>
+      post<{ job_id: string }>('/stems/jobs', body),
+    job: (id: string) => get<{
+      status: 'running' | 'done' | 'error'; progress: number; text: string; elapsed: number
+      result: Record<string, string> | null; error: string | null
+    }>(`/stems/jobs/${id}`),
   },
 
   audioToMidi: {

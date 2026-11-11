@@ -20,6 +20,8 @@ export function StemSplitter(): React.ReactElement {
   const [fileName, setFileName] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [stage, setStage] = useState('')
+  const [elapsed, setElapsed] = useState(0)
   const [result, setResult] = useState<StemResult | null>(null)
   const [model, setModel] = useState<'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s'>('htdemucs_ft')
   const [stems, setStems] = useState<string[]>(['vocals', 'drums', 'bass', 'other'])
@@ -55,9 +57,16 @@ export function StemSplitter(): React.ReactElement {
     setIsProcessing(true)
     setProgress(0)
     setError(null); setSaved(null); setResult(null)
+    setStage('Starting'); setElapsed(0)
     try {
-      const r = await api.stems.split({ filePath: file, model, stems })
-      setResult(r)
+      const { job_id } = await api.stems.start({ filePath: file, model, stems })
+      for (;;) {                                             // poll the backend once a second
+        await new Promise((r) => setTimeout(r, 1000))
+        const j = await api.stems.job(job_id)
+        setProgress(j.progress); setStage(j.text); setElapsed(j.elapsed)
+        if (j.status === 'done') { setResult(j.result as StemResult); break }
+        if (j.status === 'error') throw new Error(j.error ?? 'unknown error')
+      }
     } catch (err) {
       setError(`Splitting failed: ${(err as Error).message}`)
     } finally {
@@ -121,6 +130,9 @@ export function StemSplitter(): React.ReactElement {
               </button>
             ))}
           </div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, maxWidth: 320 }}>
+            Balanced runs 4 models one after the other: on the processor (AMD / Intel graphics too) Fast is about 4 times quicker.
+          </div>
         </div>
 
         <div>
@@ -158,11 +170,24 @@ export function StemSplitter(): React.ReactElement {
       </button>
 
       {/* Progress */}
-      {isProcessing && (
-        <div style={{ background: 'var(--bg-secondary)', borderRadius: 6, height: 6, overflow: 'hidden' }}>
-          <div style={{ width: `${progress}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.5s' }} />
-        </div>
-      )}
+      {isProcessing && (() => {
+        // remaining time from the pace so far (after the first few percent, once the model is loaded)
+        const left = progress > 8 && progress < 100 ? (elapsed / (progress - 5)) * (100 - progress) : null
+        const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: 560 }}>
+            <div style={{ background: 'var(--bg-secondary)', borderRadius: 6, height: 10, overflow: 'hidden' }}>
+              <div style={{ width: `${progress}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.5s' }} />
+            </div>
+            <div style={{ display: 'flex', gap: 10, fontSize: 12, color: 'var(--text-secondary)' }}>
+              <b>{Math.floor(progress)} %</b>
+              <span>{stage}</span>
+              <span style={{ flex: 1 }} />
+              <span>{mmss(elapsed)}{left !== null ? ` · about ${mmss(left)} left` : ''}</span>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Results */}
       {result && (

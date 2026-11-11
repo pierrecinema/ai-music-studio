@@ -35,6 +35,20 @@ function createWindow(): void {
     mainWindow!.show()
   })
 
+  // Right-click on text: Copy / Cut / Paste / Select all. The app menu is removed (it owned shortcuts the
+  // Studio needs), and Electron shows no context menu by itself, so log texts could not be copied at all.
+  // The Studio's own right-click menus (tracks, clips) prevent this event, so they are not doubled.
+  mainWindow.webContents.on('context-menu', (_e, params) => {
+    const items: Electron.MenuItemConstructorOptions[] = []
+    if (params.isEditable) {
+      items.push({ role: 'cut', enabled: params.editFlags.canCut }, { role: 'copy', enabled: params.editFlags.canCopy },
+        { role: 'paste', enabled: params.editFlags.canPaste }, { type: 'separator' }, { role: 'selectAll' })
+    } else if (params.selectionText.trim()) {
+      items.push({ role: 'copy' }, { type: 'separator' }, { role: 'selectAll' })
+    }
+    if (items.length) Menu.buildFromTemplate(items).popup({ window: mainWindow! })
+  })
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }

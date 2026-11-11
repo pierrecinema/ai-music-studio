@@ -43,8 +43,6 @@ WHAT IT DOES
 🎵 Create music: describe a style, add lyrics, pick a model and get a song with vocals, made on your own PC
 🔁 Create loops: exactly 1 to 16 bars, starting on beat 1 and repeating seamlessly ("Loop 124 BPM 4 bars")
 🎛️ Studio: a real DAW with loop and markers, automation, tempo track, takes, warp markers, return tracks and groups
-🎹 Piano Roll: draw, move and quantize MIDI notes
-🎚️ Mixer: faders, pan, mute and solo, live level meters and master
 📚 Library: every song, loop and stem with its tempo and tags, search by name, tag or BPM
 💾 Export for any DAW: WAV 16/24/32-bit, AIFF, FLAC or MP3, every stem as its own file
 ✂️ Stem Splitter: vocals, drums, bass, piano, guitar and more, separated with Demucs, with a progress bar
@@ -54,9 +52,6 @@ WHAT IT DOES
 💬 AI Chat: a music assistant for chords, lyrics and ideas, with Claude, ChatGPT, Grok or completely free and local with Ollama
 🧠 AI Engines: one-click install of ACE-Step 1.5, MusicGen, DiffRhythm, Demucs and more
 🖥️ Hardware check: see what your PC can run, on CPU or NVIDIA, AMD and Intel graphics
-⌨️ Shortcuts: Ableton Live 12 or Cubase key layout
-🔄 Automatic updates with one click
-🆓 Free and open source (GPL-3.0)
 
 Coming soon: VST3 plugins, Vocal Editor, AI Instruments, Karaoke Export with lyrics, Video Composer
 

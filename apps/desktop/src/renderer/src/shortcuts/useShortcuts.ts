@@ -7,6 +7,17 @@ import { ACTIONS, buildMap, eventToCombo } from './registry'
 export const shortcutState = { winampOpen: false }
 
 const REPEATABLE = new Set(ACTIONS.filter((a) => a.repeatable).map((a) => a.id))
+// Ctrl+C / X / V / A copy clips only in the editors. Everywhere else (logs, library, settings, dialogs), and
+// whenever text is selected, they are the normal text commands: since 0.14.2 log texts could not be copied.
+const TEXT_ACTIONS = new Set(['edit.copy', 'edit.cut', 'edit.paste', 'edit.selectAll'])
+const CLIP_VIEWS = new Set(['timeline', 'piano-roll', 'mixer'])
+
+function wantsTextCommand(id: string): boolean {
+  if (!TEXT_ACTIONS.has(id)) return false
+  if ((window.getSelection()?.toString() ?? '').trim()) return true
+  if (document.querySelector('[role="dialog"], [aria-modal="true"]')) return true
+  return !CLIP_VIEWS.has(useUIStore.getState().activeView)
+}
 const TEXT_INPUT_TYPES = new Set(['text', 'number', 'search', 'password', 'email', 'url', 'tel', ''])
 
 // Where typing needs the keys itself: text fields and text areas. A drop-down list (Grid, Count-in, ...) is
@@ -41,6 +52,7 @@ export function useShortcuts(): void {
       // Delete or Backspace, so those still reach the editor: after choosing a grid size the focus stays on the
       // list, and Delete must not silently do nothing.
       if (isEditable(e.target, combo) && !/^(F\d+|Escape)$/.test(combo)) return
+      if (wantsTextCommand(id)) return                     // the browser copies / pastes the text itself
       const el = e.target as HTMLElement | null
       if (el && (el.tagName === 'SELECT' || el.tagName === 'BUTTON' || el.tagName === 'INPUT')) el.blur()   // keys go to the Studio again
       if (shortcutState.winampOpen && id !== 'app.winamp') return

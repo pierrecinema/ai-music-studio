@@ -60,7 +60,7 @@ export function FeedbackButton(): React.ReactElement {
       </button>
       {open && (
         <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9700, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(520px, 100%)', background: 'var(--bg-primary)', border: '1px solid var(--border-mid)', borderRadius: 10, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} style={{ width: 'min(520px, 100%)', background: 'var(--bg-primary)', border: '1px solid var(--border-mid)', borderRadius: 10, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>Feedback</div>
             <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
               Describe what you did and what went wrong (or what you wish for). The report adds your system details,

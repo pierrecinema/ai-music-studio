@@ -6,6 +6,7 @@ on its GitHub release page, so every version needs a `## <version>` section here
 ## 0.16.2
 
 - **Stem Splitter fixed:** with current PyTorch versions every stem came out as an empty file (shown as "Ready to export"), so *Save to library* said "There were no stem files to save". Audio is now read and written without torchaudio's file functions, the stems keep the song's own level, and a missing Demucs or a failed split shows its reason instead of empty stems.
+- **Export:** an empty file now says so instead of "Format not recognised".
 - **Library → Stems:** *Open Library → Stems* in the Stem Splitter now opens the Stems tab, and *My tracks* points to the Stems tab when stems are saved.
 
 ## 0.16.1

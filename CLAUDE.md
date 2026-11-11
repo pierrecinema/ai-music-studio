@@ -20,6 +20,8 @@ in-app update right away. For every new version:
 Code signing (SignPath Foundation) switches on by itself in `release.yml` once the secret `SIGNPATH_API_TOKEN` and the
 variable `SIGNPATH_ORGANIZATION_ID` exist. Every signing request then waits for the owner's approval in SignPath:
 tell the owner when a release is waiting for it.
+Status: the first SignPath Foundation application was declined on 2026-11-11 for too little public visibility
+(stars, forks, external references); the owner plans to reapply later. Until then releases stay unsigned.
 
 The in-app update only sees **releases**, not commits: without step 3 the app says there is no update.
 

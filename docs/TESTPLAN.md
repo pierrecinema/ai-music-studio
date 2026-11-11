@@ -63,6 +63,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 5.2 | neu: „4 Stems on the graphics card“ | 4 Stems, „Done (DirectML)“ auf A; Zeit notieren | | | |
 | 5.3 | „Fast“ | 4 Stems auf dem Prozessor; Zeit notieren | | | |
 | 5.4 | „Balanced“ / „6 Stems“ | funktioniert (dauert lange) | | | |
+| 5.4b | neu: während einer Trennung ✕ Cancel, dann eine neue starten | bricht ab, neue startet sofort (kein Hängen bei 0 %) | | | |
 | 5.5 | Stem-Mixer: Play, Solo, Mute, Lautstärke, Wellenform spulen | hört sich richtig an | | | |
 | 5.6 | Vocals stumm → Export remix… | Karaoke-Datei „… – no vocals“ | | | |
 | 5.7 | → MIDI bei Bass oder Vocals | neue MIDI-Spur mit Noten, Piano Roll zeigt sie | | | |

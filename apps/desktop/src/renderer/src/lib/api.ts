@@ -150,9 +150,10 @@ export const api = {
     // the same split in the background, with progress (Stem Splitter view)
     start: (body: { filePath: string; model: 'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s' | 'mdx_vocals' | 'mdx_4stems'; stems: string[] }) =>
       post<{ job_id: string }>('/stems/jobs', body),
+    cancel: (id: string) => post<{ ok: boolean }>(`/stems/jobs/${id}/cancel`, {}),
     remix: (body: { stems: Record<string, string>; gains: Record<string, number> }) => post<{ path: string }>('/stems/remix', body),
     job: (id: string) => get<{
-      status: 'running' | 'done' | 'error'; progress: number; text: string; elapsed: number
+      status: 'running' | 'done' | 'error' | 'cancelled'; progress: number; text: string; elapsed: number
       result: Record<string, string> | null; error: string | null
     }>(`/stems/jobs/${id}`),
   },

@@ -349,6 +349,8 @@ def export_files(items: list[dict], folder: str, fmt: str) -> list[str]:
         src = Path(it["path"])
         if not src.exists():
             raise FileNotFoundError(str(src))
+        if src.stat().st_size == 0:
+            raise ValueError(f"{src.name} is empty: the audio was not created. Split or generate it again.")
         base = re.sub(r'[<>:"/\\|?*\x00-\x1f]+', " ", it.get("name") or src.stem)       # Windows file name rules
         base = re.sub(r"\s+", " ", base).strip(" .")[:120] or "audio"
         dest = dest_dir / f"{base}.{ext}"

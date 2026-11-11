@@ -18,6 +18,9 @@ interface UIState {
   pianoZoom: number
   grid: string          // id of a grid size (see edit/grid.ts)
   snap: boolean         // snap to the grid while moving, trimming and drawing
+  libraryTab: 'tracks' | 'stems' | 'samples'   // open tab of the Library (other views can open it on a tab)
+
+  setLibraryTab: (tab: 'tracks' | 'stems' | 'samples') => void
 
   setGrid: (id: string) => void
   toggleSnap: () => void
@@ -38,6 +41,8 @@ export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
       activeView: 'timeline',
+      libraryTab: 'tracks',
+      setLibraryTab: (libraryTab) => set({ libraryTab }),
       theme: 'dark',
       sidebarWidth: 220,
       timelineHeight: 240,

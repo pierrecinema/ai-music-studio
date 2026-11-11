@@ -212,7 +212,7 @@ export function StemSplitter(): React.ReactElement {
               }}>{saving ? 'Saving…' : saved !== null ? `✓ ${saved} stems saved` : 'Save to library'}</button>
               <button className="btn btn-ghost" onClick={() => setExporting(true)}>{t('stemSplitter.export')}…</button>
               {saved !== null && (
-                <button className="btn btn-ghost" onClick={() => useUIStore.getState().setActiveView('library')}>Open Library → Stems</button>
+                <button className="btn btn-ghost" onClick={() => { useUIStore.getState().setLibraryTab('stems'); useUIStore.getState().setActiveView('library') }}>Open Library → Stems</button>
               )}
             </div>
           </div>

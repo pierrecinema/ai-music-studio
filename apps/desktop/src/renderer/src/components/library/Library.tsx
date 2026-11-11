@@ -28,7 +28,8 @@ export function Library(): React.ReactElement {
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [playing, setPlaying] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
-  const [tab, setTab] = useState<'tracks' | 'stems' | 'samples'>('tracks')
+  const tab = useUIStore((s) => s.libraryTab)                       // kept in the store: Stem Splitter opens the Stems tab
+  const setTab = useUIStore((s) => s.setLibraryTab)
   const [editTags, setEditTags] = useState<string | null>(null)
   const [exporting, setExporting] = useState<{ title: string; items: Array<{ path: string; name: string }> } | null>(null)
   const [aligning, setAligning] = useState<string | null>(null)       // a track id, or 'all'
@@ -183,9 +184,12 @@ export function Library(): React.ReactElement {
         </div>
       ))}
 
-      {tab === 'tracks' && tracks.length === 0 && !error && (
+      {tab === 'tracks' && inTab.length > 0 && tracks.some((x) => x.source === 'stem') && (
+        <div style={muted}>Saved stems are kept in the <button className="btn btn-ghost" style={{ fontSize: 11, padding: '1px 8px' }} onClick={() => setTab('stems')}>Stems</button> tab, grouped by song.</div>
+      )}
+      {tab === 'tracks' && inTab.length === 0 && !error && (
         <div style={{ ...muted, border: '1px dashed var(--border-mid)', borderRadius: 10, padding: 24, lineHeight: 1.7 }}>
-          No tracks yet. Songs made in <b>Create music</b> appear here automatically.
+          No tracks yet. Songs made in <b>Create music</b> appear here automatically.{tracks.some((x) => x.source === 'stem') && <> Your saved stems are in the <b>Stems</b> tab.</>}
         </div>
       )}
 

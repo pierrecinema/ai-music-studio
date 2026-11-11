@@ -2,6 +2,19 @@
 
 **Open-source AI-powered music studio** — an alternative to ACE Studio built with open-source tools and configurable AI backends (Claude by Anthropic or ChatGPT by OpenAI).
 
+## Easy Windows installation
+
+No programming, no command line: just the installer.
+
+1. **Download** `AIMusicStudio-Setup-<version>.exe` from the **[latest release](https://github.com/pierrecinema/ai-music-studio/releases/latest)**.
+2. **Run it.** The first time, Windows shows a blue window *"Windows protected your PC"* (Microsoft Defender SmartScreen), because the installer is not code-signed yet and Windows does not know the publisher. It is not a virus warning: click **More info**, then **Run anyway**. Some antivirus programs ask as well.
+3. **Start AI Music Studio.** The Studio, piano roll, mixer and library work right away.
+4. **For the AI features** (songs, loops, stems, mastering): install [Python](https://www.python.org/downloads/) 3.11 or 3.12 once (tick *"Add python.exe to PATH"*), then in the app open **Settings → AI Engines** and click **Install selected**. The app sets everything up by itself and downloads the models (several GB, once).
+
+**Updates come automatically:** the app checks for new versions and installs them with one click (Settings → Updates). The SmartScreen warning only comes with the installer downloaded in the browser.
+
+Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Beta testing: [docs/BETA.md](docs/BETA.md)
+
 ## Features
 
 | Feature | Technology |
@@ -44,8 +57,7 @@
 | <img src="docs/screenshots/settings-general.png" alt="Settings → General" width="100%"><br>**Settings → General** – language and VST plugin folders | <img src="docs/screenshots/settings-audio.png" alt="Settings → Audio" width="100%"><br>**Settings → Audio** – sample rate and buffer size |
 | <img src="docs/screenshots/settings-appearance.png" alt="Settings → Appearance" width="100%"><br>**Settings → Appearance** – dark or light theme | <img src="docs/screenshots/settings-updates.png" alt="Settings → Updates" width="100%"><br>**Settings → Updates** – automatic updates from GitHub releases |
 
-**Manual (German, incl. first-time setup):** [docs/MANUAL.md](docs/MANUAL.md)
-**Beta testing (German):** [docs/BETA.md](docs/BETA.md). We are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
+**Beta testers wanted** ([guide, German](docs/BETA.md)): we are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
 ### New in 0.15.1
 
@@ -94,14 +106,6 @@
 - **Detailed log for beta testers** in the Feedback dialog (on/off, copy, save as file).
 - AI engines are no longer shown as "not installed" when they are.
 
-## Install (Windows)
-
-Download `AIMusicStudio-Setup-<version>.exe` from the [latest release](https://github.com/pierrecinema/ai-music-studio/releases/latest) and run it.
-
-**Windows will warn you the first time:** a blue window "Windows protected your PC" (Microsoft Defender SmartScreen) appears because the installer is not code-signed yet, so Windows does not know the publisher. It is not a virus warning. Click **More info**, then **Run anyway**. Some antivirus programs ask as well. The warning comes with the installer downloaded in the browser; updates the app downloads itself normally do not trigger it.
-
-Then open **Settings → AI Engines → Install selected** (needs Python 3.10+; downloads several GB once).
-
 ## Low-resource mode (8 GB VRAM / 12 GB RAM)
 
 The backend measures VRAM/RAM at startup (`GET /health` → `hardware.resources`) and switches to
@@ -131,7 +135,9 @@ ai-music-studio/
 │   └── vst-bridge/   # VST3 Bridge Plugin (JUCE C++)
 ```
 
-## Getting Started
+## Optional: build from source (developers only)
+
+*Not needed to use the app: the [Windows installer](#easy-windows-installation) is all you need.* This is for people who want to change the code.
 
 ### Prerequisites
 
@@ -179,7 +185,9 @@ Open **Settings → AI** in the app:
 
 The AI assistant helps with chord progressions, lyrics, music theory, and generation tasks.
 
-## Installing Optional AI Models
+## Optional: installing AI models by hand (developers only)
+
+Users install everything with **Settings → AI Engines → Install selected** in the app. The commands below are only for a development setup:
 
 ```bash
 # Stem separation (Meta Demucs) — requires ~2 GB

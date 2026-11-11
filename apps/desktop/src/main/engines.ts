@@ -84,6 +84,28 @@ export function hasDr(): boolean {
   return existsSync(drPython()) && existsSync(join(drRepo(), 'infer', 'infer.py'))
 }
 
+// ACE-Step 1.5: songs with vocals that also run on a CPU (2B turbo model, 8 steps). Like DiffRhythm it is not a
+// pip package: the repository is cloned next to the models and installed into its own environment.
+export function ace15Dir(): string {
+  return join(app.getPath('userData'), 'engines', 'venv-ace15')
+}
+
+export function ace15Python(): string {
+  return join(ace15Dir(), 'Scripts', 'python.exe')
+}
+
+export function ace15Repo(): string {
+  return join(modelsDir(), 'ace-step-1.5', 'ACE-Step-1.5')
+}
+
+export function ace15Checkpoints(): string {
+  return join(modelsDir(), 'ace-step-1.5', 'checkpoints')
+}
+
+export function hasAce15(): boolean {
+  return existsSync(ace15Python()) && existsSync(join(ace15Repo(), 'acestep', 'inference.py'))
+}
+
 export function hasVenv(): boolean {
   return existsSync(venvPython())
 }
@@ -165,6 +187,7 @@ export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   for (const [g, names] of Object.entries(GROUP_PROBE)) installed[g] = names.some((n) => have.has(n))
   installed.gpuamd = hasDml()
   installed.diffrhythm = hasDr()
+  installed.ace15 = hasAce15()
   return {
     pythonFound: py !== null,
     pythonVersion: py?.version ?? null,
@@ -262,6 +285,44 @@ async function installDiffRhythm(py: PythonCmd | null, log: (l: string) => void)
   return { ok: true }
 }
 
+async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
+  if (!py) return { ok: false, error: 'Python 3.11 or 3.12 was not found.' }
+  const minor = Number(py.version.split('.')[1])
+  if (minor < 11 || minor > 12) {
+    return { ok: false, error: `ACE-Step 1.5 needs Python 3.11 or 3.12 (found ${py.version}). Install Python 3.12 from python.org and try again.` }
+  }
+  const git = await capture('git', ['--version'], 8000)
+  if (git.code !== 0) return { ok: false, error: 'Git is needed once to fetch ACE-Step 1.5. Install Git and try again.' }
+  if (!existsSync(join(ace15Repo(), 'acestep', 'inference.py'))) {
+    mkdirSync(join(ace15Repo(), '..'), { recursive: true })
+    if (await run('git', ['clone', '--depth', '1', 'https://github.com/ACE-Step/ACE-Step-1.5.git', ace15Repo()], log) !== 0) {
+      return { ok: false, error: 'Could not fetch ACE-Step 1.5 from GitHub.' }
+    }
+  }
+  if (!existsSync(ace15Python())) {
+    mkdirSync(join(ace15Dir(), '..'), { recursive: true })
+    if (await run(py.cmd, [...py.args, '-m', 'venv', ace15Dir()], log) !== 0) return { ok: false, error: 'Could not create the ACE-Step 1.5 environment.' }
+    await run(ace15Python(), ['-m', 'pip', 'install', '--upgrade', 'pip'], log)
+  }
+  if (torchVariant === 'cuda') {
+    log('NVIDIA card: installing the CUDA build of PyTorch first.')
+    if (await run(ace15Python(), ['-m', 'pip', 'install', 'torch', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cu128'], log) !== 0) {
+      return { ok: false, error: 'Installing PyTorch (CUDA) for ACE-Step 1.5 failed (see log).' }
+    }
+  } else {
+    log('No NVIDIA card chosen: ACE-Step 1.5 runs on the processor (PyTorch CPU build).')
+    if (await run(ace15Python(), ['-m', 'pip', 'install', 'torch', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cpu'], log) !== 0) {
+      return { ok: false, error: 'Installing PyTorch (CPU) for ACE-Step 1.5 failed (see log).' }
+    }
+  }
+  if (await run(ace15Python(), ['-m', 'pip', 'install', '-e', ace15Repo()], log) !== 0) {
+    return { ok: false, error: 'Installing the ACE-Step 1.5 packages failed (see log).' }
+  }
+  mkdirSync(ace15Checkpoints(), { recursive: true })
+  log('ACE-Step 1.5 is installed. The model (about 10 GB) is downloaded on the first song.')
+  return { ok: true }
+}
+
 async function installDml(py: PythonCmd | null, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
   if (!py) return { ok: false, error: 'Python 3.11 was not found.' }
   const minor = Number(py.version.split('.')[1])
@@ -337,6 +398,11 @@ export async function installGroups(
     log('=== gpuamd (graphics card support for AMD and Intel) ===')
     const r = await installDml(py, log)
     if (!r.ok) { failed.push('gpuamd'); log(r.error ?? 'failed') }
+  }
+  if (groups.includes('ace15')) {
+    log('=== ace15 (ACE-Step 1.5: songs with vocals, also on the processor) ===')
+    const r = await installAce15(py, torchVariant, log)
+    if (!r.ok) { failed.push('ace15'); log(r.error ?? 'failed') }
   }
   if (groups.includes('diffrhythm')) {
     log('=== diffrhythm (full songs in one go, needs an NVIDIA card) ===')

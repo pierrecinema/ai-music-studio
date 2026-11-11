@@ -31,6 +31,8 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 18. **Bibliothek: auf Schlag 1 schneiden:** Einen älteren Song schneiden lassen, danach *Restore original*. Ist das Original wieder da?
 19. **Loop erzeugen (neu in 0.14):** In Create music *Create loop* einschalten, 4 Takte, z. B. 124 BPM. Den Loop ins Studio legen, mehrmals Strg+D drücken und abspielen. Hört man an den Übergängen einen Knacks, eine Lücke oder einen Rhythmus-Holperer? Bitte Modell, BPM und Taktzahl im Bericht nennen.
 
+20. **ACE-Step 1.5 (neu in 0.15, experimentell):** Einstellungen → AI Engines → *ACE-Step 1.5* installieren, dann in Create music das Modell *ACE-Step 1.5 turbo* wählen und einen kurzen Song (30 s) mit Text erzeugen. Kommt Gesang? Wie lange dauert es, und läuft es auf der CPU oder der Grafikkarte? Bitte das ausführliche Log anhängen, auch wenn es klappt.
+
 ## So meldest du ein Problem
 1. Unten rechts auf **Feedback** klicken.
 2. Beschreiben, was du getan hast und was passiert ist.

@@ -70,9 +70,13 @@ ENGINES: list[EngineInfo] = [
                "Music clips of about 10 s, trained on music only (latent diffusion).",
                "Research model, check the model card (assume non-commercial)", False, 10, 8, 4,
                "roughly 3 to 10 minutes for 10 s on a CPU", False, "ucsd-reach/musicldm"),
-    EngineInfo("ace-step-1.5", "ACE-Step 1.5", "planned",
-               "Newer ACE-Step with very fast generation and native LoRA training.",
-               "Apache-2.0", True, 600, 12, 8, "slow on a CPU", True, "ACE-Step/Ace-Step1.5", "Not built in yet."),
+    EngineInfo("ace-step-1.5", "ACE-Step 1.5 turbo (vocals, also on the CPU, experimental)", "built-in",
+               "Songs with vocals from your lyrics, 10 s to 10 min. The 2B turbo model needs only 8 steps, so it is "
+               "the singing model that also works on a PC without a suitable graphics card. Written from the project "
+               "documentation and not yet tested on real hardware: feedback welcome.",
+               "MIT (code); see the model card for the weights", True, 600, 12, 4,
+               "slow on a CPU (minutes per song), but it works with 16 GB RAM", True, "ACE-Step/Ace-Step1.5",
+               "Install it in Settings → AI Engines → ACE-Step 1.5."),
 ]
 
 
@@ -101,6 +105,8 @@ def rate(e: EngineInfo, m: Machine) -> dict:
             why = "" if m.vram_gb >= 12 else "8 GB is the stated minimum (with chunked decoding)."
             if dr_python() is None:
                 why = (why + " Not installed yet: Settings → AI Engines → DiffRhythm.").strip()
+    if e.id == "ace-step-1.5" and ace15_python() is None and status != "unavailable":
+        why = (why + " Not installed yet: Settings → AI Engines → ACE-Step 1.5.").strip()
     gpu_note = ""
     if e.id == "musicgen-small" and dml_python() is not None and status != "unavailable":
         status, why = "ready", "Runs on your graphics card through DirectML: about 2.5 minutes per 15 s clip (measured on an AMD Radeon R9 290)."
@@ -330,6 +336,84 @@ def generate_dml(engine_id: str, prompt: str, seconds: int, seed: int, wav_path:
 
 
 # ── DiffRhythm (own environment, cloned repository, subprocess) ──────────────
+
+# ── ACE-Step 1.5 (own environment, cloned repository, subprocess) ──────────────
+
+LANG_CODES = {"english": "en", "german": "de", "deutsch": "de", "french": "fr", "spanish": "es", "italian": "it",
+              "portuguese": "pt", "chinese": "zh", "japanese": "ja", "korean": "ko", "russian": "ru", "dutch": "nl"}
+
+
+def ace15_python() -> str | None:
+    p = os.environ.get("AMS_ACE15_PYTHON")
+    return p if p and os.path.exists(p) else None
+
+
+def ace15_repo() -> str | None:
+    p = os.environ.get("AMS_ACE15_REPO")
+    return p if p and os.path.exists(os.path.join(p, "acestep", "inference.py")) else None
+
+
+def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_proc=None, log=print) -> float:
+    """Run ACE-Step 1.5 (services/ace15_worker.py) in its own environment. Returns the song length in seconds.
+
+    `song`: caption, lyrics, instrumental, seconds, bpm, key, time_signature, language, seed."""
+    import json
+    import subprocess
+    import tempfile
+
+    py, repo = ace15_python(), ace15_repo()
+    if not py or not repo:
+        raise RuntimeError("ACE-Step 1.5 is not installed. Open Settings → AI Engines, tick ACE-Step 1.5 and press Install selected.")
+    lang = (song.get("language") or "").strip().lower()
+    req = dict(song, out=wav_path, repo=repo, checkpoints=os.environ.get("AMS_ACE15_CKPT", ""),
+               language=LANG_CODES.get(lang, lang[:2] if len(lang) == 2 else "unknown"))
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+        json.dump(req, f)
+        req_path = f.name
+    worker = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ace15_worker.py")
+    env = dict(os.environ, PYTHONPATH=repo, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1", ACESTEP_INIT_LLM="false")
+    if req["checkpoints"]:
+        env["ACESTEP_CHECKPOINTS_DIR"] = req["checkpoints"]
+    proc = subprocess.Popen([py, worker, req_path], cwd=repo, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            text=True, encoding="utf-8", errors="replace",
+                            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    if on_proc:
+        on_proc(proc)                               # lets the caller stop it (Cancel button)
+    seconds_out, error, tail = None, None, []
+    assert proc.stdout is not None
+    try:
+        for line in proc.stdout:
+            line = line.strip()
+            if not line.startswith("{"):
+                if line:
+                    tail.append(line[-300:])
+                    del tail[:-20]
+                    log("[ACE-Step 1.5] " + line[:300])
+                continue
+            try:
+                m = json.loads(line)
+            except ValueError:
+                continue
+            if "error" in m:
+                error = m["error"]
+            elif m.get("done"):
+                seconds_out = float(m["seconds"])
+            elif m.get("stage") and on_stage:
+                on_stage(m["stage"], m.get("text", ""))
+            elif m.get("step") is not None and on_step:
+                on_step(int(m["step"]), int(m.get("total", 100)))
+    except BaseException:
+        proc.kill()          # Cancel button or an error: never leave the worker running
+        raise
+    code = proc.wait()
+    try:
+        os.unlink(req_path)
+    except OSError:
+        pass
+    if seconds_out is None:
+        raise RuntimeError(error or ("ACE-Step 1.5 stopped (exit code %s): %s" % (code, " | ".join(tail[-3:]))))
+    return seconds_out
+
 
 def dr_python() -> str | None:
     p = os.environ.get("AMS_DR_PYTHON")

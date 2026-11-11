@@ -13,6 +13,7 @@ const GROUPS: Group[] = [
   { id: 'acestep', name: 'Music generator (ACE-Step)', desc: 'Full songs + LoRA. Needs Git installed. Model weights download on first use.', note: 'Large download.' },
   { id: 'musicgen', name: 'Light music generators (MusicGen, AudioLDM 2, MusicLDM)', desc: 'Instrumental clips of 10 to 30 s. They run on old PCs without a graphics card, but take minutes.', note: 'Model weights are for non-commercial use (CC-BY-NC). Each model downloads 2 to 13 GB on first use.' },
   { id: 'gpuamd', name: 'Graphics card support (AMD / Intel, DirectX 12)', desc: 'Lets MusicGen small compose on your graphics card, about 3 times faster than the processor on an AMD Radeon R9 290. Installs its own environment (about 1.5 GB).', note: 'Experimental: torch-directml is a 2024 preview build. Only MusicGen small uses it so far; ACE-Step needs more graphics memory than old cards have.' },
+  { id: 'ace15', name: 'ACE-Step 1.5: songs with vocals, also without a graphics card (experimental)', desc: 'Songs with vocals from your lyrics, 10 s to 10 min. The small turbo model (2B, 8 steps) also runs on the processor: slow, but it works with 16 GB RAM. With an NVIDIA card choose the CUDA variant of PyTorch above. Needs Python 3.11 or 3.12 and Git.', note: 'Installs its own environment (several GB) and fetches the project from GitHub; the model (about 10 GB) downloads on the first song. Code MIT; check the model card on Hugging Face for the weights. Written from the project documentation and not yet tested on real hardware: please report what happens.' },
   { id: 'diffrhythm', name: 'DiffRhythm: full songs in one go (experimental, NVIDIA only)', desc: 'Songs with vocals from your lyrics, 95 s up to 4:45 in one step. Needs an NVIDIA graphics card with 8 GB or more, Git, and eSpeak NG on Windows.', note: 'Installs its own environment (several GB) and fetches the project from GitHub. Written from the project code and not yet tested on real hardware: please report what happens.' },
   { id: 'training', name: 'LoRA training (ACE-Step)', desc: 'Packages for training your own LoRA. Needs an NVIDIA graphics card to run; without one you can still build a bundle for another PC.', note: 'The trainer itself (35 MB) is fetched once from the ACE-Step project when you start a training. Needs Git.' },
   { id: 'muscriptor', name: 'Audio → MIDI (MuScriptor)', desc: 'More accurate transcription.', note: 'CC BY-NC 4.0: non-commercial use only, and only for music you have the rights to transcribe.' },
@@ -92,7 +93,7 @@ export function EnginesTab(): React.ReactElement {
         })}
       </div>
 
-      {picked.has('torch') && (
+      {(picked.has('torch') || picked.has('ace15')) && (
         <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
           PyTorch variant{' '}
           <select value={torch} onChange={e => setTorch(e.target.value)} disabled={busy}>

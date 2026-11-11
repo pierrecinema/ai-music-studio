@@ -828,7 +828,64 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
                    stage_text="Cancelled" + (f": {done} finished song(s) kept in the library" if done else ""))
 
 
+def _run_ace15_job(job_id: str, req: GenerateMusicRequest) -> None:
+    """ACE-Step 1.5 turbo: songs with vocals, also on the CPU, in its own environment."""
+    from services.music_engines import generate_ace15
+    job = _jobs[job_id]
+    warnings: list[str] = []
+    duration = max(10, min(req.duration or 60, 600))
+    if req.duration is None:
+        warnings.append("Length 'Auto' uses 60 s with this engine.")
+    if req.loras:
+        warnings.append("ACE-Step 1.5 does not use the LoRA styles of ACE-Step v1 yet; they were ignored.")
+    if req.source_track:
+        warnings.append("ACE-Step 1.5 cannot work from a source track here yet; it was ignored.")
+    total = req.songs * req.variations * req.queue
+    base_seed = req.seed if req.seed is not None else random.randint(0, 2**31 - 1)
+    out_dir = Path(tempfile.gettempdir()) / "ams_music"
+    out_dir.mkdir(exist_ok=True)
+    results: list[dict] = []
+    job["progress"] = {"done": 0, "total": total}
+    with _gen_lock:
+        job["status"] = "running"
+        job["started"] = time.time()
+        job["device"] = _device_text()
+        stop_watch = threading.Event()
+        threading.Thread(target=_watch_downloads, args=(job, stop_watch), daemon=True).start()
+        try:
+            for i in range(total):
+                seed = random.randint(0, 2**31 - 1) if req.randomize_seed else base_seed + i
+                wav = str(out_dir / f"song_{job_id}_{i + 1}.wav")
+                label = f"Song {i + 1} of {total}: " if total > 1 else ""
+                _stage(job, "load", f"{label}starting ACE-Step 1.5")
+                song = {"caption": _compose_prompt(req), "lyrics": _ace_lyrics(req) if not req.instrumental else "",
+                        "instrumental": req.instrumental, "seconds": duration, "bpm": req.bpm, "key": req.key,
+                        "time_signature": (req.time_signature or "").split("/")[0], "language": req.language,
+                        "seed": seed, "steps": 8}
+                try:
+                    secs = generate_ace15(
+                        song, wav,
+                        on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
+                        on_step=lambda d, t: _stage(job, "render", f"{label}composing the song", d, t),
+                        on_proc=lambda pr: _procs.__setitem__(job_id, pr))
+                    _stage(job, "finish", f"{label}saving and converting")
+                    final = _finalize(wav, req, warnings if i == 0 else [])
+                except Exception as e:
+                    job.update(status="error", error=_short(e), warnings=warnings, results=results)
+                    return
+                results.append({"seed": seed, "duration": round(secs, 1), **_keep(final, req, seed, secs, "ace-step-1.5")})
+                job["progress"] = {"done": i + 1, "total": total}
+                job["results"] = list(results)
+        finally:
+            stop_watch.set()
+    job.update(status="done", engine="ace-step-1.5", audio_file=results[0]["audio_file"], results=results,
+               duration=results[0]["duration"], warnings=warnings, finished=time.time(),
+               stage="done", stage_text="Done", step=None, step_total=None)
+
+
 def _run_engine_job(job_id: str, req: GenerateMusicRequest) -> None:
+    if req.engine == "ace-step-1.5":
+        return _run_ace15_job(job_id, req)
     if req.engine == "diffrhythm":
         return _run_dr_job(job_id, req)
     if req.engine != "ace-step":
@@ -952,8 +1009,8 @@ async def generate_music(req: GenerateMusicRequest):
     if req.acapella:
         if not req.lyrics.strip():
             raise HTTPException(400, "A cappella needs lyrics: write the text that should be sung.")
-        if req.engine not in ("ace-step", "diffrhythm"):
-            raise HTTPException(400, "A cappella needs a model that can sing: choose ACE-Step or DiffRhythm.")
+        if req.engine not in ("ace-step", "ace-step-1.5", "diffrhythm"):
+            raise HTTPException(400, "A cappella needs a model that can sing: choose ACE-Step, ACE-Step 1.5 or DiffRhythm.")
         req.instrumental = False
         req.negative_prompt = ", ".join(p for p in (req.negative_prompt.strip(), ACAPELLA_NEGATIVE) if p)
     pre: list[str] = []

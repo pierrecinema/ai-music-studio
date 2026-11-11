@@ -1,6 +1,6 @@
 # AI Music Studio
 
-**Free, open-source AI music studio for Windows:** make songs, seamless loops and stems with AI on your own PC, and arrange them in a full studio with mixer and piano roll. No account, no subscription. The AI assistant works with Claude, ChatGPT, Grok or completely free and local with Ollama.
+**Free, open-source AI music studio for Windows:** make songs, seamless loops and stems with AI on your own PC, and arrange them in a full studio (DAW) with mixer, piano roll and automation. No account, no subscription. The AI assistant works with Claude, ChatGPT, Grok or completely free and local with Ollama.
 
 ## Easy Windows installation
 
@@ -19,20 +19,42 @@ Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Bet
 
 ## Features
 
-| Feature | Technology |
+### Studio (DAW): available now
+
+A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** or **Cubase** (Settings → Shortcuts).
+
+- **Arrangement:** audio and MIDI tracks, drag and drop from the Library or Explorer, multi-select, copy / cut / paste, duplicate (Ctrl+D lines up loops without a gap), split, consolidate, crossfades
+- **Timing:** loop range in the ruler, markers and cycle markers, tempo and time-signature track, snap to grid, warp markers, AUTO SYNC of imported audio to the project tempo
+- **Recording:** count-in, punch in / out, loop recording into take lanes with comping
+- **Mixing:** mixer with faders, pan, mute, solo and live level meters, volume and pan automation lanes, reverb and delay return tracks with sends, group tracks, a channel tab per track
+- **Piano Roll:** draw, move and quantize MIDI notes
+- **Right in the Studio:** split a clip into stems from the right-click menu, quick export of the song
+- **Projects:** save and open, undo / redo
+
+### AI: available now
+
+| Feature | What it does | Technology |
+|---|---|---|
+| **Create music** | Songs from a style description and lyrics; vocals with ACE-Step, instrumentals with MusicGen; a cappella mode; every track starts on beat 1 | ACE-Step 1.5 / v1, MusicGen, DiffRhythm |
+| **Create loop** | Exactly 1–16 bars, starts on beat 1, repeats seamlessly, named with tempo and bars | own loop cutter on the beat grid |
+| **Stem Splitter** | Vocals, drums, bass, piano, guitar and more, saved to the Library and exported for any DAW | Meta Demucs (htdemucs_ft) |
+| **Mastering** | Matches your mix to a reference track | Matchering |
+| **Library** | Songs, loops, stems and samples with tempo and tags; search by name, tag or BPM; export as WAV, AIFF, FLAC or MP3 | |
+| **AI Chat** | Music assistant for chords, lyrics and ideas | Claude, ChatGPT, Grok, or free and local with Ollama |
+| **Hardware** | Runs on the CPU; faster on NVIDIA (CUDA) and AMD / Intel graphics cards (DirectML) | PyTorch |
+| **Languages** | 🇩🇪 🇬🇧 🇫🇷 🇪🇸 🇮🇹 🇵🇹 🇨🇳 🇯🇵 🇰🇷 | |
+
+### Coming soon
+
+| Feature | What it will do |
 |---|---|
-| **Studio (DAW)** | Arrangement with loop/locators, markers, tempo and time-signature track, automation, return tracks with sends, group tracks, take lanes and comping, warp markers, crossfades, count-in and punch, Ableton Live 12 or Cubase shortcuts |
-| **Song generator** | ACE-Step (songs with vocals), DiffRhythm, MusicGen; a cappella mode (voice only, cleaned with Demucs); every track starts on beat 1 |
-| **Piano Roll** | Electron + React (custom built) |
-| **AI Vocal Synthesis** | DiffSinger / VITS (local GPU) + cloud fallback |
-| **AI Instruments** | DDSP neural synthesis + FluidSynth fallback |
-| **Voice Cloning** | OpenVoice / Coqui TTS |
-| **Stem Separation** | Meta's Demucs (htdemucs_ft) |
-| **Audio → MIDI** | Spotify basic-pitch |
-| **Video Composer** | OpenCV scene analysis + AI score generation |
-| **VST3 Plugin Bridge** | JUCE C++ (AMS Bridge) |
-| **AI Chat** | Claude (Anthropic) or ChatGPT (OpenAI) — your choice |
-| **Multilingual** | 🇩🇪 🇬🇧 🇫🇷 🇪🇸 🇮🇹 🇵🇹 🇨🇳 🇯🇵 🇰🇷 |
+| **VST3 plugins** | Your own instruments and effects in the Studio (bridge in JUCE C++, in development) |
+| **Audio → MIDI** | Turn a recorded melody or chord part into MIDI notes (Spotify basic-pitch) |
+| **Vocal Editor** | AI singing from notes and lyrics, voice cloning |
+| **AI Instruments** | AI-played instruments for your MIDI tracks |
+| **Karaoke Export** | Word timing, .lrc files and lyric videos |
+| **Video Composer** | Music that follows the cuts of your video |
+| **Cloud Rendering (Pro)** | Optional: render on fast NVIDIA cards in the cloud. Everything above stays free and local. |
 
 ## Screenshots
 

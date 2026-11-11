@@ -12,7 +12,8 @@ const STEM_COLORS: Record<string, string> = {
   bass: '#2563eb',
   piano: '#d97706',
   guitar: '#059669',
-  other: '#6b7280'
+  other: '#6b7280',
+  instrumental: '#0891b2'
 }
 
 export function StemSplitter(): React.ReactElement {
@@ -24,7 +25,7 @@ export function StemSplitter(): React.ReactElement {
   const [stage, setStage] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const [result, setResult] = useState<StemResult | null>(null)
-  const [model, setModel] = useState<'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s'>('htdemucs_ft')
+  const [model, setModel] = useState<'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s' | 'mdx_vocals'>('htdemucs_ft')
   const [stems, setStems] = useState<string[]>(['vocals', 'drums', 'bass', 'other'])
   const dropRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -118,28 +119,32 @@ export function StemSplitter(): React.ReactElement {
         <div>
           <div style={labelStyle}>{t('stemSplitter.model')}</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {(['htdemucs', 'htdemucs_ft', 'mdx_extra', 'htdemucs_6s'] as const).map((m) => (
+            {(['mdx_vocals', 'htdemucs', 'htdemucs_ft', 'mdx_extra', 'htdemucs_6s'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => {
                   setModel(m)
                   if (m === 'htdemucs_6s') setStems(['vocals', 'drums', 'bass', 'piano', 'guitar', 'other'])
+                  if (m === 'mdx_vocals') setStems(['vocals', 'instrumental'])
+                  else if (stems.includes('instrumental')) setStems(['vocals', 'drums', 'bass', 'other'])
                 }}
                 style={{ padding: '4px 10px', borderRadius: 4, border: '1px solid var(--border)', background: model === m ? 'var(--accent)' : 'var(--bg-secondary)', color: model === m ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11 }}
               >
-                {m === 'htdemucs' ? 'Fast' : m === 'htdemucs_ft' ? 'Balanced' : m === 'mdx_extra' ? 'Quality' : '6 Stems'}
+                {m === 'mdx_vocals' ? 'Vocals + Instrumental (fastest)' : m === 'htdemucs' ? 'Fast' : m === 'htdemucs_ft' ? 'Balanced' : m === 'mdx_extra' ? 'Quality' : '6 Stems'}
               </button>
             ))}
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, maxWidth: 320 }}>
-            Balanced runs 4 models one after the other: on the processor (AMD / Intel graphics too) Fast is about 4 times quicker.
+            {model === 'mdx_vocals'
+              ? 'Only vocals and instrumental, but much faster; uses the graphics card on AMD, Intel and NVIDIA. Needs "Fast vocal separation" in Settings → AI Engines.'
+              : 'Balanced runs 4 models one after the other: on the processor (AMD / Intel graphics too) Fast is about 4 times quicker.'}
           </div>
         </div>
 
         <div>
           <div style={labelStyle}>Stems to extract</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {Object.keys(STEM_COLORS).map(stem => (
+            {Object.keys(STEM_COLORS).filter((s) => (model === 'mdx_vocals' ? s === 'vocals' || s === 'instrumental' : s !== 'instrumental')).map(stem => (
               <button
                 key={stem}
                 onClick={() => toggleStem(stem)}
@@ -154,7 +159,7 @@ export function StemSplitter(): React.ReactElement {
                   fontWeight: stems.includes(stem) ? 600 : 400
                 }}
               >
-                {t(`stemSplitter.${stem}`)}
+                {t(`stemSplitter.${stem}`, { defaultValue: stem.charAt(0).toUpperCase() + stem.slice(1) })}
               </button>
             ))}
           </div>
@@ -195,7 +200,7 @@ export function StemSplitter(): React.ReactElement {
         <div>
           <div style={labelStyle}>Results: listen, mix and export</div>
           <StemMixer stems={result as Record<string, string>} colors={STEM_COLORS} title={title.trim() || baseName(fileName)}
-            labels={Object.fromEntries(Object.keys(result).map((s) => [s, t(`stemSplitter.${s}`)]))} />
+            labels={Object.fromEntries(Object.keys(result).map((s) => [s, t(`stemSplitter.${s}`, { defaultValue: s.charAt(0).toUpperCase() + s.slice(1) })]))} />
           {/* keep them: the library (folder "Stems") or files for a DAW */}
           <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 560 }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

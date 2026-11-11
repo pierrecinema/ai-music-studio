@@ -4,7 +4,7 @@ import { createServer } from 'net'
 import { dirname, join } from 'path'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
-import { hasVenv, venvPython, serverDir, hasDml, dmlPython, hasDr, drPython, drRepo, hasAce15, ace15Python, ace15Repo, ace15Checkpoints } from './engines'
+import { hasVenv, venvPython, serverDir, hasDml, dmlPython, hasDr, drPython, drRepo, hasAce15, ace15Python, ace15Repo, ace15Checkpoints, hasSep, sepPython, sepModels } from './engines'
 import { backendModelEnv } from './settings'
 
 export const DEFAULT_PORT = 38765
@@ -61,7 +61,7 @@ export class ServerManager {
     this.process = spawn(python, ['-u', join(serverDir(), 'main.py')], {
       cwd: serverDir(),
       // downloads (ACE-Step, Whisper, Demucs ...) go to the models folder chosen in Settings → Models
-      env: { ...process.env, AMS_PORT: String(this.port), ...backendModelEnv(), ...(hasDml() ? { AMS_DML_PYTHON: dmlPython() } : {}), ...(hasDr() ? { AMS_DR_PYTHON: drPython(), AMS_DR_REPO: drRepo() } : {}), ...(hasAce15() ? { AMS_ACE15_PYTHON: ace15Python(), AMS_ACE15_REPO: ace15Repo(), AMS_ACE15_CKPT: ace15Checkpoints() } : {}) },
+      env: { ...process.env, AMS_PORT: String(this.port), ...backendModelEnv(), ...(hasDml() ? { AMS_DML_PYTHON: dmlPython() } : {}), ...(hasDr() ? { AMS_DR_PYTHON: drPython(), AMS_DR_REPO: drRepo() } : {}), ...(hasAce15() ? { AMS_ACE15_PYTHON: ace15Python(), AMS_ACE15_REPO: ace15Repo(), AMS_ACE15_CKPT: ace15Checkpoints() } : {}), ...(hasSep() ? { AMS_SEP_PYTHON: sepPython(), AMS_SEP_MODELS: sepModels() } : {}) },
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true
     })

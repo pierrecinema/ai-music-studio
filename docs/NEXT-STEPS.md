@@ -35,6 +35,8 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 - Test with real models on the owner's PCs: "→ MIDI" (needs Audio → MIDI (basic-pitch) in AI Engines), the stem mixer
   remix export, ACE-Step 1.5 install, Grok / Ollama chat. Stem splitting and saving to the Library are confirmed working.
+- Test the new "Vocals + Instrumental (fastest)" mode (0.18.0) on the R9 290: does DirectML work, how fast is it,
+  does the fallback to the processor kick in? Written from the audio-separator code, tested here only with a stand-in.
 - Demucs runs on the CPU with AMD / Intel graphics (DirectML lacks the complex STFT); "Fast" is ~4x quicker than
   "Balanced" (4 models). An NVIDIA card with the CUDA variant is much faster.
 - torchaudio 2.9+ needs TorchCodec for load/save: do not use `torchaudio.load/save` in the backend (use soundfile /

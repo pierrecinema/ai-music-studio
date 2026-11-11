@@ -713,26 +713,53 @@ export function masterLevel(): number {
 
 let previewing: AudioBufferSourceNode | null = null
 
+let previewBuf: AudioBuffer | null = null
+let previewStarted = 0          // context time that matches second 0 of the buffer
+let previewDone: (() => void) | null = null
+
 export function stopPreview(): void {
-  try { previewing?.stop() } catch { /* already over */ }
+  const src = previewing
   previewing = null
+  try { src?.stop() } catch { /* already over */ }
+  previewDone?.(); previewDone = null
+}
+
+function startPreviewAt(c: AudioContext, offset: number): void {
+  const old = previewing
+  const src = c.createBufferSource()
+  src.buffer = previewBuf
+  src.connect(master!)
+  src.onended = () => { if (previewing === src) { previewing = null; previewDone?.(); previewDone = null } }
+  const at = Math.max(0, Math.min(offset, (previewBuf?.duration ?? 0) - 0.01))
+  previewing = src                                     // set first: the old source's onended then does nothing
+  try { old?.stop() } catch { /* already over */ }
+  src.start(0, at)
+  previewStarted = c.currentTime - at
 }
 
 // plays a file through the master; with `sourceBpm` it is stretched to the project tempo first
-export async function previewSample(path: string, sourceBpm?: number): Promise<{ seconds: number; ended: Promise<void> } | null> {
+export async function previewSample(path: string, sourceBpm?: number): Promise<{ seconds: number; ended: Promise<void>; buffer: AudioBuffer } | null> {
   stopPreview()
   const c = ensureContext()
   if (c.state === 'suspended') await c.resume()
   const bpm = useProjectStore.getState().project.bpm
   const buf = sourceBpm ? await loadWarped(path, sourceBpm, bpm) : await loadBuffer(path)
   if (!buf) return null
-  const src = c.createBufferSource()
-  src.buffer = buf
-  src.connect(master!)
-  const ended = new Promise<void>((res) => { src.onended = () => { if (previewing === src) previewing = null; res() } })
-  src.start()
-  previewing = src
-  return { seconds: buf.duration, ended }
+  previewBuf = buf
+  const ended = new Promise<void>((res) => { previewDone = res })
+  startPreviewAt(c, 0)
+  return { seconds: buf.duration, ended, buffer: buf }
+}
+
+// where the preview is (for a waveform), and jumping in it
+export function previewPosition(): { time: number; duration: number } | null {
+  if (!previewing || !previewBuf || !ctx) return null
+  return { time: Math.min(previewBuf.duration, ctx.currentTime - previewStarted), duration: previewBuf.duration }
+}
+
+export function seekPreview(seconds: number): void {
+  if (!previewing || !previewBuf) return
+  startPreviewAt(ensureContext(), seconds)
 }
 
 // ── note preview (piano roll) ────────────────────────────────────────────────

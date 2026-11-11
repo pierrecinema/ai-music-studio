@@ -22,6 +22,11 @@
 **Manual (German, incl. first-time setup):** [docs/MANUAL.md](docs/MANUAL.md)
 **Beta testing (German):** [docs/BETA.md](docs/BETA.md). We are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
+### New in 0.14.4
+
+- **MusicGen makes several clips side by side on the CPU:** with more than one song or variation, up to 4 clips are rendered together in one pass (as many as the free memory allows). One clip alone keeps the processor busy only in short bursts, because MusicGen writes one token after the other; clips side by side share every step, so all cores have work and several clips take far less than that many times as long. The graphics card path (DirectML) still makes them one after the other.
+- Install notes explain the Windows SmartScreen warning of the unsigned installer.
+
 ### New in 0.14.3
 
 - **The CPU is used fully** when a model runs on the processor: the AI now computes on all CPU threads (hyper-threads included) instead of one per core, and the AI backend runs at below-normal priority so the app and Windows stay responsive. `AMS_CPU_THREADS` still sets another number.
@@ -53,6 +58,14 @@
 - **Vocals fix:** lyrics sent to ACE-Step now always carry a vocal tag and a structure tag, which should stop typed lyrics from coming out as an instrumental (still to be confirmed with the real model on an NVIDIA PC).
 - **Detailed log for beta testers** in the Feedback dialog (on/off, copy, save as file).
 - AI engines are no longer shown as "not installed" when they are.
+
+## Install (Windows)
+
+Download `AIMusicStudio-Setup-<version>.exe` from the [latest release](https://github.com/pierrecinema/ai-music-studio/releases/latest) and run it.
+
+**Windows will warn you the first time:** a blue window "Windows protected your PC" (Microsoft Defender SmartScreen) appears because the installer is not code-signed yet, so Windows does not know the publisher. It is not a virus warning. Click **More info**, then **Run anyway**. Some antivirus programs ask as well. The warning comes with the installer downloaded in the browser; updates the app downloads itself normally do not trigger it.
+
+Then open **Settings → AI Engines → Install selected** (needs Python 3.10+; downloads several GB once).
 
 ## Low-resource mode (8 GB VRAM / 12 GB RAM)
 

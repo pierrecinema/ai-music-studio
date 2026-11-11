@@ -614,6 +614,51 @@ def _watch_downloads(job: dict, stop: threading.Event) -> None:
 
 
 
+def _run_musicgen_batches(job: dict, job_id: str, req: GenerateMusicRequest, info, total: int, base_seed: int,
+                          duration: int, out_dir: Path, results: list[dict], warnings: list[str]) -> bool:
+    """Several MusicGen clips on the CPU: make them side by side, a few at a time.
+
+    One clip keeps the processor busy only in short bursts (MusicGen writes one token after the other); clips
+    in one batch share every step, so the cores are used and N clips take far less than N times as long.
+    Returns False when this does not apply (one clip, another model, or the graphics card path is used)."""
+    from services.music_engines import can_use_dml, generate_musicgen_batch, musicgen_batch_size
+    if total <= 1 or not req.engine.startswith("musicgen") or (req.compute != "cpu" and can_use_dml(req.engine)):
+        return False
+    size = musicgen_batch_size(req.engine, total)
+    if size <= 1:
+        return False
+    warnings.append(f"The {total} clips are made {size} at a time, side by side: that keeps all processor cores "
+                    "busy and is much faster than one after the other.")
+    guidance = max(1.0, min(req.cfg_scale + 1.0, 10.0))
+    i = 0
+    while i < total:
+        n = min(size, total - i)
+        seed = random.randint(0, 2**31 - 1) if req.randomize_seed else base_seed + i
+        wavs = [str(out_dir / f"song_{job_id}_{i + k + 1}.wav") for k in range(n)]
+        label = f"Clips {i + 1}–{i + n} of {total} (together): " if n > 1 else f"Clip {i + 1} of {total}: "
+        _stage(job, "load", f"{label}loading {info.name}. The first time the model is downloaded.")
+        try:
+            secs = generate_musicgen_batch(req.engine, _compose_prompt(req), duration, seed, wavs, guidance=guidance,
+                                           on_step=lambda d, t, _l=label: _stage(job, "render", f"{_l}composing", d, t))
+            finals = []
+            for k, w in enumerate(wavs):
+                _stage(job, "finish", f"{label}saving and converting")
+                finals.append(_finalize(w, req, warnings if i + k == 0 else []))
+        except Exception as e:  # noqa: BLE001 - Cancel lands here too; _run_job turns it into "cancelled"
+            job.update(status="error", error=_short(e), warnings=warnings, results=results)
+            return True
+        for k, (final, sec) in enumerate(zip(finals, secs)):
+            results.append({"seed": seed, "batch_index": k, "duration": round(sec, 1),
+                            **_keep(final, req, seed, sec, req.engine)})
+        i += n
+        job["progress"] = {"done": i, "total": total}
+        job["results"] = list(results)
+    job.update(status="done", engine=req.engine, audio_file=results[0]["audio_file"], results=results,
+               duration=results[0]["duration"], warnings=warnings, finished=time.time(),
+               stage="done", stage_text="Done", step=None, step_total=None)
+    return True
+
+
 def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
     """MusicGen: instrumental clips of up to 30 s, works on small machines."""
     from services.music_engines import ENGINES, generate_musicgen, musicgen_ready
@@ -656,6 +701,9 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
         job["device"] = _device_text()
         stop_watch = threading.Event()
         threading.Thread(target=_watch_downloads, args=(job, stop_watch), daemon=True).start()
+        if _run_musicgen_batches(job, job_id, req, info, total, base_seed, duration, out_dir, results, warnings):
+            stop_watch.set()
+            return
         for i in range(total):
             seed = random.randint(0, 2**31 - 1) if req.randomize_seed else base_seed + i
             wav = str(out_dir / f"song_{job_id}_{i + 1}.wav")

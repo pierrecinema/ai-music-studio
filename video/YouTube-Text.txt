@@ -2,7 +2,7 @@ TITLE (max. 100 characters)
 AI Music Studio – Free AI Music Maker & DAW for Windows | Local AI, Loops, Stems, Mastering
 
 Alternative titles:
-- Make Songs, Loops & Stems with AI – 100% Free, Local & Open Source (AI Music Studio 0.16)
+- Make Songs, Loops & Stems with AI – 100% Free, Local & Open Source (AI Music Studio 0.17)
 - I Built a Free AI Music Studio That Runs on Your Own PC (No Subscription)
 
 
@@ -37,7 +37,9 @@ WHAT IT DOES
 🎚️ Mixer: faders, pan, mute and solo, live level meters and master
 📚 Library: every song, loop and stem with its tempo and tags, search by name, tag or BPM
 💾 Export for any DAW: WAV 16/24/32-bit, AIFF, FLAC or MP3, every stem as its own file
-✂️ Stem Splitter: vocals, drums, bass, piano, guitar and more, separated with Demucs
+✂️ Stem Splitter: vocals, drums, bass, piano, guitar and more, separated with Demucs, with a progress bar
+🎤 Stem mixer: solo, mute and volume per stem, export a remix (karaoke without vocals, a version without drums)
+🎼 Audio → MIDI: the melody of a stem as notes in the Piano Roll
 🔊 Mastering: match your mix to a reference track
 💬 AI Chat: a music assistant for chords, lyrics and ideas, with Claude, ChatGPT, Grok or completely free and local with Ollama
 🧠 AI Engines: one-click install of ACE-Step 1.5, MusicGen, DiffRhythm, Demucs and more
@@ -46,7 +48,7 @@ WHAT IT DOES
 🔄 Automatic updates with one click
 🆓 Free and open source (GPL-3.0)
 
-Coming soon: Vocal Editor, AI Instruments, Karaoke Export, Video Composer
+Coming soon: VST3 plugins, Vocal Editor, AI Instruments, Karaoke Export with lyrics, Video Composer
 
 ━━━━━━━━━━━━━━━━━━━━
 CHAPTERS
@@ -64,13 +66,13 @@ CHAPTERS
 ━━━━━━━━━━━━━━━━━━━━
 NOTES
 ━━━━━━━━━━━━━━━━━━━━
-• Windows 10/11. The installer is not code-signed yet, so Windows SmartScreen may show a warning the first time: click "More info" → "Run anyway". Code signing via SignPath Foundation is on the way.
+• Windows 10/11. The installer is not code-signed yet, so Windows SmartScreen may show a warning the first time: click "More info" → "Run anyway". Code signing will follow as the project grows.
 • Works on the CPU alone; an NVIDIA, AMD or Intel graphics card makes it faster.
 • Your music stays on your PC. Your music belongs to you, but check the license of the AI model you use.
 
 🎧 Music in this video: afro house, 120 BPM, made with AI Music Studio itself (MusicGen, on an AMD Radeon) and mixed from two generated tracks.
 
-#AIMusic #MusicProduction #AfroHouse #DeepHouse #FreeDAW #OpenSource #AIMusicGenerator #StemSplitter #MusicGen #ACEStep
+#AIMusic #MusicProduction #AfroHouse #DeepHouse #FreeDAW #OpenSource #AIMusicGenerator #StemSplitter #Karaoke #MusicGen #ACEStep
 
 
 TAGS (paste into the YouTube "Tags" field)

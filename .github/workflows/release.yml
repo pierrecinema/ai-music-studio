@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version (e.g. 0.1.0-alpha)'
+        description: 'Version without the v (e.g. 0.13.1). Must match apps/desktop/package.json. Creates the tag v<version> and the release.'
         required: true
-        default: '0.1.0-alpha'
+        default: ''
 
 permissions:
   contents: write
@@ -22,6 +22,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      # Started by hand: the version must be the one the app reports, or the in-app update breaks
+      - name: Check the version
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          $v = (Get-Content apps/desktop/package.json -Raw | ConvertFrom-Json).version
+          if ($v -ne '${{ inputs.version }}') { throw "Input ${{ inputs.version }} does not match package.json $v" }
 
       - name: Setup Node 20
         uses: actions/setup-node@v4
@@ -59,9 +67,12 @@ jobs:
           retention-days: 30
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
+          # a run started by hand creates the tag on the commit it built
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref_name }}
+          target_commitish: ${{ github.sha }}
           files: |
             dist/*.exe
             dist/*.exe.blockmap
@@ -70,7 +81,7 @@ jobs:
           prerelease: false
           make_latest: true
           body: |
-            ## AI Music Studio ${{ github.ref_name }}
+            ## AI Music Studio ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref_name }}
 
             ### Install
             Download `AIMusicStudio-Setup-*.exe` below and run it. Unsigned alpha: Windows SmartScreen may warn, choose "More info" then "Run anyway".

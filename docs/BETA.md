@@ -28,6 +28,7 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 16. **A cappella:** Den Schalter *A cappella (voice only)* einschalten und einen Text eingeben. Kommt eine reine Gesangsspur ohne Instrumente heraus?
 17. **Studio wie Ableton/Cubase (neu in 0.13):** Loop im Lineal aufziehen (läuft der Übergang ohne Knackser?), Marker setzen und anspringen, Automation für die Lautstärke zeichnen, eine Return-Spur mit Hall anlegen und per Send nutzen, zwei Spuren gruppieren (Strg+G), im Loop mehrmals aufnehmen und einen Take auswählen, im Clip-Fenster einen Warp-Marker setzen und ziehen. Die Kürzel stellst du unter Einstellungen → Shortcuts auf Ableton oder Cubase.
 18. **Bibliothek: auf Schlag 1 schneiden:** Einen älteren Song schneiden lassen, danach *Restore original*. Ist das Original wieder da?
+19. **Loop erzeugen (neu in 0.14):** In Create music *Create loop* einschalten, 4 Takte, z. B. 124 BPM. Den Loop ins Studio legen, mehrmals Strg+D drücken und abspielen. Hört man an den Übergängen einen Knacks, eine Lücke oder einen Rhythmus-Holperer? Bitte Modell, BPM und Taktzahl im Bericht nennen.
 
 ## So meldest du ein Problem
 1. Unten rechts auf **Feedback** klicken.

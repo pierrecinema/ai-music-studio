@@ -368,7 +368,8 @@ export function CreateMusic(): React.ReactElement {
     void (async () => {
       for (const [i, r] of job.results.entries()) {
         seedAnalysis(r.audio_file, r)                          // the tempo was measured when the song was saved
-        const problems = await importAudioFiles([r.audio_file], { startBeat: 0 })
+        const problems = await importAudioFiles([r.audio_file],
+          r.loop_bars && r.bpm ? { startBeat: 0, warpBpm: r.bpm, noBeatMatch: true } : { startBeat: 0 })
         if (problems.length) { setError(problems.join(' ')); return }
         const tracks = useProjectStore.getState().project.tracks
         const track = tracks[tracks.length - 1]
@@ -560,6 +561,27 @@ export function CreateMusic(): React.ReactElement {
           </div>
         </Card>
 
+        {/* loop: exactly N bars that repeat seamlessly */}
+        <Card title={tr("Loop")}>
+          <Toggle name={tr("Create loop")} checked={p.loop} onChange={(v) => set('loop', v)}
+            hintText={tr("Makes a loop of exactly the chosen bars, starting on beat 1. Copies placed one after the other in the Studio (Ctrl+D) play endlessly without a gap or a click.")} />
+          {p.loop && (
+            <>
+              <Field name={tr("Bars")}>
+                <Segmented value={String(p.loopBars)} onChange={(v) => set('loopBars', Number(v))}
+                  options={[1, 2, 4, 8, 16].map((n) => ({ value: String(n), label: String(n) }))} />
+              </Field>
+              <Field name={tr("BPM")}>
+                <input type="number" min={30} max={300} value={p.bpm} placeholder="120" style={full} onChange={(e) => set('bpm', e.target.value)} />
+              </Field>
+              <span style={hint}>
+                {tr("The loop keeps the tempo the model really played; in the Studio it is stretched to the project tempo, so every copy is exactly")}{' '}
+                {p.loopBars} {tr("bar(s) long.")}{' '}{tr("Saved as FLAC or WAV, without fades.")}
+              </span>
+            </>
+          )}
+        </Card>
+
         {/* lyrics */}
         <Card title={tr("Lyrics")} actions={<>
           <IconBtn title={tr("Write lyrics with AI")} onClick={aiLyrics} disabled={aiBusy !== null || p.instrumental}>{aiBusy === 'lyrics' ? '…' : '✨'}</IconBtn>
@@ -607,8 +629,8 @@ export function CreateMusic(): React.ReactElement {
               </button>}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <Field name={tr("Length, s")}>
-                  <input type="number" min={5} max={maxDur} value={p.duration} placeholder={tr("Auto")}
-                    onChange={(e) => set('duration', e.target.value)} />
+                  <input type="number" min={5} max={maxDur} value={p.loop ? '' : p.duration} placeholder={p.loop ? tr("Set by the loop") : tr("Auto")}
+                    disabled={p.loop} onChange={(e) => set('duration', e.target.value)} />
                 </Field>
                 <Field name={tr("BPM")}>
                   <input type="number" min={30} max={300} value={p.bpm} placeholder={tr("Auto")} onChange={(e) => set('bpm', e.target.value)} />
@@ -813,7 +835,7 @@ export function CreateMusic(): React.ReactElement {
             style={{ width: '100%', justifyContent: 'center', padding: '14px 0', fontSize: 15, fontWeight: 800 }}>
             {busy
               ? `${tr('Generating…')} ${job?.progress ? `${job.progress.done}/${job.progress.total}` : ''}${job?.step && job.step_total ? `  ${Math.round((job.step / job.step_total) * 100)}%` : ''}`
-              : `${tr('Create')}${count > 1 ? `  (${count})` : ''}`}
+              : `${p.loop ? tr('Create loop') : tr('Create')}${count > 1 ? `  (${count})` : ''}`}
           </button>
           {busy && job && (
             <button className="btn btn-ghost" onClick={() => void useMusicJob.getState().cancel()} disabled={!!job.cancel}

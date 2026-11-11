@@ -349,7 +349,7 @@ Getestet ist die Verbindung mit dem offiziellen MCP-Python-Client (Verbindung, W
 | „Python 3.14 is very new …“ | Python 3.11 daneben installieren (`winget install Python.Python.3.11`), den Tab „AI Engines“ neu öffnen. |
 | Claude-Modell fehlt in der Liste | Einstellungen → AI → Modell: „Other model ID…“ wählen und die exakte ID eintragen. |
 | Update-Hinweis fehlt | Einstellungen → Updates → „Jetzt suchen“. |
-| Beim Erzeugen auf der CPU ist der Prozessor nur zum Teil ausgelastet | Seit 0.14.1 rechnet die KI mit einem Thread pro echtem Kern (bei 6 Kernen/12 Threads: 6, im Task-Manager etwa 50 %). Mehr Threads auf denselben Kernen bringen bei KI-Rechnungen kaum Tempo. Wer es trotzdem ausprobieren will: Umgebungsvariable `AMS_CPU_THREADS` (z. B. `12`) setzen und die App neu starten. Das Fortschrittsfeld beim Erzeugen zeigt, mit wie vielen Threads gerechnet wird. |
+| Beim Erzeugen auf der CPU ist der Prozessor nur zum Teil ausgelastet | Seit 0.14.3 rechnet die KI mit allen Threads der CPU (auch den Hyper-Threads) und mit niedrigerer Priorität, damit App und Windows flüssig bleiben. Das Fortschrittsfeld zeigt die Zahl der Threads. MusicGen erzeugt Ton für Ton nacheinander und lastet die CPU deshalb weniger aus als ACE-Step; rechnet MusicGen über DirectML auf der Grafikkarte, ist die CPU-Last ohnehin niedrig. Eine andere Zahl: Umgebungsvariable `AMS_CPU_THREADS` setzen und die App neu starten. |
 
 ## 8. Bekannte Einschränkungen (Alpha)
 

@@ -148,7 +148,7 @@ export const api = {
       stems: string[]
     }) => post<{ vocals?: string; drums?: string; bass?: string; other?: string; piano?: string; guitar?: string }>('/stems/split', body),
     // the same split in the background, with progress (Stem Splitter view)
-    start: (body: { filePath: string; model: 'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s'; stems: string[] }) =>
+    start: (body: { filePath: string; model: 'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s' | 'mdx_vocals'; stems: string[] }) =>
       post<{ job_id: string }>('/stems/jobs', body),
     remix: (body: { stems: Record<string, string>; gains: Record<string, number> }) => post<{ path: string }>('/stems/remix', body),
     job: (id: string) => get<{

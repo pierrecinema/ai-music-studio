@@ -6,6 +6,7 @@ const GROUPS: Group[] = [
   { id: 'core', name: 'Core backend', desc: 'API server, AI chat (Claude/ChatGPT), MIDI tools. Always installed.', recommended: true },
   { id: 'torch', name: 'PyTorch', desc: 'Needed by Demucs and most local AI models.', note: 'Large download. Variant below.', recommended: true },
   { id: 'demucs', name: 'Stem separation (Demucs)', desc: 'Vocals, drums, bass, piano, guitar.', recommended: true },
+  { id: 'separator', name: 'Fast vocal separation (vocals + instrumental)', desc: 'Stem Splitter mode "Vocals + Instrumental": much faster than Demucs, ideal for karaoke and acapellas. Uses the graphics card on AMD / Intel (DirectX 12, also older cards like the R9 290) and NVIDIA, otherwise the processor. Needs Python 3.10 to 3.12.', note: 'Installs its own environment (about 1.5 GB, MDX-Net models through audio-separator); the model (about 60 MB) downloads on the first split. Graphics card use on AMD / Intel is experimental: it falls back to the processor if DirectML fails.' },
   { id: 'basicpitch', name: 'Audio → MIDI (basic-pitch)', desc: 'Default transcription engine.', recommended: true },
   { id: 'matchering', name: 'Mastering (Matchering)', desc: 'Match a mix to a reference track.', recommended: true },
   { id: 'whisper', name: 'Lyric timing (faster-whisper)', desc: 'Word timestamps for karaoke export.', recommended: true },

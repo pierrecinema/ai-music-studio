@@ -59,10 +59,61 @@ class _Progress:
             self.report(5 + done * 90)
 
 
+def run_mdx(req: StemSplitRequest, report) -> dict:
+    """Vocals + instrumental with an MDX-Net ONNX model in the separator environment (services/separator_worker.py):
+    much faster than Demucs and on AMD / Intel it can use the graphics card through DirectML."""
+    import json, subprocess, sys
+    py = os.environ.get("AMS_SEP_PYTHON")
+    if not py or not os.path.exists(py):
+        raise HTTPException(503, "Fast vocal separation is not installed: Settings → AI Engines → "
+                                 "Fast vocal separation (vocals + instrumental), then Install selected.")
+    out_dir = os.path.join(tempfile.gettempdir(), f"stems_{uuid.uuid4().hex[:8]}")
+    os.makedirs(out_dir, exist_ok=True)
+    model_dir = os.environ.get("AMS_SEP_MODELS") or os.path.join(os.path.expanduser("~"), ".ai-music-studio", "separator")
+    reqfile = os.path.join(out_dir, "request.json")
+    with open(reqfile, "w", encoding="utf-8") as f:
+        json.dump({"input": req.filePath, "out_dir": out_dir, "model_dir": model_dir, "fast": True}, f)
+    worker = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                          "services", "separator_worker.py")
+    report(3, "Starting fast vocal separation")
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    proc = subprocess.Popen([py, worker, reqfile], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                            encoding="utf-8", errors="replace", creationflags=flags)
+    started, result, error, tail = time.time(), None, None, []
+    for line in proc.stdout:                                       # type: ignore[union-attr]
+        line = line.strip()
+        if not line:
+            continue
+        tail = (tail + [line])[-8:]
+        try:
+            msg = json.loads(line)
+        except ValueError:
+            # no per-chunk progress from the library: creep forward so the bar shows it is working
+            report(min(90.0, 10 + (time.time() - started) / 3))
+            continue
+        if not isinstance(msg, dict):
+            continue
+        if "stage" in msg:
+            report(10 if "Separating" in msg["stage"] else 5, msg["stage"])
+        elif msg.get("done"):
+            result = msg.get("files") or {}
+            report(98, f"Done ({msg.get('device', 'processor')})")
+        elif "error" in msg:
+            error = msg["error"]
+    proc.wait()
+    if error or not result:
+        raise HTTPException(500, error or ("Fast vocal separation failed: " + " | ".join(tail)[-400:]))
+    report(100, "Done")
+    return result
+
+
 def run_split(req: StemSplitRequest, report=lambda pct, text=None: None) -> dict:
     """Separate the song; report(percent, text) is called along the way. Returns {stem: wav path}."""
     if not os.path.exists(req.filePath):
         raise HTTPException(400, f"File not found: {req.filePath}")
+    if req.model == "mdx_vocals":
+        with _split_lock:
+            return run_mdx(req, report)
     try:
         import torch
         import demucs.apply as demucs_apply
@@ -109,6 +160,7 @@ def run_split(req: StemSplitRequest, report=lambda pct, text=None: None) -> dict
                     sources = apply_model(
                         model, wav[None], device=device, progress=True,
                         segment=res.demucs_segment_s, num_workers=res.demucs_jobs,
+                        overlap=0.1 if req.model == "htdemucs" else 0.25,      # Fast: fewer overlapping chunks
                     )[0]
             finally:
                 if saved_tqdm is not None:

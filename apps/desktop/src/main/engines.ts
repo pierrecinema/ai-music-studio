@@ -106,6 +106,24 @@ export function hasAce15(): boolean {
   return existsSync(ace15Python()) && existsSync(join(ace15Repo(), 'acestep', 'inference.py'))
 }
 
+// Fast vocal / instrumental separation (MDX-Net ONNX models through audio-separator). Its own environment: it needs
+// NumPy 2 and ONNX Runtime, which must not change the main environment. On AMD / Intel it uses DirectML, on NVIDIA CUDA.
+export function sepDir(): string {
+  return join(app.getPath('userData'), 'engines', 'venv-separator')
+}
+
+export function sepPython(): string {
+  return join(sepDir(), 'Scripts', 'python.exe')
+}
+
+export function sepModels(): string {
+  return join(modelsDir(), 'separator')
+}
+
+export function hasSep(): boolean {
+  return existsSync(join(sepDir(), 'Lib', 'site-packages', 'audio_separator'))
+}
+
 export function hasVenv(): boolean {
   return existsSync(venvPython())
 }
@@ -188,6 +206,7 @@ export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   installed.gpuamd = hasDml()
   installed.diffrhythm = hasDr()
   installed.ace15 = hasAce15()
+  installed.separator = hasSep()
   return {
     pythonFound: py !== null,
     pythonVersion: py?.version ?? null,
@@ -323,6 +342,45 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
   return { ok: true }
 }
 
+async function installSep(py: PythonCmd | null, torchVariant: string, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
+  if (!py) return { ok: false, error: 'Python 3.10 to 3.12 was not found.' }
+  const minor = Number(py.version.split('.')[1])
+  if (minor < 10 || minor > 12) {
+    return { ok: false, error: `Fast vocal separation needs Python 3.10 to 3.12 (found ${py.version}). Install Python 3.11 or 3.12 and try again.` }
+  }
+  if (!existsSync(sepPython())) {
+    mkdirSync(join(sepDir(), '..'), { recursive: true })
+    if (await run(py.cmd, [...py.args, '-m', 'venv', sepDir()], log) !== 0) return { ok: false, error: 'Could not create the environment for fast vocal separation.' }
+    await run(sepPython(), ['-m', 'pip', 'install', '--upgrade', 'pip'], log)
+  }
+  let extra = 'cpu'
+  if (torchVariant === 'cuda') {
+    log('NVIDIA card: CUDA build of PyTorch and ONNX Runtime GPU.')
+    if (await run(sepPython(), ['-m', 'pip', 'install', 'torch', '--index-url', 'https://download.pytorch.org/whl/cu128'], log) !== 0) {
+      return { ok: false, error: 'Installing PyTorch (CUDA) for fast vocal separation failed (see log).' }
+    }
+    extra = 'gpu'
+  } else if (process.platform === 'win32') {
+    log('AMD / Intel graphics or none: DirectML build, so a DirectX 12 graphics card can help (falls back to the processor).')
+    extra = 'dml'
+  } else {
+    if (await run(sepPython(), ['-m', 'pip', 'install', 'torch', '--index-url', 'https://download.pytorch.org/whl/cpu'], log) !== 0) {
+      return { ok: false, error: 'Installing PyTorch (CPU) for fast vocal separation failed (see log).' }
+    }
+  }
+  if (await run(sepPython(), ['-m', 'pip', 'install', `audio-separator[${extra}]`], log) !== 0) {
+    if (extra !== 'dml') return { ok: false, error: 'Installing audio-separator failed (see log).' }
+    log('The DirectML build could not be installed: installing the processor build instead.')
+    if (await run(sepPython(), ['-m', 'pip', 'install', 'torch', '--index-url', 'https://download.pytorch.org/whl/cpu'], log) !== 0 ||
+        await run(sepPython(), ['-m', 'pip', 'install', 'audio-separator[cpu]'], log) !== 0) {
+      return { ok: false, error: 'Installing audio-separator failed (see log).' }
+    }
+  }
+  mkdirSync(sepModels(), { recursive: true })
+  log('Fast vocal separation is installed. Its model (about 60 MB) downloads on the first split.')
+  return { ok: true }
+}
+
 async function installDml(py: PythonCmd | null, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
   if (!py) return { ok: false, error: 'Python 3.11 was not found.' }
   const minor = Number(py.version.split('.')[1])
@@ -403,6 +461,11 @@ export async function installGroups(
     log('=== ace15 (ACE-Step 1.5: songs with vocals, also on the processor) ===')
     const r = await installAce15(py, torchVariant, log)
     if (!r.ok) { failed.push('ace15'); log(r.error ?? 'failed') }
+  }
+  if (groups.includes('separator')) {
+    log('=== separator (fast vocal / instrumental separation, also on AMD / Intel graphics) ===')
+    const r = await installSep(py, torchVariant, log)
+    if (!r.ok) { failed.push('separator'); log(r.error ?? 'failed') }
   }
   if (groups.includes('diffrhythm')) {
     log('=== diffrhythm (full songs in one go, needs an NVIDIA card) ===')

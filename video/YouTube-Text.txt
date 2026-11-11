@@ -1,0 +1,77 @@
+TITLE (max. 100 characters)
+AI Music Studio – Free AI Music Maker & DAW for Windows | Local AI, Loops, Stems, Mastering
+
+Alternative titles:
+- Make Songs, Loops & Stems with AI – 100% Free, Local & Open Source (AI Music Studio 0.16)
+- I Built a Free AI Music Studio That Runs on Your Own PC (No Subscription)
+
+
+DESCRIPTION
+AI Music Studio is a free, open-source music studio for Windows that makes songs, loops and stems with AI, locally on your own PC. No account, no subscription, no upload to the cloud.
+
+⬇️ Download (Windows installer, free):
+https://github.com/pierrecinema/ai-music-studio/releases/latest
+
+⭐ GitHub (source code, screenshots, star the project):
+https://github.com/pierrecinema/ai-music-studio
+
+📖 Manual:
+https://github.com/pierrecinema/ai-music-studio/blob/main/docs/MANUAL.md
+
+🧪 Become a beta tester:
+https://github.com/pierrecinema/ai-music-studio/blob/main/docs/BETA.md
+
+❤️ Support the project (donate via PayPal):
+https://paypal.me/djpedroflores
+
+🐞 Report a bug or ask for a feature:
+https://github.com/pierrecinema/ai-music-studio/issues
+
+━━━━━━━━━━━━━━━━━━━━
+WHAT IT DOES
+━━━━━━━━━━━━━━━━━━━━
+🎵 Create music: describe a style, add lyrics, pick a model and get a song with vocals, made on your own PC
+🔁 Create loops: exactly 1 to 16 bars, starting on beat 1 and repeating seamlessly ("Loop 124 BPM 4 bars")
+🎛️ Studio: a real DAW with loop and markers, automation, tempo track, takes, warp markers, return tracks and groups
+🎹 Piano Roll: draw, move and quantize MIDI notes
+🎚️ Mixer: faders, pan, mute and solo, live level meters and master
+📚 Library: every song, loop and stem with its tempo and tags, search by name, tag or BPM
+💾 Export for any DAW: WAV 16/24/32-bit, AIFF, FLAC or MP3, every stem as its own file
+✂️ Stem Splitter: vocals, drums, bass, piano, guitar and more, separated with Demucs
+🔊 Mastering: match your mix to a reference track
+💬 AI Chat: a music assistant for chords, lyrics and ideas, with Claude, ChatGPT, Grok or completely free and local with Ollama
+🧠 AI Engines: one-click install of ACE-Step 1.5, MusicGen, DiffRhythm, Demucs and more
+🖥️ Hardware check: see what your PC can run, on CPU or NVIDIA, AMD and Intel graphics
+⌨️ Shortcuts: Ableton Live 12 or Cubase key layout
+🔄 Automatic updates with one click
+🆓 Free and open source (GPL-3.0)
+
+Coming soon: Vocal Editor, AI Instruments, Karaoke Export, Video Composer
+
+━━━━━━━━━━━━━━━━━━━━
+CHAPTERS
+━━━━━━━━━━━━━━━━━━━━
+0:00 Intro – Create music & loops
+0:15 Studio, Piano Roll & Mixer
+0:29 Library, stems & export
+0:42 Stem Splitter & Mastering
+0:52 AI Chat & AI assistants (Claude, ChatGPT, Grok, Ollama)
+1:01 AI engines, hardware check & models
+1:15 Shortcuts, settings & automatic updates
+1:38 Open source & coming soon
+2:01 Download free
+
+━━━━━━━━━━━━━━━━━━━━
+NOTES
+━━━━━━━━━━━━━━━━━━━━
+• Windows 10/11. The installer is not code-signed yet, so Windows SmartScreen may show a warning the first time: click "More info" → "Run anyway". Code signing via SignPath Foundation is on the way.
+• Works on the CPU alone; an NVIDIA, AMD or Intel graphics card makes it faster.
+• Your music stays on your PC. Your music belongs to you, but check the license of the AI model you use.
+
+🎧 Music in this video: afro house, 120 BPM, made with AI Music Studio itself (MusicGen, on an AMD Radeon) and mixed from two generated tracks.
+
+#AIMusic #MusicProduction #AfroHouse #DeepHouse #FreeDAW #OpenSource #AIMusicGenerator #StemSplitter #MusicGen #ACEStep
+
+
+TAGS (paste into the YouTube "Tags" field)
+AI music, AI music generator, free DAW, AI music studio, local AI, open source music software, make music with AI, AI loops, loop maker, stem splitter, Demucs, MusicGen, ACE-Step, AI mastering, Windows music software, afro house, deep house, music production, free music software, Ollama

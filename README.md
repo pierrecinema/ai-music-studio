@@ -162,6 +162,24 @@ pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 Switch language in **Settings → Appearance → Language**:
 - English, Deutsch, Français, Español, Italiano, Português, 中文, 日本語, 한국어
 
+## Code signing policy
+
+Windows installers are going to be code-signed through the [SignPath Foundation](https://signpath.org) (application in progress; until then the installer is unsigned and Windows SmartScreen warns, see *Install*). Once approved: free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+- Only installers built by the GitHub Actions workflow `.github/workflows/release.yml` from this repository are signed; nothing built elsewhere.
+- Committers and reviewers: [pierrecinema](https://github.com/pierrecinema) (owner; changes are made with the help of AI coding tools and merged by the owner's instruction)
+- Approvers (sign each release): [pierrecinema](https://github.com/pierrecinema)
+
+### Privacy
+
+This program does not send any data on its own except where the user turns a feature on:
+- **Update check:** asks GitHub for the latest release (no personal data).
+- **AI engines and models:** downloads packages from PyPI and model files from Hugging Face when you install them in *Settings → AI Engines / Models*.
+- **AI chat:** sends your chat messages to Anthropic (Claude) or OpenAI (ChatGPT) only if you enter your own API key in *Settings → AI*.
+- **Feedback / logs:** reports and detailed logs are only copied or saved on your PC; nothing is uploaded automatically.
+
+Music generation itself runs locally on your computer.
+
 ## License
 
 GPL-3.0 — see [LICENSE](LICENSE)

@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type SampleEntry } from '../../lib/api'
 import { useProjectStore } from '../../stores/project.store'
 import { useAudioStore } from '../../stores/audio.store'
-import { previewSample, stopPreview } from '../../audio/engine'
+import { previewSample, stopPreview, previewPosition, seekPreview } from '../../audio/engine'
+import { WaveformSeek } from '../common/WaveformSeek'
 import { importAudioFiles } from '../timeline/Timeline'
 
 const muted: React.CSSProperties = { fontSize: 11, color: 'var(--text-muted)' }
@@ -22,6 +23,7 @@ export function SamplesTab(): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [playing, setPlaying] = useState<string | null>(null)
+  const [playBuf, setPlayBuf] = useState<{ key: string; buf: AudioBuffer } | null>(null)   // for the waveform
   const [synced, setSynced] = useState(true)
   const [measured, setMeasured] = useState<Record<string, number | null>>({})
   const timer = useRef<number | null>(null)
@@ -85,6 +87,7 @@ export function SamplesTab(): React.ReactElement {
       const r = await previewSample(e.path, bpm ?? undefined)
       if (!r) { setError('This file cannot be played.'); return }
       setPlaying(e.path)
+      setPlayBuf({ key: `${e.path}|${bpm ?? 'as-is'}`, buf: r.buffer })
       void r.ended.then(() => setPlaying((p) => (p === e.path ? null : p)))
     } catch (err) { setError((err as Error).message) }
   }
@@ -174,7 +177,8 @@ export function SamplesTab(): React.ReactElement {
       {items.map((e) => {
         const tempo = e.bpm ?? measured[e.path] ?? null
         return (
-          <div key={e.path} style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-mid)', borderRadius: 8, padding: '8px 10px', display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div key={e.path} style={{ background: 'var(--bg-panel)', border: `1px solid ${playing === e.path ? 'var(--accent)' : 'var(--border-mid)'}`, borderRadius: 8, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" style={{ width: 30, height: 30, borderRadius: 15, padding: 0, justifyContent: 'center' }} onClick={() => void play(e)} title={playing === e.path ? 'Stop' : 'Play'}>
               {playing === e.path ? '■' : '▶'}
             </button>
@@ -193,6 +197,10 @@ export function SamplesTab(): React.ReactElement {
               title="Into the Studio at the playhead, exactly as the file is (no stretching)">Studio: as is</button>
             <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void toLibrary(e)}
               title="Copy into the Library (My tracks): searchable, with tags, exportable">+ Library</button>
+          </div>
+          {playing === e.path && playBuf && (
+            <WaveformSeek fileKey={playBuf.key} buffers={[playBuf.buf]} position={previewPosition} onSeek={seekPreview} />
+          )}
           </div>
         )
       })}

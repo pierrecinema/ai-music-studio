@@ -1,22 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react'
 
 // The real waveform of a file with the play position: click or drag anywhere to jump there.
-// Drives an HTMLAudioElement that plays the same file (Library preview).
+// Either drives an HTMLAudioElement that plays the same file (Library), or reads the position and seeks through
+// callbacks (sample preview, stem mixer). The picture comes from the file bytes or from decoded AudioBuffers.
 
 const peakCache = new Map<string, Float32Array>()       // file -> [min, max] per column, so a replay draws at once
 
-async function computePeaks(bytes: Uint8Array, columns: number): Promise<Float32Array> {
+async function decode(bytes: Uint8Array): Promise<AudioBuffer> {
   const ctx = new OfflineAudioContext(1, 1, 44100)
-  const buf = await ctx.decodeAudioData(bytes.slice().buffer)      // decodeAudioData detaches its input: use a copy
-  const chans = Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c))
-  const n = buf.length
+  return ctx.decodeAudioData(bytes.slice().buffer)              // decodeAudioData detaches its input: use a copy
+}
+
+function computePeaks(bufs: AudioBuffer[], columns: number): Float32Array {
+  const chans = bufs.flatMap((b) => Array.from({ length: b.numberOfChannels }, (_, c) => b.getChannelData(c)))
+  const n = Math.max(...bufs.map((b) => b.length))
   const out = new Float32Array(columns * 2)
   const step = Math.max(1, Math.floor(n / columns))
   for (let x = 0; x < columns; x++) {
     let lo = 0, hi = 0
     const start = x * step, end = Math.min(n, start + step)
     for (const ch of chans) {
-      for (let i = start; i < end; i += 4) {                // every 4th sample is plenty for the picture
+      for (let i = start; i < Math.min(end, ch.length); i += 4) {     // every 4th sample is plenty for the picture
         const v = ch[i]
         if (v < lo) lo = v
         if (v > hi) hi = v
@@ -27,10 +31,13 @@ async function computePeaks(bytes: Uint8Array, columns: number): Promise<Float32
   return out
 }
 
-export function WaveformSeek({ fileKey, bytes, audio, color = 'var(--accent)' }: {
+export function WaveformSeek({ fileKey, bytes, buffers, audio, position, onSeek, color = 'var(--accent)' }: {
   fileKey: string                 // e.g. the path: identifies the cached peaks
-  bytes: Uint8Array | null        // the file, for drawing the waveform
-  audio: HTMLAudioElement | null
+  bytes?: Uint8Array | null       // the file, for drawing the waveform ...
+  buffers?: AudioBuffer[] | null  // ... or decoded audio (several are drawn on top of each other: stems)
+  audio?: HTMLAudioElement | null // the player to follow and to seek ...
+  position?: () => { time: number; duration: number } | null    // ... or these two
+  onSeek?: (seconds: number) => void
   color?: string
 }): React.ReactElement {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -44,24 +51,30 @@ export function WaveformSeek({ fileKey, bytes, audio, color = 'var(--accent)' }:
 
   useEffect(() => {
     if (peakCache.has(fileKey)) { setPeaks(peakCache.get(fileKey)!); return }
-    if (!bytes) return
     let cancelled = false
-    computePeaks(bytes, COLS).then((p) => { peakCache.set(fileKey, p); if (!cancelled) setPeaks(p) }).catch(() => setFailed(true))
+    const make = async (): Promise<AudioBuffer[] | null> => (buffers?.length ? buffers : bytes ? [await decode(bytes)] : null)
+    make().then((b) => {
+      if (!b || cancelled) return
+      const p = computePeaks(b, COLS)
+      peakCache.set(fileKey, p); setPeaks(p)
+    }).catch(() => setFailed(true))
     return () => { cancelled = true }
-  }, [fileKey, bytes])
+  }, [fileKey, bytes, buffers])
 
-  // follow the audio element
+  const where = (): { time: number; duration: number } | null =>
+    audio ? { time: audio.currentTime || 0, duration: Number.isFinite(audio.duration) ? audio.duration : 0 } : position?.() ?? null
+
+  // follow the player
   useEffect(() => {
-    if (!audio) return
     let raf = 0
     const tick = (): void => {
-      setTime(audio.currentTime || 0)
-      if (Number.isFinite(audio.duration)) setDuration(audio.duration)
+      const w = where()
+      if (w) { setTime(w.time); if (w.duration) setDuration(w.duration) }
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [audio])
+  })
 
   // draw
   useEffect(() => {
@@ -98,11 +111,13 @@ export function WaveformSeek({ fileKey, bytes, audio, color = 'var(--accent)' }:
 
   const seekTo = (clientX: number): void => {
     const el = wrap.current
-    if (!el || !audio || !(duration > 0)) return
+    const total = duration || where()?.duration || 0
+    if (!el || !(total > 0)) return
     const r = el.getBoundingClientRect()
     const f = Math.min(1, Math.max(0, (clientX - r.left) / r.width))
-    audio.currentTime = f * duration
-    setTime(audio.currentTime)
+    if (audio) audio.currentTime = f * total
+    else onSeek?.(f * total)
+    setTime(f * total)
   }
 
   const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`

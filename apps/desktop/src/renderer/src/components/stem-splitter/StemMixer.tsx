@@ -4,6 +4,7 @@ import { api } from '../../lib/api'
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
 import { ExportDialog } from '../common/ExportDialog'
+import { WaveformSeek } from '../common/WaveformSeek'
 
 // The stems of one split, played together: Solo, Mute and volume per stem, a remix of the audible stems
 // (karaoke without vocals, a version without drums, ...) and Audio → MIDI of one stem into the Piano Roll.
@@ -22,6 +23,7 @@ export function StemMixer({ stems, colors, labels, title }: Props): React.ReactE
   const [strips, setStrips] = useState<Record<string, Strip>>(() =>
     Object.fromEntries(names.map((n) => [n, { volume: 1, mute: false, solo: false }])))
   const [loading, setLoading] = useState(false)
+  const [loaded, setLoaded] = useState<AudioBuffer[] | null>(null)   // all stems decoded: for the waveform
   const [playing, setPlaying] = useState(false)
   const [pos, setPos] = useState(0)                  // seconds
   const [length, setLength] = useState(0)
@@ -50,7 +52,15 @@ export function StemMixer({ stems, colors, labels, title }: Props): React.ReactE
     }
   })
 
-  useEffect(() => () => { stopSources(); cancelAnimationFrame(raf.current); void ctx.current?.close() }, [])
+  useEffect(() => {
+    void load()
+    return () => {
+      stopSources(); cancelAnimationFrame(raf.current)
+      const c = ctx.current
+      ctx.current = null; buffers.current = {}; gains.current = {}     // a remount starts clean
+      void c?.close()
+    }
+  }, [])   // decode at once: the waveform shows before playing
 
   const stopSources = (): void => {
     for (const s of sources.current) { try { s.stop() } catch { /* already stopped */ } }
@@ -61,21 +71,24 @@ export function StemMixer({ stems, colors, labels, title }: Props): React.ReactE
     if (Object.keys(buffers.current).length === names.length) return true
     setLoading(true); setError(null)
     try {
-      ctx.current ??= new AudioContext()
+      const c = (ctx.current ??= new AudioContext())
       for (const n of names) {
         if (buffers.current[n]) continue
         const bytes = await window.api.fs.readFile(stems[n])
         const ab = new Uint8Array(bytes).buffer
-        buffers.current[n] = await ctx.current.decodeAudioData(ab)
-        const g = ctx.current.createGain()
-        g.connect(ctx.current.destination)
+        const decoded = await c.decodeAudioData(ab)
+        if (ctx.current !== c) return false                            // unmounted meanwhile
+        buffers.current[n] = decoded
+        const g = c.createGain()
+        g.connect(c.destination)
         gains.current[n] = g
       }
       lengthRef.current = Math.max(...Object.values(buffers.current).map((b) => b.duration))
+      setLoaded(Object.values(buffers.current))
       setLength(lengthRef.current)
       return true
     } catch (e) {
-      setError(`Cannot play the stems: ${(e as Error).message}`)
+      if (ctx.current) setError(`Cannot play the stems: ${(e as Error).message}`)
       return false
     } finally { setLoading(false) }
   }
@@ -169,10 +182,11 @@ export function StemMixer({ stems, colors, labels, title }: Props): React.ReactE
           onClick={() => (playing ? stop() : void playFrom(pos >= length ? 0 : pos))}>
           {loading ? 'Loading…' : playing ? '■ Stop' : '▶ Play'}
         </button>
-        <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{mmss(pos)}</span>
-        <input type="range" min={0} max={length || 1} step={0.1} value={Math.min(pos, length || 1)} style={{ flex: 1 }}
-          onChange={(e) => { const v = Number(e.target.value); setPos(v); if (playing) void playFrom(v) }} />
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>{length ? mmss(length) : '–:––'}</span>
+        <div style={{ flex: 1 }}>
+          <WaveformSeek fileKey={`stems:${names.map((n) => stems[n]).join('|')}`} buffers={loaded}
+            position={() => ({ time: pos, duration: length })}
+            onSeek={(v) => { setPos(v); if (playing) void playFrom(v) }} />
+        </div>
       </div>
 
       {/* one strip per stem */}

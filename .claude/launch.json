@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "studio-browser",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--prefix", "apps/desktop", "vite", "--config", "apps/desktop/vite.browser.config.ts"],
+      "port": 5199
+    }
+  ]
+}

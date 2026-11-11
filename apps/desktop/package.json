@@ -9,6 +9,7 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build && electron-builder --win nsis --publish never",
     "preview": "electron-vite preview",
+    "preview:browser": "vite --config vite.browser.config.ts",
     "test": "esbuild tests/studio.test.ts --bundle --platform=node --outfile=out/tests/studio.cjs --log-level=warning && node out/tests/studio.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p src/renderer/tsconfig.json"
   },

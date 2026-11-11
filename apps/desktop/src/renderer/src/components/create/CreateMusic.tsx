@@ -805,7 +805,7 @@ export function CreateMusic(): React.ReactElement {
             <span style={label}>{tr("Into project")}</span>
             <select value={intoProject} onChange={(e) => setIntoProject(e.target.value as 'none' | 'new')} style={{ flex: 1 }}>
               <option value="none">{tr("None")}</option>
-              <option value="new">{tr("New audio track(s) on the timeline")}</option>
+              <option value="new">{tr("New audio track(s) in the Studio")}</option>
             </select>
           </div>
           <button className="btn btn-primary" onClick={create}

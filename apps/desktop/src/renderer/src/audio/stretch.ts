@@ -77,7 +77,7 @@ export async function stretchBuffer(buf: AudioBuffer, ratio: number): Promise<Au
   const out = new AudioBuffer({ length: target, numberOfChannels: ch, sampleRate: buf.sampleRate })
   for (let c = 0; c < ch; c++) {
     const rendered = render(buf.getChannelData(c), analysis, outLen, win)
-    out.copyToChannel(rendered.subarray(0, target), c)
+    out.copyToChannel(rendered.subarray(0, target) as Float32Array<ArrayBuffer>, c)
     await new Promise((r) => setTimeout(r, 0))
   }
   return out

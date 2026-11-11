@@ -102,7 +102,7 @@ const DE: Record<string, string> = {
   'More steps are slower and usually cleaner. Turbo models need only about 8.': 'Mehr Schritte sind langsamer und meist sauberer. Turbo-Modelle brauchen nur etwa 8.',
   'Music model': 'Musikmodell',
   'Negative prompt': 'Negativ-Prompt',
-  'New audio track(s) on the timeline': 'Neue Audiospur(en) im Studio',
+  'New audio track(s) in the Studio': 'Neue Audiospur(en) im Studio',
   'No LoRA selected. Add one to steer the style, artist or sound.': 'Keine LoRA gewählt. Füge eine hinzu, um Stil, Künstler oder Klang zu steuern.',
   'No news from the engine for a minute. It is still computing; very long songs on slow hardware pause between steps.': 'Seit einer Minute keine Meldung von der Engine. Sie rechnet noch; sehr lange Songs auf langsamer Hardware pausieren zwischen den Schritten.',
   'No reference': 'Keine Referenz',

@@ -22,7 +22,11 @@
     "volume": "Master-Lautstärke"
   },
   "sidebar": {
+    "create": "Musik erstellen",
+    "library": "Bibliothek",
     "timeline": "Studio",
+    "mastering": "Mastering",
+    "karaoke": "Karaoke-Export",
     "pianoRoll": "Piano-Roll",
     "mixer": "Mixer",
     "vocalEditor": "Vokal-Editor",

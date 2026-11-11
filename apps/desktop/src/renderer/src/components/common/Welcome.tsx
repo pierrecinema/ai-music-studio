@@ -74,7 +74,7 @@ export function Welcome(): React.ReactElement | null {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={goSettings}>Install AI engines</button>
           <button className="btn btn-ghost" onClick={() => go('create')}>Create music</button>
-          <button className="btn btn-ghost" onClick={() => go('timeline')}>Start with the timeline</button>
+          <button className="btn btn-ghost" onClick={() => go('timeline')}>Start in the Studio</button>
           <span style={{ flex: 1 }} />
           <button className="btn btn-ghost" onClick={close}>Close</button>
         </div>

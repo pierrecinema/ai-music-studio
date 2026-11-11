@@ -33,8 +33,8 @@ export function BeatMatchCard(): React.ReactElement | null {
   const value = parseFloat(bpm.replace(',', '.'))
   const valid = value >= 40 && value <= 240
   const close = (): void => next()
-  const half = (): void => valid && setBpm(String(Math.round((value / 2) * 100) / 100))
-  const twice = (): void => valid && setBpm(String(Math.round(value * 2 * 100) / 100))
+  const half = (): void => { if (valid) setBpm(String(Math.round((value / 2) * 100) / 100)) }
+  const twice = (): void => { if (valid) setBpm(String(Math.round(value * 2 * 100) / 100)) }
   const apply = (kind: 'clip' | 'project'): void => {
     if (!valid) return
     const ok = kind === 'clip' ? matchClip(p, value, align) : matchProject(p, value, align)

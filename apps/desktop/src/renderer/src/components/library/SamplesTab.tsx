@@ -104,20 +104,18 @@ export function SamplesTab(): React.ReactElement {
 
   const add = async (e: SampleEntry, sync: boolean): Promise<void> => {
     setError(null)
-    const st = useProjectStore.getState()
-    const sel = st.project.tracks.find((t) => t.id === st.selectedTrackId)
     const bpm = sync ? await tempoOf(e) : null
     if (sync && !bpm) { setNotice(`No tempo found for “${e.name}”: it was added without syncing.`) }
     const problems = await importAudioFiles([e.path], {
-      trackId: sel?.type === 'audio' ? sel.id : undefined,
+      // always a track of its own (the selected one kept collecting every sample before)
       startBeat: useAudioStore.getState().currentBeat,
       warpBpm: sync && bpm ? bpm : undefined,
       noBeatMatch: !sync                                     // “Add as is” means: leave it alone
     })
     if (problems.length) { setError(problems.join(' ')); return }
     const tracks = useProjectStore.getState().project.tracks
-    const track = tracks.find((t) => t.clips.some((c) => c.audioFile === e.path)) ?? tracks[tracks.length - 1]
-    if (track && !sel) useProjectStore.getState().updateTrack(track.id, { name: e.name })
+    const track = tracks[tracks.length - 1]
+    if (track) useProjectStore.getState().updateTrack(track.id, { name: e.name })
     setNotice(sync && bpm ? `“${e.name}” was added and synced from ${Math.round(bpm)} to ${projectBpm} BPM.` : `“${e.name}” was added.`)
   }
 

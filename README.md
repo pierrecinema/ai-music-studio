@@ -17,7 +17,7 @@ No programming, no command line: just the installer.
 
 **Updates come automatically:** the app checks for new versions and installs them with one click (Settings → Updates). The SmartScreen warning only comes with the installer downloaded in the browser.
 
-Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Beta testing: [docs/BETA.md](docs/BETA.md)
+Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Beta testing: [docs/BETA.md](docs/BETA.md) · Test plan: [docs/TESTPLAN.md](docs/TESTPLAN.md)
 
 ### ☕ Buy me a coffee
 
@@ -94,6 +94,12 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 **Beta testers wanted** ([guide, German](docs/BETA.md)): we are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
+
+### New in 0.18.2
+
+- **Every new clip gets its own track:** *Studio: synced* / *as is* in the Samples tab no longer put every sample onto the selected track; like *Add to project* in the Library, each one now gets a new audio track.
+- **Drag a clip below the last track** in the Studio: a dashed frame shows "Release here: new audio track" (or MIDI track), and on release the clip moves onto a new track of its kind.
+- **Test plan** for systematic testing: [docs/TESTPLAN.md](docs/TESTPLAN.md) (German).
 
 ### New in 0.18.1
 

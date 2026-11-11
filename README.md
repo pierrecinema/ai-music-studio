@@ -19,6 +19,31 @@
 | **AI Chat** | Claude (Anthropic) or ChatGPT (OpenAI) — your choice |
 | **Multilingual** | 🇩🇪 🇬🇧 🇫🇷 🇪🇸 🇮🇹 🇵🇹 🇨🇳 🇯🇵 🇰🇷 |
 
+## Screenshots
+
+*Shown with demo content: example songs, a demo project and a PC without AI engines installed yet.*
+
+<img src="docs/screenshots/studio.png" alt="Studio" width="100%">
+**Studio** – arrangement with loop and markers, automation lane, tempo-synced loops pasted one after the other, MIDI clip, reverb return track.
+
+<img src="docs/screenshots/create-studio.png" alt="Create music" width="100%">
+**Create music** – describe the style, write lyrics, pick a model and make a song or a seamless loop (1–16 bars). Simple and Studio mode.
+
+<img src="docs/screenshots/library.png" alt="Library" width="100%">
+**Library** – every created song and loop is kept with its tempo; loops are named like "Deep house – Loop 124 BPM 4 bars".
+
+| | |
+|---|---|
+| <img src="docs/screenshots/piano-roll.png" alt="Piano Roll" width="100%"><br>**Piano Roll** – draw, move and quantize MIDI notes | <img src="docs/screenshots/mixer.png" alt="Mixer" width="100%"><br>**Mixer** – faders, pan, mute/solo, level meters, master |
+| <img src="docs/screenshots/vocal-editor.png" alt="Vocal Editor" width="100%"><br>**Vocal Editor** – voices and lyrics for AI singing (in development) | <img src="docs/screenshots/instruments.png" alt="AI Instruments" width="100%"><br>**AI Instruments** – instruments for MIDI tracks (in development) |
+| <img src="docs/screenshots/stem-splitter.png" alt="Stem Splitter" width="100%"><br>**Stem Splitter** – vocals, drums, bass and more with Demucs | <img src="docs/screenshots/mastering.png" alt="Mastering" width="100%"><br>**Mastering** – match a mix to a reference track |
+| <img src="docs/screenshots/karaoke.png" alt="Karaoke Export" width="100%"><br>**Karaoke Export** – word timing, .lrc and lyric videos | <img src="docs/screenshots/video-composer.png" alt="Video Composer" width="100%"><br>**Video Composer** – music that follows the cuts of a video |
+| <img src="docs/screenshots/ai-chat.png" alt="AI Chat" width="100%"><br>**AI Chat** – Claude or ChatGPT as a music assistant (your own API key) | <img src="docs/screenshots/settings-ai-engines.png" alt="Settings → AI Engines" width="100%"><br>**Settings → AI Engines** – install the local AI models with one click |
+| <img src="docs/screenshots/settings-hardware.png" alt="Settings → Hardware" width="100%"><br>**Settings → Hardware** – what this PC can run, and how fast | <img src="docs/screenshots/settings-models.png" alt="Settings → Models" width="100%"><br>**Settings → Models** – downloaded models, sizes and the models folder |
+| <img src="docs/screenshots/settings-shortcuts.png" alt="Settings → Shortcuts" width="100%"><br>**Settings → Shortcuts** – Ableton Live 12 or Cubase key layout | <img src="docs/screenshots/settings-ai.png" alt="Settings → AI" width="100%"><br>**Settings → AI** – Claude or ChatGPT for the AI chat |
+| <img src="docs/screenshots/settings-general.png" alt="Settings → General" width="100%"><br>**Settings → General** – language and VST plugin folders | <img src="docs/screenshots/settings-audio.png" alt="Settings → Audio" width="100%"><br>**Settings → Audio** – sample rate and buffer size |
+| <img src="docs/screenshots/settings-appearance.png" alt="Settings → Appearance" width="100%"><br>**Settings → Appearance** – dark or light theme | <img src="docs/screenshots/settings-updates.png" alt="Settings → Updates" width="100%"><br>**Settings → Updates** – automatic updates from GitHub releases |
+
 **Manual (German, incl. first-time setup):** [docs/MANUAL.md](docs/MANUAL.md)
 **Beta testing (German):** [docs/BETA.md](docs/BETA.md). We are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 

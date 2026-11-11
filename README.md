@@ -30,6 +30,8 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 - **Piano Roll:** draw, move and quantize MIDI notes
 - **Right in the Studio:** split a clip into stems from the right-click menu, quick export of the song
 - **Projects:** save and open, undo / redo
+Free, open-source AI music studio and DAW for Windows: songs, loops and stems with AI on your own PC. Studio with mixer, piano roll and automation.
+- 
 
 ### AI: available now
 

@@ -15,6 +15,8 @@ No programming, no command line: just the installer.
 
 Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Beta testing: [docs/BETA.md](docs/BETA.md)
 
+**Support the project:** AI Music Studio is free and stays free. A ⭐ on GitHub or a small donation via [PayPal](https://paypal.me/djpedroflores) helps to keep it going.
+
 ## Features
 
 | Feature | Technology |
@@ -60,6 +62,11 @@ Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Bet
 **Beta testers wanted** ([guide, German](docs/BETA.md)): we are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
+
+### New in 0.16.1
+
+- **Support the project:** Settings → About has a *Donate with PayPal* button, next to the GitHub star. Everything stays free.
+- **Cloud Rendering (Pro)** appears in the menu as *Coming soon*: an optional paid extra that renders on fast NVIDIA graphics cards in the cloud. Everything you have now stays free and local.
 
 ### New in 0.16
 

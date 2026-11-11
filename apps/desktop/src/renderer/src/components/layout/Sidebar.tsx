@@ -11,7 +11,7 @@ interface NavItem {
   soon?: boolean        // not finished yet: shown dimmed, opens a "Coming soon" page
 }
 
-export const COMING_SOON: View[] = ['vocal-editor', 'instruments', 'karaoke', 'video-composer']
+export const COMING_SOON: View[] = ['vocal-editor', 'instruments', 'karaoke', 'video-composer', 'cloud']
 
 const NAV_ITEMS: NavItem[] = [
   { view: 'create',         icon: '✨', labelKey: 'sidebar.create',        fallback: 'Create music' },
@@ -26,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { view: 'karaoke',        icon: '🎙', labelKey: 'sidebar.karaoke',       fallback: 'Karaoke Export' },
   { view: 'video-composer', icon: '🎬', labelKey: 'sidebar.videoComposer', fallback: 'Video Composer' },
   { view: 'ai-chat',        icon: '💬', labelKey: 'sidebar.aiChat',        fallback: 'AI Chat' },
+  { view: 'cloud',          icon: '☁',  labelKey: 'sidebar.cloud',         fallback: 'Cloud Rendering (Pro)' },
 ]
 
 const COLLAPSED = 56

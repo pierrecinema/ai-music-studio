@@ -460,7 +460,7 @@ const smallBtnStyle: React.CSSProperties = { padding: '6px 12px', background: 'v
 
 // About: what the project is, where it lives, and a friendly ask for a GitHub star
 function AboutTab(): React.ReactElement {
-  const link = (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions', text: string, primary = false): React.ReactElement => (
+  const link = (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions' | 'donate', text: string, primary = false): React.ReactElement => (
     <button className={`btn ${primary ? 'btn-primary' : 'btn-ghost'}`} onClick={() => void window.api.shell.openProject(page)}>{text}</button>
   )
   return (
@@ -484,6 +484,14 @@ function AboutTab(): React.ReactElement {
           project and shows that it is worth working on.
         </div>
         <div>{link('home', '⭐ Star on GitHub', true)}</div>
+      </div>
+      <div style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-mid)', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>❤ Support the project</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          AI Music Studio is free and stays free. If it is useful to you, a small donation helps to keep it going:
+          new features, more AI models and code signing for the installer.
+        </div>
+        <div>{link('donate', '❤ Donate with PayPal', true)}</div>
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {link('home', 'Project page')}

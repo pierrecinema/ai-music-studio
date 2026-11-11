@@ -15,6 +15,9 @@ function openDialog(e: IpcMainInvokeEvent, options: OpenDialogOptions): Promise<
   return win ? dialog.showOpenDialog(win, options) : dialog.showOpenDialog(options)
 }
 
+// PayPal.Me page of the project owner, for donations (Settings → About)
+const DONATE_URL = 'https://paypal.me/djpedroflores'
+
 export function registerIpcHandlers(serverManager: ServerManager): void {
   ipcMain.handle('server:url', () => serverManager.serverUrl)
   ipcMain.handle('server:ready', () => serverManager.isReady())
@@ -156,8 +159,9 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     // only Hugging Face pages, never an arbitrary address from the page
     if (/^https:\/\/huggingface\.co\/[\w.-]+\/[\w.-]+\/?$/.test(url)) void shell.openExternal(url)
   })
-  // the project's own GitHub pages (About, star, issues, releases): nothing else
+  // the project's own GitHub pages (About, star, issues, releases) and its donation page: nothing else
   ipcMain.handle('shell:open-project', (_, page: string) => {
+    if (page === 'donate') { void shell.openExternal(DONATE_URL); return }
     const pages: Record<string, string> = {
       home: '', releases: '/releases', issues: '/issues', newIssue: '/issues/new', discussions: '/discussions'
     }

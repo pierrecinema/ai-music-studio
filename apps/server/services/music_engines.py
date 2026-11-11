@@ -111,6 +111,10 @@ def rate(e: EngineInfo, m: Machine) -> dict:
     if e.id == "musicgen-small" and dml_python() is not None and status != "unavailable":
         status, why = "ready", "Runs on your graphics card through DirectML: about 2.5 minutes per 15 s clip (measured on an AMD Radeon R9 290)."
         gpu_note = "gpu"
+    elif e.id in ("musicgen-medium", "musicgen-large") and dml_python() is not None and status != "unavailable" \
+            and e.id in dml_engines():
+        status, why = "ready", "Runs on your AMD / Intel graphics card through DirectML (enough graphics memory)."
+        gpu_note = "gpu"
     d = asdict(e)
     d.update(status=status, reason=why, usable=(e.kind == "built-in" and status != "unavailable"), accel=gpu_note)
     return d
@@ -275,11 +279,30 @@ def dml_python() -> str | None:
     return p if p and os.path.exists(p) else None
 
 
-DML_ENGINES = {"musicgen-small"}      # measured to work; larger models do not fit 4 GB cards in fp32
+DML_ENGINES = {"musicgen-small"}      # measured to work on a 4 GB card (Radeon R9 290)
+# Bigger MusicGen models on the graphics card (fp32: the weights alone need about 6 GB and 13 GB):
+DML_BY_VRAM = (("musicgen-medium", 8.0), ("musicgen-large", 16.0))
+
+
+def dml_gpu_vram() -> float:
+    """GPU memory of the best AMD / Intel card (DirectML); 0 when unknown or none."""
+    try:
+        from services.capabilities import get_report
+        gpus = get_report()["machine"].get("gpus", [])
+        return max((float(g.get("vram_gb") or 0) for g in gpus if g.get("vendor") in ("amd", "intel")), default=0.0)
+    except Exception:  # noqa: BLE001
+        return 0.0
+
+
+def dml_engines(vram_gb: float | None = None) -> set[str]:
+    """Models that run on an AMD / Intel card through DirectML: MusicGen small on any DirectX 12 card,
+    medium and large when the card has the memory for them."""
+    v = dml_gpu_vram() if vram_gb is None else vram_gb
+    return set(DML_ENGINES) | {e for e, need in DML_BY_VRAM if v >= need}
 
 
 def can_use_dml(engine_id: str) -> bool:
-    return dml_python() is not None and engine_id in DML_ENGINES
+    return dml_python() is not None and engine_id in dml_engines()
 
 
 def generate_dml(engine_id: str, prompt: str, seconds: int, seed: int, wav_path: str,

@@ -57,6 +57,10 @@ Standard ist **CPU** (bei NVIDIA-Karten CUDA). Die Karte wird beim Start erkannt
 
 **Einstellungen → AI**: Anbieter wählen (Claude oder ChatGPT), Schlüssel eintragen, Modell wählen (aktuelle Claude-Modelle sind in der Liste, jede andere Modell-ID geht über „Other model ID…“). Jeder Anbieter merkt sich sein eigenes Modell. Der Schlüssel wird lokal im App-Datenordner gespeichert (nicht verschlüsselt). Ohne Schlüssel funktionieren alle lokalen Funktionen, nur der KI-Chat nicht.
 
+**KI-Assistent ohne Kosten:** Unter Einstellungen → AI gibt es neben Claude und ChatGPT auch **Grok (xAI)** mit eigenem API-Schlüssel und **Ollama**. Ollama läuft auf deinem PC und braucht kein Konto und keinen Schlüssel: von ollama.com installieren, einmal `ollama pull llama3.2` in der Eingabeaufforderung ausführen, in der App *Ollama* wählen.
+
+**Über das Projekt:** Einstellungen → *About* zeigt Version, Projektseite auf GitHub und Links zum Melden von Problemen. Wenn dir die App gefällt, gib ihr dort einen ⭐ auf GitHub.
+
 ### Schritt 4: Optionale Programme
 
 - **Git** (für ACE-Step): `winget install Git.Git`
@@ -80,6 +84,7 @@ Nach der Installation die App neu starten, damit sie die neuen Programme im PATH
   - **Source and reference:** Quell-Track (Cover/Remix) und Klang-Referenz
   - **LoRA**, **Quality** (Schritte, Songs × Variationen × Queue, Seed) und **Advanced** (Sprachmodell-Stufe, Rendering, LoRA je Schicht, Ausgabe: FLAC/MP3/WAV, Fades)
   - **Into project:** legt die fertigen Songs als Audiospuren im Studio an
+  - **Abbrechen dauert höchstens Sekunden (ab 0.16):** Hört ein Modell nicht rechtzeitig auf (ACE-Step auf der CPU rechnet manchmal minutenlang an einem Schritt), startet die App den KI-Teil nach etwa 8 Sekunden neu. Das Modell wird beim nächsten Song wieder geladen.
   - **Loop erzeugen:** In der Karte **Loop** *Create loop* einschalten, die Taktzahl wählen (1, 2, 4, 8, 16) und die BPM eintragen (leer = 120). Heraus kommt ein Loop von genau dieser Länge, der auf Schlag 1 beginnt. Die App lässt das Modell etwas mehr Musik erzeugen, misst das Tempo, schneidet den Loop ab dem zweiten Takt genau auf dem Beat-Raster und blendet die Musik nach dem Loop-Ende in seinen Anfang über. Dadurch läuft der Loop beim Wiederholen ohne Lücke und ohne Knacks. Im Studio landet er mit seinem eigenen Tempo synchronisiert; mit **Strg+D** legst du Kopien direkt dahinter, die genau auf die Takte passen. Spielt das Modell ein anderes Tempo als gewünscht, behält der Loop das echte Tempo und das Studio streckt ihn auf das Projekttempo. Loops werden als FLAC oder WAV gespeichert (MP3 hätte am Anfang eine kurze Stille) und ohne Ein- und Ausblendung. Im Titel steht, was es ist, z. B. „Deep house – Loop 124 BPM 4 bars“ (in der Bibliothek und als Spurname im Studio).
   - **Abbrechen:** Während ein Song erzeugt wird, steht unter *Create* der Knopf **✕ Abbrechen** (auch als ✕ neben dem Fortschritt in der Statusleiste). Die App stoppt beim nächsten Rechenschritt; DiffRhythm und der Grafikkarten-Weg (DirectML) werden sofort beendet. Wartet der Auftrag noch, startet er gar nicht erst. Songs, die schon fertig waren (bei mehreren Songs pro Auftrag), bleiben in der Bibliothek.
   - **A cappella (voice only):** Der Text wird **nur gesungen, ohne Instrumente**. Die App sagt dem Modell „a cappella, keine Instrumente“ und trennt nach dem Rendern die Stimme mit Demucs von allem, was das Modell trotzdem dazugelegt hat (Pad, Klick, Hall). Heraus kommt eine saubere, trockene Gesangsspur für Remixe oder einen eigenen Beat. Dafür braucht es Text und ein Modell, das singen kann: **ACE-Step** oder **DiffRhythm** (MusicGen und die anderen können nicht singen). Stil, Stimme (Male/Female), Sprache, BPM und Tonart gelten wie gewohnt. Ohne installiertes Demucs (Einstellungen → AI Engines, Stem Splitter) bleibt der Song so, wie das Modell ihn gerendert hat, und die App weist darauf hin.
@@ -234,6 +239,16 @@ Diese Funktionen sind neu und noch Beta. Rückmeldungen sind besonders willkomme
 
 **Ältere Songs auf Schlag 1 schneiden.** In der Bibliothek kann ein Song, der vor 0.11 gespeichert wurde, nachträglich auf Schlag 1 geschnitten werden. Das Original bleibt als Sicherung erhalten und lässt sich mit *Restore original* zurückholen.
 
+## Bibliothek: Meine Tracks, Stems, Samples (ab 0.16)
+
+- **Reiter:** *My tracks* (Songs und Loops aus Create music, importierte Dateien), *Stems* (gespeicherte Stems, nach Song gruppiert) und *Samples* (deine Sample-Ordner, z. B. Ableton).
+- **Suche:** nach Name, Tag oder BPM. `124` findet 123 bis 125 BPM, `120-130` einen Bereich. Ein Klick auf einen Tag zeigt alles mit diesem Tag.
+- **Tags:** beim Erzeugen (Create music → *Tags*), beim Speichern von Stems und jederzeit mit dem Knopf *Tags*. Mehrere mit Kommas trennen.
+- **Export…:** speichert eine Kopie als eigene Datei in einem Ordner deiner Wahl: WAV 16/24/32 Bit, AIFF, FLAC oder MP3 (MP3 braucht ffmpeg). Bei Stems exportiert *Export all…* alle Stems eines Songs, jeden als eigene Datei.
+- **Samples:** *Studio: synced* legt das Sample am Abspielkopf ins Studio und streckt es auf das Projekttempo, *Studio: as is* legt es unverändert hinein. Beides landet nur im Studio-Projekt, nicht in der Bibliothek. *+ Library* kopiert das Sample in die Bibliothek (My tracks), wo du es mit Tags versehen, suchen und exportieren kannst.
+
+**Stem Splitter:** Nach dem Trennen gibst du einen Namen und Tags ein und drückst *Save to library*: Die Stems liegen dann in der Bibliothek im Ordner *Stems/<Song>*. *Export…* speichert sie direkt als einzelne Dateien im gewünschten Format.
+
 ## Bibliothek
 
 **Jeder erzeugte Song beginnt auf Schlag 1.** Bevor ein Song gespeichert wird, misst die App Tempo und ersten Schlag und schneidet alles vor dem ersten Schlag ab (Stille, Einblendung, halber Schlag Vorlauf). Die gespeicherte Datei beginnt also genau auf Takt 1, und die App merkt sich Tempo und Anfang in der Bibliothek (zu sehen als „120 BPM“ neben dem Song). Im Ergebnisfeld steht dazu eine Zeile, wie viel abgeschnitten wurde. Grenzen: Es wird nur ein Vorlauf bis 6 Sekunden entfernt und nur, wenn er kürzer als etwa ein Schlag ist oder aus Stille besteht (ein echter Auftakt oder ein längeres Intro bleibt erhalten, damit keine Noten verloren gehen). Musik ohne erkennbaren Schlag (Ambient) verliert nur die Stille am Anfang. Songs, die schon vor dieser Version gespeichert wurden, bleiben zunächst unverändert.
@@ -356,7 +371,7 @@ Getestet ist die Verbindung mit dem offiziellen MCP-Python-Client (Verbindung, W
 
 ## 8. Bekannte Einschränkungen (Alpha)
 
-- **Gesangssynthese und KI-Instrumente** (Vocal Editor, Instruments) sind noch Platzhalter: Ohne angebundene Modelle erzeugen sie Stille bzw. eine einfache FluidSynth-Notlösung. Echte DiffSinger-/DDSP-Anbindung fehlt noch.
+- **Vocal Editor, AI Instruments, Karaoke Export und Video Composer** sind im Menü abgeblendet und zeigen „Coming soon“: Sie sind noch nicht fertig und kommen mit einem späteren Update.
 - Die Engines (ACE-Step, Matchering, Whisper, MuScriptor) sind eingebunden, aber noch nicht auf allen Hardware-Kombinationen erprobt.
 - Eine LoRA pro Durchgang.
 - MCP steuert nur Erzeugen und Analysieren, noch nicht das offene Projekt (Spuren, Noten, Transport).

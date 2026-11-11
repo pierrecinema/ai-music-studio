@@ -1,4 +1,4 @@
-import { ChildProcess, spawn } from 'child_process'
+import { ChildProcess, spawn, execFile } from 'child_process'
 import { appendFileSync, existsSync, mkdirSync, renameSync, statSync, writeFileSync } from 'fs'
 import { createServer } from 'net'
 import { dirname, join } from 'path'
@@ -46,6 +46,7 @@ export class ServerManager {
   }
 
   async start(): Promise<void> {
+    this.stopping = false
     const python = this.pythonExecutable()
     if (!python) {
       console.warn('[Server] No Python environment yet — open Settings → AI Engines to set it up.')
@@ -80,7 +81,19 @@ export class ServerManager {
     this.process.stdout?.on('data', (d) => { sink(d); console.log('[Server]', d.toString().trim()) })
     this.process.stderr?.on('data', (d) => { sink(d); console.error('[Server]', d.toString().trim()) })
     this.process.on('error', (e) => console.error('[Server] failed to start:', e.message))
-    this.process.on('exit', () => { this.ready = false; this.process = null })
+    const proc = this.process
+    proc.on('exit', (code) => {
+      if (this.process === proc) { this.ready = false; this.process = null }
+      // The backend ends itself when a Cancel cannot stop the AI model in time (the model runs inside it):
+      // start it again right away, so the app keeps working. Same after a crash, but at most 5 times a minute.
+      if (this.stopping) return
+      const now = Date.now()
+      this.restarts = this.restarts.filter((t) => now - t < 60000)
+      if (this.restarts.length >= 5) { console.error('[Server] stopped repeatedly; not restarting again'); return }
+      this.restarts.push(now)
+      console.warn(`[Server] exited (code ${code}); restarting`)
+      setTimeout(() => { if (!this.process && !this.stopping) void this.start() }, 800)
+    })
 
     await this.waitForReady()
   }
@@ -106,16 +119,28 @@ export class ServerManager {
     })
   }
 
+  private stopping = false
+  private restarts: number[] = []
+
+  // Ends the backend AND everything it started (AI workers for DiffRhythm, ACE-Step 1.5, the graphics card).
+  // A plain kill() leaves those running on Windows, which made the updater ask to close the app.
   async stop(): Promise<void> {
-    if (this.process) {
-      this.process.kill()
-      this.process = null
-    }
+    this.stopping = true
+    const proc = this.process
+    this.process = null
     this.ready = false
+    if (proc?.pid) {
+      if (process.platform === 'win32') {
+        await new Promise<void>((resolve) => execFile('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { windowsHide: true }, () => resolve()))
+      } else {
+        proc.kill()
+      }
+    }
   }
 
   async restart(): Promise<void> {
     await this.stop()
+    this.stopping = false
     await this.start()
   }
 

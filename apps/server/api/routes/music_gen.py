@@ -195,6 +195,7 @@ class GenerateMusicRequest(BaseModel):
     title: str = ""
     prompt: str = ""
     lyrics: str = ""
+    tags: list[str] = []                    # saved with every song and loop in the library (searchable)
     instrumental: bool = False
     acapella: bool = False                  # only the voice: sung lyrics without any instruments
     loop: bool = False                      # a loop of exactly loop_bars bars that repeats seamlessly
@@ -524,7 +525,8 @@ def _keep(path: str, req: "GenerateMusicRequest", seed: int, seconds: float, eng
         entry = library.add_track(path, {
             "title": title, "prompt": req.prompt or "", "lyrics": req.lyrics, "seed": seed,
             "duration": round(seconds, 1), "engine": engine, "source": "generated",
-            "bpm": info.get("bpm"), "first_beat": info.get("first_beat"), "loop_bars": info.get("bars")})
+            "bpm": info.get("bpm"), "first_beat": info.get("first_beat"), "loop_bars": info.get("bars"),
+            "tags": req.tags})
         out = {"audio_file": entry["path"], "library_id": entry["id"], "title": entry["title"],
                "bpm": info.get("bpm"), "first_beat": info.get("first_beat"), "loop_bars": info.get("bars")}
         if entry.get("duration"):
@@ -1022,6 +1024,19 @@ async def generate_music(req: GenerateMusicRequest):
     return {"jobId": job_id}
 
 
+HARD_CANCEL_AFTER = 8.0
+
+
+def _hard_cancel(job: dict) -> None:
+    """A model that runs inside this process (ACE-Step v1 on the CPU) only notices Cancel between two steps,
+    and one step can take minutes. If the job is still running after a few seconds, end the whole backend:
+    the desktop app starts it again at once (the model is loaded again on the next song)."""
+    time.sleep(HARD_CANCEL_AFTER)
+    if job.get("status") == "running" and job.get("cancel"):
+        print("[cancel] the model did not stop in time: restarting the backend", flush=True)
+        os._exit(3)
+
+
 @router.post("/jobs/{job_id}/cancel")
 async def cancel_job(job_id: str):
     """Stop a queued or running job. Songs that are already finished stay in the library."""
@@ -1035,6 +1050,7 @@ async def cancel_job(job_id: str):
         job.update(status="cancelled", stage="done", stage_text="Cancelled", finished=time.time())
         return {"cancelled": True, "status": "cancelled"}
     job["stage_text"] = "Cancelling: stops at the next step"
+    threading.Thread(target=_hard_cancel, args=(job,), daemon=True).start()
     proc = _procs.get(job_id)
     if proc is not None:
         try:
@@ -1052,9 +1068,9 @@ async def engines():
     import asyncio
     m = await asyncio.to_thread(detect_machine, os.environ.get("AMS_ACESTEP_DIR"))
     from services.music_engines import recommend
-    from services.music_engines import DML_ENGINES, dml_python
+    from services.music_engines import dml_engines, dml_python
     return {"engines": catalog(m), "recommended": recommend(m), "gpu_path": dml_python() is not None,
-            "gpu_models": sorted(DML_ENGINES)}
+            "gpu_models": sorted(dml_engines())}
 
 
 @router.get("/jobs/{job_id}")

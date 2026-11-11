@@ -69,6 +69,8 @@ const DE: Record<string, string> = {
     'Für Gesang wähle ein Modell, das singen kann. ACE-Step läuft auf jedem PC, braucht ohne NVIDIA-Karte aber sehr lange (auf dem Prozessor etwa eine Stunde oder mehr pro Minute Musik). DiffRhythm braucht eine NVIDIA-Karte.',
   'Generating…': 'Erzeuge…',
   'Cancel': 'Abbrechen',
+  'Tags (optional)': 'Tags (optional)',
+  'Genre, mood or anything you want to find this song or loop by in the Library. Separate with commas.': 'Genre, Stimmung oder was immer du in der Bibliothek suchen willst. Mit Kommas trennen.',
   'Loop': 'Loop',
   'Create loop': 'Loop erzeugen',
   'Bars': 'Takte',

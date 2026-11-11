@@ -14,6 +14,7 @@ import { Mixer } from './components/mixer/Mixer'
 import { VocalEditor } from './components/vocal-editor/VocalEditor'
 import { InstrumentPanel } from './components/instruments/InstrumentPanel'
 import { AIChat } from './components/ai-chat/AIChat'
+import { ComingSoon } from './components/common/ComingSoon'
 import { StemSplitter } from './components/stem-splitter/StemSplitter'
 import { VideoComposer } from './components/video-composer/VideoComposer'
 import { Settings } from './components/settings/Settings'
@@ -141,22 +142,22 @@ export default function App(): React.ReactElement {
     switch (activeView) {
       case 'piano-roll':    return <PianoRoll />
       case 'mixer':         return <Mixer />
-      case 'vocal-editor':  return <VocalEditor />
-      case 'instruments':   return <InstrumentPanel />
+      case 'vocal-editor':  return <ComingSoon name="Vocal Editor" icon="🎤" />
+      case 'instruments':   return <ComingSoon name="AI Instruments" icon="🎻" />
       case 'ai-chat':       return <AIChat />
       case 'stem-splitter': return <StemSplitter />
-      case 'video-composer':return <VideoComposer />
+      case 'video-composer':return <ComingSoon name="Video Composer" icon="🎬" />
       case 'create':        return <CreateMusic />
       case 'library':       return <Library />
       case 'mastering':     return <Mastering />
-      case 'karaoke':       return <KaraokeExport />
+      case 'karaoke':       return <ComingSoon name="Karaoke Export" icon="🎙" />
       case 'settings':      return <Settings />
       default:              return null
     }
   }
 
   // These views need room: they use the whole main area instead of the strip under the timeline
-  const FULL_VIEWS = ['create', 'library', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'video-composer', 'ai-chat']
+  const FULL_VIEWS = ['create', 'library', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'video-composer', 'ai-chat', 'vocal-editor', 'instruments']
   const panel = renderPanel()
   const fullView = FULL_VIEWS.includes(activeView)
 

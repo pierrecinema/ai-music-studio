@@ -7,6 +7,7 @@ export interface MusicParams {
   instrumental: boolean
   acapella: boolean         // only the voice: the lyrics sung without any instruments
   loop: boolean             // a loop of exactly loopBars bars that repeats seamlessly in the Studio
+  tags: string              // comma separated, saved with the song or loop in the library
   loopBars: number
   language: string
   voice: 'any' | 'male' | 'female'
@@ -73,6 +74,7 @@ export const DEFAULT_PARAMS: MusicParams = {
   instrumental: false,
   acapella: false,
   loop: false,
+  tags: '',
   loopBars: 4,
   language: 'English',
   voice: 'any',
@@ -159,6 +161,7 @@ export function toRequest(p: MusicParams): Record<string, unknown> {
     instrumental: p.instrumental && !p.acapella,
     acapella: p.acapella && !p.instrumental,
     loop: p.loop,
+    tags: p.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 20),
     loop_bars: p.loopBars,
     language: p.language,
     voice: p.voice,

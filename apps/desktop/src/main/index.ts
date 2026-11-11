@@ -82,7 +82,7 @@ app.whenReady().then(async () => {
 
   createWindow()
 
-  if (mainWindow) setupUpdater(mainWindow)
+  if (mainWindow) setupUpdater(mainWindow, () => serverManager.stop())
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

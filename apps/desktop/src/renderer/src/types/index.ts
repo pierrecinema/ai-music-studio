@@ -110,7 +110,7 @@ export interface AIInstrument {
   tags: string[]
 }
 
-export type AIProvider = 'claude' | 'openai'
+export type AIProvider = 'claude' | 'openai' | 'grok' | 'ollama'
 
 export interface AIMessage {
   role: 'user' | 'assistant'

@@ -59,6 +59,18 @@ Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Bet
 
 **Beta testers wanted** ([guide, German](docs/BETA.md)): we are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
+### New in 0.16
+
+- **Stems are kept and exported properly:** after splitting, *Save to library* puts the stems into their own folder in the Library (tab *Stems*, grouped by song, with tags and tempo). *Export…* writes every stem as its own file in the format your DAW wants: WAV 16/24/32-bit, AIFF, FLAC or MP3.
+- **Library with tabs and search:** *My tracks* (songs and loops from Create music, imports), *Stems* and *Samples*. Search by name, tag or BPM (`124`, `120-130`). Tags can be set when creating (Create music → Tags), when saving stems, and later on every item. Every item can be exported. Samples can be copied into the Library (*+ Library*).
+- **Loops stay in sync:** loops go into the Studio with their exact tempo and beat 1 at the file start, so AUTO SYNC and *Sync all* no longer measure them again and nudge them off the grid.
+- **Cancel stops within seconds:** a model that cannot stop in time (ACE-Step on the CPU) makes the AI engine restart itself.
+- **Updates no longer ask you to close the app:** the AI engine and its workers are ended before installing.
+- **More graphics cards:** MusicGen medium and large run on AMD / Intel cards with 8 / 16 GB through DirectML (small on any DirectX 12 card).
+- **AI assistant: Grok (xAI) and Ollama.** Ollama runs a model on your own PC: free, no account, no key.
+- **Settings → About:** project, links, and a request for a GitHub ⭐. Vocal Editor, AI Instruments, Karaoke Export and Video Composer show "Coming soon" until they are finished.
+- Windows *Settings → Apps* shows the description, project page and help link.
+
 ### New in 0.15.1
 
 - **Copying text works again:** since 0.14.2 Ctrl+C, Ctrl+A, Ctrl+V and Ctrl+X were taken by the Studio everywhere, so log texts could not be copied. They now copy clips only in the Studio, piano roll and mixer, and never while text is selected or a dialog is open.
@@ -218,7 +230,7 @@ Windows installers are going to be code-signed through the [SignPath Foundation]
 This program does not send any data on its own except where the user turns a feature on:
 - **Update check:** asks GitHub for the latest release (no personal data).
 - **AI engines and models:** downloads packages from PyPI and model files from Hugging Face when you install them in *Settings → AI Engines / Models*.
-- **AI chat:** sends your chat messages to Anthropic (Claude) or OpenAI (ChatGPT) only if you enter your own API key in *Settings → AI*.
+- **AI chat:** sends your chat messages to Anthropic (Claude), OpenAI (ChatGPT) or xAI (Grok) only if you enter your own API key in *Settings → AI*. With Ollama the chat stays on your PC.
 - **Feedback / logs:** reports and detailed logs are only copied or saved on your PC; nothing is uploaded automatically.
 
 Music generation itself runs locally on your computer.

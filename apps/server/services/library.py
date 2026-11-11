@@ -79,7 +79,7 @@ def add_track(src: str, meta: dict) -> dict:
     tid = uuid.uuid4().hex[:10]
     month = time.strftime("%Y-%m")
     title = (meta.get("title") or "").strip() or (meta.get("prompt") or "").split(",")[0].strip()[:60] or "Untitled"
-    folder = library_dir() / month
+    folder = library_dir() / (meta.get("folder") or month)     # stems: "Stems/<song>", everything else by month
     folder.mkdir(parents=True, exist_ok=True)
     dest = folder / f"{_slug(title)}-{tid}{srcp.suffix.lower()}"
     shutil.copy2(srcp, dest)
@@ -99,6 +99,12 @@ def add_track(src: str, meta: dict) -> dict:
         "favorite": False,
         "notes": "",
     }
+    tags = clean_tags(meta.get("tags"))
+    if tags:                                          # genre, mood or anything the user wants to search for
+        entry["tags"] = tags
+    for k in ("stem", "stem_set", "song"):            # stems: which part, which split, which song they come from
+        if meta.get(k):
+            entry[k] = meta[k]
     if meta.get("loop_bars"):                         # a seamless loop of this many bars (Create music → Loop)
         entry["loop_bars"] = meta["loop_bars"]
     if "first_beat" in meta:                          # made since 0.11.0: already cut to beat 1 before saving
@@ -123,8 +129,22 @@ def list_tracks() -> list[dict]:
     return [_public(e) for e in sorted(items, key=lambda e: e.get("created", 0), reverse=True)]
 
 
+def clean_tags(tags) -> list[str]:
+    """'House, deep , house' -> ['house', 'deep']: lower case, trimmed, no duplicates, at most 20."""
+    if isinstance(tags, str):
+        tags = tags.split(",")
+    out: list[str] = []
+    for t in tags or []:
+        t = str(t).strip().lower()[:40]
+        if t and t not in out:
+            out.append(t)
+    return out[:20]
+
+
 def update_track(tid: str, patch: dict) -> dict | None:
-    allowed = {k: v for k, v in patch.items() if k in ("title", "favorite", "notes")}
+    allowed = {k: v for k, v in patch.items() if k in ("title", "favorite", "notes", "tags")}
+    if "tags" in allowed:
+        allowed["tags"] = clean_tags(allowed["tags"])
     with _lock:
         items = _read()
         for e in items:
@@ -283,3 +303,70 @@ def align_all() -> dict:
         except Exception as e:  # noqa: BLE001 - one bad file must not stop the others
             failed.append(f"{tid}: {e}")
     return {"checked": done, "trimmed": cut, "failed": failed}
+
+
+# ── stems: saved together, in their own folder ────────────────────────────────
+
+def add_stems(stems: dict[str, str], title: str, tags=None, source_path: str | None = None) -> list[dict]:
+    """Put the stems of one split into the library (folder "Stems/<title>"), with the song's tempo and tags."""
+    set_id = uuid.uuid4().hex[:8]
+    title = (title or "").strip() or "Stems"
+    bpm = None
+    if source_path and os.path.exists(source_path):
+        try:
+            from services.samples import analyze
+            bpm = analyze(source_path).get("bpm")
+        except Exception:  # noqa: BLE001 - librosa missing or an odd file: no tempo
+            bpm = None
+    folder = f"Stems/{_slug(title)}-{set_id}"
+    out = []
+    for name, path in stems.items():
+        if not path or not os.path.exists(path) or os.path.getsize(path) == 0:
+            continue
+        out.append(add_track(path, {"title": f"{title} – {name}", "source": "stem", "stem": name, "stem_set": set_id,
+                                    "song": title, "tags": tags, "bpm": bpm, "folder": folder}))
+    return out
+
+
+# ── export: copies in the format a DAW wants ──────────────────────────────────
+
+EXPORT_FORMATS = {
+    "wav16": ("wav", "WAV", "PCM_16"), "wav24": ("wav", "WAV", "PCM_24"), "wav32": ("wav", "WAV", "FLOAT"),
+    "aiff": ("aiff", "AIFF", "PCM_24"), "flac": ("flac", "FLAC", "PCM_24"), "mp3": ("mp3", None, None),
+}
+
+
+def export_files(items: list[dict], folder: str, fmt: str) -> list[str]:
+    """Write each {path, name} into `folder` as its own file in the chosen format. Returns the written paths."""
+    import soundfile as sf
+    if fmt not in EXPORT_FORMATS:
+        raise ValueError(f"Unknown format: {fmt}")
+    ext, sf_format, subtype = EXPORT_FORMATS[fmt]
+    dest_dir = Path(folder)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    written = []
+    for it in items:
+        src = Path(it["path"])
+        if not src.exists():
+            raise FileNotFoundError(str(src))
+        base = re.sub(r'[<>:"/\\|?*\x00-\x1f]+', " ", it.get("name") or src.stem)       # Windows file name rules
+        base = re.sub(r"\s+", " ", base).strip(" .")[:120] or "audio"
+        dest = dest_dir / f"{base}.{ext}"
+        n = 2
+        while dest.exists():
+            dest = dest_dir / f"{base} ({n}).{ext}"
+            n += 1
+        if fmt == "mp3":
+            ffmpeg = shutil.which("ffmpeg")
+            if not ffmpeg:
+                raise RuntimeError("MP3 needs ffmpeg, which was not found. Choose WAV, AIFF or FLAC, or install ffmpeg.")
+            import subprocess
+            r = subprocess.run([ffmpeg, "-y", "-i", str(src), "-c:a", "libmp3lame", "-b:a", "320k", str(dest)],
+                               capture_output=True, text=True)
+            if r.returncode != 0:
+                raise RuntimeError(f"ffmpeg failed: {(r.stderr or '')[-200:]}")
+        else:
+            data, sr = sf.read(str(src), dtype="float32", always_2d=True)
+            sf.write(str(dest), data, sr, format=sf_format, subtype=subtype)
+        written.append(str(dest))
+    return written

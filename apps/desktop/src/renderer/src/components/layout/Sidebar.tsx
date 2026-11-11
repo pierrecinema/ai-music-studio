@@ -8,7 +8,10 @@ interface NavItem {
   icon: string
   labelKey: string
   fallback: string
+  soon?: boolean        // not finished yet: shown dimmed, opens a "Coming soon" page
 }
+
+export const COMING_SOON: View[] = ['vocal-editor', 'instruments', 'karaoke', 'video-composer']
 
 const NAV_ITEMS: NavItem[] = [
   { view: 'create',         icon: '✨', labelKey: 'sidebar.create',        fallback: 'Create music' },
@@ -34,12 +37,13 @@ export function Sidebar(): React.ReactElement {
 
   const button = (view: View, icon: string, text: string, size = 16) => {
     const active = activeView === view
+    const soon = COMING_SOON.includes(view)
     return (
       <button
         key={view}
         // a second click on the open Settings button closes it again
         onClick={() => (view === 'settings' && active ? closeSettings() : setActiveView(view))}
-        title={text}
+        title={soon ? `${text} (coming soon)` : text}
         aria-label={text}
         style={{
           width: '100%', height: 40, display: 'flex', alignItems: 'center',
@@ -48,6 +52,7 @@ export function Sidebar(): React.ReactElement {
           background: active ? 'var(--accent)' : 'transparent',
           color: active ? 'white' : 'var(--text-secondary)', fontSize: 13, fontWeight: active ? 700 : 500,
           transition: 'background 0.15s', textAlign: 'left', overflow: 'hidden', whiteSpace: 'nowrap',
+          opacity: soon && !active ? 0.4 : 1, filter: soon ? 'grayscale(0.8)' : undefined,
         }}
       >
         <span style={{ width: 24, textAlign: 'center', fontSize: size, flexShrink: 0 }}>{icon}</span>

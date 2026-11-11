@@ -1,7 +1,8 @@
 {
   "name": "desktop",
-  "version": "0.15.1",
-  "description": "AI Music Studio - open-source AI music production studio",
+  "version": "0.16.0",
+  "description": "AI Music Studio - free, open-source music studio with local AI song and loop generation",
+  "homepage": "https://github.com/pierrecinema/ai-music-studio",
   "author": "pierrecinema",
   "private": true,
   "main": "./out/main/index.js",
@@ -49,7 +50,7 @@
     "appId": "com.aimusic.studio",
     "productName": "AI Music Studio",
     "npmRebuild": false,
-    "copyright": "Copyright © 2024 AI Music Studio",
+    "copyright": "Copyright © 2026 pierrecinema · GPL-3.0 · github.com/pierrecinema/ai-music-studio",
     "directories": {
       "output": "../../dist"
     },

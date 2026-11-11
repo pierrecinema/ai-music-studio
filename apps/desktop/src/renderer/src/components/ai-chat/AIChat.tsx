@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAIStore } from '../../stores/ai.store'
+import { apiKeyFor, PROVIDER_LABEL, useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
 import { api } from '../../lib/api'
 
@@ -10,7 +10,7 @@ interface AIChatProps {
 
 export function AIChat({ compact = false }: AIChatProps): React.ReactElement {
   const { t } = useTranslation()
-  const { provider, messages, isThinking, addMessage, setThinking, claudeApiKey, openaiApiKey, model } = useAIStore()
+  const { provider, messages, isThinking, addMessage, setThinking, model } = useAIStore()
   const { project } = useProjectStore()
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -29,7 +29,7 @@ export function AIChat({ compact = false }: AIChatProps): React.ReactElement {
     addMessage({ role: 'user', content: text })
     setThinking(true)
     try {
-      const apiKey = provider === 'claude' ? claudeApiKey : openaiApiKey
+      const apiKey = apiKeyFor(useAIStore.getState())
       const reply = await api.ai.chat({
         provider,
         apiKey,
@@ -75,7 +75,7 @@ export function AIChat({ compact = false }: AIChatProps): React.ReactElement {
           border: `1px solid ${provider === 'claude' ? '#7c3aed44' : '#10a37f44'}`,
           fontWeight: 600
         }}>
-          {provider === 'claude' ? 'Claude' : 'GPT'}
+          {PROVIDER_LABEL[provider]}
         </div>
       </div>
 

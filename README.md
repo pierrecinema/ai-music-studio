@@ -2,7 +2,6 @@
 
 **Free, open-source AI music studio for Windows:** make songs, seamless loops and stems with AI on your own PC, and arrange them in a full studio (DAW) with mixer, piano roll and automation. No account, no subscription. The AI assistant works with Claude, ChatGPT, Grok or completely free and local with Ollama.
 
-https://youtu.be/F1hakwjWwEc
 
 ## Easy Windows installation
 

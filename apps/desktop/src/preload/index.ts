@@ -88,6 +88,14 @@ const api = {
     openIssues: () => ipcRenderer.invoke('app:open-feedback'),
     showCrashLog: () => ipcRenderer.invoke('app:show-crash-log')
   },
+  diag: {
+    get: () => ipcRenderer.invoke('diag:get'),
+    set: (on: boolean) => ipcRenderer.invoke('diag:set', on),
+    append: (text: string) => ipcRenderer.invoke('diag:append', text),
+    collect: (extra: string) => ipcRenderer.invoke('diag:collect', extra),
+    clear: () => ipcRenderer.invoke('diag:clear'),
+    save: (text: string) => ipcRenderer.invoke('diag:save', text)
+  },
   updater: {
     check: () => ipcRenderer.invoke('updater:check'),
     download: () => ipcRenderer.invoke('updater:download'),

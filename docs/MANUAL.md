@@ -116,7 +116,7 @@ Dazu gehören Stopp, Zurück zum Anfang, Spur duplizieren (Strg+D), neues Projek
 
 - **Rückgängig / Wiederholen** gilt für Änderungen am Projekt (Spuren, Clips, Noten, Tempo). Ein Schieberegler-Zug zählt als ein Schritt.
 - In Textfeldern tippst du normal, die Kürzel greifen dort nicht (Funktionstasten ausgenommen).
-- Aufgenommen sind nur Kürzel für Funktionen, die die App hat. Loop, Quantisieren, Comping u. Ä. folgen, wenn es die Funktionen gibt.
+- Aufgenommen sind nur Kürzel für Funktionen, die die App hat. Neu seit 0.13: **Loop um die Auswahl** (Ableton Strg+L, Cubase P), **Loop an/aus** (Cubase Num /), **Punch-in / Punch-out** (Cubase I / O), **Marker setzen / nächster / vorheriger** (Cubase Einfg / Umschalt+N / Umschalt+B), **alles auswählen** (Strg+A), **Konsolidieren** (Ableton Strg+J), **Crossfade** (Cubase X), **Spuren gruppieren** (Ableton Strg+G) und **Automationsspur ein/aus** (Ableton A).
 - Quellen: Ableton-Kürzel aus dem Live-12-Handbuch (Windows). Cubase-Kürzel sind die Standard-Tastenbefehle laut Steinberg-Forenliste (Stand Cubase 11), bei neueren Versionen können einzelne abweichen.
 
 ## Modelle und Speicherplatz (Einstellungen → Models)
@@ -194,6 +194,38 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 **Export.** *File → Export audio* mischt das ganze Projekt (Mute, Solo, Lautstärke und Pan wie gehört) zu WAV (16 oder 24 Bit) oder MP3 (braucht ffmpeg; fehlt es, wird stattdessen eine WAV-Datei gespeichert). Optional normalisiert die App auf −1 dBFS und warnt, wenn der Mix übersteuert.
 
+## Studio: Arbeiten wie in Ableton und Cubase (neu in 0.13)
+
+Diese Funktionen sind neu und noch Beta. Rückmeldungen sind besonders willkommen (Feedback → *Detailed log*).
+
+**Loop (Cycle).** Im oberen Streifen des Lineals ziehst du den Loop-Bereich auf. Die Klammer lässt sich verschieben, ihre Ränder ändern die Länge, ein Klick schaltet den Loop an oder aus. Mit Strg+L (Ableton) bzw. P (Cubase) legt die App den Loop um die gewählten Clips. Der Übergang am Loop-Ende ist nahtlos.
+
+**Marker.** Doppelklick in die Markerzeile setzt einen Marker. Marker kann man ziehen, ein Klick springt hin, Rechtsklick benennt um oder löscht. Ein Doppelklick auf einen Cycle-Marker loopt diesen Abschnitt.
+
+**Taktart- und Tempospur.** Rechtsklick ins Lineal ändert die Taktart ab diesem Takt. In der Tempospur setzt ein Doppelklick einen Tempowechsel; ziehen verschiebt ihn, Rechtsklick setzt die BPM oder löscht ihn. MIDI und synchronisiertes Audio (Clips mit eigenem Tempo) folgen der Tempokarte, unsynchronisiertes Audio bleibt zeitlich an seiner Stelle.
+
+**Mehrfachauswahl.** Strg+Klick oder Umschalt+Klick wählt mehrere Clips, Strg+A alle. Sie lassen sich zusammen verschieben und löschen. **Konsolidieren** (Ableton Strg+J) macht aus den gewählten Clips einer Spur einen einzigen Clip.
+
+**Crossfades.** *Crossfade* (Cubase X) blendet den gewählten Audio-Clip mit dem Clip davor auf derselben Spur über. Dafür braucht einer der beiden Clips etwas Audio über die Schnittstelle hinaus; sonst meldet die App, dass du einen Clip erst etwas kürzen sollst.
+
+**Automation.** Mit A (Ableton) oder dem Knopf an der Spur blendest du die Automationsspur ein und wählst Lautstärke oder Panorama. Klick setzt einen Punkt, ziehen verschiebt ihn (Umschalt: nur in der Zeit, Alt: ohne Raster), Doppelklick löscht ihn. *Clear* entfernt alle Punkte. Beim Abspielen und Exportieren folgt der Mix der Kurve.
+
+**Return-Spuren und Sends.** Über die Auswahl *Return tracks* legst du einen gemeinsamen Hall oder ein Delay an. Jede Spur hat Send-Regler, mit denen sie einen Teil ihres Signals dorthin schickt. Hall: Länge (*Decay*); Delay: Zeit im Songtempo und Rückkopplung (*FB*).
+
+**Gruppenspuren.** Spuren auswählen und *Group tracks* (Ableton Strg+G): Die Spuren laufen über eine Gruppenspur mit eigener Lautstärke, Mute und Solo.
+
+**Takes und Comping.** Nimmst du im Loop mehrfach auf, landet jeder Durchgang als Take in einer eigenen Take-Spur (Knopf **T** an der Spur blendet sie ein). Ein Klick auf einen Take übernimmt ihn in die Spur. Nicht benötigte Take-Spuren lassen sich löschen.
+
+**Warp-Marker.** Im Clip-Fenster eines Audio-Clips: Doppelklick auf die Wellenform setzt einen Warp-Marker an einem Moment der Aufnahme, ziehen legt ihn auf einen anderen Schlag (das Audio dazwischen wird gestreckt oder gestaucht, ohne die Tonhöhe zu ändern). Alt+Klick löscht einen Marker, ein Knopf entfernt alle.
+
+**Aufnahme: Einzähler und Punch.** *Count-in* stellt ein, wie viele Takte vor der Aufnahme geklickt werden. Mit *Punch in* (Cubase I) beginnt die Aufnahme erst am Anfang des Loop-Bereichs, mit *Punch out* (Cubase O) endet sie an seinem Ende.
+
+**Channel-Tab.** Zeigt für die gewählte Spur alles an einem Ort, wie das Spurfenster in Cubase: Farbe, Lautstärke, Panorama, Mute/Solo, Sends, Gruppe, Automation und Pegelanzeige. Bei einer Gruppenspur gibt es *Ungroup* (die Spuren bleiben erhalten).
+
+**Stems in der Spur und Schnell-Export.** Rechtsklick auf einen Audio-Clip → *Split into stems (Demucs)* zerlegt ihn direkt im Studio in Stems, die als eigene Spuren erscheinen (braucht Demucs, dauert einige Minuten). Der Knopf *Export* in der Werkzeugleiste speichert den ganzen Song als WAV oder MP3.
+
+**Ältere Songs auf Schlag 1 schneiden.** In der Bibliothek kann ein Song, der vor 0.11 gespeichert wurde, nachträglich auf Schlag 1 geschnitten werden. Das Original bleibt als Sicherung erhalten und lässt sich mit *Restore original* zurückholen.
+
 ## Bibliothek
 
 **Jeder erzeugte Song beginnt auf Schlag 1.** Bevor ein Song gespeichert wird, misst die App Tempo und ersten Schlag und schneidet alles vor dem ersten Schlag ab (Stille, Einblendung, halber Schlag Vorlauf). Die gespeicherte Datei beginnt also genau auf Takt 1, und die App merkt sich Tempo und Anfang in der Bibliothek (zu sehen als „120 BPM“ neben dem Song). Im Ergebnisfeld steht dazu eine Zeile, wie viel abgeschnitten wurde. Grenzen: Es wird nur ein Vorlauf bis 6 Sekunden entfernt und nur, wenn er kürzer als etwa ein Schlag ist oder aus Stille besteht (ein echter Auftakt oder ein längeres Intro bleibt erhalten, damit keine Noten verloren gehen). Musik ohne erkennbaren Schlag (Ambient) verliert nur die Stille am Anfang. Songs, die schon vor dieser Version gespeichert wurden, bleiben zunächst unverändert.
@@ -210,7 +242,7 @@ Jeder erzeugte Song wird sofort dauerhaft gespeichert, standardmäßig unter `Mu
 
 - **Grid** (Leiste im Studio und des Klaviatur-Editors): Rastergröße von *1 Bar* bis *1/64*, dazu Triolen (1/8 und 1/16) und *Off (free)*. **Snap** schaltet das Einrasten an oder aus (Ctrl+4). **Stufenlos** verschiebst du immer, wenn Snap aus ist, oder für einen einzelnen Zug mit gedrückter **Alt**-Taste. Das Raster gilt für Verschieben, Kürzen und Teilen von Clips sowie für Noten (zeichnen, verschieben, Länge).
 - **Tastatur:** Ctrl+1 engeres, Ctrl+2 weiteres Raster, Ctrl+3 Triole an/aus. **Pfeil links/rechts** schiebt den gewählten Clip (oder die gewählte Note) um einen Rasterschritt, bei ausgeschaltetem Snap um eine feine Stufe (1/64 Schlag). Im Klaviatur-Editor verschieben **Pfeil hoch/runter** die gewählte Note um einen Halbton.
-- **Quantize** (Ctrl+U; Einstellungen mit dem Zahnrad oder Ctrl+Shift+U): Bei MIDI rücken die Noten des gewählten Clips (oder die gewählte Note) zum Raster. *Strength* bestimmt, wie weit (100 % = genau aufs Raster, 50 % = halber Weg), *Swing* verzögert jeden zweiten Rasterschritt, und mit *Quantize note ends* ändern sich auch die Notenlängen. Bei **Audio** gibt es keine Noten: Quantize rastet den Clipanfang ein (die Rhythmik innerhalb der Aufnahme bleibt unverändert; dafür gibt es das Beat-Matching). Warp-Marker wie in Ableton gibt es noch nicht.
+- **Quantize** (Ctrl+U; Einstellungen mit dem Zahnrad oder Ctrl+Shift+U): Bei MIDI rücken die Noten des gewählten Clips (oder die gewählte Note) zum Raster. *Strength* bestimmt, wie weit (100 % = genau aufs Raster, 50 % = halber Weg), *Swing* verzögert jeden zweiten Rasterschritt, und mit *Quantize note ends* ändern sich auch die Notenlängen. Bei **Audio** gibt es keine Noten: Quantize rastet den Clipanfang ein (die Rhythmik innerhalb der Aufnahme bleibt unverändert; dafür gibt es das Beat-Matching). Für die Rhythmik innerhalb einer Aufnahme gibt es Warp-Marker (siehe „Studio: Arbeiten wie in Ableton und Cubase“).
 - **Spuren umsortieren:** am Griff `⋮⋮` links im Spurkopf ziehen.
 - **Spuren und Clips löschen:** per **Rechtsklick** auf den Spurkopf oder den Clip (Menü mit *Delete track* / *Delete clip*, dazu Umbenennen, Duplizieren, Teilen, Quantize), mit dem ×-Knopf im Spurkopf oder mit der Entf-Taste (nach einem Klick auf den Spurkopf bzw. den Clip). Die Entf-Taste funktioniert auch dann, wenn zuletzt ein Auswahlfeld (zum Beispiel das Raster) angeklickt war; früher schluckte das Auswahlfeld die Taste, und es sah aus, als ließe sich nichts löschen. Es kommt keine Rückfrage mehr, **Ctrl+Z bringt die Spur zurück**. Entf löscht einen gewählten Clip; der Klick auf einen Spurkopf hebt die Auswahl eines Clips einer anderen Spur auf, damit Entf nicht den falschen Clip trifft.
 - **Clip-Leiste** (erscheint, sobald ein Audio-Clip gewählt ist): *Gain* (Doppelklick setzt auf 0 dB zurück) sowie *Fade in* und *Fade out* in Sekunden.
@@ -253,7 +285,7 @@ Unter **Library → Samples** legst du Sample-Ordner fest. Die App erkennt insta
 
 ## Beta-Test
 
-Wie du testest und Probleme meldest, steht in `docs/BETA.md`. Unten rechts gibt es den Knopf **Feedback**: Er sammelt Systemdaten, Engine-Status und die letzten Log-Zeilen, sendet aber nichts automatisch.
+Wie du testest und Probleme meldest, steht in `docs/BETA.md`. Unten rechts gibt es den Knopf **Feedback**: Er sammelt Systemdaten, Engine-Status und die letzten Log-Zeilen, sendet aber nichts automatisch. Im Feedback-Fenster gibt es außerdem das **Detailed log (beta)**: einschalten, den Fehler wiederholen, dann *Copy log* oder *Save log as file…* und uns schicken. Es enthält Klicks, Warnungen und Fehler der App und das Log des KI-Backends, aber kein Audio und keine Passwörter. Es bleibt über Neustarts an, bis du es ausschaltest.
 
 ## 4. Speicherorte
 

@@ -6,7 +6,9 @@
 
 | Feature | Technology |
 |---|---|
-| **Piano Roll + Timeline** | Electron + React (custom built) |
+| **Studio (DAW)** | Arrangement with loop/locators, markers, tempo and time-signature track, automation, return tracks with sends, group tracks, take lanes and comping, warp markers, crossfades, count-in and punch, Ableton Live 12 or Cubase shortcuts |
+| **Song generator** | ACE-Step (songs with vocals), DiffRhythm, MusicGen; a cappella mode (voice only, cleaned with Demucs); every track starts on beat 1 |
+| **Piano Roll** | Electron + React (custom built) |
 | **AI Vocal Synthesis** | DiffSinger / VITS (local GPU) + cloud fallback |
 | **AI Instruments** | DDSP neural synthesis + FluidSynth fallback |
 | **Voice Cloning** | OpenVoice / Coqui TTS |
@@ -18,6 +20,16 @@
 | **Multilingual** | 🇩🇪 🇬🇧 🇫🇷 🇪🇸 🇮🇹 🇵🇹 🇨🇳 🇯🇵 🇰🇷 |
 
 **Manual (German, incl. first-time setup):** [docs/MANUAL.md](docs/MANUAL.md)
+**Beta testing (German):** [docs/BETA.md](docs/BETA.md). We are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
+
+### New in 0.13
+
+- **Studio works like Ableton and Cubase:** drag a loop in the ruler (seamless wrap), markers and cycle markers, tempo and time-signature changes, multi-select and consolidate, crossfades, volume/pan automation lanes, reverb/delay return tracks with per-track sends, group tracks, loop recording into take lanes with comping, warp markers, count-in, punch in/out, a channel tab, split a clip into stems from the right-click menu, quick export.
+- **Shortcuts** for all of the above in both the Ableton Live 12 and the Cubase layout (Settings → Shortcuts).
+- **Create music** is translated into German and warns *before* rendering when the chosen model cannot sing.
+- **Vocals fix:** lyrics sent to ACE-Step now always carry a vocal tag and a structure tag, which should stop typed lyrics from coming out as an instrumental (still to be confirmed with the real model on an NVIDIA PC).
+- **Detailed log for beta testers** in the Feedback dialog (on/off, copy, save as file).
+- AI engines are no longer shown as "not installed" when they are.
 
 ## Low-resource mode (8 GB VRAM / 12 GB RAM)
 

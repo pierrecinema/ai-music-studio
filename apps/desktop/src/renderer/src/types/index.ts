@@ -1,4 +1,4 @@
-export type TrackType = 'vocal' | 'instrument' | 'audio' | 'midi'
+export type TrackType = 'vocal' | 'instrument' | 'audio' | 'midi' | 'group'
 
 export interface Note {
   id: string
@@ -21,7 +21,40 @@ export interface Track {
   clips: Clip[]
   voiceId?: string
   instrumentId?: string
+  parentId?: string           // inside this group track (its sound goes through the group)
+  collapsed?: boolean         // group tracks: children hidden in the Studio
+  sends?: Record<string, number>          // return track id -> send level 0..1 (post fader)
+  automation?: Partial<Record<AutoParam, AutoPoint[]>>
+  showAutomation?: AutoParam | null       // which automation lane is open below the track
+  takes?: TakeLane[]          // loop recording: one lane per pass (comping)
+  showTakes?: boolean
 }
+
+// automated parameters: volume and pan of the track, and the send level to each return track ("send:<id>")
+export type AutoParam = 'volume' | 'pan' | `send:${string}`
+export interface AutoPoint { beat: number; value: number }     // value: volume/send 0..1, pan -1..1
+
+export interface TakeLane { id: string; name: string; clips: Clip[] }
+
+export interface WarpMarker { src: number; beat: number }        // file second `src` plays at clip beat `beat`
+
+export interface Marker { id: string; beat: number; name: string; end?: number }   // `end`: a cycle marker
+export interface TempoPoint { beat: number; bpm: number }
+export interface SignaturePoint { bar: number; num: number; den: number }          // from this bar on (0 = first bar)
+
+export interface ReturnTrack {
+  id: string
+  name: string
+  effect: 'reverb' | 'delay'
+  volume: number
+  muted: boolean
+  pan: number
+  decay?: number              // reverb: seconds
+  delayBeats?: number         // delay: in beats (0.5 = an eighth)
+  feedback?: number           // delay: 0..0.9
+}
+
+export interface LoopRange { start: number; end: number; enabled: boolean }
 
 export interface Clip {
   id: string
@@ -35,6 +68,7 @@ export interface Clip {
   fadeOut?: number    // audio clips: fade-out length in beats
   gridFirst?: number  // beat grid: time of the first beat in the FILE (seconds); with warpBpm it gives every beat of the clip
   warpBpm?: number    // synced samples: the tempo the file was made at; it is stretched to the project tempo
+  warpMarkers?: WarpMarker[]   // timing of the audio bent by hand (Ableton warp markers)
   name?: string
   color?: string
 }
@@ -46,6 +80,14 @@ export interface Project {
   timeSignature: [number, number]
   sampleRate: number
   tracks: Track[]
+  loop?: LoopRange
+  markers?: Marker[]
+  tempoMap?: TempoPoint[]          // tempo changes after beat 0 (beat 0 uses `bpm`)
+  signatures?: SignaturePoint[]    // time signature changes after bar 0 (bar 0 uses `timeSignature`)
+  returns?: ReturnTrack[]
+  countIn?: number                 // bars of clicks before recording starts
+  punchIn?: boolean                // recording only keeps what lies inside the loop range
+  punchOut?: boolean
   createdAt: string
   updatedAt: string
 }

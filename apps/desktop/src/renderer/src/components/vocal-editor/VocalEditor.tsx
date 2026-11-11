@@ -166,7 +166,7 @@ export function VocalEditor(): React.ReactElement {
           </button>
           {!track && (
             <span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center' }}>
-              Select a vocal track in the timeline first
+              Select a vocal track in the Studio first
             </span>
           )}
         </div>

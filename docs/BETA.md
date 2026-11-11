@@ -24,6 +24,10 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 12. **Auto Sync:** Oben „AUTO SYNC“ einschalten, Master-BPM auf z. B. 100 stellen, Loops mit anderem Tempo importieren. Werden sie ohne Rückfrage gestreckt? „Sync all“ auf einem Projekt mit mehreren Loops probieren.
 13. **DJ-Sync:** Zwei Loops mit unterschiedlichem Tempo laden, AUTO SYNC einschalten. Liegen die weißen Beat-Linien beider Spuren untereinander? Hört man beim Abspielen keinen Kick, der „schleppt“? Tempo-Feld im Clip: Korrektur um 0,2 BPM, driftet es danach weniger?
 14. **Aufnahme (Mikrofon):** Rote Taste. Wird die Aufnahme als Clip abgelegt? (Wenig getestet, besonders interessant.)
+15. **Gesang:** In Create music mit ACE-Step einen Text unter *Lyrics* eingeben (gerne mit `[Verse]`/`[Chorus]`). Hört man im fertigen Song Gesang? Ist der Text verständlich? Bitte Modell, Sprache und Stimme im Bericht nennen.
+16. **A cappella:** Den Schalter *A cappella (voice only)* einschalten und einen Text eingeben. Kommt eine reine Gesangsspur ohne Instrumente heraus?
+17. **Studio wie Ableton/Cubase (neu in 0.13):** Loop im Lineal aufziehen (läuft der Übergang ohne Knackser?), Marker setzen und anspringen, Automation für die Lautstärke zeichnen, eine Return-Spur mit Hall anlegen und per Send nutzen, zwei Spuren gruppieren (Strg+G), im Loop mehrmals aufnehmen und einen Take auswählen, im Clip-Fenster einen Warp-Marker setzen und ziehen. Die Kürzel stellst du unter Einstellungen → Shortcuts auf Ableton oder Cubase.
+18. **Bibliothek: auf Schlag 1 schneiden:** Einen älteren Song schneiden lassen, danach *Restore original*. Ist das Original wieder da?
 
 ## So meldest du ein Problem
 1. Unten rechts auf **Feedback** klicken.
@@ -31,11 +35,15 @@ Deine Rückmeldungen entscheiden, was als Nächstes besser wird.
 3. **Copy report** drücken: Das kopiert deine Systemdaten, den Engine-Status und die letzten Log-Zeilen in die Zwischenablage. Es wird **nichts automatisch gesendet**.
 4. **Open GitHub issues** drücken, „New issue“, den Bericht einfügen (Strg+V).
 
+**Detailliertes Log (sehr hilfreich):** Im Feedback-Fenster *Record a detailed log* einschalten, den Fehler noch einmal auslösen, dann *Copy log* oder *Save log as file…* und die Datei an das Issue hängen. Das Log enthält deine Klicks, Warnungen und Fehler der App und das Log des KI-Backends, aber kein Audio und keine Passwörter. Es bleibt an, bis du es wieder ausschaltest.
+
 Falls das Programm abstürzt oder ein weißes Fenster zeigt: Beim nächsten Start bietet die App an, den automatisch gesicherten Stand
 wiederherzustellen. Die Fehlerdatei findest du über Feedback → **Show error log**.
 
 ## Was bekannt ist
 - Auf Rechnern ohne NVIDIA-Karte dauert KI-Musik lange (Minuten bis Stunden, je nach Modell). Der Fortschrittsbalken zeigt das echte Tempo.
 - MusicGen macht nur Instrumentals, DiffRhythm braucht NVIDIA, Stimmen- und Instrumenten-KI sind teilweise noch Platzhalter.
-- Aufnahme hat keine Latenzkorrektur; Audio wird beim Tempowechsel nicht gestreckt (es bleibt zeitlich an seiner Stelle).
+- Aufnahme hat keine Latenzkorrektur. Bei Tempowechseln folgen nur synchronisierte Audio-Clips (mit eigenem Tempo) dem neuen Tempo, anderes Audio bleibt zeitlich an seiner Stelle.
+- Gesang mit ACE-Step: Ohne Hinweis auf Gesang im Stil hat ACE-Step Texte oft instrumental gerendert. Seit 0.13 ergänzt die App dann automatisch „vocals“ und einen `[verse]`-Tag. Wenn trotzdem kein Gesang kommt, bitte melden (mit Log).
+- Die Studio-Funktionen aus 0.13 (Loop, Automation, Returns, Gruppen, Takes, Warp-Marker) sind neu und bisher nur ohne echte Audio-Hardware-Last getestet.
 - Der Installer ist nicht signiert: Windows SmartScreen kann warnen („Weitere Informationen“ → „Trotzdem ausführen“).

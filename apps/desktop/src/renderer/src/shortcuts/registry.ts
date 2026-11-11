@@ -8,8 +8,7 @@ export interface ActionDef {
   repeatable?: boolean   // fires again while the key is held (zoom)
 }
 
-// Only actions this app can really perform. Other DAW shortcuts (loop, quantize, comping, ...)
-// are left out until the matching feature exists.
+// Only actions this app can really perform.
 export const ACTIONS: ActionDef[] = [
   { id: 'transport.playStop', label: 'Play / pause', group: 'Transport' },
   { id: 'transport.play', label: 'Play (continue)', group: 'Transport' },
@@ -17,6 +16,13 @@ export const ACTIONS: ActionDef[] = [
   { id: 'transport.toStart', label: 'Stop and return to start', group: 'Transport' },
   { id: 'transport.record', label: 'Record on / off', group: 'Transport' },
   { id: 'transport.metronome', label: 'Metronome on / off', group: 'Transport' },
+  { id: 'transport.loop', label: 'Loop (cycle) on / off', group: 'Transport' },
+  { id: 'loop.selection', label: 'Loop around the selected clips (set locators)', group: 'Transport' },
+  { id: 'transport.punchIn', label: 'Punch in on / off', group: 'Transport' },
+  { id: 'transport.punchOut', label: 'Punch out on / off', group: 'Transport' },
+  { id: 'marker.add', label: 'Add a marker at the playhead', group: 'Transport' },
+  { id: 'marker.next', label: 'Jump to the next marker', group: 'Transport' },
+  { id: 'marker.prev', label: 'Jump to the previous marker', group: 'Transport' },
 
   { id: 'edit.undo', label: 'Undo', group: 'Edit' },
   { id: 'edit.redo', label: 'Redo', group: 'Edit' },
@@ -37,13 +43,18 @@ export const ACTIONS: ActionDef[] = [
   { id: 'note.up', label: 'Selected notes up one semitone', group: 'Edit', repeatable: true },
   { id: 'note.down', label: 'Selected notes down one semitone', group: 'Edit', repeatable: true },
   { id: 'clip.split', label: 'Split selected clip at the playhead', group: 'Edit' },
-  { id: 'clip.delete', label: 'Delete selected clip (or track if no clip is selected)', group: 'Edit' },
+  { id: 'clip.delete', label: 'Delete selected clips (or the track if no clip is selected)', group: 'Edit' },
+  { id: 'edit.selectAll', label: 'Select all clips', group: 'Edit' },
+  { id: 'clip.consolidate', label: 'Consolidate the selected clips into one', group: 'Edit' },
+  { id: 'clip.crossfade', label: 'Crossfade the selected clip with the clip before', group: 'Edit' },
 
   { id: 'track.addAudio', label: 'Add audio track', group: 'Tracks' },
   { id: 'track.addMidi', label: 'Add MIDI track', group: 'Tracks' },
   { id: 'track.delete', label: 'Delete selected track', group: 'Tracks' },
   { id: 'track.mute', label: 'Mute selected track', group: 'Tracks' },
   { id: 'track.solo', label: 'Solo selected track', group: 'Tracks' },
+  { id: 'track.group', label: 'Group the selected tracks', group: 'Tracks' },
+  { id: 'track.automation', label: 'Show / hide the automation lane', group: 'Tracks' },
 
   { id: 'tool.drawToggle', label: 'Piano roll: toggle draw mode', group: 'Tools' },
   { id: 'tool.draw', label: 'Piano roll: draw tool', group: 'Tools' },
@@ -80,8 +91,13 @@ export const PRESETS: Record<PresetId, Preset> = {
       'transport.toStart': ['Home'],
       'transport.record': ['F9'],
       'transport.metronome': ['O'],
+      'loop.selection': ['Ctrl+L'],
       'edit.undo': ['Ctrl+Z'],
       'edit.redo': ['Ctrl+Y'],
+      'edit.selectAll': ['Ctrl+A'],
+      'clip.consolidate': ['Ctrl+J'],
+      'track.group': ['Ctrl+G'],
+      'track.automation': ['A'],
       'edit.duplicate': ['Ctrl+D'],
       'file.new': ['Ctrl+N'],
       'file.open': ['Ctrl+O'],
@@ -125,8 +141,17 @@ export const PRESETS: Record<PresetId, Preset> = {
       'transport.toStart': ['Num.'],
       'transport.record': ['Num*'],
       'transport.metronome': ['C'],
+      'transport.loop': ['Num/'],
+      'loop.selection': ['P'],
+      'transport.punchIn': ['I'],
+      'transport.punchOut': ['O'],
+      'marker.add': ['Insert'],
+      'marker.next': ['Shift+N'],
+      'marker.prev': ['Shift+B'],
       'edit.undo': ['Ctrl+Z'],
       'edit.redo': ['Ctrl+Shift+Z'],
+      'edit.selectAll': ['Ctrl+A'],
+      'clip.crossfade': ['X'],
       'edit.duplicate': ['Ctrl+D'],
       'file.new': ['Ctrl+N'],
       'file.open': ['Ctrl+O'],

@@ -292,6 +292,20 @@ ACAPELLA_TAGS = "a cappella, solo vocals only, unaccompanied voice, no instrumen
 ACAPELLA_NEGATIVE = "instruments, drums, percussion, bass, guitar, piano, synth, strings, beat, accompaniment"
 
 
+_VOCAL_WORDS = re.compile(r"\b(vocals?|voices?|sing(s|er|ers|ing)?|choir|rap|rapping|a ?cappella|acapella)\b", re.I)
+_SECTION_TAG = re.compile(r"^\s*\[[^\]]+\]\s*$", re.M)
+
+
+def _ace_lyrics(req: GenerateMusicRequest) -> str:
+    """Lyrics as ACE-Step reads them best: with at least one structure tag ([verse], [chorus])."""
+    if req.instrumental:
+        return "[instrumental]"
+    text = req.lyrics.strip()
+    if text and not _SECTION_TAG.search(text):
+        text = "[verse]\n" + text
+    return text
+
+
 def _compose_prompt(req: GenerateMusicRequest) -> str:
     parts = [req.prompt.strip()] if req.prompt.strip() else []
     if req.acapella:
@@ -305,6 +319,9 @@ def _compose_prompt(req: GenerateMusicRequest) -> str:
     if not req.instrumental:
         if req.voice in ("male", "female"):
             parts.append(f"{req.voice} vocals")
+        elif req.lyrics.strip() and not _VOCAL_WORDS.search(", ".join(parts)):
+            # Without a vocal tag ACE-Step often renders lyrics as an instrumental: ask for the voice explicitly.
+            parts.append("vocals")
         if req.language and req.language.lower() not in ("", "auto"):
             parts.append(f"{req.language} lyrics")
     return ", ".join(parts) or "music"
@@ -394,7 +411,7 @@ def _engine_kwargs(pipe, req: GenerateMusicRequest, duration: int, seed: int,
     kwargs: dict = {
         "audio_duration": duration,
         "prompt": _compose_prompt(req),
-        "lyrics": "[instrumental]" if req.instrumental else req.lyrics,
+        "lyrics": _ace_lyrics(req),
         "infer_step": req.steps,
         "guidance_scale": req.guidance,
         "manual_seeds": str(seed),

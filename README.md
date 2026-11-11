@@ -1,6 +1,6 @@
 # AI Music Studio
 
-**Open-source AI-powered music studio** — an alternative to ACE Studio built with open-source tools and configurable AI backends (Claude by Anthropic or ChatGPT by OpenAI).
+**Free, open-source AI music studio for Windows:** make songs, seamless loops and stems with AI on your own PC, and arrange them in a full studio with mixer and piano roll. No account, no subscription. The AI assistant works with Claude, ChatGPT, Grok or completely free and local with Ollama.
 
 ## Easy Windows installation
 

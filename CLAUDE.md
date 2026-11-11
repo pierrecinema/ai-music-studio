@@ -25,6 +25,11 @@ Status: the first SignPath Foundation application was declined on 2026-11-11 for
 
 The in-app update only sees **releases**, not commits: without step 3 the app says there is no update.
 
+## Current state and plans
+
+Read `docs/NEXT-STEPS.md` at the start of a session: what is planned next (feedback, posts in forums and blogs),
+open technical items and how the owner likes to work.
+
 ## Checks
 
 - `apps/desktop`: `pnpm test` (unit tests), `pnpm typecheck`

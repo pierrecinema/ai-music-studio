@@ -1,4 +1,5 @@
 """Audio-to-MIDI: basic-pitch (default) or MuScriptor (optional, CC BY-NC 4.0)."""
+import asyncio
 import glob
 import os
 import shutil
@@ -96,6 +97,11 @@ async def engines():
 
 @router.post("")
 async def convert_audio_to_midi(req: AudioToMidiRequest):
+    # basic-pitch and MuScriptor take a while: in a thread, so the server keeps answering meanwhile
+    return await asyncio.to_thread(_convert, req)
+
+
+def _convert(req: AudioToMidiRequest):
     if not os.path.exists(req.filePath):
         raise HTTPException(400, f"File not found: {req.filePath}")
     if req.engine not in ("auto", "basic-pitch", "muscriptor"):

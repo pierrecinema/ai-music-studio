@@ -39,7 +39,8 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 |---|---|---|
 | **Create music** | Songs from a style description and lyrics; vocals with ACE-Step, instrumentals with MusicGen; a cappella mode; every track starts on beat 1 | ACE-Step 1.5 / v1, MusicGen, DiffRhythm |
 | **Create loop** | Exactly 1–16 bars, starts on beat 1, repeats seamlessly, named with tempo and bars | own loop cutter on the beat grid |
-| **Stem Splitter** | Vocals, drums, bass, piano, guitar and more, saved to the Library and exported for any DAW | Meta Demucs (htdemucs_ft) |
+| **Stem Splitter** | Vocals, drums, bass, piano, guitar and more; a stem mixer (solo, mute, volume) with remix export, e.g. karaoke without vocals; saved to the Library and exported for any DAW | Meta Demucs (htdemucs_ft) |
+| **Audio → MIDI** | The melody of a stem as notes on a MIDI track, opened in the Piano Roll | Spotify basic-pitch |
 | **Mastering** | Matches your mix to a reference track | Matchering |
 | **Library** | Songs, loops, stems and samples with tempo and tags; search by name, tag or BPM; export as WAV, AIFF, FLAC or MP3 | |
 | **AI Chat** | Music assistant for chords, lyrics and ideas | Claude, ChatGPT, Grok, or free and local with Ollama |
@@ -51,7 +52,6 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 | Feature | What it will do |
 |---|---|
 | **VST3 plugins** | Your own instruments and effects in the Studio (bridge in JUCE C++, in development) |
-| **Audio → MIDI** | Turn a recorded melody or chord part into MIDI notes (Spotify basic-pitch) |
 | **Vocal Editor** | AI singing from notes and lyrics, voice cloning |
 | **AI Instruments** | AI-played instruments for your MIDI tracks |
 | **Karaoke Export** | Word timing, .lrc files and lyric videos |
@@ -86,6 +86,12 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 **Beta testers wanted** ([guide, German](docs/BETA.md)): we are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
+
+### New in 0.17
+
+- **Stem mixer in the Stem Splitter:** after splitting, play all stems together and set **Solo**, **Mute** and the **volume** of each stem while listening (double-click a slider: 100 %).
+- **Export remix:** mixes the stems you hear at these levels into one file (WAV, AIFF, FLAC or MP3). Mute *Vocals* for a karaoke version, *Drums* for a version without drums; the file is named after what was left out.
+- **Audio → MIDI:** *→ MIDI* on a stem (vocals, bass, piano, guitar, other) turns its melody into notes on a new MIDI track and opens it in the Piano Roll. Needs *Audio → MIDI (basic-pitch)* in Settings → AI Engines.
 
 ### New in 0.16.3
 

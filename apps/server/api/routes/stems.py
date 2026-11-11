@@ -172,3 +172,44 @@ async def split_status(jid: str):
     if not job:
         raise HTTPException(404, "Unknown job")
     return {**job, "elapsed": round(time.time() - job["started"], 1)}
+
+
+# ── remix: the stems mixed again with their own levels (karaoke, no drums, ...) ──────────────
+
+class RemixRequest(BaseModel):
+    stems: dict[str, str]                 # stem name -> wav file
+    gains: dict[str, float] = {}          # stem name -> 0..2 (missing: 1, 0 = left out)
+
+
+def mix_stems(stems: dict[str, str], gains: dict[str, float]) -> str:
+    import soundfile as sf
+    parts, sr = [], None
+    for name, path in stems.items():
+        g = float(gains.get(name, 1.0))
+        if g <= 0 or not path or not os.path.exists(path) or os.path.getsize(path) == 0:
+            continue
+        data, s = sf.read(path, dtype="float32", always_2d=True)
+        if sr is None:
+            sr = s
+        elif s != sr:
+            raise HTTPException(400, f"{name} has another sample rate ({s} Hz instead of {sr} Hz).")
+        parts.append(data * min(g, 2.0))
+    if not parts:
+        raise HTTPException(400, "Every stem is muted: nothing to mix.")
+    n = max(len(p) for p in parts)
+    ch = max(p.shape[1] for p in parts)
+    mix = np.zeros((n, ch), dtype=np.float32)
+    for p in parts:
+        mix[:len(p), :p.shape[1]] += p if p.shape[1] == ch else np.repeat(p, ch, axis=1)
+    peak = float(np.max(np.abs(mix))) or 1.0
+    if peak > 0.99:                                   # no clipping when exported as 16 / 24 bit
+        mix *= 0.99 / peak
+    out = os.path.join(tempfile.gettempdir(), f"remix_{uuid.uuid4().hex[:8]}.wav")
+    sf.write(out, mix, sr, subtype="FLOAT")
+    return out
+
+
+@router.post("/remix")
+async def remix(req: RemixRequest):
+    path = await asyncio.to_thread(mix_stems, req.stems, req.gains)
+    return {"path": path}

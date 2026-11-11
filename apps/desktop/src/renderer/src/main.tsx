@@ -6,11 +6,13 @@ import './styles/globals.css'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import './audio/engine'
 import { startAutosave } from './project/io'
+import { initDiagLog } from './lib/diagLog'
 
 // every uncaught error ends up in the error log that "Feedback" can show
 window.addEventListener('error', (e) => { void window.api?.feedback?.logError(`window error: ${e.message} at ${e.filename}:${e.lineno}`) })
 window.addEventListener('unhandledrejection', (e) => { void window.api?.feedback?.logError(`unhandled rejection: ${(e.reason as Error)?.stack ?? String(e.reason)}`) })
 startAutosave()
+void initDiagLog()
 
 // test hook: a test page sets __AMS_TEST__ before the app starts to reach the engine and the stores
 if ((window as unknown as { __AMS_TEST__?: boolean }).__AMS_TEST__) {

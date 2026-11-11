@@ -114,6 +114,14 @@ declare global {
         openIssues: () => Promise<void>
         showCrashLog: () => Promise<void>
       }
+      diag: {
+        get: () => Promise<boolean>
+        set: (on: boolean) => Promise<boolean>
+        append: (text: string) => Promise<void>
+        collect: (extra: string) => Promise<string>
+        clear: () => Promise<void>
+        save: (text: string) => Promise<string | null>
+      }
       updater: {
         check: () => Promise<void>
         download: () => Promise<void>

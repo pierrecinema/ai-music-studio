@@ -146,10 +146,14 @@ let pkgCache: { at: number; names: Set<string> } | null = null
 async function installedPackages(): Promise<Set<string>> {
   if (!hasVenv()) return new Set()
   if (pkgCache && Date.now() - pkgCache.at < 5000) return pkgCache.names
-  const r = await capture(venvPython(), ['-m', 'pip', 'list', '--format=json'], 60000)
+  // pip writes notices ("a new release of pip is available", "there was an error checking the latest
+  // version of pip" when offline) after the list: they made the whole list unreadable and every engine
+  // looked "not installed". So the version check is off and only the JSON array itself is read.
+  const r = await capture(venvPython(), ['-m', 'pip', 'list', '--format=json', '--disable-pip-version-check'], 60000)
   let names = new Set<string>()
   try {
-    names = new Set((JSON.parse(r.out) as Array<{ name: string }>).map(p => p.name.toLowerCase().replace(/_/g, '-')))
+    const json = /\[[\s\S]*\]/.exec(r.out)?.[0] ?? '[]'
+    names = new Set((JSON.parse(json) as Array<{ name: string }>).map(p => p.name.toLowerCase().replace(/_/g, '-')))
   } catch { /* leave empty */ }
   pkgCache = { at: Date.now(), names }
   return names

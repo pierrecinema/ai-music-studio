@@ -7,7 +7,17 @@ Alternative titles:
 
 
 DESCRIPTION
-AI Music Studio is a free, open-source music studio for Windows that makes songs, loops and stems with AI, locally on your own PC. No account, no subscription, no upload to the cloud.
+AI Music Studio is a free, open-source AI music studio and DAW for Windows: make songs, seamless loops and stems with AI on your own PC, then arrange, mix and export them in a full studio. No account, no subscription, no upload to the cloud.
+
+In this video you see every part of the app. Describe a style and get a full song, with vocals or as an instrumental, made by open AI models like ACE-Step and MusicGen that run locally on your computer. Need a groove for your track? "Create loop" makes loops of exactly 1 to 16 bars that start on beat 1 and repeat without a gap, named with their tempo and length, so you can line them up endlessly in the Studio.
+
+The Studio is a real DAW with the shortcuts of Ableton Live 12 or Cubase: arrangement with markers and loop range, tempo and time-signature track, automation, warp markers, return tracks with reverb and delay, group tracks, recording with takes and comping, a mixer with level meters and a Piano Roll for MIDI.
+
+The Stem Splitter separates any song into vocals, drums, bass, piano, guitar and more. Listen to the stems in the stem mixer, solo or mute them, export a remix such as a karaoke version without vocals, or turn a melody into MIDI notes for the Piano Roll. Every song, loop and stem is kept in the Library with tempo and tags and can be exported for any DAW as WAV, AIFF, FLAC or MP3. Mastering matches your mix to a reference track.
+
+The built-in AI assistant helps with chords, lyrics and ideas, with Claude, ChatGPT, Grok or completely free and offline with Ollama. A hardware check shows what your PC can run: it works on the CPU alone and faster with NVIDIA, AMD or Intel graphics. New versions arrive by themselves with one click.
+
+AI Music Studio is made by a musician for musicians and is free and open source (GPL-3.0). If you like it, give it a star on GitHub, share it, or tell me in the comments what you would like to see next.
 
 ⬇️ Download (Windows installer, free):
 https://github.com/pierrecinema/ai-music-studio/releases/latest

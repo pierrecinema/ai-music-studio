@@ -258,12 +258,31 @@ export function crossfade(lengthBeats = 0.5): string | null {
 
 // Cubase 15: stem separation right in the project. The clip's file is split (Demucs) and the stems are
 // added as new tracks in a group, at the same place; the original track is muted.
-export async function splitIntoStems(trackId: string, clipId: string): Promise<string> {
+async function splitJob(filePath: string, model: 'mdx_4stems' | 'htdemucs', onProgress?: (pct: number, text: string) => void): Promise<Record<string, string>> {
+  const { job_id } = await api.stems.start({ filePath, model, stems: ['vocals', 'drums', 'bass', 'other'] })
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 1000))
+    const j = await api.stems.job(job_id)
+    onProgress?.(j.progress, j.text)
+    if (j.status === 'done') return j.result ?? {}
+    if (j.status === 'error') throw new Error(j.error ?? 'Stem separation failed.')
+    if (j.status === 'cancelled') throw new Error('Cancelled.')
+  }
+}
+
+export async function splitIntoStems(trackId: string, clipId: string, onProgress?: (pct: number, text: string) => void): Promise<string> {
   const st = useProjectStore.getState()
   const track = st.project.tracks.find((t) => t.id === trackId)
   const clip = track?.clips.find((c) => c.id === clipId)
   if (!track || !clip?.audioFile) return 'Choose an audio clip.'
-  const result = await api.stems.split({ filePath: clip.audioFile, model: 'htdemucs', stems: ['vocals', 'drums', 'bass', 'other'] })
+  // the graphics-card models first (fast separation installed), else Demucs Fast on the processor
+  let result: Record<string, string>
+  try {
+    result = await splitJob(clip.audioFile, 'mdx_4stems', onProgress)
+  } catch (e) {
+    if (!/not installed/i.test((e as Error).message)) throw e
+    result = await splitJob(clip.audioFile, 'htdemucs', onProgress)
+  }
   const names = Object.entries(result).filter(([, path]) => !!path) as Array<[string, string]>
   if (!names.length) return 'Demucs returned no stems.'
   const ids: string[] = []
@@ -279,7 +298,7 @@ export async function splitIntoStems(trackId: string, clipId: string): Promise<s
   const group = useProjectStore.getState().project.tracks.find((t) => t.id === useProjectStore.getState().selectedTrackId)
   if (group) useProjectStore.getState().updateTrack(group.id, { name: `${clip.name ?? track.name} stems` })
   useProjectStore.getState().updateTrack(trackId, { muted: true })
-  return `Split into ${names.length} stems (${names.map(([n]) => n).join(', ')}). The original track is muted.`
+  return `Split into ${names.length} stems (${names.map(([n]) => n).join(', ')}): they are on new tracks at the bottom, in the group "${clip.name ?? track.name} stems". The original track is muted.`
 }
 
 // warp markers: put one at a file second, keeping the timing where it is

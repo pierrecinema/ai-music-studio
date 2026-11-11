@@ -95,6 +95,13 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.3
+
+- **Resizable Studio and panel:** drag the line between the Studio and the panel below it (mixer, piano roll, ...) up or down; double-click resets it. The Studio now takes all the height the panel leaves.
+- **New-track zone in the Studio:** under the last track there is always a dashed "+ Drag a clip or an audio file here for a new track" area; it lights up while you drag a clip there.
+- **Split into stems in the Studio** shows its progress next to the toolbar and uses the graphics-card models when *Fast vocal separation* is installed (else Demucs Fast); the message says where the stems are (new tracks at the bottom, in a group).
+- **No more hard distortion:** a safety limiter at the end of the master stops many notes or loud clips together from clipping.
+
 ### New in 0.18.2
 
 - **Every new clip gets its own track:** *Studio: synced* / *as is* in the Samples tab no longer put every sample onto the selected track; like *Add to project* in the Library, each one now gets a new audio track.

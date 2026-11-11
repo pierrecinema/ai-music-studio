@@ -19,6 +19,8 @@ interface UIState {
   grid: string          // id of a grid size (see edit/grid.ts)
   snap: boolean         // snap to the grid while moving, trimming and drawing
   libraryTab: 'tracks' | 'stems' | 'samples'   // open tab of the Library (other views can open it on a tab)
+  panelHeight: number   // the panel under the Studio (mixer, piano roll, ...): drag its top edge
+  setPanelHeight: (h: number) => void
 
   setLibraryTab: (tab: 'tracks' | 'stems' | 'samples') => void
 
@@ -42,6 +44,8 @@ export const useUIStore = create<UIState>()(
     (set) => ({
       activeView: 'timeline',
       libraryTab: 'tracks',
+      panelHeight: 320,
+      setPanelHeight: (panelHeight) => set({ panelHeight }),
       setLibraryTab: (libraryTab) => set({ libraryTab }),
       theme: 'dark',
       sidebarWidth: 220,

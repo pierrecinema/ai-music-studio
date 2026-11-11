@@ -1,7 +1,9 @@
 """Fast vocal / instrumental separation with an MDX-Net ONNX model (audio-separator), in its own environment.
 
 Usage: python separator_worker.py request.json
-Request: {"input": path, "out_dir": dir, "model_dir": dir, "model": "UVR-MDX-NET-Inst_HQ_3.onnx", "fast": bool}
+Request: {"input": path, "out_dir": dir, "model_dir": dir, "mode": "vocals" | "4stems", "fast": bool}
+  vocals: one MDX-Net model, vocals + instrumental.
+  4stems: the four MDX-Net models of the KUIELab (Music Demixing Challenge), one per stem: vocals, drums, bass, other.
 Prints one JSON object per line: {"stage": text}, {"done": true, "files": {"vocals": path, "instrumental": path},
 "device": "..."} or {"error": "..."}. Anything else on stdout is library chatter and is ignored.
 
@@ -30,7 +32,10 @@ def providers() -> list[str]:
         return []
 
 
-def separate(req: dict, directml: bool) -> list[str]:
+FOUR = ["vocals", "drums", "bass", "other"]
+
+
+def make_separator(req: dict, directml: bool):
     from audio_separator.separator import Separator
     kw = {
         "log_level": logging.WARNING,
@@ -43,12 +48,34 @@ def separate(req: dict, directml: bool) -> list[str]:
                        "batch_size": 1, "enable_denoise": False},
     }
     accepted = set(inspect.signature(Separator.__init__).parameters)
-    sep = Separator(**{k: v for k, v in kw.items() if k in accepted})
+    return Separator(**{k: v for k, v in kw.items() if k in accepted})
+
+
+def absolute(req: dict, out: list[str]) -> list[str]:
+    return [o if os.path.isabs(o) else os.path.join(req["out_dir"], o) for o in out]
+
+
+def separate(req: dict, directml: bool) -> list[str]:
+    sep = make_separator(req, directml)
+    where = " on the graphics card" if directml else ""
+    if req.get("mode") == "4stems":
+        keep = []
+        for i, stem in enumerate(FOUR):
+            say(stage=f"Separating {stem} ({i + 1}/4){where}", part=i, parts=4)
+            sep.load_model(model_filename=f"kuielab_a_{stem}.onnx")
+            for f in absolute(req, sep.separate(req["input"])):
+                if f"({stem})" in os.path.basename(f).lower():
+                    keep.append(f)
+                else:
+                    try:
+                        os.remove(f)                     # the rest of the song: not needed
+                    except OSError:
+                        pass
+        return keep
     say(stage="Loading the model (downloads about 60 MB the first time)")
     sep.load_model(model_filename=req.get("model") or "UVR-MDX-NET-Inst_HQ_3.onnx")
-    say(stage="Separating vocals and instrumental" + (" on the graphics card" if directml else ""))
-    out = sep.separate(req["input"])
-    return [o if os.path.isabs(o) else os.path.join(req["out_dir"], o) for o in out]
+    say(stage="Separating vocals and instrumental" + where)
+    return absolute(req, sep.separate(req["input"]))
 
 
 def main() -> int:
@@ -81,7 +108,11 @@ def main() -> int:
     result = {}
     for f in files:
         name = os.path.basename(f).lower()
-        if "(vocals)" in name or ("vocals" in name and "instrumental" not in name):
+        if req.get("mode") == "4stems":
+            for stem in FOUR:
+                if f"({stem})" in name:
+                    result[stem] = f
+        elif "(vocals)" in name or ("vocals" in name and "instrumental" not in name):
             result["vocals"] = f
         elif "(instrumental)" in name or "instrumental" in name:
             result["instrumental"] = f

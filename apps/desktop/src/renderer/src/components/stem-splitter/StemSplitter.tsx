@@ -25,7 +25,7 @@ export function StemSplitter(): React.ReactElement {
   const [stage, setStage] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const [result, setResult] = useState<StemResult | null>(null)
-  const [model, setModel] = useState<'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s' | 'mdx_vocals'>('htdemucs_ft')
+  const [model, setModel] = useState<'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s' | 'mdx_vocals' | 'mdx_4stems'>('htdemucs_ft')
   const [stems, setStems] = useState<string[]>(['vocals', 'drums', 'bass', 'other'])
   const dropRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -119,24 +119,27 @@ export function StemSplitter(): React.ReactElement {
         <div>
           <div style={labelStyle}>{t('stemSplitter.model')}</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {(['mdx_vocals', 'htdemucs', 'htdemucs_ft', 'mdx_extra', 'htdemucs_6s'] as const).map((m) => (
+            {(['mdx_vocals', 'mdx_4stems', 'htdemucs', 'htdemucs_ft', 'mdx_extra', 'htdemucs_6s'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => {
                   setModel(m)
                   if (m === 'htdemucs_6s') setStems(['vocals', 'drums', 'bass', 'piano', 'guitar', 'other'])
                   if (m === 'mdx_vocals') setStems(['vocals', 'instrumental'])
+                  else if (m === 'mdx_4stems') setStems(['vocals', 'drums', 'bass', 'other'])
                   else if (stems.includes('instrumental')) setStems(['vocals', 'drums', 'bass', 'other'])
                 }}
                 style={{ padding: '4px 10px', borderRadius: 4, border: '1px solid var(--border)', background: model === m ? 'var(--accent)' : 'var(--bg-secondary)', color: model === m ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11 }}
               >
-                {m === 'mdx_vocals' ? 'Vocals + Instrumental (fastest)' : m === 'htdemucs' ? 'Fast' : m === 'htdemucs_ft' ? 'Balanced' : m === 'mdx_extra' ? 'Quality' : '6 Stems'}
+                {m === 'mdx_vocals' ? 'Vocals + Instrumental (fastest)' : m === 'mdx_4stems' ? '4 Stems on the graphics card' : m === 'htdemucs' ? 'Fast' : m === 'htdemucs_ft' ? 'Balanced' : m === 'mdx_extra' ? 'Quality' : '6 Stems'}
               </button>
             ))}
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, maxWidth: 320 }}>
             {model === 'mdx_vocals'
               ? 'Only vocals and instrumental, but much faster; uses the graphics card on AMD, Intel and NVIDIA. Needs "Fast vocal separation" in Settings → AI Engines.'
+              : model === 'mdx_4stems'
+              ? 'Vocals, drums, bass and other with four small models on the graphics card (AMD, Intel, NVIDIA): much faster than Fast on these cards, a little less clean than Balanced. Needs "Fast vocal separation" in Settings → AI Engines; the four models (a few dozen MB each) download on the first split.'
               : 'Balanced runs 4 models one after the other: on the processor (AMD / Intel graphics too) Fast is about 4 times quicker.'}
           </div>
         </div>
@@ -144,7 +147,7 @@ export function StemSplitter(): React.ReactElement {
         <div>
           <div style={labelStyle}>Stems to extract</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {Object.keys(STEM_COLORS).filter((s) => (model === 'mdx_vocals' ? s === 'vocals' || s === 'instrumental' : s !== 'instrumental')).map(stem => (
+            {Object.keys(STEM_COLORS).filter((s) => (model === 'mdx_vocals' ? s === 'vocals' || s === 'instrumental' : model === 'mdx_4stems' ? ['vocals', 'drums', 'bass', 'other'].includes(s) : s !== 'instrumental')).map(stem => (
               <button
                 key={stem}
                 onClick={() => toggleStem(stem)}

@@ -72,7 +72,8 @@ def run_mdx(req: StemSplitRequest, report) -> dict:
     model_dir = os.environ.get("AMS_SEP_MODELS") or os.path.join(os.path.expanduser("~"), ".ai-music-studio", "separator")
     reqfile = os.path.join(out_dir, "request.json")
     with open(reqfile, "w", encoding="utf-8") as f:
-        json.dump({"input": req.filePath, "out_dir": out_dir, "model_dir": model_dir, "fast": True}, f)
+        json.dump({"input": req.filePath, "out_dir": out_dir, "model_dir": model_dir, "fast": True,
+                   "mode": "4stems" if req.model == "mdx_4stems" else "vocals"}, f)
     worker = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                           "services", "separator_worker.py")
     report(3, "Starting fast vocal separation")
@@ -80,6 +81,7 @@ def run_mdx(req: StemSplitRequest, report) -> dict:
     proc = subprocess.Popen([py, worker, reqfile], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                             encoding="utf-8", errors="replace", creationflags=flags)
     started, result, error, tail = time.time(), None, None, []
+    base, span = 10.0, 84.0                                         # where the current model's share of the bar is
     for line in proc.stdout:                                       # type: ignore[union-attr]
         line = line.strip()
         if not line:
@@ -89,12 +91,18 @@ def run_mdx(req: StemSplitRequest, report) -> dict:
             msg = json.loads(line)
         except ValueError:
             # no per-chunk progress from the library: creep forward so the bar shows it is working
-            report(min(90.0, 10 + (time.time() - started) / 3))
+            report(base + min(span * 0.95, (time.time() - started) / 3))
             continue
         if not isinstance(msg, dict):
             continue
         if "stage" in msg:
-            report(10 if "Separating" in msg["stage"] else 5, msg["stage"])
+            if "part" in msg:                                       # 4 stems: one model after the other
+                parts = max(1, msg.get("parts", 4))
+                started, span = time.time(), 90.0 / parts
+                base = 5 + span * msg["part"]
+                report(base, msg["stage"])
+            else:
+                report(10 if "Separating" in msg["stage"] else 5, msg["stage"])
         elif msg.get("done"):
             result = msg.get("files") or {}
             report(98, f"Done ({msg.get('device', 'processor')})")
@@ -111,7 +119,7 @@ def run_split(req: StemSplitRequest, report=lambda pct, text=None: None) -> dict
     """Separate the song; report(percent, text) is called along the way. Returns {stem: wav path}."""
     if not os.path.exists(req.filePath):
         raise HTTPException(400, f"File not found: {req.filePath}")
-    if req.model == "mdx_vocals":
+    if req.model in ("mdx_vocals", "mdx_4stems"):
         with _split_lock:
             return run_mdx(req, report)
     try:

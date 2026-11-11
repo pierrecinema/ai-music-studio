@@ -95,6 +95,11 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.1
+
+- **Stem Splitter: "4 Stems on the graphics card":** vocals, drums, bass and other with four small MDX-Net models that run on the graphics card like *Vocals + Instrumental* (AMD / Intel through DirectML, also the R9 290, and NVIDIA). Much faster than Demucs *Fast* on these cards, a little less clean than *Balanced*. Uses the same *Fast vocal separation* engine; the models download on the first split.
+- Release pages show the changelog and the install notes; the donation link is only on the project page ("Buy me a coffee").
+
 ### New in 0.18
 
 - **Stem Splitter: "Vocals + Instrumental (fastest)":** a new mode with an MDX-Net model (through audio-separator) that is much faster than Demucs, ideal for karaoke and acapellas. It uses the graphics card on AMD and Intel (DirectX 12 through DirectML, also older cards like the R9 290) and on NVIDIA (CUDA), and falls back to the processor. Install it once in Settings → AI Engines → *Fast vocal separation*; it has its own environment and does not touch the others.

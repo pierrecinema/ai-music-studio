@@ -535,7 +535,8 @@ def _device_text() -> str:
             g = next((g for g in m["gpus"] if g.get("cuda")), None)
             return f"Using the graphics card: {g['name'] if g else 'NVIDIA GPU'} (CUDA)."
         gpu = next((g for g in m["gpus"] if g["vendor"] in ("amd", "nvidia")), None)
-        cpu = f"{m['cpu'] or 'the processor'} ({m['threads']} threads)"
+        ai = os.environ.get("AMS_AI_THREADS")
+        cpu = f"{m['cpu'] or 'the processor'} ({m['threads']} threads{f', the AI computes on {ai}' if ai else ''})"
         if gpu and gpu["vendor"] == "amd":
             why = (f"Your {gpu['name']} is not used: PyTorch cannot use AMD cards on Windows without a special "
                    "build, and cards of this age are not supported by it.")

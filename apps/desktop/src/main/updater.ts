@@ -1,5 +1,5 @@
 import { autoUpdater } from 'electron-updater'
-import { BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import log from 'electron-log'
 
 autoUpdater.logger = log
@@ -7,7 +7,7 @@ autoUpdater.autoDownload = false   // ask user first
 autoUpdater.allowPrerelease = true
 autoUpdater.autoInstallOnAppQuit = true
 
-export function setupUpdater(win: BrowserWindow): void {
+export function setupUpdater(win: BrowserWindow, stopBackend: () => Promise<void>): void {
   // Forward all update events to renderer
   const send = (event: string, data?: unknown) => {
     if (!win.isDestroyed()) win.webContents.send(event, data)
@@ -51,7 +51,14 @@ export function setupUpdater(win: BrowserWindow): void {
   // IPC from renderer (return only serialisable values)
   ipcMain.handle('updater:check', () => check(true))
   ipcMain.handle('updater:download', async () => { await autoUpdater.downloadUpdate() })
-  ipcMain.handle('updater:install', () => autoUpdater.quitAndInstall())
+  // End the AI backend and its workers first: a Python process still running made the installer stop with
+  // "please close AI Music Studio". The installer then starts the new version by itself.
+  ipcMain.handle('updater:install', async () => {
+    try { await stopBackend() } catch (e) { log.warn('stopping the backend before the update failed', e) }
+    autoUpdater.quitAndInstall(false, true)
+  })
+  // the same when an update that was downloaded earlier is installed on quit
+  app.on('before-quit-for-update', () => { void stopBackend() })
 
   // Auto-check 5 s after launch, then every 4 h
   setTimeout(() => void check(false), 5000)

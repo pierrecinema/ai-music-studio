@@ -54,6 +54,15 @@ export const useMusicJob = create<MusicJobState>((set, get) => ({
     } catch (e) {
       set({ error: String((e as Error).message) })
     }
+    // A model that does not stop in time makes the backend restart itself (about 10 s): do not wait for it
+    window.setTimeout(() => {
+      const cur = get().job
+      if (cur && cur.id === j.id && isBusy(cur)) {
+        if (timer) clearInterval(timer)
+        timer = null
+        set({ job: { ...cur, status: 'cancelled', stage_text: 'Cancelled (the AI engine was restarted to stop at once)' } })
+      }
+    }, 12000)
   },
 }))
 

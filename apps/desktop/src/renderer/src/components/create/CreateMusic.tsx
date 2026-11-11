@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type EngineState, type MusicEngineInfo, type MusicJob, type MusicResult, type Resources, type Usage } from '../../lib/api'
-import { useAIStore } from '../../stores/ai.store'
+import { apiKeyFor, useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
 import { AudioFile } from '../common/AudioFile'
@@ -173,8 +173,9 @@ function FilePick({ value, onChange, placeholder }: {
 // ─── AI helper (uses the provider/key from Settings → AI) ────────────────────
 
 async function askAI(system: string, user: string): Promise<string> {
-  const { provider, claudeApiKey, openaiApiKey, model } = useAIStore.getState()
-  const apiKey = provider === 'claude' ? claudeApiKey : openaiApiKey
+  const st = useAIStore.getState()
+  const { provider, model } = st
+  const apiKey = apiKeyFor(st)
   if (!apiKey) throw new Error(tr('Add an API key in Settings → AI first.'))
   return api.ai.chat({
     provider, apiKey, model, systemContext: system,
@@ -369,7 +370,7 @@ export function CreateMusic(): React.ReactElement {
       for (const [i, r] of job.results.entries()) {
         seedAnalysis(r.audio_file, r)                          // the tempo was measured when the song was saved
         const problems = await importAudioFiles([r.audio_file],
-          r.loop_bars && r.bpm ? { startBeat: 0, warpBpm: r.bpm, noBeatMatch: true } : { startBeat: 0 })
+          r.loop_bars && r.bpm ? { startBeat: 0, warpBpm: r.bpm, gridFirst: 0, noBeatMatch: true } : { startBeat: 0 })
         if (problems.length) { setError(problems.join(' ')); return }
         const tracks = useProjectStore.getState().project.tracks
         const track = tracks[tracks.length - 1]
@@ -551,6 +552,9 @@ export function CreateMusic(): React.ReactElement {
           <Field name={tr("Style")} hintText={tr("A description of the music: genre, mood, instruments, tempo.")}>
             <textarea value={p.prompt} onChange={(e) => set('prompt', e.target.value)} rows={4} style={full}
               placeholder={tr("e.g. deep house, warm bass, dreamy pads, 122 bpm")} />
+          </Field>
+          <Field name={tr("Tags (optional)")} hintText={tr("Genre, mood or anything you want to find this song or loop by in the Library. Separate with commas.")}>
+            <input value={p.tags} onChange={(e) => set('tags', e.target.value)} style={full} placeholder="e.g. house, chill, my project" />
           </Field>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {chips.map((g) => (

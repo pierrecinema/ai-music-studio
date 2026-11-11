@@ -19,6 +19,44 @@ class Patch(BaseModel):
     title: str | None = None
     favorite: bool | None = None
     notes: str | None = None
+    tags: list[str] | None = None
+
+
+class StemsReq(BaseModel):
+    stems: dict[str, str]                 # stem name -> file
+    title: str = ""
+    tags: list[str] = []
+    source_path: str | None = None        # the mixed song: its tempo is measured once for all stems
+
+
+@router.post("/stems")
+async def save_stems(req: StemsReq):
+    saved = await asyncio.to_thread(library.add_stems, req.stems, req.title, req.tags, req.source_path)
+    if not saved:
+        raise HTTPException(400, "There were no stem files to save.")
+    return {"tracks": saved}
+
+
+class ExportItem(BaseModel):
+    path: str
+    name: str = ""
+
+
+class ExportReq(BaseModel):
+    items: list[ExportItem]
+    folder: str
+    format: str = "wav24"                  # wav16 | wav24 | wav32 | aiff | flac | mp3
+
+
+@router.post("/export")
+async def export(req: ExportReq):
+    try:
+        files = await asyncio.to_thread(library.export_files, [i.model_dump() for i in req.items], req.folder, req.format)
+    except FileNotFoundError as e:
+        raise HTTPException(400, f"File not found: {e}")
+    except (ValueError, RuntimeError) as e:
+        raise HTTPException(400, str(e))
+    return {"files": files}
 
 
 @router.patch("/{track_id}")
@@ -41,13 +79,16 @@ class ImportReq(BaseModel):
     title: str = ""
     source: str = "import"          # import | stem | master
     prompt: str = ""
+    bpm: float | None = None
+    tags: list[str] = []
 
 
 @router.post("/import")
 async def import_track(req: ImportReq):
     try:
         return await asyncio.to_thread(
-            library.add_track, req.path, {"title": req.title, "source": req.source, "prompt": req.prompt}
+            library.add_track, req.path, {"title": req.title, "source": req.source, "prompt": req.prompt,
+                                          "bpm": req.bpm, "tags": req.tags}
         )
     except FileNotFoundError:
         raise HTTPException(400, f"File not found: {req.path}")

@@ -89,6 +89,16 @@ export function SamplesTab(): React.ReactElement {
     } catch (err) { setError((err as Error).message) }
   }
 
+  // a copy in the library (My tracks): searchable, taggable, exportable, independent of the sample folder
+  const toLibrary = async (e: SampleEntry): Promise<void> => {
+    setError(null)
+    try {
+      const bpm = await tempoOf(e)
+      await api.library.importFile(e.path, e.name, 'import', bpm ?? null)
+      setNotice(`“${e.name}” was copied into the Library (My tracks).`)
+    } catch (err) { setError((err as Error).message) }
+  }
+
   const add = async (e: SampleEntry, sync: boolean): Promise<void> => {
     setError(null)
     const st = useProjectStore.getState()
@@ -177,8 +187,12 @@ export function SamplesTab(): React.ReactElement {
             ) : (
               <button className="btn btn-ghost" style={{ fontSize: 10 }} onClick={() => void detect(e)} title="Measure the tempo">BPM?</button>
             )}
-            <button className="btn btn-primary" style={{ fontSize: 11 }} onClick={() => void add(e, true)} title={`Insert on the audio track and stretch to ${projectBpm} BPM`}>Add synced</button>
-            <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void add(e, false)}>Add as is</button>
+            <button className="btn btn-primary" style={{ fontSize: 11 }} onClick={() => void add(e, true)}
+              title={`Into the Studio at the playhead, stretched to the project tempo (${projectBpm} BPM) without changing the pitch`}>Studio: synced</button>
+            <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void add(e, false)}
+              title="Into the Studio at the playhead, exactly as the file is (no stretching)">Studio: as is</button>
+            <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void toLibrary(e)}
+              title="Copy into the Library (My tracks): searchable, with tags, exportable">+ Library</button>
           </div>
         )
       })}

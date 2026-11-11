@@ -85,10 +85,11 @@ declare global {
       dialog: {
         openAudio: () => Promise<string[]>
         openVideo: () => Promise<string | null>
+        pickFolder: (title?: string) => Promise<string | null>
         save: (name: string) => Promise<string | null>
       }
       fs: { readFile: (path: string) => Promise<Uint8Array> }
-      shell: { openPath: (path: string) => Promise<void> }
+      shell: { openPath: (path: string) => Promise<void>; openProject: (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions') => Promise<void> }
       project: {
         openDialog: () => Promise<{ path: string; text: string } | null>
         read: (path: string) => Promise<string>

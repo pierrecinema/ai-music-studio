@@ -60,7 +60,10 @@ export interface LibraryTrack {
   engine: string; source: string; prompt: string; lyrics: string; seed: number | null; favorite: boolean; notes: string
   bpm?: number | null; first_beat?: number | null     // measured when the track was saved; first_beat 0 = starts on beat 1
   aligned?: boolean; original?: string; trimmed?: number   // checked for beat 1; `original` = saved untouched file
+  tags?: string[]; loop_bars?: number
+  stem?: string; stem_set?: string; song?: string      // stems: which part, which split, which song
 }
+export type ExportFormat = 'wav16' | 'wav24' | 'wav32' | 'aiff' | 'flac' | 'mp3'
 export interface SampleEntry { path: string; name: string; folder: string; root: string; size: number; bpm: number | null }
 export interface KaraokeWord { text: string; start: number; end: number }
 
@@ -162,7 +165,7 @@ export const api = {
 
   ai: {
     chat: (body: {
-      provider: 'claude' | 'openai'
+      provider: 'claude' | 'openai' | 'grok' | 'ollama'
       apiKey: string
       model: string
       messages: Array<{ role: 'user' | 'assistant'; content: string }>
@@ -210,9 +213,13 @@ export const api = {
 
   library: {
     list: () => get<{ dir: string; tracks: LibraryTrack[] }>('/library'),
-    patch: (id: string, body: { title?: string; favorite?: boolean; notes?: string }) => send<LibraryTrack>('PATCH', `/library/${id}`, body),
+    saveStems: (body: { stems: Record<string, string>; title: string; tags: string[]; source_path?: string | null }) =>
+      post<{ tracks: LibraryTrack[] }>('/library/stems', body),
+    exportFiles: (body: { items: Array<{ path: string; name: string }>; folder: string; format: ExportFormat }) =>
+      post<{ files: string[] }>('/library/export', body),
+    patch: (id: string, body: { title?: string; favorite?: boolean; notes?: string; tags?: string[] }) => send<LibraryTrack>('PATCH', `/library/${id}`, body),
     remove: (id: string, deleteFile = true) => send<{ removed: string }>('DELETE', `/library/${id}?delete_file=${deleteFile}`),
-    importFile: (path: string, title = '', source = 'import') => post<LibraryTrack>('/library/import', { path, title, source }),
+    importFile: (path: string, title = '', source = 'import', bpm: number | null = null) => post<LibraryTrack>('/library/import', { path, title, source, bpm }),
     align: (id: string) => post<{ track: LibraryTrack; trimmed: number; message: string }>(`/library/${id}/align`, {}),
     restore: (id: string) => post<LibraryTrack>(`/library/${id}/restore`, {}),
     alignAll: () => post<{ checked: number; trimmed: number; failed: string[] }>('/library/align-all', {}),

@@ -1,3 +1,4 @@
+import logo from '../../assets/logo.png'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
@@ -38,6 +39,18 @@ const OPENAI_MODELS = [
   { id: 'o1', label: 'o1' },
   { id: 'o1-mini', label: 'o1-mini' },
 ]
+// xAI's model names change often: "Other model ID" takes any current one from console.x.ai
+const GROK_MODELS = [
+  { id: 'grok-4.1-fast', label: 'Grok 4.1 Fast' },
+  { id: 'grok-4.3', label: 'Grok 4.3' },
+]
+// any model pulled with "ollama pull <name>"
+const OLLAMA_MODELS = [
+  { id: 'llama3.2', label: 'Llama 3.2 (3B, small and quick)' },
+  { id: 'qwen2.5', label: 'Qwen 2.5 (7B)' },
+  { id: 'gemma3', label: 'Gemma 3' },
+  { id: 'mistral', label: 'Mistral (7B)' },
+]
 const CUSTOM = '__custom__'
 
 function ModelPicker({ models, value, onChange }: {
@@ -72,7 +85,7 @@ function ModelPicker({ models, value, onChange }: {
   )
 }
 
-type SettingsTab = 'general' | 'ai' | 'engines' | 'hardware' | 'models' | 'shortcuts' | 'audio' | 'appearance' | 'updates'
+type SettingsTab = 'general' | 'ai' | 'engines' | 'hardware' | 'models' | 'shortcuts' | 'audio' | 'appearance' | 'updates' | 'about'
 
 type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
 
@@ -186,7 +199,7 @@ function UpdatesTab(): React.ReactElement {
 export function Settings(): React.ReactElement {
   const { t } = useTranslation()
   const { theme, setTheme, language, setLanguage } = useUIStore()
-  const { provider, setProvider, claudeApiKey, setClaudeApiKey, openaiApiKey, setOpenaiApiKey, model, setModel } = useAIStore()
+  const { provider, setProvider, claudeApiKey, setClaudeApiKey, openaiApiKey, setOpenaiApiKey, grokApiKey, setGrokApiKey, model, setModel } = useAIStore()
   const [tab, setTab] = useState<SettingsTab>(() => {
     const wanted = sessionStorage.getItem('ams-settings-tab') as SettingsTab | null
     sessionStorage.removeItem('ams-settings-tab')
@@ -218,7 +231,7 @@ export function Settings(): React.ReactElement {
       {/* Tab nav */}
       <div style={{ width: 160, background: 'var(--bg-secondary)', borderRight: '1px solid var(--border)', padding: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10, padding: '0 6px' }}>{t('settings.title')}</div>
-        {(['general', 'ai', 'engines', 'hardware', 'models', 'shortcuts', 'audio', 'appearance', 'updates'] as SettingsTab[]).map(tab2 => (
+        {(['general', 'ai', 'engines', 'hardware', 'models', 'shortcuts', 'audio', 'appearance', 'updates', 'about'] as SettingsTab[]).map(tab2 => (
           <button
             key={tab2}
             onClick={() => setTab(tab2)}
@@ -235,7 +248,7 @@ export function Settings(): React.ReactElement {
               fontWeight: tab === tab2 ? 600 : 400
             }}
           >
-            {t(`settings.${tab2}`, { defaultValue: tab2 === 'engines' ? 'AI Engines' : tab2 === 'hardware' ? 'Hardware' : tab2 === 'models' ? 'Models' : tab2 === 'shortcuts' ? 'Shortcuts' : tab2 === 'updates' ? 'Updates' : tab2 })}
+            {t(`settings.${tab2}`, { defaultValue: tab2 === 'engines' ? 'AI Engines' : tab2 === 'hardware' ? 'Hardware' : tab2 === 'models' ? 'Models' : tab2 === 'shortcuts' ? 'Shortcuts' : tab2 === 'updates' ? 'Updates' : tab2 === 'about' ? 'About' : tab2 })}
           </button>
         ))}
       </div>
@@ -271,8 +284,8 @@ export function Settings(): React.ReactElement {
             <div style={sectionStyle}>{t('settings.ai')}</div>
             <div>
               <label style={labelStyle}>{t('settings.aiProvider')}</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {(['claude', 'openai'] as AIProvider[]).map(p => (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {(['claude', 'openai', 'grok', 'ollama'] as AIProvider[]).map(p => (
                   <button
                     key={p}
                     onClick={() => setProvider(p)}
@@ -287,7 +300,7 @@ export function Settings(): React.ReactElement {
                       fontWeight: provider === p ? 600 : 400
                     }}
                   >
-                    {p === 'claude' ? 'Claude (Anthropic)' : 'ChatGPT (OpenAI)'}
+                    {p === 'claude' ? 'Claude (Anthropic)' : p === 'openai' ? 'ChatGPT (OpenAI)' : p === 'grok' ? 'Grok (xAI)' : 'Ollama (free, on this PC)'}
                   </button>
                 ))}
               </div>
@@ -333,6 +346,45 @@ export function Settings(): React.ReactElement {
                 <div>
                   <label style={labelStyle}>{t('settings.model')}</label>
                   <ModelPicker models={OPENAI_MODELS} value={model} onChange={setModel} />
+                </div>
+              </>
+            )}
+
+            {provider === 'grok' && (
+              <>
+                <div>
+                  <label style={labelStyle}>Grok API key (xAI)</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input type={showKey ? 'text' : 'password'} value={grokApiKey} onChange={e => setGrokApiKey(e.target.value)}
+                      placeholder="xai-..." style={{ ...inputStyle, flex: 1 }} />
+                    <button onClick={() => setShowKey(s => !s)} style={smallBtnStyle}>{showKey ? 'Hide' : 'Show'}</button>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.5 }}>
+                    Create a key at console.x.ai. New xAI accounts have often received free starter credits; check your
+                    credit balance there. If a model name no longer exists, choose "Other model ID" and enter a current one.
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>{t('settings.model')}</label>
+                  <ModelPicker models={GROK_MODELS} value={model} onChange={setModel} />
+                </div>
+              </>
+            )}
+
+            {provider === 'ollama' && (
+              <>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  <b>Completely free, no account, no key:</b> Ollama runs an AI model on your own PC.
+                  <ol style={{ margin: '6px 0 0 18px', padding: 0 }}>
+                    <li>Install Ollama from ollama.com (Windows installer).</li>
+                    <li>Open a command prompt once and type <code>ollama pull llama3.2</code> (about 2 GB).</li>
+                    <li>Keep Ollama running; choose the same model below.</li>
+                  </ol>
+                  Answers come slower than from the cloud on a PC without a strong graphics card, and small models know less.
+                </div>
+                <div>
+                  <label style={labelStyle}>{t('settings.model')}</label>
+                  <ModelPicker models={OLLAMA_MODELS} value={model} onChange={setModel} />
                 </div>
               </>
             )}
@@ -391,6 +443,7 @@ export function Settings(): React.ReactElement {
         )}
 
         {tab === 'updates' && <UpdatesTab />}
+        {tab === 'about' && <AboutTab />}
         {tab === 'engines' && <EnginesTab />}
         {tab === 'hardware' && <HardwareTab />}
         {tab === 'models' && <ModelsTab />}
@@ -404,3 +457,41 @@ const sectionStyle: React.CSSProperties = { fontSize: 16, fontWeight: 700, color
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }
 const inputStyle: React.CSSProperties = { width: '100%', maxWidth: 400, background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 6, padding: '8px 10px', fontSize: 13 }
 const smallBtnStyle: React.CSSProperties = { padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: 5, cursor: 'pointer', fontSize: 11 }
+
+// About: what the project is, where it lives, and a friendly ask for a GitHub star
+function AboutTab(): React.ReactElement {
+  const link = (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions', text: string, primary = false): React.ReactElement => (
+    <button className={`btn ${primary ? 'btn-primary' : 'btn-ghost'}`} onClick={() => void window.api.shell.openProject(page)}>{text}</button>
+  )
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 640 }}>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+        <img src={logo} alt="AI Music Studio" style={{ width: 84, height: 84, borderRadius: 18 }} />
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)' }}>AI Music Studio</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Version {__APP_VERSION__} · free and open source (GPL-3.0)</div>
+        </div>
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+        AI Music Studio is a free music studio for Windows: a DAW with Studio, mixer and piano roll, and AI music
+        generation that runs on your own computer. Describe a style, write lyrics and make songs or seamless loops,
+        without a cloud service or a subscription. Your music and lyrics stay on your PC.
+      </div>
+      <div style={{ background: 'var(--bg-panel)', border: '1px solid var(--accent)', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>⭐ Do you like AI Music Studio?</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          Give it a star on GitHub. It takes a second (with a free GitHub account), helps other musicians find the
+          project and shows that it is worth working on.
+        </div>
+        <div>{link('home', '⭐ Star on GitHub', true)}</div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {link('home', 'Project page')}
+        {link('releases', 'All versions')}
+        {link('newIssue', 'Report a problem')}
+        {link('issues', 'Known issues')}
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>github.com/pierrecinema/ai-music-studio</div>
+    </div>
+  )
+}

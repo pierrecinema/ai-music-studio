@@ -34,7 +34,7 @@ const NOTE_TYPES: Track['type'][] = ['midi', 'instrument', 'vocal']
 
 export async function importAudioFiles(
   paths: string[],
-  at?: { trackId?: string; startBeat?: number; warpBpm?: number; noBeatMatch?: boolean }
+  at?: { trackId?: string; startBeat?: number; warpBpm?: number; gridFirst?: number; noBeatMatch?: boolean }
 ): Promise<string[]> {
   const problems: string[] = []
   const startBeat = at?.startBeat ?? useAudioStore.getState().currentBeat
@@ -57,7 +57,9 @@ export async function importAudioFiles(
       startTime: startBeat,
       // a synced sample is measured in its own tempo: a 2-bar loop stays 8 beats long at any project tempo
       duration: secToBeats(buf.duration, warp ?? store.project.bpm),
-      audioFile: path, name, warpBpm: warp
+      // gridFirst: where beat 1 is in the file. Known for loops (0): Sync all / AUTO SYNC then leave the clip
+      // alone instead of measuring it again and nudging it off the grid
+      audioFile: path, name, warpBpm: warp, gridFirst: warp !== undefined ? at?.gridFirst : undefined
     })
     useProjectStore.getState().selectTrack(trackId!)
     // the new clip is selected, so its clip bar (gain, fades, SYNC, MASTER) is right there

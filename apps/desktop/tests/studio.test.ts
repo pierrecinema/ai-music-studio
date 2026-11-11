@@ -7,6 +7,8 @@ import { beatOfSrc, srcOfBeat, validMarkers, warpSegments } from '../src/rendere
 import { isAudible, recordingPieces } from '../src/renderer/src/audio/engine'
 import { useProjectStore } from '../src/renderer/src/stores/project.store'
 import type { Project, Track } from '../src/renderer/src/types'
+import { matchesQuery } from '../src/renderer/src/lib/librarySearch'
+import type { LibraryTrack } from '../src/renderer/src/lib/api'
 
 let failed = 0
 let passed = 0
@@ -124,6 +126,16 @@ const clip = useProjectStore.getState().project.tracks[0].clips[0]
 useProjectStore.getState().splitClip(t2.id, clip.id, 2)       // 120 bpm: beat 2 lies halfway to the marker -> 0.5 s
 const right = useProjectStore.getState().project.tracks[0].clips[1]
 check('split with warp markers', near(right.offset ?? -1, 0.5), String(right.offset))
+
+// library search: words, tags, BPM and BPM ranges
+const lt = (o: Partial<LibraryTrack>): LibraryTrack => ({ id: 'x', title: '', file: '', path: '', exists: true, created: 0, duration: 10, engine: '', source: 'generated', prompt: '', lyrics: '', seed: null, favorite: false, notes: '', ...o })
+const loopT = lt({ title: 'Deep house – Loop 124 BPM 4 bars', bpm: 124, tags: ['house', 'warm'] })
+const stemT = lt({ title: 'Midnight Drive – vocals', bpm: 118, source: 'stem', stem: 'vocals', tags: ['synthwave'] })
+check('search by word', matchesQuery(loopT, 'deep') && !matchesQuery(stemT, 'deep'))
+check('search by tag', matchesQuery(loopT, 'warm') && matchesQuery(stemT, 'Synthwave'))
+check('search by bpm', matchesQuery(loopT, '124') && matchesQuery(loopT, '123') && !matchesQuery(loopT, '120'))
+check('search by bpm range', matchesQuery(stemT, '110-120') && matchesQuery(stemT, 'bpm 118') && !matchesQuery(loopT, '110-120'))
+check('search by stem name and several words', matchesQuery(stemT, 'vocals midnight') && !matchesQuery(stemT, 'vocals house'))
 
 console.log(`${passed} passed, ${failed} failed`)
 if (failed) process.exit(1)

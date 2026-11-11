@@ -55,12 +55,14 @@ const api = {
   dialog: {
     openAudio: () => ipcRenderer.invoke('dialog:open-audio'),
     openVideo: () => ipcRenderer.invoke('dialog:open-video'),
+    pickFolder: (title?: string) => ipcRenderer.invoke('dialog:pick-folder', title),
     save: (name: string) => ipcRenderer.invoke('dialog:save', name)
   },
   fs: {
     readFile: (path: string) => ipcRenderer.invoke('fs:read-file', path)
   },
   shell: {
+    openProject: (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions') => ipcRenderer.invoke('shell:open-project', page),
     openPath: (path: string) => ipcRenderer.invoke('shell:open-path', path)
   },
   project: {

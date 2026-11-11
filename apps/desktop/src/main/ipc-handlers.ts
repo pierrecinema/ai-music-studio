@@ -156,6 +156,13 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     // only Hugging Face pages, never an arbitrary address from the page
     if (/^https:\/\/huggingface\.co\/[\w.-]+\/[\w.-]+\/?$/.test(url)) void shell.openExternal(url)
   })
+  // the project's own GitHub pages (About, star, issues, releases): nothing else
+  ipcMain.handle('shell:open-project', (_, page: string) => {
+    const pages: Record<string, string> = {
+      home: '', releases: '/releases', issues: '/issues', newIssue: '/issues/new', discussions: '/discussions'
+    }
+    if (page in pages) void shell.openExternal(`https://github.com/pierrecinema/ai-music-studio${pages[page]}`)
+  })
   ipcMain.handle('dialog:open-lora', async (e, mode: 'file' | 'folder') => {
     const result = await openDialog(
       e,
@@ -163,6 +170,12 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
         ? { properties: ['openDirectory'] }
         : { filters: [{ name: 'LoRA', extensions: ['safetensors', 'pt', 'bin'] }], properties: ['openFile'] }
     )
+    return result.filePaths[0] ?? null
+  })
+
+  // a folder to export into (stems, loops: one file each)
+  ipcMain.handle('dialog:pick-folder', async (e, title?: string) => {
+    const result = await openDialog(e, { title: title || 'Choose a folder', properties: ['openDirectory', 'createDirectory'] })
     return result.filePaths[0] ?? null
   })
 

@@ -6,13 +6,17 @@ import { useUIStore } from '../../stores/ui.store'
 import { importAudioFiles } from '../timeline/Timeline'
 import { SamplesTab } from './SamplesTab'
 import { seedAnalysis } from '../../beatmatch/store'
+import { ExportDialog, parseTags } from '../common/ExportDialog'
+import { matchesQuery } from '../../lib/librarySearch'
 
 const muted: React.CSSProperties = { fontSize: 11, color: 'var(--text-muted)' }
 const mmss = (s: number | null): string => (s == null ? '?' : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`)
 const ENGINE: Record<string, string> = {
   'ace-step': 'ACE-Step', 'musicgen-small': 'MusicGen small', 'musicgen-medium': 'MusicGen medium', 'musicgen-large': 'MusicGen large',
-  'audioldm2-music': 'AudioLDM 2', musicldm: 'MusicLDM', diffrhythm: 'DiffRhythm'
+  'audioldm2-music': 'AudioLDM 2', musicldm: 'MusicLDM', diffrhythm: 'DiffRhythm', 'ace-step-1.5': 'ACE-Step 1.5'
 }
+
+const chip: React.CSSProperties = { fontSize: 10, padding: '1px 7px', borderRadius: 10, background: 'var(--bg-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-mid)', cursor: 'pointer' }
 
 export function Library(): React.ReactElement {
   const [tracks, setTracks] = useState<LibraryTrack[]>([])
@@ -24,7 +28,9 @@ export function Library(): React.ReactElement {
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [playing, setPlaying] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
-  const [tab, setTab] = useState<'tracks' | 'samples'>('tracks')
+  const [tab, setTab] = useState<'tracks' | 'stems' | 'samples'>('tracks')
+  const [editTags, setEditTags] = useState<string | null>(null)
+  const [exporting, setExporting] = useState<{ title: string; items: Array<{ path: string; name: string }> } | null>(null)
   const [aligning, setAligning] = useState<string | null>(null)       // a track id, or 'all'
   const [confirmAll, setConfirmAll] = useState(false)
   // where a song lands on the timeline: always bar 1 (all songs start together), or at the playhead
@@ -47,10 +53,14 @@ export function Library(): React.ReactElement {
     return () => { window.clearInterval(id); audio.current?.pause(); if (url.current) URL.revokeObjectURL(url.current) }
   }, [load])
 
-  const shown = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return tracks.filter((t) => (!onlyFav || t.favorite) && (!q || `${t.title} ${t.prompt} ${t.engine}`.toLowerCase().includes(q)))
-  }, [tracks, query, onlyFav])
+  const inTab = useMemo(() => tracks.filter((t) => (tab === 'stems') === (t.source === 'stem')), [tracks, tab])
+  const shown = useMemo(() => inTab.filter((t) => (!onlyFav || t.favorite) && matchesQuery(t, query)), [inTab, query, onlyFav])
+  // stems of one split stay together
+  const stemSets = useMemo(() => {
+    const m = new Map<string, LibraryTrack[]>()
+    for (const t of shown) { const k = t.stem_set ?? t.id; m.set(k, [...(m.get(k) ?? []), t]) }
+    return [...m.values()]
+  }, [shown])
 
   const play = async (t: LibraryTrack): Promise<void> => {
     if (playing === t.id) { audio.current?.pause(); setPlaying(null); return }
@@ -68,7 +78,11 @@ export function Library(): React.ReactElement {
 
   const toProject = async (t: LibraryTrack): Promise<void> => {
     seedAnalysis(t.path, t)                                   // tempo and first beat are known: no new measurement
-    const problems = await importAudioFiles([t.path], { startBeat: insertAt === 'bar1' ? 0 : useAudioStore.getState().currentBeat })
+    const startBeat = insertAt === 'bar1' ? 0 : Math.round(useAudioStore.getState().currentBeat)
+    // loops know their exact tempo and start on beat 1: synced at once and never measured again
+    const problems = await importAudioFiles([t.path], t.loop_bars && t.bpm
+      ? { startBeat, warpBpm: t.bpm, gridFirst: 0, noBeatMatch: true }
+      : { startBeat: insertAt === 'bar1' ? 0 : useAudioStore.getState().currentBeat })
     if (problems.length) { setError(problems.join(' ')); return }
     const tracks = useProjectStore.getState().project.tracks
     useProjectStore.getState().updateTrack(tracks[tracks.length - 1].id, { name: t.title })
@@ -109,17 +123,17 @@ export function Library(): React.ReactElement {
       </div>
 
       <div style={{ display: 'flex', gap: 6 }}>
-        {(['tracks', 'samples'] as const).map((t) => (
+        {(['tracks', 'stems', 'samples'] as const).map((t) => (
           <button key={t} className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`} onClick={() => { audio.current?.pause(); setPlaying(null); setTab(t) }}>
-            {t === 'tracks' ? 'My tracks' : 'Samples (Ableton and others)'}
+            {t === 'tracks' ? 'My tracks' : t === 'stems' ? `Stems (${tracks.filter((x) => x.source === 'stem').length})` : 'Samples (Ableton and others)'}
           </button>
         ))}
       </div>
 
       {tab === 'samples' && <SamplesTab />}
 
-      {tab === 'tracks' && <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search title, style or model…" style={{ width: 280 }} />
+      {tab !== 'samples' && <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, tag or BPM (e.g. house, 124, 120-130)…" style={{ width: 320 }} />
         <label style={{ ...muted, display: 'flex', gap: 4, alignItems: 'center' }}>
           <input type="checkbox" checked={onlyFav} onChange={(e) => setOnlyFav(e.target.checked)} /> Favourites only
         </label>
@@ -144,11 +158,30 @@ export function Library(): React.ReactElement {
             <option value="bar1">bar 1</option><option value="playhead">the playhead</option>
           </select>
         </label>
-        <span style={muted}>{shown.length} of {tracks.length} tracks</span>
+        <span style={muted}>{shown.length} of {inTab.length} {tab === 'stems' ? 'stems' : 'tracks'}</span>
       </div>}
 
-      {tab === 'tracks' && error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
-      {tab === 'tracks' && notice && <div style={{ color: 'var(--green)', fontSize: 12 }}>{notice} <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} onClick={() => setActiveView('timeline')}>Show Studio</button></div>}
+      {tab !== 'samples' && error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
+      {tab !== 'samples' && notice && <div style={{ color: 'var(--green)', fontSize: 12 }}>{notice} <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} onClick={() => setActiveView('timeline')}>Show Studio</button></div>}
+
+      {tab === 'stems' && inTab.length === 0 && !error && (
+        <div style={{ ...muted, border: '1px dashed var(--border-mid)', borderRadius: 10, padding: 24, lineHeight: 1.7 }}>
+          No stems yet. Split a song in the <b>Stem Splitter</b> and press <b>Save to library</b>: its stems are kept here together, with tags, and can be exported for any DAW later.
+        </div>
+      )}
+
+      {tab === 'stems' && stemSets.map((set) => (
+        <div key={set[0].stem_set ?? set[0].id} style={{ border: '1px solid var(--border-mid)', borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <b style={{ fontSize: 13, color: 'var(--text-primary)' }}>{set[0].song ?? set[0].title}</b>
+            <span style={muted}>{set.length} stems{set[0].bpm ? ` · ${Math.round(set[0].bpm)} BPM` : ''} · {new Date(set[0].created * 1000).toLocaleDateString()}</span>
+            <span style={{ flex: 1 }} />
+            <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!set.some((t) => t.exists)}
+              onClick={() => setExporting({ title: `${set[0].song ?? 'stems'} (${set.length} stems)`, items: set.filter((t) => t.exists).map((t) => ({ path: t.path, name: t.title })) })}>Export all…</button>
+          </div>
+          {set.map((t) => row(t))}
+        </div>
+      ))}
 
       {tab === 'tracks' && tracks.length === 0 && !error && (
         <div style={{ ...muted, border: '1px dashed var(--border-mid)', borderRadius: 10, padding: 24, lineHeight: 1.7 }}>
@@ -156,7 +189,13 @@ export function Library(): React.ReactElement {
         </div>
       )}
 
-      {tab === 'tracks' && shown.map((t) => (
+      {tab === 'tracks' && shown.map((t) => row(t))}
+      {exporting && <ExportDialog title={exporting.title} items={exporting.items} onClose={() => setExporting(null)} />}
+    </div>
+  )
+
+  function row(t: LibraryTrack): React.ReactElement {
+    return (
         <div key={t.id} style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-mid)', borderRadius: 10, padding: 12, display: 'flex', gap: 12, alignItems: 'center', opacity: t.exists ? 1 : 0.55 }}>
           <button className="btn btn-primary" style={{ width: 38, height: 38, borderRadius: 19, padding: 0, justifyContent: 'center' }} disabled={!t.exists}
             title={playing === t.id ? 'Stop' : 'Play'} onClick={() => void play(t)}>{playing === t.id ? '■' : '▶'}</button>
@@ -172,22 +211,34 @@ export function Library(): React.ReactElement {
               </div>
             )}
             <div style={{ ...muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.prompt}>{t.prompt || '—'}</div>
+            {editTags === t.id ? (
+              <input autoFocus defaultValue={(t.tags ?? []).join(', ')} placeholder="tags, separated by commas" style={{ width: '100%', fontSize: 11, marginTop: 2 }}
+                onBlur={(e) => { setEditTags(null); void act(() => api.library.patch(t.id, { tags: parseTags(e.target.value) })) }}
+                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditTags(null) }} />
+            ) : (t.tags?.length ?? 0) > 0 && (
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+                {t.tags!.map((g) => <span key={g} style={chip} title="Show everything with this tag" onClick={() => setQuery(g)}>{g}</span>)}
+              </div>
+            )}
             <div style={muted}>
-              {mmss(t.duration)} · {t.bpm ? `${Math.round(t.bpm)} BPM · ` : ''}{t.trimmed ? `cut ${t.trimmed.toFixed(2)} s to beat 1 · ` : ''}{ENGINE[t.engine] ?? (t.engine || t.source)} · {new Date(t.created * 1000).toLocaleString()}{t.seed ? ` · seed ${t.seed}` : ''}
+              {t.loop_bars ? `loop ${t.loop_bars} bars · ` : ''}{mmss(t.duration)} · {t.bpm ? `${Math.round(t.bpm)} BPM · ` : ''}{t.trimmed ? `cut ${t.trimmed.toFixed(2)} s to beat 1 · ` : ''}{ENGINE[t.engine] ?? (t.engine || t.source)} · {new Date(t.created * 1000).toLocaleString()}{t.seed ? ` · seed ${t.seed}` : ''}
             </div>
           </div>
 
           <button className="btn btn-ghost" style={{ fontSize: 11 }} title="Rename this song" onClick={() => setRenaming(t.id)}>Rename</button>
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} title="Tags: genre, mood or anything you want to search for" onClick={() => setEditTags(t.id)}>Tags</button>
           {t.original ? (
             <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={aligning !== null} title="Undo the cut: put the untouched file back"
               onClick={() => { stopIfPlaying(t.id); void act(() => api.library.restore(t.id)).then(() => setNotice(`"${t.title}": the original is back.`)) }}>Restore original</button>
-          ) : !t.aligned && t.exists ? (
+          ) : !t.aligned && t.exists && (t.source || 'generated') === 'generated' ? (
             <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={aligning !== null} title="Cut the lead-in so that the song starts exactly on beat 1 (the original is kept)"
               onClick={() => void alignOne(t)}>{aligning === t.id ? 'Cutting…' : 'Start on beat 1'}</button>
           ) : null}
           <button className="btn btn-ghost" style={{ fontSize: 16, color: t.favorite ? 'var(--yellow)' : 'var(--text-muted)' }} title="Favourite"
             onClick={() => void act(() => api.library.patch(t.id, { favorite: !t.favorite }))}>{t.favorite ? '★' : '☆'}</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} onClick={() => void toProject(t)}>Add to project</button>
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} title="Save a copy as WAV, AIFF, FLAC or MP3"
+            onClick={() => setExporting({ title: `"${t.title}"`, items: [{ path: t.path, name: t.title }] })}>Export…</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} onClick={() => void window.api.files.showItem(t.path)}>Show file</button>
           {confirmId === t.id ? (
             <>
@@ -198,7 +249,6 @@ export function Library(): React.ReactElement {
             <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setConfirmId(t.id)}>Delete</button>
           )}
         </div>
-      ))}
-    </div>
-  )
+    )
+  }
 }

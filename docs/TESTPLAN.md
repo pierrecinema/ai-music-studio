@@ -3,6 +3,8 @@
 Damit wir systematisch testen: jede Zeile einmal durchgehen, Ergebnis eintragen (✅ geht, ❌ Fehler, ⏭ nicht getestet) und
 bei Fehlern kurz notieren, was passiert ist. Stand: Version 0.18.2.
 
+**Ergebnisse (11.11.2026, PC A):** Bereiche 1, 2, 4, 5 alles ✅ · Bereich 3 ✅ außer 3.6 (ACE-Step 1.5) ❌ · Bereiche 6 und 7 noch offen.
+
 **Fehler melden:** In der App unten rechts *Feedback* → *Detailliertes Log* einschalten → Fehler nachstellen → Log speichern
 und mit Screenshot in einem GitHub-Issue anhängen (https://github.com/pierrecinema/ai-music-studio/issues) oder Claude geben.
 
@@ -14,61 +16,61 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 
 | # | Test | Erwartet | A | B | Notiz |
 |---|---|---|---|---|---|
-| 1.1 | Installer von GitHub laden und starten | SmartScreen-Warnung → „Weitere Informationen“ → „Trotzdem ausführen“ → installiert | | | |
-| 1.2 | Settings → Updates, „Nach Updates suchen“ | neueste Version wird angeboten bzw. „aktuell“ | | | |
-| 1.3 | Update installieren, während die App läuft | App schließt sich selbst, installiert, startet neu, ohne Rückfrage | | | |
-| 1.4 | Settings → About | richtige Version, Links öffnen GitHub, „Donate with PayPal“ öffnet PayPal | | | |
+| 1.1 | Installer von GitHub laden und starten | SmartScreen-Warnung → „Weitere Informationen“ → „Trotzdem ausführen“ → installiert | ✅ | | |
+| 1.2 | Settings → Updates, „Nach Updates suchen“ | neueste Version wird angeboten bzw. „aktuell“ | ✅ | | |
+| 1.3 | Update installieren, während die App läuft | App schließt sich selbst, installiert, startet neu, ohne Rückfrage | ✅ | | |
+| 1.4 | Settings → About | richtige Version, Links öffnen GitHub, „Donate with PayPal“ öffnet PayPal | ✅ | | |
 
 ## 2. AI Engines
 
 | # | Test | Erwartet | A | B | Notiz |
 |---|---|---|---|---|---|
-| 2.1 | Settings → AI Engines → empfohlene Pakete → Install selected | Log läuft durch, am Ende alles grün | | | |
-| 2.2 | „Graphics card support (AMD / Intel)“ installieren | grün, Hardware-Tab zeigt die Grafikkarte | | – | |
-| 2.3 | neu: „Fast vocal separation“ installieren | grün, eigene Umgebung | | | |
-| 2.4 | „Audio → MIDI (basic-pitch)“ installieren | grün | | | |
-| 2.5 | Text im Log markieren, Strg+C / Rechtsklick → Kopieren | Text wird kopiert | | | |
+| 2.1 | Settings → AI Engines → empfohlene Pakete → Install selected | Log läuft durch, am Ende alles grün | ✅ | | |
+| 2.2 | „Graphics card support (AMD / Intel)“ installieren | grün, Hardware-Tab zeigt die Grafikkarte | ✅ | – | |
+| 2.3 | neu: „Fast vocal separation“ installieren | grün, eigene Umgebung | ✅ | | |
+| 2.4 | „Audio → MIDI (basic-pitch)“ installieren | grün | ✅ | | |
+| 2.5 | Text im Log markieren, Strg+C / Rechtsklick → Kopieren | Text wird kopiert | ✅ | | |
 
 ## 3. Create music
 
 | # | Test | Erwartet | A | B | Notiz |
 |---|---|---|---|---|---|
-| 3.1 | MusicGen small, Instrumental, 30 s | Song entsteht, landet in der Library | | | |
-| 3.2 | Längerer Track (2 min) | mehrere Teile werden aneinandergehängt, keine hörbare Naht | | | |
-| 3.3 | Create loop, 4 Takte, 120 BPM | Titel „… Loop 120 BPM 4 bars“, wiederholt sich nahtlos | | | |
-| 3.4 | Abbrechen während der Erzeugung | stoppt innerhalb weniger Sekunden | | | |
-| 3.5 | Tags eintragen | Tags erscheinen in der Library | | | |
-| 3.6 | ACE-Step 1.5 (falls installiert): kurzer Song mit Text | Song mit Gesang (langsam auf dem Prozessor) | | | |
+| 3.1 | MusicGen small, Instrumental, 30 s | Song entsteht, landet in der Library | ✅ | | |
+| 3.2 | Längerer Track (2 min) | mehrere Teile werden aneinandergehängt, keine hörbare Naht | ✅ | | |
+| 3.3 | Create loop, 4 Takte, 120 BPM | Titel „… Loop 120 BPM 4 bars“, wiederholt sich nahtlos | ✅ | | |
+| 3.4 | Abbrechen während der Erzeugung | stoppt innerhalb weniger Sekunden | ✅ | | |
+| 3.5 | Tags eintragen | Tags erscheinen in der Library | ✅ | | |
+| 3.6 | ACE-Step 1.5 (falls installiert): kurzer Song mit Text | Song mit Gesang (langsam auf dem Prozessor) | ❌ | | hat nie funktioniert: Log/Fehlermeldung nachreichen |
 
 ## 4. Library
 
 | # | Test | Erwartet | A | B | Notiz |
 |---|---|---|---|---|---|
-| 4.1 | ▶ bei einem Song | spielt, Wellenform erscheint darunter | | | |
-| 4.2 | In die Wellenform klicken / ziehen | springt an die Stelle | | | |
-| 4.3 | Suche: Name, Tag, „124“, „120-130“ | passende Einträge | | | |
-| 4.4 | Umbenennen, Tags, Favorit | wird gespeichert | | | |
-| 4.5 | Export… WAV 24 / FLAC / MP3 | Dateien im gewählten Ordner, abspielbar | | | |
-| 4.6 | neu: „Add to project“ zweimal | jedes Mal eine neue Audiospur | | | |
-| 4.7 | Loop „Add to project“, mehrmals Strg+D im Studio | Loop läuft endlos ohne Lücke, bleibt im Takt | | | |
-| 4.8 | Samples: Ordner hinzufügen, ▶ | spielt, Wellenform, Spulen geht | | | |
-| 4.9 | neu: Samples „Studio: synced“ / „as is“ mehrmals | jedes Mal eine neue Audiospur | | | |
-| 4.10 | Samples „+ Library“ | erscheint unter My tracks | | | |
+| 4.1 | ▶ bei einem Song | spielt, Wellenform erscheint darunter | ✅ | | |
+| 4.2 | In die Wellenform klicken / ziehen | springt an die Stelle | ✅ | | |
+| 4.3 | Suche: Name, Tag, „124“, „120-130“ | passende Einträge | ✅ | | |
+| 4.4 | Umbenennen, Tags, Favorit | wird gespeichert | ✅ | | |
+| 4.5 | Export… WAV 24 / FLAC / MP3 | Dateien im gewählten Ordner, abspielbar | ✅ | | |
+| 4.6 | neu: „Add to project“ zweimal | jedes Mal eine neue Audiospur | ✅ | | |
+| 4.7 | Loop „Add to project“, mehrmals Strg+D im Studio | Loop läuft endlos ohne Lücke, bleibt im Takt | ✅ | | |
+| 4.8 | Samples: Ordner hinzufügen, ▶ | spielt, Wellenform, Spulen geht | ✅ | | |
+| 4.9 | neu: Samples „Studio: synced“ / „as is“ mehrmals | jedes Mal eine neue Audiospur | ✅ | | |
+| 4.10 | Samples „+ Library“ | erscheint unter My tracks | ✅ | | |
 
 ## 5. Stem Splitter
 
 | # | Test | Erwartet | A | B | Notiz |
 |---|---|---|---|---|---|
-| 5.1 | „Vocals + Instrumental (fastest)“ | Fortschrittsbalken, am Ende „Done (DirectML)“ auf A; Zeit notieren | | | |
-| 5.2 | neu: „4 Stems on the graphics card“ | 4 Stems, „Done (DirectML)“ auf A; Zeit notieren | | | |
-| 5.3 | „Fast“ | 4 Stems auf dem Prozessor; Zeit notieren | | | |
-| 5.4 | „Balanced“ / „6 Stems“ | funktioniert (dauert lange) | | | |
-| 5.4b | neu: während einer Trennung ✕ Cancel, dann eine neue starten | bricht ab, neue startet sofort (kein Hängen bei 0 %) | | | |
-| 5.5 | Stem-Mixer: Play, Solo, Mute, Lautstärke, Wellenform spulen | hört sich richtig an | | | |
-| 5.6 | Vocals stumm → Export remix… | Karaoke-Datei „… – no vocals“ | | | |
-| 5.7 | → MIDI bei Bass oder Vocals | neue MIDI-Spur mit Noten, Piano Roll zeigt sie | | | |
-| 5.8 | Save to library → Open Library → Stems | Tab Stems mit dem Song und allen Stems | | | |
-| 5.9 | Export Stems… | jede Stem-Datei im Ordner | | | |
+| 5.1 | „Vocals + Instrumental (fastest)“ | Fortschrittsbalken, am Ende „Done (DirectML)“ auf A; Zeit notieren | ✅ | | |
+| 5.2 | neu: „4 Stems on the graphics card“ | 4 Stems, „Done (DirectML)“ auf A; Zeit notieren | ✅ | | |
+| 5.3 | „Fast“ | 4 Stems auf dem Prozessor; Zeit notieren | ✅ | | |
+| 5.4 | „Balanced“ / „6 Stems“ | funktioniert (dauert lange) | ✅ | | |
+| 5.4b | neu: während einer Trennung ✕ Cancel, dann eine neue starten | bricht ab, neue startet sofort (kein Hängen bei 0 %) | ✅ | | |
+| 5.5 | Stem-Mixer: Play, Solo, Mute, Lautstärke, Wellenform spulen | hört sich richtig an | ✅ | | |
+| 5.6 | Vocals stumm → Export remix… | Karaoke-Datei „… – no vocals“ | ✅ | | |
+| 5.7 | → MIDI bei Bass oder Vocals | neue MIDI-Spur mit Noten, Piano Roll zeigt sie | ✅ | | |
+| 5.8 | Save to library → Open Library → Stems | Tab Stems mit dem Song und allen Stems | ✅ | | |
+| 5.9 | Export Stems… | jede Stem-Datei im Ordner | ✅ | | |
 
 ## 6. Studio, Piano Roll, Mixer
 

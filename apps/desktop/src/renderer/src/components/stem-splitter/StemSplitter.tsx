@@ -24,6 +24,7 @@ export function StemSplitter(): React.ReactElement {
   const [progress, setProgress] = useState(0)
   const [stage, setStage] = useState('')
   const [elapsed, setElapsed] = useState(0)
+  const jobId = useRef<string | null>(null)                 // the running split, for Cancel
   const [result, setResult] = useState<StemResult | null>(null)
   const [model, setModel] = useState<'htdemucs' | 'htdemucs_ft' | 'mdx_extra' | 'htdemucs_6s' | 'mdx_vocals' | 'mdx_4stems'>('htdemucs_ft')
   const [stems, setStems] = useState<string[]>(['vocals', 'drums', 'bass', 'other'])
@@ -62,16 +63,19 @@ export function StemSplitter(): React.ReactElement {
     setStage('Starting'); setElapsed(0)
     try {
       const { job_id } = await api.stems.start({ filePath: file, model, stems })
+      jobId.current = job_id
       for (;;) {                                             // poll the backend once a second
         await new Promise((r) => setTimeout(r, 1000))
         const j = await api.stems.job(job_id)
         setProgress(j.progress); setStage(j.text); setElapsed(j.elapsed)
         if (j.status === 'done') { setResult(j.result as StemResult); break }
         if (j.status === 'error') throw new Error(j.error ?? 'unknown error')
+        if (j.status === 'cancelled') { setError('Splitting was cancelled.'); break }
       }
     } catch (err) {
       setError(`Splitting failed: ${(err as Error).message}`)
     } finally {
+      jobId.current = null
       setIsProcessing(false)
       setProgress(100)
     }
@@ -193,6 +197,8 @@ export function StemSplitter(): React.ReactElement {
               <span>{stage}</span>
               <span style={{ flex: 1 }} />
               <span>{mmss(elapsed)}{left !== null ? ` · about ${mmss(left)} left` : ''}</span>
+              <button className="btn btn-ghost" style={{ fontSize: 11, padding: '1px 10px' }} title="Stop this split"
+                onClick={() => { if (jobId.current) void api.stems.cancel(jobId.current).catch(() => undefined) }}>✕ Cancel</button>
             </div>
           </div>
         )

@@ -42,24 +42,40 @@ _split_lock = threading.Lock()          # one split at a time (Demucs uses all c
 _jobs: dict[str, dict] = {}
 
 
+class Cancelled(Exception):
+    pass
+
+
+def _take_lock(job: dict | None, report) -> None:
+    """One split at a time. If another one runs, say so (instead of sitting at 0 %) and wait; Cancel stops waiting."""
+    if _split_lock.acquire(blocking=False):
+        return
+    report(0, "Waiting for the previous split to finish…")
+    while not _split_lock.acquire(timeout=0.5):
+        if job and job.get("cancel"):
+            raise Cancelled()
+
+
 class _Progress:
     """Stands in for the `tqdm` module inside demucs.apply: Demucs wraps its chunk loop in tqdm.tqdm(...) when
     progress=True, once per model of a bag. Counting the chunks gives the share done of the whole split."""
 
-    def __init__(self, n_models: int, report):
-        self.n_models, self.report, self.model_i = max(1, n_models), report, -1
+    def __init__(self, n_models: int, report, job: dict | None = None):
+        self.n_models, self.report, self.model_i, self.job = max(1, n_models), report, -1, job
 
     def tqdm(self, iterable, *args, **kwargs):
         self.model_i += 1
         items = list(iterable)
         total = max(1, len(items))
         for k, it in enumerate(items):
+            if self.job and self.job.get("cancel"):
+                raise Cancelled()                                      # stops Demucs between two chunks
             yield it
             done = (min(self.model_i, self.n_models - 1) + (k + 1) / total) / self.n_models
             self.report(5 + done * 90)
 
 
-def run_mdx(req: StemSplitRequest, report) -> dict:
+def run_mdx(req: StemSplitRequest, report, job: dict | None = None) -> dict:
     """Vocals + instrumental with an MDX-Net ONNX model in the separator environment (services/separator_worker.py):
     much faster than Demucs and on AMD / Intel it can use the graphics card through DirectML."""
     import json, subprocess, sys
@@ -80,6 +96,8 @@ def run_mdx(req: StemSplitRequest, report) -> dict:
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     proc = subprocess.Popen([py, worker, reqfile], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                             encoding="utf-8", errors="replace", creationflags=flags)
+    if job is not None:
+        job["proc"] = proc                                           # Cancel ends the worker at once
     started, result, error, tail = time.time(), None, None, []
     base, span = 10.0, 84.0                                         # where the current model's share of the bar is
     for line in proc.stdout:                                       # type: ignore[union-attr]
@@ -109,19 +127,24 @@ def run_mdx(req: StemSplitRequest, report) -> dict:
         elif "error" in msg:
             error = msg["error"]
     proc.wait()
+    if job and job.get("cancel"):
+        raise Cancelled()
     if error or not result:
         raise HTTPException(500, error or ("Fast vocal separation failed: " + " | ".join(tail)[-400:]))
     report(100, "Done")
     return result
 
 
-def run_split(req: StemSplitRequest, report=lambda pct, text=None: None) -> dict:
+def run_split(req: StemSplitRequest, report=lambda pct, text=None: None, job: dict | None = None) -> dict:
     """Separate the song; report(percent, text) is called along the way. Returns {stem: wav path}."""
     if not os.path.exists(req.filePath):
         raise HTTPException(400, f"File not found: {req.filePath}")
     if req.model in ("mdx_vocals", "mdx_4stems"):
-        with _split_lock:
-            return run_mdx(req, report)
+        _take_lock(job, report)
+        try:
+            return run_mdx(req, report, job)
+        finally:
+            _split_lock.release()
     try:
         import torch
         import demucs.apply as demucs_apply
@@ -133,7 +156,8 @@ def run_split(req: StemSplitRequest, report=lambda pct, text=None: None) -> dict
 
     out_dir = os.path.join(tempfile.gettempdir(), f"stems_{uuid.uuid4().hex[:8]}")
     os.makedirs(out_dir, exist_ok=True)
-    with _split_lock:
+    _take_lock(job, report)
+    try:
         try:
             report(1, "Loading the Demucs model")
             model = get_model(req.model)
@@ -160,7 +184,7 @@ def run_split(req: StemSplitRequest, report=lambda pct, text=None: None) -> dict
             n_models = len(getattr(model, "models", [])) or 1
             where = "graphics card" if device == "cuda" else "processor"
             report(5, f"Separating on the {where}" + (f" ({n_models} models)" if n_models > 1 else ""))
-            hook = _Progress(n_models, lambda pct: report(pct))
+            hook = _Progress(n_models, lambda pct: report(pct), job)
             saved_tqdm = getattr(demucs_apply, "tqdm", None)
             demucs_apply.tqdm = hook
             try:
@@ -186,10 +210,12 @@ def run_split(req: StemSplitRequest, report=lambda pct, text=None: None) -> dict
                 raise HTTPException(500, "Demucs returned no stems.")
             report(100, "Done")
             return result
-        except HTTPException:
+        except (HTTPException, Cancelled):
             raise
         except Exception as e:  # noqa: BLE001 - show the reason instead of empty "ready" stems
             raise HTTPException(500, f"Stem separation failed: {type(e).__name__}: {e}")
+    finally:
+        _split_lock.release()
 
 
 @router.post("/split")
@@ -215,8 +241,10 @@ async def start_split(req: StemSplitRequest):
 
     def work():
         try:
-            job["result"] = run_split(req, report)
+            job["result"] = run_split(req, report, job)
             job["status"] = "done"
+        except Cancelled:
+            job["status"], job["error"], job["text"] = "cancelled", "Cancelled", "Cancelled"
         except HTTPException as e:
             job["status"], job["error"] = "error", str(e.detail)
         except Exception as e:  # noqa: BLE001
@@ -231,7 +259,24 @@ async def split_status(jid: str):
     job = _jobs.get(jid)
     if not job:
         raise HTTPException(404, "Unknown job")
-    return {**job, "elapsed": round(time.time() - job["started"], 1)}
+    return {k: v for k, v in job.items() if k not in ("proc", "cancel")} | {"elapsed": round(time.time() - job["started"], 1)}
+
+
+@router.post("/jobs/{jid}/cancel")
+async def cancel_split(jid: str):
+    """Stop a split: the fast-separation worker is ended at once, Demucs stops after its current chunk."""
+    job = _jobs.get(jid)
+    if not job:
+        raise HTTPException(404, "Unknown job")
+    job["cancel"] = True
+    job["text"] = "Cancelling…"
+    proc = job.get("proc")
+    if proc is not None and proc.poll() is None:
+        try:
+            proc.kill()
+        except OSError:
+            pass
+    return {"ok": True}
 
 
 # ── remix: the stems mixed again with their own levels (karaoke, no drums, ...) ──────────────

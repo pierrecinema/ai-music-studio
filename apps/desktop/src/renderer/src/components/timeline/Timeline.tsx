@@ -169,7 +169,7 @@ const Waveform = React.memo(function Waveform({ clip, color, height, width, warp
 
 // ── the Studio ───────────────────────────────────────────────────────────────
 
-interface ClipDrag { kind: 'move' | 'trimL' | 'trimR'; trackId: string; clipId: string; startX: number; startY: number; orig: Clip; moved: boolean; group?: Map<string, number> }
+interface ClipDrag { kind: 'move' | 'trimL' | 'trimR'; trackId: string; clipId: string; startX: number; startY: number; orig: Clip; moved: boolean; group?: Map<string, number>; toNew?: boolean }
 
 export function Timeline({ fill = false }: { fill?: boolean }): React.ReactElement {
   const project = useProjectStore((s) => s.project)
@@ -186,6 +186,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const [renaming, setRenaming] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [dropping, setDropping] = useState(false)
+  const [newTrackHint, setNewTrackHint] = useState<'audio' | 'midi' | null>(null)   // a clip dragged below the last track
   const [syncing, setSyncing] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [frame, setFrame] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
@@ -251,6 +252,10 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         const hover = rowAt(e.clientY)
         const accepts = (t: Track): boolean => (o.audioFile ? AUDIO_TYPES.includes(t.type) : NOTE_TYPES.includes(t.type))
         if (hover?.kind === 'track' && accepts(hover.track)) toId = hover.track.id
+        // below the last track: on release the clip gets a new track of its kind (audio or MIDI)
+        const y = e.clientY - lanesRef.current!.getBoundingClientRect().top
+        d.toNew = !hover && y >= (tops[rows.length] ?? 0)
+        setNewTrackHint(d.toNew ? (o.audioFile ? 'audio' : 'midi') : null)
         moveClip(from?.id ?? d.trackId, d.clipId, toId, Math.max(0, start))
         d.trackId = toId
       } else if (d.kind === 'trimR') {
@@ -272,7 +277,22 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         updateClip(d.trackId, d.clipId, { startTime: start, duration: end - start, offset })
       }
     }
-    const onUp = (): void => { drag.current = null }
+    const onUp = (): void => {
+      const d = drag.current
+      drag.current = null
+      setNewTrackHint(null)
+      if (!d || !d.moved || d.kind !== 'move' || d.group || !d.toNew) return
+      const st = useProjectStore.getState()
+      const clip = st.project.tracks.find((t) => t.id === d.trackId)?.clips.find((c) => c.id === d.clipId)
+      if (!clip) return
+      st.addTrack(clip.audioFile ? 'audio' : 'midi')
+      const tracks = useProjectStore.getState().project.tracks
+      const newId = tracks[tracks.length - 1].id
+      if (clip.name) useProjectStore.getState().updateTrack(newId, { name: clip.name })
+      useProjectStore.getState().moveClip(d.trackId, d.clipId, newId, clip.startTime)
+      useProjectStore.getState().selectTrack(newId)
+      useProjectStore.getState().selectClip(d.clipId)
+    }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
     return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp) }
@@ -660,6 +680,11 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             </div>
             {frame && (
               <div style={{ position: 'absolute', left: HEADER_WIDTH + Math.min(frame.x0, frame.x1), top: lanesTop + Math.min(frame.y0, frame.y1), width: Math.abs(frame.x1 - frame.x0), height: Math.abs(frame.y1 - frame.y0), border: '1px solid var(--accent-light)', background: 'rgba(124,58,237,0.12)', zIndex: 8, pointerEvents: 'none' }} />
+            )}
+            {newTrackHint && (
+              <div style={{ position: 'absolute', left: 0, right: 0, top: lanesTop + lanesHeight + 4, height: 44, border: '2px dashed var(--accent)', borderRadius: 8, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', paddingLeft: 16, fontSize: 12, fontWeight: 700, color: 'var(--accent-light)', zIndex: 9, pointerEvents: 'none' }}>
+                + Release here: new {newTrackHint === 'audio' ? 'audio' : 'MIDI'} track
+              </div>
             )}
             <Playhead scrollRef={scrollRef} beatWidth={beatWidth} />
           </div>

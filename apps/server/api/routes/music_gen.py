@@ -506,13 +506,23 @@ def _engine_kwargs(pipe, req: GenerateMusicRequest, duration: int, seed: int,
 _cur: dict = {"job": None}
 
 
+def loop_title(base: str, bpm: float | None, bars: int) -> str:
+    """'Deep house – Loop 124 BPM 4 bars': a loop says what it is, its tempo and its length."""
+    tempo = f"{bpm:.1f}".rstrip("0").rstrip(".") + " BPM" if bpm else ""
+    tag = " ".join(x for x in ("Loop", tempo, f"{bars} bar" + ("" if bars == 1 else "s")) if x)
+    return f"{base} – {tag}" if base else tag
+
+
 def _keep(path: str, req: "GenerateMusicRequest", seed: int, seconds: float, engine: str) -> dict:
     """Put a finished track into the library for good. Returns what the UI needs: permanent path, id and title."""
     try:
         from services import library
         info = _start_info.pop(path, {})
+        title = req.title
+        if info.get("bars"):
+            title = loop_title(req.title or (req.prompt or "").split(",")[0].strip()[:50], info.get("bpm"), info["bars"])
         entry = library.add_track(path, {
-            "title": req.title, "prompt": req.prompt or "", "lyrics": req.lyrics, "seed": seed,
+            "title": title, "prompt": req.prompt or "", "lyrics": req.lyrics, "seed": seed,
             "duration": round(seconds, 1), "engine": engine, "source": "generated",
             "bpm": info.get("bpm"), "first_beat": info.get("first_beat"), "loop_bars": info.get("bars")})
         out = {"audio_file": entry["path"], "library_id": entry["id"], "title": entry["title"],

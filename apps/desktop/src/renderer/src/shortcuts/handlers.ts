@@ -11,7 +11,8 @@ import { openQuantizeDialog, quantizeSelection } from '../edit/quantize'
 import { EXPORT_EVENT, reportOpen } from '../components/layout/FileMenu'
 import { diagWrite } from '../lib/diagLog'
 import {
-  addMarkerAtPlayhead, consolidate, crossfade, deleteSelection, groupSelectedTracks, jumpMarker, loopToSelection, selectAll,
+  addMarkerAtPlayhead, consolidate, copySelection, crossfade, cutSelection, deleteSelection, duplicateSelection, groupSelectedTracks,
+  jumpMarker, loopToSelection, pasteClipboard, selectAll,
   toggleAutomationLane, toggleLoop, togglePunch
 } from '../components/timeline/studioOps'
 
@@ -141,7 +142,11 @@ const HANDLERS: Record<string, () => void> = {
 
   'edit.undo': () => void undo(),
   'edit.redo': () => void redo(),
+  'edit.copy': () => { copySelection() },
+  'edit.cut': () => { cutSelection() },
+  'edit.paste': () => { const m = pasteClipboard(); if (m) window.alert(m) },
   'edit.duplicate': () => {
+    if (useProjectStore.getState().selectedClipIds.length > 1 && duplicateSelection()) return
     const st = useProjectStore.getState()
     const owner = st.project.tracks.find((t) => t.clips.some((c) => c.id === st.selectedClipId))
     if (owner && st.selectedClipId) st.duplicateClip(owner.id, st.selectedClipId)

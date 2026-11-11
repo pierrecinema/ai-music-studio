@@ -40,5 +40,9 @@ const w = window as unknown as { api?: unknown; __browserMem?: Map<string, Uint8
 if (!w.api) {
   w.api = new Proxy({}, { get: (_, k: string) => ns(k) })
   w.__browserMem = mem
+  // browser tests only: read the stores from Playwright (window.__ams.project.getState())
+  void Promise.all([import('../stores/project.store'), import('../stores/audio.store')]).then(([p, a]) => {
+    (window as unknown as { __ams: unknown }).__ams = { project: p.useProjectStore, audio: a.useAudioStore }
+  })
 }
 export {}

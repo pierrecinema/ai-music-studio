@@ -51,6 +51,89 @@ export function deleteSelection(): boolean {
   return true
 }
 
+// ── clipboard: Ctrl+C / Ctrl+X / Ctrl+V (Ableton and Cubase) ─────────────────
+
+interface Copied { trackId: string; audio: boolean; clip: Omit<Clip, 'id'>; rel: number }
+let clipboard: { items: Copied[]; length: number } | null = null
+
+const AUDIO_TRACKS: Track['type'][] = ['audio', 'vocal', 'instrument']
+const fits = (t: Track, audio: boolean): boolean => (audio ? AUDIO_TRACKS.includes(t.type) : t.type === 'midi')
+
+function snapshot(sel: Array<{ track: Track; clip: Clip }>): { items: Copied[]; length: number; start: number } {
+  const start = Math.min(...sel.map((x) => x.clip.startTime))
+  const end = Math.max(...sel.map((x) => x.clip.startTime + x.clip.duration))
+  const items = sel.map(({ track, clip }) => {
+    const { id: _id, ...rest } = clip
+    return { trackId: track.id, audio: !!clip.audioFile, clip: JSON.parse(JSON.stringify(rest)) as Omit<Clip, 'id'>, rel: clip.startTime - start }
+  })
+  return { items, length: end - start, start }
+}
+
+export function copySelection(): boolean {
+  const sel = selectedClips()
+  if (!sel.length) return false
+  const { items, length } = snapshot(sel)
+  clipboard = { items, length }
+  return true
+}
+
+export function cutSelection(): boolean {
+  if (!copySelection()) return false
+  deleteSelection()
+  return true
+}
+
+export function hasClipboard(): boolean {
+  return !!clipboard?.items.length
+}
+
+// Puts copies at `at`. Clips from one track go onto the selected track when it can hold them (Ableton),
+// clips from several tracks keep their tracks. Returns the ids of the new clips.
+function placeCopies(items: Copied[], at: number, preferSelected: boolean): string[] {
+  const st = useProjectStore.getState()
+  let tracks = st.project.tracks
+  const fromOne = new Set(items.map((i) => i.trackId)).size === 1
+  const chosen = tracks.find((t) => t.id === st.selectedTrackId)
+  const ids: string[] = []
+  for (const it of items) {
+    let target = preferSelected && fromOne && chosen && fits(chosen, it.audio) ? chosen : tracks.find((t) => t.id === it.trackId)
+    if (!target || !fits(target, it.audio)) {
+      target = tracks.find((t) => fits(t, it.audio))
+      if (!target) continue                                    // no track that can hold this kind of clip
+    }
+    const id = nanoid()
+    ids.push(id)
+    const copy: Clip = { ...JSON.parse(JSON.stringify(it.clip)), id, startTime: Math.max(0, at + it.rel) }
+    if (copy.notes) copy.notes = copy.notes.map((n: Note) => ({ ...n, id: nanoid() }))
+    const tid = target.id
+    tracks = tracks.map((t) => (t.id === tid ? { ...t, clips: [...t.clips, copy] } : t))
+  }
+  if (ids.length) {
+    useProjectStore.setState({ project: { ...st.project, tracks } })
+    useProjectStore.getState().selectClips(ids)
+  }
+  return ids
+}
+
+// Ctrl+V: at the playhead. The playhead then moves to the end of what was pasted, so pressing Ctrl+V again
+// puts the next copy right behind it (a loop pasted several times plays on without a gap).
+export function pasteClipboard(): string | null {
+  if (!clipboard?.items.length) return 'Nothing copied yet: select clips and press Ctrl+C.'
+  const at = useAudioStore.getState().currentBeat
+  const ids = placeCopies(clipboard.items, at, true)
+  if (!ids.length) return 'There is no track here that can take these clips (audio clips need an audio track, MIDI clips a MIDI track).'
+  if (!useAudioStore.getState().isPlaying) seek(at + clipboard.length)
+  return null
+}
+
+// Ctrl+D with several clips: copies of all of them right after the selection (the clipboard is not touched)
+export function duplicateSelection(): boolean {
+  const sel = selectedClips()
+  if (!sel.length) return false
+  const { items, length, start } = snapshot(sel)
+  return placeCopies(items, start + length, false).length > 0
+}
+
 // ── loop and markers ─────────────────────────────────────────────────────────
 
 export function toggleLoop(): void {

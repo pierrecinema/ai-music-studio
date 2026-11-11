@@ -9,13 +9,21 @@ export const shortcutState = { winampOpen: false }
 const REPEATABLE = new Set(ACTIONS.filter((a) => a.repeatable).map((a) => a.id))
 const TEXT_INPUT_TYPES = new Set(['text', 'number', 'search', 'password', 'email', 'url', 'tel', ''])
 
-function isEditable(target: EventTarget | null): boolean {
+// Where typing needs the keys itself: text fields and text areas. A drop-down list (Grid, Count-in, ...) is
+// NOT one of them: after choosing a value the focus stays on the list, and all shortcuts (Space, Ctrl+C, ...)
+// went dead until the user clicked somewhere else. Only the arrow keys and Enter stay with a list.
+function isEditable(target: EventTarget | null, combo: string): boolean {
   const el = target as HTMLElement | null
   if (!el) return false
   if (el.isContentEditable) return true
   const tag = el.tagName
-  if (tag === 'TEXTAREA' || tag === 'SELECT') return true
-  return tag === 'INPUT' && TEXT_INPUT_TYPES.has((el as HTMLInputElement).type)
+  if (tag === 'TEXTAREA') return true
+  if (tag === 'SELECT') return /^(ArrowUp|ArrowDown|Enter)$/.test(combo)
+  if (tag !== 'INPUT') return false
+  const type = (el as HTMLInputElement).type
+  // a number field (BPM, length) has no use for Space: play / pause still works while it has the focus
+  if (type === 'number' && combo === 'Space') return false
+  return TEXT_INPUT_TYPES.has(type)
 }
 
 export function useShortcuts(): void {
@@ -32,8 +40,9 @@ export function useShortcuts(): void {
       // typing in a field keeps its own keys; function keys still work. A drop-down list has no use for
       // Delete or Backspace, so those still reach the editor: after choosing a grid size the focus stays on the
       // list, and Delete must not silently do nothing.
-      const onSelect = (e.target as HTMLElement | null)?.tagName === 'SELECT'
-      if (isEditable(e.target) && !/^(F\d+|Escape)$/.test(combo) && !(onSelect && /^(Delete|Backspace)$/.test(combo))) return
+      if (isEditable(e.target, combo) && !/^(F\d+|Escape)$/.test(combo)) return
+      const el = e.target as HTMLElement | null
+      if (el && (el.tagName === 'SELECT' || el.tagName === 'BUTTON' || el.tagName === 'INPUT')) el.blur()   // keys go to the Studio again
       if (shortcutState.winampOpen && id !== 'app.winamp') return
       e.preventDefault()
       if (e.repeat && !REPEATABLE.has(id)) return
@@ -42,7 +51,7 @@ export function useShortcuts(): void {
 
     // Space also "clicks" a focused button on key-up: swallow that when Space is a shortcut
     const onKeyUp = (e: KeyboardEvent): void => {
-      if (e.key === ' ' && map.has('space') && !isEditable(e.target) && !shortcutState.winampOpen) {
+      if (e.key === ' ' && map.has('space') && !isEditable(e.target, 'Space') && !shortcutState.winampOpen) {
         e.preventDefault()
       }
     }

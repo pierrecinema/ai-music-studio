@@ -26,7 +26,17 @@ useProjectStore.subscribe(
 function restore(project: Project): void {
   restoring = true
   try {
-    useProjectStore.setState({ project })
+    // keep only the selection that still exists: a selected clip that undo removed would make Ctrl+X,
+    // Delete or Ctrl+C silently do nothing
+    const st = useProjectStore.getState()
+    const ids = new Set(project.tracks.flatMap((t) => t.clips.map((c) => c.id)))
+    const kept = st.selectedClipIds.filter((id) => ids.has(id))
+    useProjectStore.setState({
+      project,
+      selectedClipIds: kept,
+      selectedClipId: st.selectedClipId && ids.has(st.selectedClipId) ? st.selectedClipId : kept[kept.length - 1] ?? null,
+      selectedTrackId: project.tracks.some((t) => t.id === st.selectedTrackId) ? st.selectedTrackId : null,
+    })
   } finally {
     restoring = false
   }

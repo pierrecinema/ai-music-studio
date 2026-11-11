@@ -108,6 +108,7 @@ Nach der Installation die App neu starten, damit sie die neuen Programme im PATH
 | Wiederherstellen (Redo) | Strg+Y | Strg+Umschalt+Z |
 | Audiospur hinzufügen | Strg+T | T |
 | MIDI-Spur hinzufügen | Strg+Umschalt+T | – |
+| Kopieren / Ausschneiden / Einfügen | Strg+C / Strg+X / Strg+V | Strg+C / Strg+X / Strg+V |
 | Spur stumm / Solo | 0 / S | M / S |
 | Spur löschen | Entf | Umschalt+Entf |
 | Piano-Roll-Werkzeug | B (Zeichnen an/aus) | 1 Auswahl, 5 Radierer, 8 Zeichnen |
@@ -116,6 +117,8 @@ Nach der Installation die App neu starten, damit sie die neuen Programme im PATH
 
 Dazu gehören Stopp, Zurück zum Anfang, Spur duplizieren (Strg+D), neues Projekt (Strg+N), Einstellungen (Strg+, bei Ableton), Vollbild (F11) und der Winamp-Modus (Strg+M in beiden). Die Liste in den Einstellungen ist vollständig.
 
+- **Kopieren und Einfügen:** Strg+C kopiert die gewählten Clips, Strg+X schneidet sie aus. Strg+V fügt sie am Abspielkopf ein und setzt den Abspielkopf ans Ende des Eingefügten: Wer Strg+V mehrmals drückt, bekommt die Kopien lückenlos hintereinander (praktisch für Loops). Clips aus einer Spur landen auf der gewählten Spur, Clips aus mehreren Spuren bleiben auf ihren Spuren. Strg+D mit mehreren gewählten Clips dupliziert alle direkt dahinter.
+- Nach dem Wählen in einer Auswahlliste (Raster, Count-in) oder einem Klick auf einen Knopf wirken die Kürzel sofort wieder. Die Leertaste spielt auch dann ab, wenn ein Zahlenfeld (BPM) den Fokus hat.
 - **Rückgängig / Wiederholen** gilt für Änderungen am Projekt (Spuren, Clips, Noten, Tempo). Ein Schieberegler-Zug zählt als ein Schritt.
 - In Textfeldern tippst du normal, die Kürzel greifen dort nicht (Funktionstasten ausgenommen).
 - Aufgenommen sind nur Kürzel für Funktionen, die die App hat. Neu seit 0.13: **Loop um die Auswahl** (Ableton Strg+L, Cubase P), **Loop an/aus** (Cubase Num /), **Punch-in / Punch-out** (Cubase I / O), **Marker setzen / nächster / vorheriger** (Cubase Einfg / Umschalt+N / Umschalt+B), **alles auswählen** (Strg+A), **Konsolidieren** (Ableton Strg+J), **Crossfade** (Cubase X), **Spuren gruppieren** (Ableton Strg+G) und **Automationsspur ein/aus** (Ableton A).

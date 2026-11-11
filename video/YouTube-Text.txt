@@ -7,17 +7,15 @@ Alternative titles:
 
 
 DESCRIPTION
-AI Music Studio is a free, open-source AI music studio and DAW for Windows: make songs, seamless loops and stems with AI on your own PC, then arrange, mix and export them in a full studio. No account, no subscription, no upload to the cloud.
+AI Music Studio is a free, open-source AI music studio and DAW for Windows: make songs, seamless loops and stems with AI on your own PC, then arrange, mix and export them. No account, no subscription, no cloud.
 
-In this video you see every part of the app. Describe a style and get a full song, with vocals or as an instrumental, made by open AI models like ACE-Step and MusicGen that run locally on your computer. Need a groove for your track? "Create loop" makes loops of exactly 1 to 16 bars that start on beat 1 and repeat without a gap, named with their tempo and length, so you can line them up endlessly in the Studio.
+Describe a style and get a full song, with vocals or instrumental, made by open AI models (ACE-Step, MusicGen) running locally. "Create loop" makes loops of exactly 1 to 16 bars that repeat without a gap.
 
-The Studio is a real DAW with the shortcuts of Ableton Live 12 or Cubase: arrangement with markers and loop range, tempo and time-signature track, automation, warp markers, return tracks with reverb and delay, group tracks, recording with takes and comping, a mixer with level meters and a Piano Roll for MIDI.
+The Studio is a real DAW with Ableton Live 12 or Cubase shortcuts: markers, tempo track, automation, warp markers, return tracks, groups, takes and a Piano Roll.
 
-The Stem Splitter separates any song into vocals, drums, bass, piano, guitar and more. Listen to the stems in the stem mixer, solo or mute them, export a remix such as a karaoke version without vocals, or turn a melody into MIDI notes for the Piano Roll. Every song, loop and stem is kept in the Library with tempo and tags and can be exported for any DAW as WAV, AIFF, FLAC or MP3. Mastering matches your mix to a reference track.
+The Stem Splitter separates vocals, drums, bass and more. Solo or mute stems, export a karaoke remix, or turn a melody into MIDI. Everything is kept in the Library and exported as WAV, AIFF, FLAC or MP3.
 
-The built-in AI assistant helps with chords, lyrics and ideas, with Claude, ChatGPT, Grok or completely free and offline with Ollama. A hardware check shows what your PC can run: it works on the CPU alone and faster with NVIDIA, AMD or Intel graphics. New versions arrive by themselves with one click.
-
-AI Music Studio is made by a musician for musicians and is free and open source (GPL-3.0). If you like it, give it a star on GitHub, share it, or tell me in the comments what you would like to see next.
+Free and open source (GPL-3.0). A star on GitHub or a comment with your wishes helps a lot!
 
 ⬇️ Download (Windows installer, free):
 https://github.com/pierrecinema/ai-music-studio/releases/latest
@@ -40,18 +38,18 @@ https://github.com/pierrecinema/ai-music-studio/issues
 ━━━━━━━━━━━━━━━━━━━━
 WHAT IT DOES
 ━━━━━━━━━━━━━━━━━━━━
-🎵 Create music: describe a style, add lyrics, pick a model and get a song with vocals, made on your own PC
-🔁 Create loops: exactly 1 to 16 bars, starting on beat 1 and repeating seamlessly ("Loop 124 BPM 4 bars")
-🎛️ Studio: a real DAW with loop and markers, automation, tempo track, takes, warp markers, return tracks and groups
-📚 Library: every song, loop and stem with its tempo and tags, search by name, tag or BPM
-💾 Export for any DAW: WAV 16/24/32-bit, AIFF, FLAC or MP3, every stem as its own file
-✂️ Stem Splitter: vocals, drums, bass, piano, guitar and more, separated with Demucs, with a progress bar
-🎤 Stem mixer: solo, mute and volume per stem, export a remix (karaoke without vocals, a version without drums)
-🎼 Audio → MIDI: the melody of a stem as notes in the Piano Roll
-🔊 Mastering: match your mix to a reference track
-💬 AI Chat: a music assistant for chords, lyrics and ideas, with Claude, ChatGPT, Grok or completely free and local with Ollama
-🧠 AI Engines: one-click install of ACE-Step 1.5, MusicGen, DiffRhythm, Demucs and more
-🖥️ Hardware check: see what your PC can run, on CPU or NVIDIA, AMD and Intel graphics
+🎵 Create music: songs with or without vocals, made on your own PC
+🔁 Create loop: 1 to 16 bars, seamless
+🎛️ Studio: DAW with mixer, automation and Piano Roll
+📚 Library: search by name, tag or BPM
+💾 Export: WAV, AIFF, FLAC, MP3
+✂️ Stem Splitter: vocals, drums, bass and more (Demucs)
+🎤 Stem mixer: karaoke and custom remixes
+🎼 Audio → MIDI into the Piano Roll
+🔊 Mastering to a reference track
+💬 AI Chat: Claude, ChatGPT, Grok or free with Ollama
+🧠 One-click install of the AI engines
+🖥️ Runs on CPU, NVIDIA, AMD and Intel
 
 Coming soon: VST3 plugins, Vocal Editor, AI Instruments, Karaoke Export with lyrics, Video Composer
 
@@ -71,9 +69,7 @@ CHAPTERS
 ━━━━━━━━━━━━━━━━━━━━
 NOTES
 ━━━━━━━━━━━━━━━━━━━━
-• Windows 10/11. The installer is not code-signed yet, so Windows SmartScreen may show a warning the first time: click "More info" → "Run anyway". Code signing will follow as the project grows.
-• Works on the CPU alone; an NVIDIA, AMD or Intel graphics card makes it faster.
-• Your music stays on your PC. Your music belongs to you, but check the license of the AI model you use.
+• Windows 10/11. Not code-signed yet: on the SmartScreen warning click "More info" → "Run anyway".
 
 🎧 Music in this video: afro house, 120 BPM, made with AI Music Studio itself (MusicGen, on an AMD Radeon) and mixed from two generated tracks.
 

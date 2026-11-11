@@ -4,11 +4,31 @@ import logging
 
 # Hardware-aware thread tuning for older CPUs (e.g. dual-core)
 # Must happen before any torch/numpy imports
+def cpu_threads_for_ai(logical: int, physical: int | None, override: str | None = None) -> int:
+    """Threads for PyTorch on the CPU.
+
+    One thread per physical core: the AI maths fills a core's arithmetic units, a second (hyper-)thread on the
+    same core adds little and slows both. Small CPUs without hyper-threading keep one core free for the app.
+    AMS_CPU_THREADS overrides it. (Up to 0.14 this was capped at 4, which left a 6-core/12-thread CPU at ~25 %.)
+    """
+    if override and override.strip().isdigit() and int(override) > 0:
+        return min(int(override), logical)
+    physical = physical or max(1, logical // 2)
+    if physical < logical:              # hyper-threading: the extra threads stay free for the app and Windows
+        return physical
+    return max(1, logical - 1) if logical <= 4 else logical
+
+
 def _tune_threads() -> None:
     try:
-        cpu_count = os.cpu_count() or 2
-        # On old CPUs cap PyTorch/OMP threads to avoid thrashing
-        threads = max(1, min(cpu_count - 1, 4))
+        logical = os.cpu_count() or 2
+        try:
+            import psutil
+            physical = psutil.cpu_count(logical=False)
+        except Exception:
+            physical = None
+        threads = cpu_threads_for_ai(logical, physical, os.environ.get("AMS_CPU_THREADS"))
+        os.environ["AMS_AI_THREADS"] = str(threads)
         os.environ.setdefault("OMP_NUM_THREADS", str(threads))
         os.environ.setdefault("MKL_NUM_THREADS", str(threads))
         os.environ.setdefault("OPENBLAS_NUM_THREADS", str(threads))

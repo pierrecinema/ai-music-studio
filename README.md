@@ -19,7 +19,11 @@ No programming, no command line: just the installer.
 
 Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Beta testing: [docs/BETA.md](docs/BETA.md)
 
-**Support the project:** AI Music Studio is free and stays free. A ⭐ on GitHub or a small donation via [PayPal](https://paypal.me/djpedroflores) helps to keep it going.
+### ☕ Buy me a coffee
+
+AI Music Studio is free and stays free, made in my spare time. If it saves you time or makes you a track you love, you can buy me a coffee. It keeps the project going: new features, more AI models and code signing for the installer. A ⭐ on GitHub helps too!
+
+[![Buy me a coffee with PayPal](https://img.shields.io/badge/%E2%98%95%20Buy%20me%20a%20coffee-PayPal-0070ba?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/djpedroflores)
 
 ## Features
 
@@ -90,6 +94,11 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 **Beta testers wanted** ([guide, German](docs/BETA.md)): we are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
+
+### New in 0.18.1
+
+- **Stem Splitter: "4 Stems on the graphics card":** vocals, drums, bass and other with four small MDX-Net models that run on the graphics card like *Vocals + Instrumental* (AMD / Intel through DirectML, also the R9 290, and NVIDIA). Much faster than Demucs *Fast* on these cards, a little less clean than *Balanced*. Uses the same *Fast vocal separation* engine; the models download on the first split.
+- Release pages show the changelog and the install notes; the donation link is only on the project page ("Buy me a coffee").
 
 ### New in 0.18
 

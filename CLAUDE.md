@@ -15,7 +15,8 @@ in-app update right away. For every new version:
    the tag `v<version>` and the GitHub release with `latest.yml`, which the in-app updater reads.
    (A cloud session cannot push tags, so use the workflow. From the desktop, pushing the tag works too.)
 4. Check that the run succeeded and the release exists, then tell the owner, with a short changelog summary in German
-   (standing instruction: every release).
+   (standing instruction: every release). Release notes carry the changelog and install notes, no donation link
+   (that is only on the README).
 
 Code signing (SignPath Foundation) switches on by itself in `release.yml` once the secret `SIGNPATH_API_TOKEN` and the
 variable `SIGNPATH_ORGANIZATION_ID` exist. Every signing request then waits for the owner's approval in SignPath:

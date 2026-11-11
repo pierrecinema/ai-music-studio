@@ -51,3 +51,31 @@ async def import_track(req: ImportReq):
         )
     except FileNotFoundError:
         raise HTTPException(400, f"File not found: {req.path}")
+
+
+@router.post("/{track_id}/align")
+async def align_track(track_id: str):
+    """Cut the song so that it starts on its first beat (the original is kept for restoring)."""
+    try:
+        return await asyncio.to_thread(library.align_track, track_id)
+    except KeyError:
+        raise HTTPException(404, "Unknown track")
+    except FileNotFoundError:
+        raise HTTPException(400, "The file of this song is missing.")
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(500, f"Could not cut the song: {e}")
+
+
+@router.post("/{track_id}/restore")
+async def restore_track(track_id: str):
+    try:
+        return await asyncio.to_thread(library.restore_original, track_id)
+    except KeyError:
+        raise HTTPException(404, "Unknown track")
+    except (ValueError, FileNotFoundError) as e:
+        raise HTTPException(400, str(e))
+
+
+@router.post("/align-all")
+async def align_all():
+    return await asyncio.to_thread(library.align_all)

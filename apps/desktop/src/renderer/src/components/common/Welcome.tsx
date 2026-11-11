@@ -66,7 +66,7 @@ export function Welcome(): React.ReactElement | null {
         <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.9 }}>
           <li><b>Install the AI engines</b> once: Settings → AI Engines. Nothing generates before this.</li>
           <li><b>Create music</b> makes a song from a description. Every song is saved in the <b>Library</b> automatically.</li>
-          <li>The <b>Timeline</b> plays and edits audio and MIDI: drag audio files in, move and trim clips, mix, then <b>File → Export</b>.</li>
+          <li>The <b>Studio</b> plays and edits audio and MIDI: drag audio files in, move and trim clips, mix, then <b>File → Export</b>.</li>
           <li>Press <b>Ctrl+S</b> to save your project. Unsaved work is backed up every 30 seconds.</li>
           <li>Something wrong? Press <b>Feedback</b> at the bottom right: it prepares a report with your system details.</li>
         </ol>
@@ -74,7 +74,7 @@ export function Welcome(): React.ReactElement | null {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={goSettings}>Install AI engines</button>
           <button className="btn btn-ghost" onClick={() => go('create')}>Create music</button>
-          <button className="btn btn-ghost" onClick={() => go('timeline')}>Start with the timeline</button>
+          <button className="btn btn-ghost" onClick={() => go('timeline')}>Start in the Studio</button>
           <span style={{ flex: 1 }} />
           <button className="btn btn-ghost" onClick={close}>Close</button>
         </div>

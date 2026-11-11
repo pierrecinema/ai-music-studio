@@ -9,6 +9,11 @@ import { newProject, openProject, saveProject, saveProjectAs } from '../project/
 import { narrowerGrid, nudgeStep, tripletToggle, widerGrid } from '../edit/grid'
 import { openQuantizeDialog, quantizeSelection } from '../edit/quantize'
 import { EXPORT_EVENT, reportOpen } from '../components/layout/FileMenu'
+import { diagWrite } from '../lib/diagLog'
+import {
+  addMarkerAtPlayhead, consolidate, crossfade, deleteSelection, groupSelectedTracks, jumpMarker, loopToSelection, selectAll,
+  toggleAutomationLane, toggleLoop, togglePunch
+} from '../components/timeline/studioOps'
 
 export const WINAMP_EVENT = 'ams:toggle-winamp'
 
@@ -121,6 +126,18 @@ const HANDLERS: Record<string, () => void> = {
     else void startRecording().then((problem) => { if (problem) window.alert(problem) })
   },
   'transport.metronome': () => useAudioStore.getState().toggleMetronome(),
+  'transport.loop': () => toggleLoop(),
+  'loop.selection': () => { loopToSelection() },
+  'transport.punchIn': () => togglePunch('punchIn'),
+  'transport.punchOut': () => togglePunch('punchOut'),
+  'marker.add': () => addMarkerAtPlayhead(),
+  'marker.next': () => jumpMarker(1),
+  'marker.prev': () => jumpMarker(-1),
+  'edit.selectAll': () => selectAll(),
+  'clip.consolidate': () => { void consolidate().then((m) => { if (m) window.alert(m) }) },
+  'clip.crossfade': () => { const m = crossfade(); if (m) window.alert(m) },
+  'track.group': () => groupSelectedTracks(),
+  'track.automation': () => toggleAutomationLane(),
 
   'edit.undo': () => void undo(),
   'edit.redo': () => void redo(),
@@ -141,6 +158,7 @@ const HANDLERS: Record<string, () => void> = {
     if (owner && st.selectedClipId) st.splitClip(owner.id, st.selectedClipId, useAudioStore.getState().currentBeat)
   },
   'clip.delete': () => {
+    if (useProjectStore.getState().selectedClipIds.length > 1 && deleteSelection()) return
     const st = useProjectStore.getState()
     const owner = st.project.tracks.find((t) => t.clips.some((c) => c.id === st.selectedClipId))
     if (owner && st.selectedClipId) { st.removeClip(owner.id, st.selectedClipId); return }
@@ -186,6 +204,7 @@ const HANDLERS: Record<string, () => void> = {
 export function runAction(id: string): boolean {
   const handler = HANDLERS[id]
   if (!handler) return false
+  diagWrite('action', id)
   markStep()
   handler()
   return true

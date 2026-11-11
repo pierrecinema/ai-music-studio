@@ -5,6 +5,7 @@ export interface MusicParams {
   prompt: string
   lyrics: string
   instrumental: boolean
+  acapella: boolean         // only the voice: the lyrics sung without any instruments
   language: string
   voice: 'any' | 'male' | 'female'
   duration: string          // '' = auto
@@ -68,6 +69,7 @@ export const DEFAULT_PARAMS: MusicParams = {
   prompt: '',
   lyrics: '',
   instrumental: false,
+  acapella: false,
   language: 'English',
   voice: 'any',
   duration: '',
@@ -150,7 +152,8 @@ export function toRequest(p: MusicParams): Record<string, unknown> {
     title: p.title,
     prompt: p.prompt,
     lyrics: p.lyrics,
-    instrumental: p.instrumental,
+    instrumental: p.instrumental && !p.acapella,
+    acapella: p.acapella && !p.instrumental,
     language: p.language,
     voice: p.voice,
     duration: int(p.duration, 5, 600),

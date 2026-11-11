@@ -52,6 +52,10 @@ function GeneratingBadge(): React.ReactElement | null {
       >
         {job.status === 'error' ? 'Music generation failed: open' : `Generating music${pct !== null ? ` ${pct}%` : '…'}${job.stage_text ? ` · ${job.stage_text.slice(0, 40)}` : ''}`}
       </button>
+      {busy && !job.cancel && (
+        <button onClick={() => void useMusicJob.getState().cancel()} title="Cancel music generation"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--red)', padding: '0 2px' }}>✕</button>
+      )}
     </>
   )
 }

@@ -46,7 +46,7 @@ export function Mixer(): React.ReactElement {
     <div style={{ display: 'flex', height: '100%', background: 'var(--bg-primary)', overflow: 'auto', padding: 12, gap: 8, alignItems: 'flex-start' }}>
       {tracks.length === 0 && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--text-muted)' }}>
-          No tracks yet. Add tracks in the timeline.
+          No tracks yet. Add tracks in the Studio.
         </div>
       )}
       {tracks.map((track) => (

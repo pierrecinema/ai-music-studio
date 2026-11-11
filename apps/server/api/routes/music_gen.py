@@ -196,6 +196,7 @@ class GenerateMusicRequest(BaseModel):
     prompt: str = ""
     lyrics: str = ""
     instrumental: bool = False
+    acapella: bool = False                  # only the voice: sung lyrics without any instruments
     language: str | None = None
     voice: str = "any"                      # any | male | female
     # song parameters (None = let the engine decide)
@@ -287,8 +288,28 @@ def _get_pipeline():
     return _pipeline
 
 
+ACAPELLA_TAGS = "a cappella, solo vocals only, unaccompanied voice, no instruments, no drums, no music, dry studio vocal"
+ACAPELLA_NEGATIVE = "instruments, drums, percussion, bass, guitar, piano, synth, strings, beat, accompaniment"
+
+
+_VOCAL_WORDS = re.compile(r"\b(vocals?|voices?|sing(s|er|ers|ing)?|choir|rap|rapping|a ?cappella|acapella)\b", re.I)
+_SECTION_TAG = re.compile(r"^\s*\[[^\]]+\]\s*$", re.M)
+
+
+def _ace_lyrics(req: GenerateMusicRequest) -> str:
+    """Lyrics as ACE-Step reads them best: with at least one structure tag ([verse], [chorus])."""
+    if req.instrumental:
+        return "[instrumental]"
+    text = req.lyrics.strip()
+    if text and not _SECTION_TAG.search(text):
+        text = "[verse]\n" + text
+    return text
+
+
 def _compose_prompt(req: GenerateMusicRequest) -> str:
     parts = [req.prompt.strip()] if req.prompt.strip() else []
+    if req.acapella:
+        parts.insert(0, ACAPELLA_TAGS)
     if req.bpm:
         parts.append(f"{req.bpm} bpm")
     if req.key:
@@ -298,6 +319,9 @@ def _compose_prompt(req: GenerateMusicRequest) -> str:
     if not req.instrumental:
         if req.voice in ("male", "female"):
             parts.append(f"{req.voice} vocals")
+        elif req.lyrics.strip() and not _VOCAL_WORDS.search(", ".join(parts)):
+            # Without a vocal tag ACE-Step often renders lyrics as an instrumental: ask for the voice explicitly.
+            parts.append("vocals")
         if req.language and req.language.lower() not in ("", "auto"):
             parts.append(f"{req.language} lyrics")
     return ", ".join(parts) or "music"
@@ -317,6 +341,11 @@ _start_info: dict[str, dict] = {}      # final file -> what the start alignment 
 def _finalize(wav_path: str, req: GenerateMusicRequest, warnings: list[str]) -> str:
     """Cut the track to start on its first beat, convert to the wanted format and apply fades (ffmpeg)."""
     info: dict = {}
+    if req.acapella:
+        from services.vocal_isolate import isolate_vocals
+        done, note = isolate_vocals(wav_path)
+        if note:
+            warnings.append(note)
     try:
         from services.startalign import align_start
         info = align_start(wav_path)
@@ -382,7 +411,7 @@ def _engine_kwargs(pipe, req: GenerateMusicRequest, duration: int, seed: int,
     kwargs: dict = {
         "audio_duration": duration,
         "prompt": _compose_prompt(req),
-        "lyrics": "[instrumental]" if req.instrumental else req.lyrics,
+        "lyrics": _ace_lyrics(req),
         "infer_step": req.steps,
         "guidance_scale": req.guidance,
         "manual_seeds": str(seed),
@@ -475,8 +504,18 @@ def _device_text() -> str:
         return "Using the CPU."
 
 
+class Cancelled(Exception):
+    """The user pressed Cancel: raised at the next progress report and stops the job."""
+
+
+_procs: dict[str, object] = {}         # job id -> running worker process (DiffRhythm, DirectML), killed on Cancel
+
+
 def _stage(job: dict, stage: str, text: str, step: int | None = None, total: int | None = None) -> None:
-    """Tell the UI what is happening. `step`/`total` give a real progress bar when known."""
+    """Tell the UI what is happening. `step`/`total` give a real progress bar when known.
+    Every engine reports here often, so this is also where a Cancel takes effect."""
+    if job.get("cancel"):
+        raise Cancelled()
     now = time.time()
     if job.get("stage") != stage:
         job["stage_started"] = now
@@ -512,6 +551,8 @@ def _watch_downloads(job: dict, stop: threading.Event) -> None:
     dirs = [d for d in (str(MODEL_DIR), os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")) if d]
     start = sum(_dir_mb(d) for d in dirs if os.path.isdir(d))
     while not stop.wait(2.0):
+        if job.get("cancel"):
+            return
         now_mb = sum(_dir_mb(d) for d in dirs if os.path.isdir(d))
         job["downloaded_mb"] = round(max(0.0, now_mb - start), 1)
         job["updated"] = time.time()
@@ -580,8 +621,11 @@ def _run_clip_job(job_id: str, req: GenerateMusicRequest) -> None:
                     try:
                         seconds = generate_dml(req.engine, _compose_prompt(req), duration, seed, wav,
                                                guidance=max(1.0, min(req.cfg_scale + 1.0, 10.0)), on_step=on_step,
-                                               on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"))
+                                               on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
+                                               on_proc=lambda pr: _procs.__setitem__(job_id, pr))
                     except Exception as e:  # fall back: a track on the CPU beats an error
+                        if job.get("cancel"):
+                            raise Cancelled() from e
                         warnings.append(f"The graphics card failed ({_short(e)}); continuing on the processor.")
                         job["device"] = _device_text()
                         use_gpu = False
@@ -643,7 +687,8 @@ def _run_dr_job(job_id: str, req: GenerateMusicRequest) -> None:
                     secs = generate_diffrhythm(
                         _compose_prompt(req), req.lyrics, wanted, wav,
                         on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
-                        on_step=lambda d, t: _stage(job, "render", f"{label}composing the song", d, t))
+                        on_step=lambda d, t: _stage(job, "render", f"{label}composing the song", d, t),
+                        on_proc=lambda pr: _procs.__setitem__(job_id, pr))
                     _stage(job, "finish", f"{label}saving and converting")
                     final = _finalize(wav, req, warnings if i == 0 else [])
                 except Exception as e:
@@ -660,6 +705,25 @@ def _run_dr_job(job_id: str, req: GenerateMusicRequest) -> None:
 
 
 def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
+    job = _jobs[job_id]
+    if job.get("cancel"):
+        return
+    try:
+        _run_engine_job(job_id, req)
+    except Cancelled:
+        pass
+    except Exception as e:  # noqa: BLE001 - a job must never stay "running" forever
+        job.update(status="error", error=_short(e))
+    finally:
+        _procs.pop(job_id, None)
+        _cur["job"] = None if _cur["job"] is job else _cur["job"]
+    if job.get("cancel") and job.get("status") != "done":
+        done = len(job.get("results") or [])
+        job.update(status="cancelled", error=None, stage="done", step=None, step_total=None, finished=time.time(),
+                   stage_text="Cancelled" + (f": {done} finished song(s) kept in the library" if done else ""))
+
+
+def _run_engine_job(job_id: str, req: GenerateMusicRequest) -> None:
     if req.engine == "diffrhythm":
         return _run_dr_job(job_id, req)
     if req.engine != "ace-step":
@@ -780,10 +844,39 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
 async def generate_music(req: GenerateMusicRequest):
     if not req.prompt.strip() and not req.lyrics.strip() and not req.source_track:
         raise HTTPException(400, "Describe the music (style) or provide lyrics.")
+    if req.acapella:
+        if not req.lyrics.strip():
+            raise HTTPException(400, "A cappella needs lyrics: write the text that should be sung.")
+        if req.engine not in ("ace-step", "diffrhythm"):
+            raise HTTPException(400, "A cappella needs a model that can sing: choose ACE-Step or DiffRhythm.")
+        req.instrumental = False
+        req.negative_prompt = ", ".join(p for p in (req.negative_prompt.strip(), ACAPELLA_NEGATIVE) if p)
     job_id = uuid.uuid4().hex[:10]
     _jobs[job_id] = {"id": job_id, "status": "queued", "created": time.time(), "warnings": [], "results": []}
     threading.Thread(target=_run_job, args=(job_id, req), daemon=True).start()
     return {"jobId": job_id}
+
+
+@router.post("/jobs/{job_id}/cancel")
+async def cancel_job(job_id: str):
+    """Stop a queued or running job. Songs that are already finished stay in the library."""
+    job = _jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Unknown job")
+    if job["status"] not in ("queued", "running"):
+        return {"cancelled": False, "status": job["status"]}
+    job["cancel"] = True
+    if job["status"] == "queued":       # still waiting for another job: it will not start at all
+        job.update(status="cancelled", stage="done", stage_text="Cancelled", finished=time.time())
+        return {"cancelled": True, "status": "cancelled"}
+    job["stage_text"] = "Cancelling: stops at the next step"
+    proc = _procs.get(job_id)
+    if proc is not None:
+        try:
+            proc.kill()  # type: ignore[attr-defined]
+        except Exception:  # noqa: BLE001 - already gone
+            pass
+    return {"cancelled": True, "status": job["status"]}
 
 
 @router.get("/engines")

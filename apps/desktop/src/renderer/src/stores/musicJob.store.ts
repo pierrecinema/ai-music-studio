@@ -10,6 +10,7 @@ interface MusicJobState {
   setJob: (j: MusicJob | null) => void
   markHandled: (id: string) => void
   track: (jobId: string) => void
+  cancel: () => Promise<void>
 }
 
 let timer: number | null = null
@@ -28,7 +29,7 @@ export const useMusicJob = create<MusicJobState>((set, get) => ({
         const j = await api.music.job(jobId)
         misses = 0
         set({ job: j })
-        if (j.status === 'done' || j.status === 'error') {
+        if (j.status === 'done' || j.status === 'error' || j.status === 'cancelled') {
           if (timer) clearInterval(timer)
           timer = null
         }
@@ -41,6 +42,18 @@ export const useMusicJob = create<MusicJobState>((set, get) => ({
         }
       }
     }, 1500)
+  },
+  // Cancel button: the backend stops at the next step; finished songs stay in the library
+  cancel: async () => {
+    const j = get().job
+    if (!j || !isBusy(j)) return
+    set({ job: { ...j, cancel: true, stage_text: 'Cancelling: stops at the next step' } })
+    try {
+      const r = await api.music.cancel(j.id)
+      if (r.status === 'cancelled') set({ job: await api.music.job(j.id) })
+    } catch (e) {
+      set({ error: String((e as Error).message) })
+    }
   },
 }))
 

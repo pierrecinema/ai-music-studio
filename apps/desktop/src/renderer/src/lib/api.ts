@@ -19,13 +19,14 @@ export interface Lora {
 }
 export interface MusicResult { audio_file: string; seed: number; duration: number; library_id?: string | null; title?: string; bpm?: number | null; first_beat?: number | null }
 export interface MusicJob {
-  id: string; status: 'queued' | 'running' | 'done' | 'error'
+  id: string; status: 'queued' | 'running' | 'done' | 'error' | 'cancelled'
   audio_file?: string; error?: string; warnings: string[]; engine?: string
   results: MusicResult[]; progress?: { done: number; total: number }
   // live progress from the engine
   stage?: 'load' | 'prepare' | 'render' | 'finish' | 'done'; stage_text?: string
   step?: number | null; step_total?: number | null
   device?: string
+  cancel?: boolean                      // Cancel was pressed, the job stops at the next step
   created?: number; started?: number; updated?: number; stage_started?: number; downloaded_mb?: number
 }
 export interface MusicEngineInfo {
@@ -58,6 +59,7 @@ export interface LibraryTrack {
   id: string; title: string; file: string; path: string; exists: boolean; created: number; duration: number | null
   engine: string; source: string; prompt: string; lyrics: string; seed: number | null; favorite: boolean; notes: string
   bpm?: number | null; first_beat?: number | null     // measured when the track was saved; first_beat 0 = starts on beat 1
+  aligned?: boolean; original?: string; trimmed?: number   // checked for beat 1; `original` = saved untouched file
 }
 export interface SampleEntry { path: string; name: string; folder: string; root: string; size: number; bpm: number | null }
 export interface KaraokeWord { text: string; start: number; end: number }
@@ -180,6 +182,7 @@ export const api = {
     }>('/music/status'),
     generate: (body: Record<string, unknown>) => post<{ jobId: string }>('/music/generate', body),
     job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
+    cancel: (id: string) => post<{ cancelled: boolean; status: string }>(`/music/jobs/${id}/cancel`, {}),
     engines: () => get<{ engines: MusicEngineInfo[]; recommended: string; gpu_path: boolean; gpu_models: string[] }>('/music/engines'),
   },
 
@@ -210,6 +213,9 @@ export const api = {
     patch: (id: string, body: { title?: string; favorite?: boolean; notes?: string }) => send<LibraryTrack>('PATCH', `/library/${id}`, body),
     remove: (id: string, deleteFile = true) => send<{ removed: string }>('DELETE', `/library/${id}?delete_file=${deleteFile}`),
     importFile: (path: string, title = '', source = 'import') => post<LibraryTrack>('/library/import', { path, title, source }),
+    align: (id: string) => post<{ track: LibraryTrack; trimmed: number; message: string }>(`/library/${id}/align`, {}),
+    restore: (id: string) => post<LibraryTrack>(`/library/${id}/restore`, {}),
+    alignAll: () => post<{ checked: number; trimmed: number; failed: string[] }>('/library/align-all', {}),
   },
 
   system: {

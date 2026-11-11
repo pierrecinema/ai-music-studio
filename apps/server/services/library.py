@@ -99,6 +99,8 @@ def add_track(src: str, meta: dict) -> dict:
         "favorite": False,
         "notes": "",
     }
+    if "first_beat" in meta:                          # made since 0.11.0: already cut to beat 1 before saving
+        entry["aligned"] = True
     with _lock:
         items = _read()
         items.append(entry)
@@ -139,9 +141,143 @@ def remove_track(tid: str, delete_file: bool = True) -> bool:
             return False
         if delete_file:
             gone = next(e for e in items if e["id"] == tid)
-            try:
-                (library_dir() / gone["file"]).unlink()
-            except OSError:
-                pass
+            for rel in (gone["file"], gone.get("original")):
+                if not rel:
+                    continue
+                try:
+                    (library_dir() / rel).unlink()
+                except OSError:
+                    pass
         _write(keep)
     return True
+
+
+# ── start on beat 1, afterwards (songs made before 0.11.0) ────────────────────
+#
+# Songs created since 0.11.0 are cut to their first beat before they are saved. Older songs can be cut here.
+# Cutting changes the file, so the untouched original is copied to `originals/` first: "Restore original"
+# brings it back. A song whose lead-in is longer than a few seconds (a real intro) is left as it is.
+
+def _originals_dir() -> Path:
+    d = library_dir() / "originals"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _decode_to_wav(src: Path, dest: Path) -> None:
+    """Write `src` as a WAV file (soundfile first, ffmpeg for formats it cannot read)."""
+    try:
+        import soundfile as sf
+        data, sr = sf.read(str(src), dtype="float32", always_2d=False)
+        sf.write(str(dest), data, sr, subtype="PCM_16", format="WAV")
+        return
+    except Exception:
+        pass
+    ff = shutil.which("ffmpeg")
+    if not ff:
+        raise RuntimeError(f"Cannot read {src.suffix} files without ffmpeg.")
+    import subprocess
+    r = subprocess.run([ff, "-y", "-v", "error", "-i", str(src), "-c:a", "pcm_s16le", str(dest)], capture_output=True, text=True)
+    if r.returncode != 0 or not dest.exists():
+        raise RuntimeError((r.stderr or "ffmpeg failed").strip()[:200])
+
+
+def align_track(tid: str) -> dict:
+    """Cut one library song so that it starts on its first beat. Returns {track, trimmed, message}."""
+    from services.startalign import align_start
+    with _lock:
+        entry = next((e for e in _read() if e["id"] == tid), None)
+    if not entry:
+        raise KeyError(tid)
+    src = library_dir() / entry["file"]
+    if not src.exists():
+        raise FileNotFoundError(str(src))
+    if entry.get("aligned"):
+        return {"track": _public(entry), "trimmed": 0.0, "message": "Already starts on beat 1."}
+
+    tmp = src.with_name(f".{src.stem}.align.wav")
+    _decode_to_wav(src, tmp)
+    try:
+        info = align_start(str(tmp))
+    except Exception:
+        tmp.unlink(missing_ok=True)
+        raise
+    cut = float(info.get("trimmed") or 0.0)
+    patch: dict = {"bpm": info.get("bpm"), "first_beat": info.get("first_beat"), "aligned": True}
+    if cut > 0:
+        backup = _originals_dir() / entry["file"]
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        if not backup.exists():
+            shutil.copy2(src, backup)                         # the untouched file, for "Restore original"
+        target = src if src.suffix.lower() == ".wav" else src.with_suffix(".wav")
+        os.replace(tmp, target)
+        if target != src:
+            src.unlink(missing_ok=True)                       # the original format is kept in originals/
+        patch.update({
+            "file": str(target.relative_to(library_dir())).replace("\\", "/"),
+            "original": str(backup.relative_to(library_dir())).replace("\\", "/"),
+            "trimmed": round(cut, 3),
+            "duration": _duration(target) or entry.get("duration"),
+        })
+        message = f"Cut {cut:.2f} s before the first beat. The original is kept and can be restored."
+    else:
+        tmp.unlink(missing_ok=True)
+        first = info.get("first_beat")
+        if not info.get("bpm"):
+            message = "No steady beat found: the song was left as it is."
+        elif first and first > 0:
+            message = f"The first beat is at {first:.2f} s (an intro): the song was left as it is."
+        else:
+            message = "Already starts on beat 1."
+    with _lock:
+        items = _read()
+        for e in items:
+            if e["id"] == tid:
+                e.update(patch)
+                entry = e
+        _write(items)
+    return {"track": _public(entry), "trimmed": round(cut, 3), "message": message}
+
+
+def restore_original(tid: str) -> dict:
+    """Undo align_track: put the untouched file back."""
+    with _lock:
+        items = _read()
+        entry = next((e for e in items if e["id"] == tid), None)
+        if not entry:
+            raise KeyError(tid)
+        if not entry.get("original"):
+            raise ValueError("This song has no saved original.")
+        backup = library_dir() / entry["original"]
+        if not backup.exists():
+            raise FileNotFoundError(str(backup))
+        current = library_dir() / entry["file"]
+        rel = Path(entry["original"]).relative_to("originals")
+        dest = library_dir() / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if current.exists() and current != dest:
+            current.unlink()
+        os.replace(backup, dest)
+        entry["file"] = str(rel).replace("\\", "/")
+        entry["duration"] = _duration(dest) or entry.get("duration")
+        for k in ("original", "trimmed", "aligned", "first_beat"):
+            entry.pop(k, None)
+        _write(items)
+        return _public(entry)
+
+
+def align_all() -> dict:
+    """Cut every generated song that was not checked yet. Stems and imports are left alone (stems of one song
+    must stay in time with each other)."""
+    with _lock:
+        todo = [e["id"] for e in _read() if e.get("source", "generated") == "generated" and not e.get("aligned")
+                and (library_dir() / e["file"]).exists()]
+    done, cut, failed = 0, 0, []
+    for tid in todo:
+        try:
+            r = align_track(tid)
+            done += 1
+            cut += 1 if r["trimmed"] else 0
+        except Exception as e:  # noqa: BLE001 - one bad file must not stop the others
+            failed.append(f"{tid}: {e}")
+    return {"checked": done, "trimmed": cut, "failed": failed}

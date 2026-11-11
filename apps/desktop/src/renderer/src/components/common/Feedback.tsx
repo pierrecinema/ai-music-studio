@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { api } from '../../lib/api'
 import { useProjectStore } from '../../stores/project.store'
 import { copyText } from '../../lib/clipboard'
+import { diagIsOn, flushDiag, setDiag } from '../../lib/diagLog'
+import { tr } from '../../i18n/tr'
 
 // Collects what a developer needs to understand a problem. Nothing is sent anywhere: the user copies it.
 export async function buildReport(note: string): Promise<string> {
@@ -78,9 +80,38 @@ export function FeedbackButton(): React.ReactElement {
             </div>
             {state === 'copied' && <div style={{ color: 'var(--green)', fontSize: 12 }}>Copied. Paste it into the issue (Ctrl+V).</div>}
             {state === 'failed' && <div style={{ color: 'var(--red)', fontSize: 12 }}>Could not copy to the clipboard.</div>}
+            <DiagSection note={note} />
           </div>
         </div>
       )}
     </>
+  )
+}
+
+// Beta testers: record a detailed log, then copy it or save it as a file and send it to us.
+function DiagSection({ note }: { note: string }): React.ReactElement {
+  const [on, setOn] = useState(diagIsOn())
+  const [msg, setMsg] = useState<string | null>(null)
+  const full = async (): Promise<string> => { flushDiag(); await new Promise((r) => setTimeout(r, 150)); return window.api.diag.collect(await buildReport(note)) }
+  const act = async (fn: () => Promise<string | null>): Promise<void> => { setMsg(tr('Preparing…')); try { setMsg(await fn()) } catch (e) { setMsg((e as Error).message) } }
+  return (
+    <div style={{ borderTop: '1px solid var(--border-mid)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <b style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1 }}>{tr('Detailed log (beta)')}</b>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: on ? 'var(--red)' : 'var(--text-secondary)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={on} onChange={async (e) => { setOn(await setDiag(e.target.checked)) }} />
+          {on ? tr('Recording') : tr('Record a detailed log')}
+        </label>
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+        {tr('Switch it on, repeat what went wrong, then copy the log or save it as a file and send it to us (GitHub issue, e-mail or message). It contains what you clicked, warnings and errors of the app and the log of the AI backend: no audio, no lyrics of your songs beyond what you typed into the AI fields, no passwords. It stays on after a restart until you switch it off.')}
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button className="btn btn-ghost" onClick={() => void act(async () => ((await copyText(await full())) ? tr('Log copied. Paste it with Ctrl+V.') : tr('Could not copy to the clipboard.')))}>{tr('Copy log')}</button>
+        <button className="btn btn-ghost" onClick={() => void act(async () => { const p = await window.api.diag.save(await full()); return p ? tr('Saved:') + ' ' + p : null })}>{tr('Save log as file…')}</button>
+        <button className="btn btn-ghost" onClick={() => void act(async () => { await window.api.diag.clear(); return tr('Log cleared.') })}>{tr('Clear log')}</button>
+      </div>
+      {msg && <div style={{ fontSize: 12, color: 'var(--green)', wordBreak: 'break-all' }}>{msg}</div>}
+    </div>
   )
 }

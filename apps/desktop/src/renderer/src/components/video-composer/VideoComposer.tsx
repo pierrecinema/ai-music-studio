@@ -134,7 +134,7 @@ export function VideoComposer(): React.ReactElement {
               <span style={{ color: 'var(--success)', fontSize: 18 }}>✓</span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--success)' }}>Score generated!</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Tracks added to timeline. Export when ready.</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Tracks added to the Studio. Export when ready.</div>
               </div>
             </div>
           )}

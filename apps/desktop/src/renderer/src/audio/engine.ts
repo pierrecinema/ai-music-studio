@@ -1,14 +1,20 @@
 // The audio engine: plays the project (audio clips and MIDI notes through the built-in synth), mixes
-// tracks (volume, pan, mute, solo), measures levels, records, and renders the mix for export.
+// tracks (volume, pan, mute, solo, automation, sends to return tracks, group tracks), loops the loop range,
+// measures levels, records (count-in, punch, loop recording into take lanes) and renders the mix for export.
 //
 // The same scheduling code serves live playback (AudioContext) and export (OfflineAudioContext).
 
+import { nanoid } from 'nanoid'
 import { useAudioStore } from '../stores/audio.store'
 import { useProjectStore } from '../stores/project.store'
-import type { Project, Track } from '../types'
+import type { Clip, Project, Track } from '../types'
 import { playClick, playSynthNote, type Timbre } from './synth'
 import { encodeWav, peakOf } from './wav'
 import { MAX_STRETCH_SECONDS, stretchBuffer } from './stretch'
+import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
+import { hasAutomation, scheduleLane } from './automation'
+import { makeEffect } from './fx'
+import { beatOfSrc, renderWarped } from './warp'
 
 // ── files → buffers ──────────────────────────────────────────────────────────
 
@@ -52,6 +58,13 @@ export function bufferOf(path: string): AudioBuffer | undefined {
   return buffers.get(path)
 }
 
+// for tests and for files made inside the app (recordings, consolidated clips)
+export function putBuffer(path: string, buf: AudioBuffer): void {
+  buffers.set(path, buf)
+  peaksCache.delete(path)
+  listeners.forEach((l) => l())
+}
+
 // ── synced samples: stretched copies of a file for the current project tempo ──
 
 const warped = new Map<string, AudioBuffer>()
@@ -83,6 +96,41 @@ export async function loadWarped(path: string, sourceBpm: number, projectBpm: nu
       }
     })()
     warping.set(key, p)
+  }
+  return p
+}
+
+// ── warp markers: the file rendered with its markers at the tempo where the clip starts ──
+
+const markerBufs = new Map<string, AudioBuffer>()
+const markerJobs = new Map<string, Promise<AudioBuffer | null>>()
+
+function markerKey(c: Clip, spbSrc: number, spbProject: number): string {
+  return `${c.audioFile}|${spbSrc.toFixed(6)}|${spbProject.toFixed(6)}|${JSON.stringify(c.warpMarkers)}`
+}
+
+export async function loadMarkerWarp(c: Clip, spbSrc: number, spbProject: number): Promise<AudioBuffer | null> {
+  const key = markerKey(c, spbSrc, spbProject)
+  const have = markerBufs.get(key)
+  if (have) return have
+  let p = markerJobs.get(key)
+  if (!p) {
+    p = (async () => {
+      const raw = await loadBuffer(c.audioFile!)
+      if (!raw || raw.duration > MAX_STRETCH_SECONDS * 3) return null
+      try {
+        const out = await renderWarped(raw, c.warpMarkers ?? [], spbSrc, spbProject)
+        if (markerBufs.size > 24) markerBufs.delete(markerBufs.keys().next().value as string)
+        markerBufs.set(key, out)
+        return out
+      } catch (e) {
+        console.warn('[audio] cannot warp', c.audioFile, e)
+        return null
+      } finally {
+        markerJobs.delete(key)
+      }
+    })()
+    markerJobs.set(key, p)
   }
   return p
 }
@@ -142,9 +190,19 @@ function timbreOf(t: Track): Timbre {
   return 'soft'
 }
 
-const hasSound = (t: Track): boolean => t.clips.length > 0
+// mute and solo. A track is heard if it is not muted and (nothing is soloed, or it, its group, or - for a
+// group - one of its tracks is soloed). Return tracks are "solo safe": they always stay audible.
+export function isAudible(t: Track, tracks: Track[]): boolean {
+  if (t.muted) return false
+  const anySolo = tracks.some((x) => x.soloed)
+  if (!anySolo || t.soloed) return true
+  const parent = t.parentId ? tracks.find((x) => x.id === t.parentId) : undefined
+  if (parent?.soloed) return true
+  if (t.type === 'group' && tracks.some((x) => x.parentId === t.id && x.soloed)) return true
+  return false
+}
 
-// mute and solo: a track is heard if it is not muted and (nothing is soloed, or it is soloed)
+// kept for older callers: the fader value a track plays at
 export function audibleGain(t: Track, anySolo: boolean): number {
   if (t.muted) return 0
   if (anySolo && !t.soloed) return 0
@@ -153,27 +211,54 @@ export function audibleGain(t: Track, anySolo: boolean): number {
 
 interface Strip {
   bus: GainNode            // everything of the track goes in here (stopped by ramping this to 0)
-  gain: GainNode           // fader
+  mute: GainNode           // 0 or 1 (mute, solo)
+  gain: GainNode           // fader, or the volume automation
   pan: StereoPannerNode
   analyser: AnalyserNode
+  sends: Map<string, GainNode>
 }
 
-function makeStrip(ctx: BaseAudioContext, dest: AudioNode, t: Track, anySolo: boolean): Strip {
+function makeStrip(ctx: BaseAudioContext, dest: AudioNode): Strip {
   const bus = ctx.createGain()
+  const mute = ctx.createGain()
   const gain = ctx.createGain()
   const pan = ctx.createStereoPanner()
   const analyser = ctx.createAnalyser()
   analyser.fftSize = 1024
-  gain.gain.value = audibleGain(t, anySolo)
-  pan.pan.value = Math.max(-1, Math.min(1, t.pan))
-  bus.connect(gain).connect(pan).connect(analyser).connect(dest)
-  return { bus, gain, pan, analyser }
+  bus.connect(mute).connect(gain).connect(pan).connect(analyser).connect(dest)
+  return { bus, mute, gain, pan, analyser, sends: new Map() }
+}
+
+// the envelope of one audio clip: fade in, fade out (linear, or equal power for crossfades), starting
+// `skip` seconds into the clip
+function envelope(param: AudioParam, at: number, skip: number, len: number, peak: number,
+  fadeIn: number, fadeOut: number, eqIn: boolean, eqOut: boolean): void {
+  const total = skip + len
+  const shape = (x: number, eq: boolean): number => (eq ? Math.sin((Math.max(0, Math.min(1, x)) * Math.PI) / 2) : Math.max(0, Math.min(1, x)))
+  const valueAt = (t: number): number => {
+    let v = 1
+    if (fadeIn > 0 && t < fadeIn) v = Math.min(v, shape(t / fadeIn, eqIn))
+    if (fadeOut > 0 && t > total - fadeOut) v = Math.min(v, shape((total - t) / fadeOut, eqOut))
+    return v * peak
+  }
+  // sample the envelope where it changes; straight lines in between are close enough at 24 points per fade
+  const times = new Set<number>([skip, total])
+  const add = (from: number, to: number, n: number): void => { for (let i = 0; i <= n; i++) times.add(from + ((to - from) * i) / n) }
+  if (fadeIn > 0) add(0, fadeIn, eqIn ? 24 : 1)
+  if (fadeOut > 0) add(total - fadeOut, total, eqOut ? 24 : 1)
+  const sorted = [...times].filter((t) => t >= skip && t <= total).sort((a, b) => a - b)
+  param.setValueAtTime(valueAt(skip), at)
+  for (const t of sorted) if (t > skip) param.linearRampToValueAtTime(valueAt(t), at + (t - skip))
 }
 
 export interface Scheduled {
   strips: Map<string, Strip>
+  returns: Map<string, Strip>
   stop: (fade?: boolean) => void
+  stopAt: (time: number) => void           // end the sound at a context time (loop jump)
 }
+
+export interface ScheduleOptions { untilBeat?: number }
 
 // Schedules everything from `fromBeat` on. `when` is the context time that corresponds to `fromBeat`.
 export function scheduleProject(
@@ -181,47 +266,108 @@ export function scheduleProject(
   dest: AudioNode,
   project: Project,
   fromBeat: number,
-  when: number
+  when: number,
+  opts: ScheduleOptions = {}
 ): Scheduled {
-  const spb = 60 / (project.bpm || 120)
-  const anySolo = project.tracks.some((t) => t.soloed)
+  const base = beatToSec(project, fromBeat)
+  const T = (beat: number): number => when + beatToSec(project, beat) - base
   const strips = new Map<string, Strip>()
+  const returns = new Map<string, Strip>()
+  const returnInputs = new Map<string, AudioNode>()
   const nodes: Array<AudioScheduledSourceNode> = []
+  const until = opts.untilBeat ?? Infinity
 
-  for (const track of project.tracks) {
-    if (!hasSound(track)) continue
-    const strip = makeStrip(ctx, dest, track, anySolo)
+  // return tracks (effects), then group tracks, then the tracks themselves
+  for (const r of project.returns ?? []) {
+    const strip = makeStrip(ctx, dest)
+    const fx = makeEffect(ctx, r, 60 / bpmAt(project, fromBeat))
+    fx.output.connect(strip.bus)
+    strip.mute.gain.value = r.muted ? 0 : 1
+    strip.gain.gain.value = r.volume
+    strip.pan.pan.value = Math.max(-1, Math.min(1, r.pan ?? 0))
+    returns.set(r.id, strip)
+    returnInputs.set(r.id, fx.input)
+  }
+
+  const ordered = [...project.tracks].sort((a, b) => (a.type === 'group' ? 0 : 1) - (b.type === 'group' ? 0 : 1))
+  for (const track of ordered) {
+    if (track.type !== 'group' && track.clips.length === 0) continue
+    const parent = track.parentId ? strips.get(track.parentId) : undefined
+    const strip = makeStrip(ctx, parent?.bus ?? dest)
     strips.set(track.id, strip)
+    const on = isAudible(track, project.tracks) ? 1 : 0
+    strip.mute.gain.value = on
+    if (hasAutomation(track, 'volume')) scheduleLane(strip.gain.gain, track.automation!.volume, fromBeat, T, 1, track.volume)
+    else strip.gain.gain.value = track.volume
+    if (hasAutomation(track, 'pan')) scheduleLane(strip.pan.pan, track.automation!.pan, fromBeat, T, 1, track.pan)
+    else strip.pan.pan.value = Math.max(-1, Math.min(1, track.pan))
+    for (const [rid, input] of returnInputs) {
+      const lane = track.automation?.[`send:${rid}`]
+      const level = track.sends?.[rid] ?? 0
+      if (!level && !lane?.length) continue
+      const send = ctx.createGain()
+      if (lane?.length) scheduleLane(send.gain, lane, fromBeat, T, 1, level)
+      else send.gain.value = level
+      strip.analyser.connect(send).connect(input)           // post fader, after pan
+      strip.sends.set(rid, send)
+    }
+    if (track.type === 'group') continue
     const timbre = timbreOf(track)
 
+    // crossfades: where two audio clips of the track overlap, both fade over the overlap (equal power)
+    const audio = track.clips.filter((c) => c.audioFile).sort((a, b) => a.startTime - b.startTime)
+    const xIn = new Map<string, number>()
+    const xOut = new Map<string, number>()
+    for (let i = 1; i < audio.length; i++) {
+      for (let j = 0; j < i; j++) {
+        const ov = audio[j].startTime + audio[j].duration - audio[i].startTime
+        if (ov > 0.001 && ov < Math.min(audio[i].duration, audio[j].duration)) {
+          xIn.set(audio[i].id, Math.max(xIn.get(audio[i].id) ?? 0, ov))
+          xOut.set(audio[j].id, Math.max(xOut.get(audio[j].id) ?? 0, ov))
+        }
+      }
+    }
+
     for (const clip of track.clips) {
-      const clipStart = (clip.startTime - fromBeat) * spb          // seconds from `when`
-      const clipLen = clip.duration * spb
-      if (clipStart + clipLen <= 0) continue
-      const skip = Math.max(0, -clipStart)                         // playing from the middle of the clip
+      const clipEnd = Math.min(clip.startTime + clip.duration, until)
+      if (clipEnd <= fromBeat || clip.startTime >= until) continue
+      const clipStart = T(clip.startTime) - when                 // seconds from `when`
+      const clipLen = T(clipEnd) - T(clip.startTime)
+      const skip = Math.max(0, -clipStart)                        // playing from the middle of the clip
 
       if (clip.audioFile) {
-        const synced = clip.warpBpm ? warped.get(warpKey(clip.audioFile, clip.warpBpm, project.bpm)) : undefined
-        const buf = synced ?? buffers.get(clip.audioFile)
+        const tempo = bpmAt(project, clip.startTime)
+        const spbProject = 60 / tempo
+        let buf: AudioBuffer | undefined
+        let offset: number
+        if (clip.warpMarkers?.length) {
+          const spbSrc = sourceSecPerBeat(clip.warpBpm, tempo)
+          buf = markerBufs.get(markerKey(clip, spbSrc, spbProject))
+          // the rendered file starts at the file beat of second 0
+          offset = (beatOfSrc(clip.warpMarkers, clip.offset ?? 0, spbSrc) - beatOfSrc(clip.warpMarkers, 0, spbSrc)) * spbProject + skip
+        } else {
+          const synced = clip.warpBpm ? warped.get(warpKey(clip.audioFile, clip.warpBpm, tempo)) : undefined
+          buf = synced ?? buffers.get(clip.audioFile)
+          // `offset` counts seconds of the original file: a stretched copy is longer or shorter in the same proportion
+          const stretch = synced && clip.warpBpm ? clip.warpBpm / tempo : 1
+          offset = (clip.offset ?? 0) * stretch + skip
+        }
         if (!buf) continue
         const len = clipLen - skip
-        // `offset` counts seconds of the original file: a stretched copy is longer or shorter in the same proportion
-        const stretch = synced && clip.warpBpm ? clip.warpBpm / project.bpm : 1
-        const offset = (clip.offset ?? 0) * stretch + skip
         if (len <= 0 || offset >= buf.duration) continue
         const src = ctx.createBufferSource()
         src.buffer = buf
         const g = ctx.createGain()
         const at = when + Math.max(0, clipStart)
         const peakGain = Math.max(0, Math.min(2, clip.gain ?? 1))
-        const click = Math.min(0.006, len / 4)                     // tiny fades remove clicks at the cut
-        // the fades the user set (in beats); each is at most half of the clip
-        const fadeIn = Math.max(click, Math.min(len / 2, (clip.fadeIn ?? 0) * spb - skip))
-        const fadeOut = Math.max(click, Math.min(len / 2, (clip.fadeOut ?? 0) * spb))
-        g.gain.setValueAtTime(0, at)
-        g.gain.linearRampToValueAtTime(peakGain, at + fadeIn)
-        g.gain.setValueAtTime(peakGain, at + len - fadeOut)
-        g.gain.linearRampToValueAtTime(0, at + len)
+        const full = clipLen
+        const click = Math.min(0.006, full / 4)                    // tiny fades remove clicks at the cut
+        const spb = clipLen / Math.max(1e-6, clipEnd - clip.startTime)
+        const xi = (xIn.get(clip.id) ?? 0) * spb
+        const xo = (xOut.get(clip.id) ?? 0) * spb
+        const fadeIn = Math.min(full / 2, Math.max(click, (clip.fadeIn ?? 0) * spb, xi))
+        const fadeOut = Math.min(full / 2, Math.max(click, (clip.fadeOut ?? 0) * spb, xo))
+        envelope(g.gain, at, skip, len, peakGain, fadeIn, fadeOut, xi > 0 && xi >= (clip.fadeIn ?? 0) * spb, xo > 0 && xo >= (clip.fadeOut ?? 0) * spb)
         src.connect(g).connect(strip.bus)
         src.start(at, offset, Math.min(len, buf.duration - offset))
         nodes.push(src)
@@ -229,10 +375,11 @@ export function scheduleProject(
 
       if (clip.notes?.length && !clip.audioFile) {
         for (const n of clip.notes) {
-          const nStart = clipStart + n.startTime * spb
-          let nLen = n.duration * spb
-          if (nStart + nLen <= 0 || nStart >= clipStart + clipLen) continue
-          nLen = Math.min(nLen, clipStart + clipLen - nStart)
+          const nb = clip.startTime + n.startTime
+          const ne = Math.min(nb + n.duration, clipEnd)
+          if (ne <= fromBeat || nb >= clipEnd) continue
+          const nStart = T(nb) - when
+          const nLen = T(ne) - T(nb)
           const at = when + Math.max(0, nStart)
           const dur = nStart < 0 ? nLen + nStart : nLen
           if (dur <= 0.005) continue
@@ -242,21 +389,29 @@ export function scheduleProject(
     }
   }
 
+  const all = (): Strip[] => [...strips.values(), ...returns.values()]
   return {
     strips,
+    returns,
     stop: (fade = true) => {
       const t = (ctx as AudioContext).currentTime ?? 0
-      for (const s of strips.values()) {
+      for (const s of all()) {
         try {
           if (fade && 'setTargetAtTime' in s.bus.gain) s.bus.gain.setTargetAtTime(0, t, 0.008)
         } catch { /* context closed */ }
       }
       const kill = (): void => {
         for (const n of nodes) { try { n.stop() } catch { /* not started */ } }
-        for (const s of strips.values()) { try { s.bus.disconnect() } catch { /* gone */ } }
+        for (const s of all()) { try { s.bus.disconnect() } catch { /* gone */ } }
       }
       if (fade) window.setTimeout(kill, 40)
       else kill()
+    },
+    stopAt: (time: number) => {
+      for (const n of nodes) { try { n.stop(time) } catch { /* already stopped */ } }
+      // return tracks keep their tail (reverb, echoes) for a moment, then everything is freed
+      const free = Math.max(0, time - ((ctx as AudioContext).currentTime ?? 0)) * 1000 + 6000
+      window.setTimeout(() => { for (const s of all()) { try { s.bus.disconnect() } catch { /* gone */ } } }, free)
     }
   }
 }
@@ -276,6 +431,9 @@ let metroBeat = 0
 let epoch = 0                         // invalidates a restart that is still loading files
 let restartTimer = 0
 let lastSignature = ''
+// the next pass of the loop, already scheduled to start at `when`
+let pendingLoop: { when: number; beat: number; sched: Scheduled } | null = null
+const loopWraps: number[] = []        // context times at which the loop jumped back (loop recording)
 
 function ensureContext(): AudioContext {
   if (!ctx) {
@@ -293,37 +451,71 @@ export function isPlaying(): boolean {
   return playing
 }
 
+function commitLoop(): void {
+  if (!pendingLoop || !ctx || ctx.currentTime < pendingLoop.when) return
+  current = pendingLoop.sched
+  startCtxTime = pendingLoop.when
+  startBeat = pendingLoop.beat
+  metroBeat = Math.ceil(startBeat - 1e-6)
+  pendingLoop = null
+}
+
 export function currentBeat(): number {
   if (!playing || !ctx) return useAudioStore.getState().currentBeat
-  const bpm = useProjectStore.getState().project.bpm || 120
-  // the first moments after play lie slightly before the scheduled start: never report a negative step
-  return startBeat + Math.max(0, ((ctx.currentTime - startCtxTime) * bpm) / 60)
+  commitLoop()
+  const p = useProjectStore.getState().project
+  // the first moments after play (and the count-in) lie before the scheduled start: never report an earlier beat
+  return secToBeat(p, beatToSec(p, startBeat) + Math.max(0, ctx.currentTime - startCtxTime))
+}
+
+export function activeLoop(p: Project): { start: number; end: number } | null {
+  const l = p.loop
+  return l && l.enabled && l.end - l.start > 0.05 ? { start: l.start, end: l.end } : null
 }
 
 async function loadAllFiles(p: Project): Promise<void> {
   const files = new Set<string>()
-  const synced = new Map<string, [string, number]>()
+  const synced = new Map<string, [string, number, number]>()
+  const marked: Array<[Clip, number, number]> = []
   for (const t of p.tracks) {
     for (const c of t.clips) {
       if (!c.audioFile) continue
       files.add(c.audioFile)
-      if (c.warpBpm) synced.set(warpKey(c.audioFile, c.warpBpm, p.bpm), [c.audioFile, c.warpBpm])
+      const tempo = bpmAt(p, c.startTime)
+      if (c.warpMarkers?.length) marked.push([c, sourceSecPerBeat(c.warpBpm, tempo), 60 / tempo])
+      else if (c.warpBpm) synced.set(warpKey(c.audioFile, c.warpBpm, tempo), [c.audioFile, c.warpBpm, tempo])
     }
   }
   await Promise.all([...files].map((f) => loadBuffer(f)))
-  await Promise.all([...synced.values()].map(([f, b]) => loadWarped(f, b, p.bpm)))
+  await Promise.all([...synced.values()].map(([f, b, tempo]) => loadWarped(f, b, tempo)))
+  await Promise.all(marked.map(([c, a, b]) => loadMarkerWarp(c, a, b)))
 }
 
+// everything that needs a new schedule when it changes (fader moves and mute/solo do not)
 function structureSignature(p: Project): string {
-  return p.bpm + '|' + p.tracks.map((t) =>
-    `${t.id}:${t.type}:${t.name}:` + t.clips.map((c) =>
-      `${c.id},${c.startTime},${c.duration},${c.offset ?? 0},${c.audioFile ?? ''},${c.gain ?? 1},${c.warpBpm ?? 0},${c.fadeIn ?? 0},${c.fadeOut ?? 0},` +
-      (c.notes ?? []).map((n) => `${n.pitch}/${n.startTime}/${n.duration}/${n.velocity}`).join(';')
-    ).join('~')
-  ).join('#')
+  return JSON.stringify([
+    p.bpm, p.tempoMap ?? [], p.returns?.map((r) => [r.id, r.effect, r.decay, r.delayBeats, r.feedback]) ?? [],
+    p.tracks.map((t) => [
+      t.id, t.type, t.name, t.parentId ?? '', t.automation ?? {}, Object.keys(t.sends ?? {}).filter((k) => (t.sends?.[k] ?? 0) > 0),
+      t.clips.map((c) => [c.id, c.startTime, c.duration, c.offset ?? 0, c.audioFile ?? '', c.gain ?? 1, c.warpBpm ?? 0, c.fadeIn ?? 0, c.fadeOut ?? 0,
+        c.warpMarkers ?? [], (c.notes ?? []).map((n) => `${n.pitch}/${n.startTime}/${n.duration}/${n.velocity}`).join(';')])
+    ])
+  ])
 }
 
-async function startAt(beat: number): Promise<void> {
+// clicks for the count-in: `bars` bars ending at context time `end`, in the tempo of `beat`
+function scheduleCountIn(c: AudioContext, end: number, beat: number, barsCount: number): number {
+  const p = useProjectStore.getState().project
+  const bar = barAt(p, beat)
+  const spb = 60 / bpmAt(p, beat)
+  const beatsPerBar = Math.max(1, Math.round(bar.length))
+  const n = barsCount * beatsPerBar
+  const pre = n * spb
+  for (let k = 0; k < n; k++) playClick(c, master!, end - pre + k * spb, k % beatsPerBar === 0)
+  return pre
+}
+
+async function startAt(beat: number, countInBars = 0): Promise<void> {
   const my = ++epoch
   const c = ensureContext()
   if (c.state === 'suspended') await c.resume()
@@ -334,11 +526,15 @@ async function startAt(beat: number): Promise<void> {
   if (my !== epoch) return                                        // stopped or restarted meanwhile
   const latest = useProjectStore.getState().project
   lastSignature = structureSignature(latest)
-  const when = c.currentTime + 0.06
-  current = scheduleProject(c, master!, latest, beat, when)
+  let when = c.currentTime + 0.06
+  if (countInBars > 0) when += scheduleCountIn(c, when + 60 / bpmAt(latest, beat) * Math.round(barAt(latest, beat).length) * countInBars, beat, countInBars)
+  const loop = activeLoop(latest)
+  current = scheduleProject(c, master!, latest, beat, when, loop && beat < loop.end ? { untilBeat: loop.end } : {})
+  pendingLoop = null
   startCtxTime = when
   startBeat = beat
   playing = true
+  recPlayStart = when
   useAudioStore.setState({ isPlaying: true })
   metroBeat = Math.ceil(beat - 1e-6)
   tick()
@@ -346,14 +542,30 @@ async function startAt(beat: number): Promise<void> {
   metroTimer = window.setInterval(metronomeTick, 40)
 }
 
+// a little before the loop end, the next pass is scheduled to start exactly at the end: no gap
+function prepareLoop(): void {
+  if (!ctx || !master || pendingLoop || !current) return
+  const p = useProjectStore.getState().project
+  const loop = activeLoop(p)
+  if (!loop || startBeat >= loop.end) return
+  const endTime = startCtxTime + beatToSec(p, loop.end) - beatToSec(p, startBeat)
+  if (endTime - ctx.currentTime > 0.35) return
+  current.stopAt(endTime)
+  const sched = scheduleProject(ctx, master, p, loop.start, endTime, { untilBeat: loop.end })
+  pendingLoop = { when: endTime, beat: loop.start, sched }
+  if (recorder) loopWraps.push(endTime)
+}
+
 function tick(): void {
   cancelAnimationFrame(raf)
   const frame = (): void => {
     if (!playing) return
+    prepareLoop()
     const beat = currentBeat()
     useAudioStore.setState({ currentBeat: beat })
-    const end = projectEndBeat(useProjectStore.getState().project)
-    if (end > 0 && beat > end + 1 && !useAudioStore.getState().isRecording) {
+    const p = useProjectStore.getState().project
+    const end = projectEndBeat(p)
+    if (!activeLoop(p) && end > 0 && beat > end + 1 && !useAudioStore.getState().isRecording) {
       stop()                                                       // reached the end
       return
     }
@@ -368,12 +580,15 @@ function metronomeTick(): void {
     if (playing && ctx) metroBeat = Math.max(metroBeat, Math.ceil(currentBeat()))
     return
   }
-  const { project } = useProjectStore.getState()
-  const spb = 60 / (project.bpm || 120)
-  const perBar = project.timeSignature?.[0] || 4
-  while (startCtxTime + (metroBeat - startBeat) * spb < ctx.currentTime + 0.25) {
-    const at = startCtxTime + (metroBeat - startBeat) * spb
-    if (at >= ctx.currentTime) playClick(ctx, master, at, metroBeat % perBar === 0)
+  commitLoop()
+  const project = useProjectStore.getState().project
+  const loop = activeLoop(project)
+  const base = beatToSec(project, startBeat)
+  for (;;) {
+    if (loop && startBeat < loop.end && metroBeat >= loop.end - 1e-6) break     // the next pass clicks itself
+    const at = startCtxTime + beatToSec(project, metroBeat) - base
+    if (at >= ctx.currentTime + 0.25) break
+    if (at >= ctx.currentTime) playClick(ctx, master, at, isDownbeat(project, metroBeat))
     metroBeat++
   }
 }
@@ -383,13 +598,19 @@ export async function play(): Promise<void> {
   await startAt(useAudioStore.getState().currentBeat)
 }
 
+function halt(): void {
+  current?.stop()
+  pendingLoop?.sched.stop()
+  current = null
+  pendingLoop = null
+  playing = false
+}
+
 export function pause(): void {
   epoch++
   if (playing) {
     const beat = currentBeat()
-    current?.stop()
-    current = null
-    playing = false
+    halt()
     window.clearInterval(metroTimer)
     cancelAnimationFrame(raf)
     useAudioStore.setState({ isPlaying: false, currentBeat: beat })
@@ -407,9 +628,7 @@ export function stop(): void {
 export function seek(beat: number): void {
   const b = Math.max(0, beat)
   if (playing) {
-    current?.stop()
-    current = null
-    playing = false
+    halt()
     void startAt(b)
   } else {
     useAudioStore.setState({ currentBeat: b })
@@ -422,9 +641,7 @@ function restartSoon(): void {
   restartTimer = window.setTimeout(() => {
     if (!playing) return
     const beat = currentBeat()
-    current?.stop()
-    current = null
-    playing = false
+    halt()
     void startAt(beat)
   }, 90)
 }
@@ -432,18 +649,32 @@ function restartSoon(): void {
 function applyMix(): void {
   if (!playing || !current || !ctx) return
   const project = useProjectStore.getState().project
-  const anySolo = project.tracks.some((t) => t.soloed)
-  for (const t of project.tracks) {
-    const s = current.strips.get(t.id)
-    if (!s) continue
-    s.gain.gain.setTargetAtTime(audibleGain(t, anySolo), ctx.currentTime, 0.012)
-    s.pan.pan.setTargetAtTime(Math.max(-1, Math.min(1, t.pan)), ctx.currentTime, 0.012)
+  const now = ctx.currentTime
+  for (const sched of [current, pendingLoop?.sched]) {
+    if (!sched) continue
+    for (const t of project.tracks) {
+      const s = sched.strips.get(t.id)
+      if (!s) continue
+      s.mute.gain.setTargetAtTime(isAudible(t, project.tracks) ? 1 : 0, now, 0.012)
+      if (!hasAutomation(t, 'volume')) s.gain.gain.setTargetAtTime(t.volume, now, 0.012)
+      if (!hasAutomation(t, 'pan')) s.pan.pan.setTargetAtTime(Math.max(-1, Math.min(1, t.pan)), now, 0.012)
+      for (const [rid, send] of s.sends) if (!hasAutomation(t, `send:${rid}`)) send.gain.setTargetAtTime(t.sends?.[rid] ?? 0, now, 0.012)
+    }
+    for (const r of project.returns ?? []) {
+      const s = sched.returns.get(r.id)
+      if (!s) continue
+      s.mute.gain.setTargetAtTime(r.muted ? 0 : 1, now, 0.012)
+      s.gain.gain.setTargetAtTime(r.volume, now, 0.012)
+      s.pan.pan.setTargetAtTime(Math.max(-1, Math.min(1, r.pan ?? 0)), now, 0.012)
+    }
   }
 }
 
 useProjectStore.subscribe((s, prev) => {
   if (s.project === prev.project || !playing) return
-  if (structureSignature(s.project) !== lastSignature) restartSoon()
+  const sig = structureSignature(s.project)
+  // a new send (level from 0 to more) needs its connection: that changes the signature too
+  if (sig !== lastSignature) restartSoon()
   else applyMix()
 })
 
@@ -468,8 +699,10 @@ function peakOfAnalyser(a: AnalyserNode): number {
 }
 
 export function trackLevel(trackId: string): number {
-  const s = current?.strips.get(trackId)
-  return playing && s ? peakOfAnalyser(s.analyser) : 0
+  if (!playing) return 0
+  commitLoop()
+  const s = current?.strips.get(trackId) ?? current?.returns.get(trackId)
+  return s ? peakOfAnalyser(s.analyser) : 0
 }
 
 export function masterLevel(): number {
@@ -517,6 +750,8 @@ let recStream: MediaStream | null = null
 let recChunks: Blob[] = []
 let recTrackId: string | null = null
 let recStartBeat = 0
+let recCtxStart = 0                  // context time when the recorder started
+let recPlayStart = 0                 // context time when the music (after the count-in) started
 
 export async function startRecording(): Promise<string | null> {
   if (recorder) return null
@@ -537,15 +772,51 @@ export async function startRecording(): Promise<string | null> {
     useAudioStore.setState({ isRecording: false })
     return `No microphone access: ${(e as Error).message}`
   }
+  const c = ensureContext()
+  if (c.state === 'suspended') await c.resume()
   recChunks = []
   recTrackId = trackId
-  recStartBeat = currentBeat()
+  loopWraps.length = 0
+  const project = useProjectStore.getState().project
+  const countIn = Math.max(0, Math.min(4, project.countIn ?? 0))
   recorder = new MediaRecorder(recStream)
   recorder.ondataavailable = (e) => { if (e.data.size) recChunks.push(e.data) }
   recorder.start(250)
+  recCtxStart = c.currentTime
   useAudioStore.setState({ isRecording: true })
-  if (!playing) void play()
+  if (playing) {
+    recStartBeat = currentBeat()
+    recPlayStart = recCtxStart                                    // already playing: the music is "now"
+  } else {
+    recStartBeat = useAudioStore.getState().currentBeat
+    await startAt(recStartBeat, countIn)
+  }
   return null
+}
+
+// what one recorded stretch becomes: a clip on the timeline (beats) that reads the file from `offset`
+interface Piece { startBeat: number; endBeat: number; offset: number }
+
+export function recordingPieces(p: Project, startBeatRec: number, recSeconds: number, lead: number, wraps: number[],
+  loop: { start: number; end: number } | null): Piece[] {
+  const pieces: Piece[] = []
+  const at = (beat: number): number => beatToSec(p, beat)
+  if (!loop || !wraps.length) {
+    const endBeat = secToBeat(p, at(startBeatRec) + Math.max(0, recSeconds - lead))
+    if (endBeat > startBeatRec) pieces.push({ startBeat: startBeatRec, endBeat, offset: lead })
+    return pieces
+  }
+  // first pass: from where the recording started to the loop end; then one pass per loop
+  let fileAt = lead
+  let from = startBeatRec
+  for (let k = 0; k <= wraps.length; k++) {
+    const passSec = k < wraps.length ? (k === 0 ? wraps[0] - lead : wraps[k] - wraps[k - 1]) : recSeconds - fileAt
+    const endBeat = Math.min(loop.end, secToBeat(p, at(from) + Math.max(0, passSec)))
+    if (endBeat - from > 0.05) pieces.push({ startBeat: from, endBeat, offset: fileAt })
+    fileAt += Math.max(0, passSec)
+    from = loop.start
+  }
+  return pieces
 }
 
 export async function stopRecording(): Promise<void> {
@@ -565,17 +836,42 @@ export async function stopRecording(): Promise<void> {
     const buf = await decoder.decodeAudioData(raw)
     const wav = encodeWav(buf, 16)
     const path = await window.api.files.saveRecording(wav)
-    buffers.set(path, buf)
-    const bpm = useProjectStore.getState().project.bpm
-    useProjectStore.getState().addClip(recTrackId, {
-      startTime: recStartBeat, duration: secToBeats(buf.duration, bpm), audioFile: path, name: 'Recording'
+    putBuffer(path, buf)
+    const project = useProjectStore.getState().project
+    const loop = activeLoop(project)
+    const wraps = loopWraps.map((t) => t - recCtxStart)
+    const lead = Math.max(0, recPlayStart - recCtxStart)
+    let pieces = recordingPieces(project, recStartBeat, buf.duration, lead, wraps, loop)
+    // punch in / out: only what lies inside the loop range is kept
+    const range = project.loop
+    if (range && (project.punchIn || project.punchOut) && !wraps.length) {
+      pieces = pieces.map((pc) => {
+        const s = project.punchIn ? Math.max(pc.startBeat, range.start) : pc.startBeat
+        const e = project.punchOut ? Math.min(pc.endBeat, range.end) : pc.endBeat
+        return { startBeat: s, endBeat: e, offset: pc.offset + beatToSec(project, s) - beatToSec(project, pc.startBeat) }
+      }).filter((pc) => pc.endBeat - pc.startBeat > 0.05)
+    }
+    if (!pieces.length) return
+    const toClip = (pc: Piece, name: string): Omit<Clip, 'id'> => ({
+      startTime: pc.startBeat, duration: pc.endBeat - pc.startBeat, audioFile: path, offset: pc.offset, name
     })
+    const st = useProjectStore.getState()
+    if (pieces.length === 1) {
+      st.addClip(recTrackId, toClip(pieces[0], 'Recording'))
+      return
+    }
+    // loop recording: every pass in its own take lane; the last pass plays on the track (comp it from the lanes)
+    const track = st.project.tracks.find((t) => t.id === recTrackId)
+    const first = (track?.takes?.length ?? 0) + 1
+    const lanes = pieces.map((pc, i) => ({ id: nanoid(), name: `Take ${first + i}`, clips: [{ ...toClip(pc, `Take ${first + i}`), id: nanoid() }] }))
+    st.updateTrack(recTrackId, { takes: [...(track?.takes ?? []), ...lanes], showTakes: true })
+    st.addClip(recTrackId, toClip(pieces[pieces.length - 1], `Take ${first + pieces.length - 1}`))
   } catch (e) {
     console.warn('[audio] recording failed', e)
   }
 }
 
-// ── export ───────────────────────────────────────────────────────────────────
+// ── offline rendering: export and consolidate ────────────────────────────────
 
 export interface MixResult { wav: Uint8Array; seconds: number; peak: number }
 
@@ -585,7 +881,7 @@ export async function renderMix(opts: { bits: 16 | 24; normalize: boolean; tailS
   const sr = 44100
   const endBeat = projectEndBeat(project)
   if (endBeat <= 0) throw new Error('The project is empty: nothing to export.')
-  const seconds = beatsToSec(endBeat, project.bpm) + (opts.tailSeconds ?? 2)
+  const seconds = beatToSec(project, endBeat) + (opts.tailSeconds ?? 2)
   const off = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr)
   const out = off.createGain()
   out.gain.value = useAudioStore.getState().masterVolume
@@ -595,4 +891,18 @@ export async function renderMix(opts: { bits: 16 | 24; normalize: boolean; tailS
   const peak = peakOf(rendered)
   const gain = opts.normalize && peak > 0 ? 0.891 / peak : 1                 // -1 dBFS
   return { wav: encodeWav(rendered, opts.bits, gain), seconds, peak: peak * gain }
+}
+
+// The selected audio clips of one track rendered into one new file (Ableton "Consolidate", Cubase
+// "Bounce selection"): clip gain, fades, crossfades, sync and warp markers are included, the track's fader,
+// pan, sends and automation are not.
+export async function renderClips(project: Project, clips: Clip[], fromBeat: number, toBeat: number): Promise<AudioBuffer> {
+  const solo: Track = { id: 'render', name: 'render', type: 'audio', color: '#000', volume: 1, pan: 0, muted: false, soloed: false, clips }
+  const p: Project = { ...project, tracks: [solo], returns: [] }
+  await loadAllFiles(p)
+  const sr = 44100
+  const seconds = beatToSec(p, toBeat) - beatToSec(p, fromBeat)
+  const off = new OfflineAudioContext(2, Math.max(1, Math.ceil(seconds * sr)), sr)
+  scheduleProject(off, off.destination, p, fromBeat, 0, { untilBeat: toBeat })
+  return off.startRendering()
 }

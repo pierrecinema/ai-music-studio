@@ -40,7 +40,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 3.3 | Create loop, 4 Takte, 120 BPM | Titel „… Loop 120 BPM 4 bars“, wiederholt sich nahtlos | ✅ | | |
 | 3.4 | Abbrechen während der Erzeugung | stoppt innerhalb weniger Sekunden | ✅ | | |
 | 3.5 | Tags eintragen | Tags erscheinen in der Library | ✅ | | |
-| 3.6 | ACE-Step 1.5 (falls installiert): kurzer Song mit Text | Song mit Gesang (langsam auf dem Prozessor) | ❌ | | hat nie funktioniert: Log/Fehlermeldung nachreichen |
+| 3.6 | ACE-Step 1.5 (falls installiert): kurzer Song mit Text | Song mit Gesang (langsam auf dem Prozessor) | ✅ | | geht seit 0.18.7 (siehe 6b.7) |
 
 ## 4. Library
 
@@ -96,7 +96,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6b.3 | Piano Roll: MIDI-Spur → Doppelklick (Clip) → Piano Roll → Noten zeichnen **ohne** Quantize | Noten erscheinen und lassen sich verschieben; Ton klingt sauber | | | |
 | 6b.4 | Viele Noten gleichzeitig abspielen (z. B. → MIDI eines Stems) | kein hartes Verzerren mehr | | | |
 | 6b.4b | Piano Roll: mehrere Noten zeichnen, in die Piano Roll klicken, Strg+A → Quantize; mit „Select“ einen Rahmen um Noten ziehen → verschieben / Entf | alle bzw. die eingerahmten Noten werden gewählt, zusammen verschoben, quantisiert oder gelöscht | ✅ | |  |
-| 6b.7 | ACE-Step 1.5 neu installieren (AI Engines → Haken → Install selected), dann kurzer Song | Install endet grün, Song entsteht (langsam); sonst Fehlermeldung an Claude | ⏳ | | 0.18.7: Install ✅; Song läuft (78 % nach 3 Min., bei 80 % „Decoding audio…“ einige Minuten ohne Fortschritt auf dem Prozessor) |
+| 6b.7 | ACE-Step 1.5 neu installieren (AI Engines → Haken → Install selected), dann kurzer Song | Install endet grün, Song entsteht (langsam); sonst Fehlermeldung an Claude | ✅ | | 0.18.7: Install ✅, Song ✅ („sehr gut“); 78 % nach 3 Min., bei 80 % „Decoding audio…“ einige Minuten ohne Fortschritt auf dem Prozessor |
 | 6b.8 | App zweimal starten | zweites Mal kommt nur das offene Fenster nach vorne | ✅ | |  |
 | 6b.9 | neu (0.18.5): Neues Projekt, einen ganzen Song (über 90 s) einfügen → Sync to … BPM, Metronom an, abspielen, auch nach 2–3 Minuten | Kick liegt auf den Klicks, Takt 1 des Songs auf einem Taktstrich, kein Auseinanderlaufen | ⏳ | | 0.18.7: läuft mit, aber Start nicht ganz genau → 0.18.8 (Schlag für Schlag gestreckt) neu testen, auch schon den ersten Kick |
 | 6b.11 | neu (0.18.7): blaue Abspiel-Linie mit der Maus an eine andere Stelle ziehen, auch während der Song läuft; in den Taktzahlen klicken und ziehen | Linie folgt der Maus (rastet aufs Raster, Alt = frei), beim Loslassen spielt der Song dort weiter | ✅ | | |

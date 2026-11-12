@@ -648,8 +648,13 @@ function halt(): void {
   playing = false
 }
 
+// called when the transport stops (MIDI recording ends there)
+const stopHooks: Array<() => void> = []
+export function onTransportStop(fn: () => void): void { stopHooks.push(fn) }
+
 export function pause(): void {
   epoch++
+  for (const fn of stopHooks) { try { fn() } catch { /* a hook must not stop the transport from stopping */ } }
   if (playing) {
     const beat = currentBeat()
     halt()

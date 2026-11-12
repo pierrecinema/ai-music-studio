@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAudioStore } from '../../stores/audio.store'
 import { useProjectStore } from '../../stores/project.store'
-import { masterLevel, pause, play, startRecording, stop } from '../../audio/engine'
+import { masterLevel, pause, play, stop } from '../../audio/engine'
+import { startAnyRecording } from '../../audio/midiRecord'
 import { historySize, redo, undo } from '../../shortcuts/history'
 import { FileMenu } from './FileMenu'
 import { runSyncAll, runSyncSelected, selectedAudioIds, useBeatMatch } from '../../beatmatch/store'
@@ -98,7 +99,7 @@ export function TopBar(): React.ReactElement {
 
   const toggleRecord = async (): Promise<void> => {
     if (isRecording) { pause(); return }
-    const problem = await startRecording()
+    const problem = await startAnyRecording()                    // MIDI on a MIDI track / in the Piano Roll
     if (problem) window.alert(problem)
   }
 

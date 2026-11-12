@@ -109,6 +109,20 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6b.16 | neu (0.18.13): ACE-Step-1.5-Song mit Text (z. B. 90 s), im Studio ans Ende zoomen | Gesang ist drin (12.11. ✅); Clip endet dort, wo die Musik ausklingt, keine Sekunde Stille dahinter | | | |
 | 6b.10 | neu (0.18.6): 2–3 Songs/Loops/Stems an verschiedenen Stellen einfügen, alle markieren (Strg+A oder Rahmen) → „Sync together“ (oder AUTO SYNC) | alle auf Master-BPM, Takt 1 von jedem auf demselben Taktstrich, starten gleichzeitig und laufen synchron (auch nach 2–3 Min.) | ✅ | | |
 
+## 6c. Neu in 0.20.0
+
+| # | Test | Erwartet | A | B | Notiz |
+|---|---|---|---|---|---|
+| 6c.1 | Studio: **A** an einer Spur | Volume und Pan als zwei eigene Spuren darunter; ▾/▸ macht eine klein; Punkte setzen geht | | | |
+| 6c.2 | Studio: **FX** an einer Spur → + Effect… Delay, dann EQ; abspielen, Regler bewegen, ⏻ aus/an | Effekt hörbar, Bypass hörbar, auch im Export | | | |
+| 6c.3 | Rechtsklick auf Spurkopf (oder Farbstreifen links) → Farbe wählen | Spur und Clips in der neuen Farbe | | | |
+| 6c.4 | MIDI-Spur wählen, Piano Roll → **● Rec** (oder Strg+R), auf der Klaviatur links spielen; mit MIDI-Keyboard, falls vorhanden | Noten erscheinen als Kästchen, so lang wie gehalten; Strg+R stoppt | | | |
+| 6c.5 | Create: Text eingeben, **[Chorus]**-Knopf, **Auto structure** | Abschnitte werden eingefügt bzw. automatisch gesetzt | | | |
+| 6c.6 | Create (ACE-Step 1.5): **Preview voices** → 3 Proben → **Use this voice** → Create | 3 kurze Proben, nicht in der Library; Song mit der gewählten Stimme (ähnlich) | | | |
+| 6c.7 | Create: LoRA-Liste bei ACE-Step 1.5 und bei v1 | passende LoRAs normal, unpassende grau mit Grund | | | |
+| 6c.8 | Settings → AI → Gemini mit Key; AI Chat | Antwort von Gemini | | | |
+| 6c.9 | Positionsanzeige oben anklicken; Channel-Tab Pan | wechselt zu Minuten:Sekunden; Pan zeigt L/R und „Center“ | | | |
+
 ## 7. Mastering, AI Chat, Sonstiges (wird zuerst umgebaut)
 
 | # | Test | Erwartet | A | B | Notiz |

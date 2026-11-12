@@ -7,7 +7,7 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 |---|---|
 | **Import audio…** | wav, mp3, flac, ogg, m4a, aiff onto a track (dragging files from Explorer works too) |
 | **+ Audio track / + MIDI track** | adds a track |
-| **+ Return… (Reverb / Delay)** | a shared reverb or delay; every track sends to it with its send knob |
+| **+ Return… (Reverb / Delay)** | a shared reverb or delay; every track sends to it with its send knob (effects for one track: **FX** on the track) |
 | **Sync all to … BPM** / **Sync N selected** | brings all audio (or the selected clips, together) in time with the master BPM: [[Beat Matching and Sync]] |
 | **Beat match…** | measures the selected audio clip and offers to sync it |
 | **Grid / Snap** | grid from 1 bar to 1/64, triplets, *Off (free)*; hold **Alt** to move freely once |
@@ -42,11 +42,17 @@ The blue line shows where the song plays. **Click or double-click** any empty pl
 - **Tempo track:** double-click to add a tempo change, drag to move it, right-click to set the BPM or delete.
 
 ## Automation
-**A** (Ableton) or the button on the track: a volume or pan lane. Click adds a point, drag moves it (Shift: only in time, Alt: off the grid), double-click deletes, **Clear** removes all.
+**A** on the track (Ableton: A; or right-click → *Show automation*) opens **volume and pan** as two lanes below the track. In each lane: click adds a point, drag moves it (Shift: only in time, Alt: off the grid), double-click deletes it, **Clear** removes all. **▾ / ▸** makes a lane small, the selector switches it to another value (pan, a send), **+** adds a lane, **×** closes it (the points stay). Playback and export follow the curves.
 
-## Recording, takes
-Red record button: records onto the selected audio track. In a loop, every pass becomes a take in its own lane (**T** on the track shows them); click a take to use it.
+## Effects (FX)
+**FX** on the track opens its effects lane: **+ Effect…** adds an **EQ** (low / mid / high), **compressor**, **delay** (in beats), **reverb** or **filter** (low-pass / high-pass). Every effect has its settings as sliders (double-click: default), ⏻ on / bypass, ◀ ▶ for the order and × to remove it. The sound goes through them in order, before the fader. VST3 plugins will appear here later.
 
+## Track colour
+Right-click a track header, or click the colour strip at its left: pick a colour from the palette or any colour.
+
+## Recording
+**MIDI:** select a MIDI track (or open the Piano Roll) and press ● (top bar), **Ctrl+R** or **● Rec** in the Piano Roll. The song plays; what you play on the Piano Roll's keyboard or on a MIDI keyboard becomes notes in the clip, as long as you hold the keys. Press again or Space to stop.
+**Audio:** on an audio track the same buttons record from the microphone or audio interface. In a loop, every pass becomes a take in its own lane (**T** on the track shows them); click a take to use it.
 ## Warp markers
 Right-click → *Edit warp markers*: double-click the waveform to set a marker, drag it onto another beat (the audio between is stretched without changing the pitch), Alt+click deletes it.
 

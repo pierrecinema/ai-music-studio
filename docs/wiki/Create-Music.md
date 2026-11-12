@@ -20,7 +20,8 @@ Make songs and loops with AI on your own PC. Two modes at the top: **Simple** (s
 ## Lyrics
 - **Instrumental**, or **A cappella (voice only)**: only the singing, no instruments (the app removes leftover sounds with Demucs). Needs a model that can sing.
 - **Language**, **Voice** (any / male / female).
-- **Lyrics** with section tags like `[Verse]`, `[Chorus]`, `[Bridge]`. ✨ lets the AI write lyrics.
+- **Lyrics:** the buttons **[Intro] [Verse] [Pre-Chorus] [Chorus] [Bridge] [Outro]** insert a section at the cursor; **Auto structure** turns stanzas (separated by an empty line) into verses and choruses; lyrics without sections are structured automatically. ✨ lets the AI write lyrics.
+- **🎤 Preview voices (3 × 20 s):** three short takes of your first lines, each with another voice (ACE-Step). **Use this voice** fixes it (its seed) for the whole song; similar, but not always identical, because the song is longer.
 
 ## Song parameters
 Length (seconds), BPM, key, time signature. **Auto** leaves it to the model; **Complete the metadata** fills the fields with AI.
@@ -33,6 +34,7 @@ A source track for a cover or remix, and a reference for the sound.
 
 ## LoRA
 Style or sound add-ons for ACE-Step:
+- The **+ Add LoRA** list shows the LoRAs that fit the chosen model; the others are greyed out with the reason.
 - **Import LoRA file… / folder…** (`.safetensors`, `.pt`, `.bin`), **+ Add LoRA**, strength slider. One LoRA is used per run (the strongest).
 - **Find LoRA on Hugging Face…:** search, see license, likes and downloads, check if it fits the engine, **Download** with progress.
 - **Which LoRA fits which model:** ACE-Step v1 uses LoRAs made for v1. **ACE-Step 1.5 turbo** uses LoRAs made for ACE-Step 1.5 (a folder with `adapter_config.json`); LoRAs for the larger **XL** model ("xl" in the name) do not fit turbo and are left out with a note.

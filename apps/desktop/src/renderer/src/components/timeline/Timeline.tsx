@@ -335,10 +335,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
 
   const laneDoubleClick = async (e: React.MouseEvent, track: Track): Promise<void> => {
     const beat = snap(beatAt(e.clientX), false)
-    if (track.type === 'audio') {
-      const problems = await pickAndImport({ trackId: track.id, startBeat: beat })
-      if (problems.length) setMessage(problems.join(' '))
-    } else if (NOTE_TYPES.includes(track.type)) {
+    seek(Math.max(0, snapBeat(beatAt(e.clientX), e.altKey)))       // double-click anywhere: the playhead jumps there
+    if (NOTE_TYPES.includes(track.type)) {
       const bar = (project.timeSignature?.[0] ?? 4)
       const start = Math.floor(beat / bar) * bar
       addClip(track.id, { startTime: start, duration: bar, notes: [], name: 'MIDI clip' })
@@ -371,7 +369,13 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         for (const c of r.track.clips) if (c.startTime < bx1 && c.startTime + c.duration > bx0) ids.push(c.id)
       })
       selectClips([...new Set([...before, ...ids])])
-    }, () => { setFrame(null); if (!moved && !add) selectClip(null) })
+    }, (ev) => {
+      setFrame(null)
+      if (moved) return
+      if (!add) selectClip(null)
+      // a click (no drag) on an empty place: the playhead jumps there (snapped to the grid, Alt: free)
+      seek(Math.max(0, snapBeat(x0 / beatWidth, ev.altKey)))
+    })
   }
 
   // ── drag and drop of files from the desktop ────────────────────────────────
@@ -843,12 +847,13 @@ function ClipInspector({ trackId, clip, bpm, warpEdit, onWarpEdit }: { trackId: 
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
         {clip.warpBpm ? (
           <>
-            <span title="Tempo of this audio: correct it by hand if the measurement is slightly off">Tempo</span>
+            <span title="The tempo the song itself was made at (measured). It is NOT the project tempo: that is BPM at the top. Correct it here only if the measurement is off (half or double, or a little); SYNC then keeps your value.">Song tempo</span>
             <input key={`bp${clip.id}${clip.warpBpm}`} defaultValue={String(clip.warpBpm)} style={{ width: 56 }}
               onBlur={(e) => { const v = parseFloat(e.target.value.replace(',', '.')); if (v && v !== clip.warpBpm) retune(trackId, clip.id, v) }}
               onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} />
             <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 6px' }} title="Half speed" onClick={() => retune(trackId, clip.id, clip.warpBpm! / 2)}>÷2</button>
             <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 6px' }} title="Double speed" onClick={() => retune(trackId, clip.id, clip.warpBpm! * 2)}>×2</button>
+            <span style={{ color: 'var(--text-muted)' }} title="Plays at the project tempo (BPM at the top)">→ {Math.round(bpm * 100) / 100} project</span>
           </>
         ) : <span style={{ color: 'var(--text-muted)' }}>not synced</span>}
         <button className="btn btn-primary" style={{ fontSize: 10, padding: '1px 8px' }} disabled={busy} title="Stretch this audio to the master BPM and put its beats on the project beats"

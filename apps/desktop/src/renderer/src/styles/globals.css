@@ -159,7 +159,7 @@ html, body, #root {
   -webkit-app-region: no-drag;
 }
 .tb-bpm input {
-  width: 42px;
+  width: 58px;
   background: transparent; border: none; outline: none;
   font-size: 15px; font-weight: 700;
   color: var(--accent-light);

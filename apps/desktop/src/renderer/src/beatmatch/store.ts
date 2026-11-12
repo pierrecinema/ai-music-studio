@@ -184,14 +184,16 @@ export function retune(trackId: string, clipId: string, bpm: number): boolean {
   if (!clip || !(bpm >= 40 && bpm <= 300)) return false
   const projectBpm = useProjectStore.getState().project.bpm
   const seconds = clip.duration * sourceSecPerBeat(clip.warpBpm, projectBpm)
-  useProjectStore.getState().updateClip(trackId, clipId, { warpBpm: bpm, duration: (seconds * bpm) / 60 })
+  useProjectStore.getState().updateClip(trackId, clipId, { warpBpm: bpm, duration: (seconds * bpm) / 60, tempoManual: true })
   return true
 }
 
 function proposalFor(trackId: string, clipId: string, r: { bpm: number | null; first_beat?: number | null; downbeat?: number | null }): Proposal | null {
   const clip = findClip(trackId, clipId)
   if (!clip?.audioFile || !r.bpm) return null
-  return { id: `one${clipId}`, trackId, clipId, path: clip.audioFile, name: clip.name ?? 'Audio', firstAudio: false, status: 'ready', bpm: r.bpm, firstBeat: r.first_beat ?? 0, downbeat: (r as { downbeat?: number | null }).downbeat ?? undefined }
+  // a tempo corrected by hand in the clip bar wins over the measurement (SYNC used to put the measured one back)
+  const bpm = clip.tempoManual && clip.warpBpm ? clip.warpBpm : r.bpm
+  return { id: `one${clipId}`, trackId, clipId, path: clip.audioFile, name: clip.name ?? 'Audio', firstAudio: false, status: 'ready', bpm, firstBeat: r.first_beat ?? 0, downbeat: (r as { downbeat?: number | null }).downbeat ?? undefined }
 }
 
 /** SYNC of one clip: measure (once), stretch to the master BPM, put its beats on the project beats. */

@@ -25,7 +25,7 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 - **Split at the playhead:** Ctrl+E (Cubase Alt+X). **Delete:** Del (Ctrl+Z brings it back).
 - **Track height:** drag the lower edge of a track up or down; double-click the edge for the normal height.
 - **Rename a track:** double-click its name. **Reorder:** drag the `⋮⋮` grip. **Zoom:** Ctrl+mouse wheel.
-- **Clip bar** (selected audio clip): gain, fade in/out, tempo field, **SYNC**, **MASTER**.
+- **Clip bar** (selected audio clip): gain, fade in/out, **Song tempo** (the tempo the song itself was made at, not the project tempo; correct it only if the measurement is off), **SYNC**, **MASTER**.
 
 ## Right-click on a clip
 **SYNC to the master BPM** (or **SYNC the N selected clips together**), **Make this the MASTER tempo**, **Split at the playhead**, **Duplicate clip**, **Quantize**, **Consolidate selection (Ctrl+J)**, **Crossfade with the clip before (X)**, **Loop this clip (Ctrl+L)**, **Edit warp markers**, **Split into stems (Demucs)** (progress at the top right, the stems arrive as new tracks in a group), **Delete clip**.
@@ -34,7 +34,7 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 **Rename track**, **Duplicate track**, **Show automation**, **Put into a new group (Ctrl+G)** / **Take out of the group** / **Ungroup**, **Delete track**.
 
 ## Playhead
-The blue line shows where the song plays. **Drag it** (the line or the small triangle on top) to any point, or **click or drag in the bar numbers** of the ruler. It snaps to the grid; hold **Alt** for a free position. While playing, playback jumps there when you let go. **Home** (Ableton) or **Num .** (Cubase) goes back to the start.
+The blue line shows where the song plays. **Click or double-click** any empty place to move it there, **drag it** (the line or the small triangle on top) to any point, or **click or drag in the bar numbers** of the ruler. It snaps to the grid; hold **Alt** for a free position. While playing, playback jumps there when you let go. **Home** (Ableton) or **Num .** (Cubase) goes back to the start.
 
 ## Ruler, markers, tempo
 - Click the ruler to set the playhead. **Right-click the ruler:** time signature from this bar on.

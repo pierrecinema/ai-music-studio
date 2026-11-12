@@ -93,6 +93,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.9
+
+- **ACE-Step 1.5 shows its phase:** at 80 % it decodes the song into audio, which takes a few minutes on the processor without further progress. The progress now says so ("Decoding audio…"), so a standing bar is not taken for a hang.
+
 ### New in 0.18.8
 
 - **Synced songs hit the beat exactly, from the first kick on:**

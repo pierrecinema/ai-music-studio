@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.18.9
+
+- **ACE-Step 1.5 shows its phase:** at 80 % it decodes the song into audio, which takes a few minutes on the processor without further progress. The progress now says so ("Decoding audio…"), so a standing bar is not taken for a hang.
+
 ## 0.18.8
 
 - **Synced songs hit the beat exactly, from the first kick on:**

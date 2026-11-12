@@ -3,6 +3,7 @@
 // with time-signature changes.
 import React, { useRef } from 'react'
 import { useProjectStore } from '../../stores/project.store'
+import { useAudioStore } from '../../stores/audio.store'
 import { seek } from '../../audio/engine'
 import { bars } from '../../audio/timemap'
 import { snapBeat } from '../../edit/grid'
@@ -64,6 +65,19 @@ export function Ruler({ beatWidth, totalBeats, popover }: { beatWidth: number; t
       const nb = Math.max(0, snapBeat(beat + b - b0, ev.altKey))
       updateMarker(id, m?.end !== undefined ? { beat: nb, end: nb + (m.end - m.beat) } : { beat: nb })
     }, () => { if (!moved) seek(beat) })
+  }
+
+  // click or drag in the bar numbers: the playhead follows the mouse; playback (if running) jumps there on release
+  const scrub = (e: React.PointerEvent): void => {
+    if (e.button !== 0) return
+    const at = (ev: { clientX: number; altKey: boolean }): number => Math.max(0, snapBeat(beatAt(ev.clientX), ev.altKey))
+    let last = at(e)
+    const playing = useAudioStore.getState().isPlaying
+    if (!playing) useAudioStore.setState({ currentBeat: last })
+    trackPointer((ev) => {
+      last = at(ev)
+      if (!playing) useAudioStore.setState({ currentBeat: last })
+    }, () => seek(last))
   }
 
   const editMarker = (e: React.MouseEvent, id: string): void => {
@@ -139,8 +153,8 @@ export function Ruler({ beatWidth, totalBeats, popover }: { beatWidth: number; t
         )}
       </div>
       {/* bar numbers */}
-      <div onMouseDown={(e) => { if (e.button === 0) seek(beatAt(e.clientX)) }} onContextMenu={editSignature}
-        title="Click: move the playhead. Right-click: change the time signature from this bar on"
+      <div onPointerDown={scrub} onContextMenu={editSignature}
+        title="Click or drag: move the playhead (Alt: off the grid). Right-click: change the time signature from this bar on"
         style={{ position: 'absolute', left: 0, right: 0, top: MARKER_H + LOOP_H, height: NUM_H, cursor: 'text' }}>
         {barList.map((b) => {
           const sig = `${b.num}/${b.den}`

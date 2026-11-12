@@ -32,6 +32,9 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 ## Right-click on a track header
 **Rename track**, **Duplicate track**, **Show automation**, **Put into a new group (Ctrl+G)** / **Take out of the group** / **Ungroup**, **Delete track**.
 
+## Playhead
+The blue line shows where the song plays. **Drag it** (the line or the small triangle on top) to any point, or **click or drag in the bar numbers** of the ruler. It snaps to the grid; hold **Alt** for a free position. While playing, playback jumps there when you let go. **Home** (Ableton) or **Num .** (Cubase) goes back to the start.
+
 ## Ruler, markers, tempo
 - Click the ruler to set the playhead. **Right-click the ruler:** time signature from this bar on.
 - **Markers:** double-click the marker row to add one, drag to move, click to jump, right-click to rename or delete. Double-click a cycle marker to loop that part.

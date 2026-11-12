@@ -763,18 +763,49 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
 }
 
 // The playhead is its own component: it changes every frame while playing and must not redraw the clips.
+// It can be dragged anywhere (the line or the handle on top): snapped to the grid, Alt for free. While playing, a
+// ghost line follows the mouse and playback jumps there on release.
 function Playhead({ scrollRef, beatWidth }: { scrollRef: React.RefObject<HTMLDivElement>; beatWidth: number }): React.ReactElement {
   const beat = useAudioStore((s) => s.currentBeat)
   const playing = useAudioStore((s) => s.isPlaying)
+  const [drag, setDrag] = useState<number | null>(null)
   useEffect(() => {
     const el = scrollRef.current
-    if (!el || !playing) return
+    if (!el || !playing || drag !== null) return
     const x = HEADER_WIDTH + beat * beatWidth
     if (x > el.scrollLeft + el.clientWidth - 60 || x < el.scrollLeft + HEADER_WIDTH) {
       el.scrollLeft = Math.max(0, x - HEADER_WIDTH - 80)         // follow the playhead
     }
-  }, [beat, playing, beatWidth, scrollRef])
-  return <div style={{ position: 'absolute', left: HEADER_WIDTH + beat * beatWidth, top: 0, width: 2, height: '100%', background: 'var(--accent)', zIndex: 7, pointerEvents: 'none' }} />
+  }, [beat, playing, beatWidth, scrollRef, drag])
+  const down = (e: React.PointerEvent<HTMLDivElement>): void => {
+    if (e.button !== 0) return
+    e.preventDefault(); e.stopPropagation()
+    const content = e.currentTarget.parentElement
+    if (!content) return
+    const at = (ev: PointerEvent | React.PointerEvent): number =>
+      Math.max(0, snapBeat((ev.clientX - content.getBoundingClientRect().left - HEADER_WIDTH) / beatWidth, ev.altKey))
+    let last = at(e)
+    const move = (ev: PointerEvent): void => {
+      last = at(ev)
+      if (useAudioStore.getState().isPlaying) setDrag(last)
+      else useAudioStore.setState({ currentBeat: last })
+    }
+    const up = (): void => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up)
+      setDrag(null)
+      seek(last)
+    }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
+  }
+  const x = HEADER_WIDTH + (drag ?? beat) * beatWidth
+  return (
+    <div onPointerDown={down} title="Drag to move the playhead (Alt: off the grid)"
+      style={{ position: 'absolute', left: x - 5, top: 0, width: 11, height: '100%', zIndex: 7, cursor: 'ew-resize', touchAction: 'none' }}>
+      <div style={{ position: 'absolute', left: 5, top: 0, width: 2, height: '100%', background: 'var(--accent)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', left: 0, top: 0, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '9px solid var(--accent)', pointerEvents: 'none' }} />
+      {drag !== null && <div style={{ position: 'absolute', left: 5, top: 0, width: 2, height: '100%', background: 'var(--accent-light)', opacity: 0.6, pointerEvents: 'none' }} />}
+    </div>
+  )
 }
 
 // Gain, tempo, fades and warp of the selected audio clip

@@ -5,6 +5,7 @@
 // The same scheduling code serves live playback (AudioContext) and export (OfflineAudioContext).
 
 import { nanoid } from 'nanoid'
+import { api } from '../lib/api'
 import { useAudioStore } from '../stores/audio.store'
 import { useProjectStore } from '../stores/project.store'
 import type { Clip, Project, Track } from '../types'
@@ -83,7 +84,16 @@ export async function loadWarped(path: string, sourceBpm: number, projectBpm: nu
     p = (async () => {
       const raw = await loadBuffer(path)
       if (!raw) return null
-      if (raw.duration > MAX_STRETCH_SECONDS) return raw          // too long to stretch: plays unchanged
+      if (raw.duration > MAX_STRETCH_SECONDS) {
+        // a whole song: too long for the stretcher here; the backend makes a synced copy (before, it played at its
+        // own tempo next to the grid and drifted away from the metronome)
+        try {
+          const r = await api.samples.stretch(path, sourceBpm / projectBpm)
+          const out = await loadBuffer(r.path)
+          if (out) { warped.set(key, out); return out }
+        } catch (e) { console.warn('[audio] cannot sync a long file', path, e) }
+        return raw
+      }
       try {
         const out = await stretchBuffer(raw, sourceBpm / projectBpm)
         warped.set(key, out)

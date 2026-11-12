@@ -217,7 +217,9 @@ export const api = {
     removeFolder: (path: string) => send<{ folders: string[] }>('DELETE', `/samples/folders?path=${encodeURIComponent(path)}`),
     search: (q: string, root?: string, bpm?: number) =>
       get<{ total: number; count: number; items: SampleEntry[] }>(`/samples?q=${encodeURIComponent(q)}${root ? `&root=${encodeURIComponent(root)}` : ''}${bpm ? `&bpm=${bpm}` : ''}`),
-    analyze: (path: string) => post<{ bpm: number | null; first_beat?: number | null; beats?: number; alternatives?: number[]; duration: number | null; note?: string }>('/samples/analyze', { path }),
+    // a long file made ratio times as long (source BPM / project BPM) on the backend: returns the new file
+    stretch: (path: string, ratio: number) => post<{ path: string }>('/samples/stretch', { path, ratio }),
+    analyze: (path: string) => post<{ bpm: number | null; first_beat?: number | null; downbeat?: number | null; beats?: number; alternatives?: number[]; duration: number | null; note?: string }>('/samples/analyze', { path }),
   },
 
   library: {

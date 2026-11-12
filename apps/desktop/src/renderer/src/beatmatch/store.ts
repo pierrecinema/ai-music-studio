@@ -19,6 +19,7 @@ export interface Proposal {
   status: 'analyzing' | 'ready' | 'none' | 'error'
   bpm?: number                 // measured (the user may correct it on the card)
   firstBeat?: number           // seconds from the start of the file
+  downbeat?: number            // seconds: beat 1 of a bar (the first one), when measured
   message?: string
 }
 
@@ -53,8 +54,10 @@ async function measure(path: string): Promise<Awaited<ReturnType<typeof api.samp
 }
 
 /** Remember what is already known about a file (the library measured it when the track was saved). */
-export function seedAnalysis(path: string, known: { bpm?: number | null; first_beat?: number | null }): void {
-  if (known.bpm) analysisCache.set(path, { bpm: known.bpm, first_beat: known.first_beat ?? 0, duration: null })
+export function seedAnalysis(path: string, known: { bpm?: number | null; first_beat?: number | null; loop_bars?: number | null }): void {
+  // only loops: their tempo is exact and they start on beat 1. Songs saved before 0.18.5 were measured with the
+  // older, less exact analysis (no downbeat): they are measured again when they are synced.
+  if (known.bpm && known.loop_bars) analysisCache.set(path, { bpm: known.bpm, first_beat: known.first_beat ?? 0, downbeat: 0, duration: null })
 }
 
 export const useBeatMatch = create<State>((set, get) => ({
@@ -79,7 +82,7 @@ export const useBeatMatch = create<State>((set, get) => ({
     try {
       const r = await measure(path)
       if (!r.bpm) { update({ status: 'none', message: r.note ?? 'No steady beat found.' }); return }
-      update({ status: 'ready', bpm: r.bpm, firstBeat: r.first_beat ?? 0 })
+      update({ status: 'ready', bpm: r.bpm, firstBeat: r.first_beat ?? 0, downbeat: r.downbeat ?? undefined })
       // automatic mode: every new audio is stretched to the master BPM; the master tempo itself is never changed
       if (mode === 'auto' && !force) {
         const cur = get().queue.find((q) => q.id === id)
@@ -112,13 +115,22 @@ function findClip(trackId: string, clipId: string) {
  * (so the intro before the first beat stays); only if that would push it before the start of the timeline,
  * the part that does not fit is cut off (non-destructive: the left edge can be pulled back).
  */
-export function phaseAlign(c: { startTime: number; duration: number; offset?: number }, gridFirst: number, bpm: number): { startTime: number; duration: number; offset: number } {
+export function phaseAlign(c: { startTime: number; duration: number; offset?: number }, gridFirst: number, bpm: number, downbeat?: number, barBeats = 4): { startTime: number; duration: number; offset: number } {
   const offset = c.offset ?? 0
   const secPerBeat = 60 / bpm
-  // the first beat of the grid that is not before the left edge of the clip
-  const k = Math.max(0, Math.ceil((offset - gridFirst) / secPerBeat - 1e-6))
-  const first = c.startTime + (gridFirst + k * secPerBeat - offset) / secPerBeat          // in project beats
-  const target = Math.round(first)
+  let first: number, target: number
+  if (downbeat !== undefined && downbeat >= 0 && barBeats > 0) {
+    // the bar: beat 1 of the audio on beat 1 of a project bar (like a DJ program's bar sync), not just any beat
+    const secPerBar = secPerBeat * barBeats
+    const k = Math.max(0, Math.ceil((offset - downbeat) / secPerBar - 1e-6))
+    first = c.startTime + (downbeat + k * secPerBar - offset) / secPerBeat
+    target = Math.round(first / barBeats) * barBeats
+  } else {
+    // the first beat of the grid that is not before the left edge of the clip
+    const k = Math.max(0, Math.ceil((offset - gridFirst) / secPerBeat - 1e-6))
+    first = c.startTime + (gridFirst + k * secPerBeat - offset) / secPerBeat          // in project beats
+    target = Math.round(first)
+  }
   const delta = target - first
   const newStart = Math.max(0, c.startTime + delta)
   const cut = newStart - (c.startTime + delta)                                           // beats that do not fit before zero
@@ -140,7 +152,7 @@ export function matchClip(p: Proposal, bpm: number, align: boolean): boolean {
   const gridFirst = p.firstBeat ?? clip.gridFirst
   let patch: Partial<ClipT> = { warpBpm: bpm, gridFirst, startTime: clip.startTime, offset: clip.offset ?? 0, duration: (seconds * bpm) / 60 }
   if (align && gridFirst !== undefined) {
-    patch = { ...patch, ...phaseAlign({ startTime: clip.startTime, duration: (seconds * bpm) / 60, offset: clip.offset }, gridFirst, bpm) }
+    patch = { ...patch, ...phaseAlign({ startTime: clip.startTime, duration: (seconds * bpm) / 60, offset: clip.offset }, gridFirst, bpm, p.downbeat, st.project.timeSignature?.[0] ?? 4) }
   }
   st.updateClip(found.trackId, clip.id, patch)
   return true
@@ -160,7 +172,7 @@ export function matchProject(p: Proposal, bpm: number, align: boolean): boolean 
   const seconds = clip.duration * sourceSecPerBeat(clip.warpBpm, rounded)
   let patch: Partial<ClipT> = { warpBpm: rounded, gridFirst, duration: (seconds * rounded) / 60 }
   if (align && gridFirst !== undefined) {
-    patch = { ...patch, ...phaseAlign({ startTime: clip.startTime, duration: (seconds * rounded) / 60, offset: clip.offset }, gridFirst, rounded) }
+    patch = { ...patch, ...phaseAlign({ startTime: clip.startTime, duration: (seconds * rounded) / 60, offset: clip.offset }, gridFirst, rounded, p.downbeat, useProjectStore.getState().project.timeSignature?.[0] ?? 4) }
   }
   useProjectStore.getState().updateClip(found.trackId, clip.id, patch)
   return true
@@ -176,10 +188,10 @@ export function retune(trackId: string, clipId: string, bpm: number): boolean {
   return true
 }
 
-function proposalFor(trackId: string, clipId: string, r: { bpm: number | null; first_beat?: number | null }): Proposal | null {
+function proposalFor(trackId: string, clipId: string, r: { bpm: number | null; first_beat?: number | null; downbeat?: number | null }): Proposal | null {
   const clip = findClip(trackId, clipId)
   if (!clip?.audioFile || !r.bpm) return null
-  return { id: `one${clipId}`, trackId, clipId, path: clip.audioFile, name: clip.name ?? 'Audio', firstAudio: false, status: 'ready', bpm: r.bpm, firstBeat: r.first_beat ?? 0 }
+  return { id: `one${clipId}`, trackId, clipId, path: clip.audioFile, name: clip.name ?? 'Audio', firstAudio: false, status: 'ready', bpm: r.bpm, firstBeat: r.first_beat ?? 0, downbeat: (r as { downbeat?: number | null }).downbeat ?? undefined }
 }
 
 /** SYNC of one clip: measure (once), stretch to the master BPM, put its beats on the project beats. */

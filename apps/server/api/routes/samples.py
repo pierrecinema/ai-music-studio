@@ -44,3 +44,19 @@ async def analyze(req: FolderReq):
         raise HTTPException(400, "Tempo detection needs the librosa package (Settings → AI Engines → Video analysis).")
     except Exception as e:
         raise HTTPException(400, f"Could not analyse this file: {e}")
+
+
+class StretchReq(BaseModel):
+    path: str
+    ratio: float          # output length / input length (source BPM / project BPM)
+
+
+@router.post("/stretch")
+async def stretch(req: StretchReq):
+    """Long audio synced to the project tempo (the Studio stretches files up to 90 s itself)."""
+    try:
+        return {"path": await asyncio.to_thread(samples.stretch, req.path, req.ratio)}
+    except ImportError:
+        raise HTTPException(400, "Syncing long audio needs the librosa package (Settings → AI Engines).")
+    except Exception as e:
+        raise HTTPException(400, f"Could not sync this file: {e}")

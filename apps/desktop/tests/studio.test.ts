@@ -9,7 +9,7 @@ import { useProjectStore } from '../src/renderer/src/stores/project.store'
 import type { Project, Track } from '../src/renderer/src/types'
 import { matchesQuery } from '../src/renderer/src/lib/librarySearch'
 import type { LibraryTrack } from '../src/renderer/src/lib/api'
-import { phaseAlign } from '../src/renderer/src/beatmatch/store'
+import { alignStarts, leadBeats, phaseAlign } from '../src/renderer/src/beatmatch/store'
 
 let failed = 0
 let passed = 0
@@ -148,6 +148,24 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   const downAt = bar.startTime + 1.25 / 0.5
   check('bar sync puts the downbeat on a bar line', near(downAt % 4, 0) || near(downAt % 4, 4), String(downAt))
   check('bar sync moves at most two beats', Math.abs(bar.startTime - 5.3) <= 2.0001, String(bar.startTime))
+}
+
+// several clips synced together: beat 1 of every clip on the same bar line
+{
+  // a song with a 3.1 s intro at 125 BPM (downbeat after 6.458 beats) and a loop that starts on beat 1
+  const songLead = leadBeats({ offset: 0 }, 125, 3.1, 4)
+  check('lead beats of a song intro', near(songLead, 3.1 / 0.48), String(songLead))
+  check('lead beats skip a trimmed downbeat', near(leadBeats({ offset: 4 }, 120, 1, 4), 2), String(leadBeats({ offset: 4 }, 120, 1, 4)))
+  const r = alignStarts([
+    { id: 'song', startTime: 0.7, lead: songLead },
+    { id: 'loop', startTime: 13.2, lead: 0 },
+    { id: 'stem', startTime: 9, lead: 0.5 }
+  ], 4)
+  const ones = [r.starts.song + songLead, r.starts.loop, r.starts.stem + 0.5]
+  check('all start on the same bar', ones.every((x) => near(x, r.bar)), JSON.stringify(ones))
+  check('the shared bar is a bar line and fits every intro', near(r.bar % 4, 0) && r.bar >= songLead && Object.values(r.starts).every((x) => x >= 0), String(r.bar))
+  const late = alignStarts([{ id: 'a', startTime: 31, lead: 0 }, { id: 'b', startTime: 40, lead: 1 }], 4)
+  check('the bar nearest the earliest clip is kept', near(late.bar, 32) && near(late.starts.b, 31), JSON.stringify(late))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

@@ -1,7 +1,7 @@
 # Testplan AI Music Studio
 
 Damit wir systematisch testen: jede Zeile einmal durchgehen, Ergebnis eintragen (✅ geht, ❌ Fehler, ⏭ nicht getestet) und
-bei Fehlern kurz notieren, was passiert ist. Stand: Version 0.18.2.
+bei Fehlern kurz notieren, was passiert ist. Stand: Version 0.18.6.
 
 **Ergebnisse (11.11.2026, PC A):** Bereiche 1, 2, 4, 5 alles ✅ · Bereich 3 ✅ außer 3.6 (ACE-Step 1.5) ❌ · Bereich 6 getestet: 6.1, 6.5, 6.6, 6.7 ❌ (siehe Notizen), Rest ✅ · Bereich 7 wird zuerst umgebaut.
 
@@ -101,6 +101,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6b.9 | neu (0.18.5): Neues Projekt, einen ganzen Song (über 90 s) einfügen → Sync to … BPM, Metronom an, abspielen, auch nach 2–3 Minuten | Kick liegt auf den Klicks, Takt 1 des Songs auf einem Taktstrich, kein Auseinanderlaufen | | | |
 | 6b.5 | Trennlinie zwischen Studio und Mixer ziehen, Doppelklick | Höhe stufenlos, Doppelklick = Standard | | | |
 | 6b.6 | AUTO SYNC: Loop/Song einfügen, AUTO SYNC an, abspielen | Clip im Takt; wenn nicht: Tempo des Songs, BPM des Projekts, Screenshot | | | |
+| 6b.10 | neu (0.18.6): 2–3 Songs/Loops/Stems an verschiedenen Stellen einfügen, alle markieren (Strg+A oder Rahmen) → „Sync together“ (oder AUTO SYNC) | alle auf Master-BPM, Takt 1 von jedem auf demselben Taktstrich, starten gleichzeitig und laufen synchron (auch nach 2–3 Min.) | | | |
 
 ## 7. Mastering, AI Chat, Sonstiges (wird zuerst umgebaut)
 

@@ -9,7 +9,7 @@ import { useUIStore } from '../../stores/ui.store'
 import { useAudioStore } from '../../stores/audio.store'
 import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER_SECOND, projectEndBeat, secToBeats, seek } from '../../audio/engine'
 import type { Clip, Track } from '../../types'
-import { makeMaster, retune, runSyncAll, syncOne, useBeatMatch } from '../../beatmatch/store'
+import { makeMaster, retune, runSyncAll, runSyncSelected, syncOne, useBeatMatch } from '../../beatmatch/store'
 import { minLength, snapBeat } from '../../edit/grid'
 import { runAction } from '../../shortcuts/handlers'
 import { GridControls } from '../../edit/GridControls'
@@ -215,6 +215,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const tops = useMemo(() => rowTops(rows), [rows])
   const lanesTop = RULER_HEIGHT + (showTempo ? TEMPO_HEIGHT : 0)
   const selected = new Set(selectedClipIds)
+  // selected audio clips (songs, loops, stems): two or more are synced together
+  const selAudio = project.tracks.flatMap((t) => t.clips.filter((c) => selected.has(c.id) && c.audioFile).map((c) => c.id))
 
   const beatAt = useCallback((clientX: number): number => {
     const rect = lanesRef.current!.getBoundingClientRect()
@@ -596,9 +598,9 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           <option value="">+ Return…</option><option value="reverb">Reverb</option><option value="delay">Delay</option>
         </select>
         <button className="btn btn-ghost" style={tb} disabled={syncing || !project.tracks.some((t) => t.clips.some((c) => c.audioFile))}
-          title="Measure all audio clips and bring every one in time with the master BPM"
-          onClick={async () => { setSyncing(true); setMessage(null); await runSyncAll(); setSyncing(false) }}>
-          {syncing ? 'Syncing…' : `Sync all to ${project.bpm} BPM`}
+          title={selAudio.length > 1 ? 'The selected clips: stretch each to the master BPM and start them together, beat 1 of each on the same bar' : 'Measure all audio clips and bring every one in time with the master BPM'}
+          onClick={async () => { setSyncing(true); setMessage(null); await (selAudio.length > 1 ? runSyncSelected(selAudio) : runSyncAll()); setSyncing(false) }}>
+          {syncing ? 'Syncing…' : selAudio.length > 1 ? `Sync ${selAudio.length} selected to ${project.bpm} BPM` : `Sync all to ${project.bpm} BPM`}
         </button>
         <button className="btn btn-ghost" style={tb} disabled={!selectedAudioClip}
           title={selectedAudioClip ? 'Measure the tempo of the selected audio and bring it in time with the project' : 'Select an audio clip first'}
@@ -633,6 +635,13 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 10px', borderBottom: '1px solid var(--border)', background: 'var(--bg-panel)', fontSize: 11, color: 'var(--text-secondary)' }}>
           <b style={{ color: 'var(--text-primary)' }}>{selectedClipIds.length} clips selected</b>
           <span>Drag one to move all · Delete removes them</span>
+          {selAudio.length > 1 && (
+            <button className="btn btn-primary" style={{ fontSize: 10, padding: '1px 8px' }} disabled={syncing}
+              title="Stretch every selected song, loop or stem to the master BPM and start them together: beat 1 of each on the same bar"
+              onClick={async () => { setSyncing(true); setMessage(null); await runSyncSelected(selAudio); setSyncing(false) }}>
+              {syncing ? 'Syncing…' : `Sync together (${selAudio.length})`}
+            </button>
+          )}
           <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} onClick={() => void run('Consolidating', consolidate)} title="Join into one clip (Ableton Ctrl+J)">Consolidate</button>
           <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} onClick={() => loopToSelection()} title="Loop around the selection (Ableton Ctrl+L, Cubase P)">Loop selection</button>
           <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 8px' }} onClick={() => groupSelectedTracks()} title="Put their tracks into a group track (Ctrl+G)">Group tracks</button>
@@ -716,7 +725,9 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                 { label: 'Delete this take lane', run: () => { const t = project.tracks.find((x) => x.id === menu.trackId); updateTrack(menu.trackId, { takes: (t?.takes ?? []).filter((l) => l.id !== menu.laneId) }) }, danger: true }
               ]
               : [
-                { label: 'SYNC to the master BPM', run: () => { void syncOne(menu.trackId, menu.clipId!).then((m) => useBeatMatch.getState().setNotice(m)) } },
+                ...(selAudio.length > 1 && selAudio.includes(menu.clipId!)
+                  ? [{ label: `SYNC the ${selAudio.length} selected clips together`, run: () => { void runSyncSelected(selAudio) } }]
+                  : [{ label: 'SYNC to the master BPM', run: () => { void syncOne(menu.trackId, menu.clipId!).then((m) => useBeatMatch.getState().setNotice(m)) } }]),
                 { label: 'Make this the MASTER tempo', run: () => { void makeMaster(menu.trackId, menu.clipId!).then((m) => useBeatMatch.getState().setNotice(m)) } },
                 { label: 'Split at the playhead', run: () => runAction('clip.split') },
                 { label: 'Duplicate clip', run: () => runAction('edit.duplicate') },

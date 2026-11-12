@@ -1,7 +1,11 @@
 // Sizes of the Studio and a small helper for mouse drags.
 import type { AutoParam, Project, TakeLane, Track } from '../../types'
 
-export const TRACK_HEIGHT = 72
+export const TRACK_HEIGHT = 72       // default; every track can be made higher or lower by dragging its lower edge
+export const TRACK_MIN_HEIGHT = 36
+export const TRACK_MAX_HEIGHT = 320
+export const trackHeight = (t: { height?: number }): number =>
+  Math.max(TRACK_MIN_HEIGHT, Math.min(TRACK_MAX_HEIGHT, t.height ?? TRACK_HEIGHT))
 export const AUTO_HEIGHT = 64
 export const TAKE_HEIGHT = 44
 export const RETURN_HEIGHT = 56
@@ -20,7 +24,7 @@ export type Row =
   | { kind: 'take'; track: Track; lane: TakeLane }
 
 export function rowHeight(r: Row): number {
-  return r.kind === 'track' ? TRACK_HEIGHT : r.kind === 'auto' ? AUTO_HEIGHT : TAKE_HEIGHT
+  return r.kind === 'track' ? trackHeight(r.track) : r.kind === 'auto' ? AUTO_HEIGHT : TAKE_HEIGHT
 }
 
 // the rows of the Studio from top to bottom: tracks (children of a closed group are hidden), their

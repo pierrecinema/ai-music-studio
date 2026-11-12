@@ -402,7 +402,7 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     if on_proc:
         on_proc(proc)                               # lets the caller stop it (Cancel button)
-    seconds_out, error, tail = None, None, []
+    seconds_out, error, tail, last_text = None, None, [], ""
     assert proc.stdout is not None
     try:
         for line in proc.stdout:
@@ -423,8 +423,15 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
                 seconds_out = float(m["seconds"])
             elif m.get("stage") and on_stage:
                 on_stage(m["stage"], m.get("text", ""))
-            elif m.get("step") is not None and on_step:
-                on_step(int(m["step"]), int(m.get("total", 100)))
+            elif m.get("step") is not None:
+                # ACE-Step names its phases ("Decoding audio..." at 80 %, which takes minutes on the processor with
+                # no further progress): show the name, so a bar standing still is not taken for a hang
+                text = str(m.get("text") or "")
+                if text and text != last_text and on_stage:
+                    last_text = text
+                    on_stage("render", text + (" (this part takes a few minutes on the processor; the bar stands still)" if "decod" in text.lower() else ""))
+                if on_step:
+                    on_step(int(m["step"]), int(m.get("total", 100)))
     except BaseException:
         proc.kill()          # Cancel button or an error: never leave the worker running
         raise

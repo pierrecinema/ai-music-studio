@@ -830,6 +830,25 @@ def _run_job(job_id: str, req: GenerateMusicRequest) -> None:
                    stage_text="Cancelled" + (f": {done} finished song(s) kept in the library" if done else ""))
 
 
+ACE15_TAIL = 5.0     # seconds rendered beyond the wanted length, so the song does not stop in the middle of the music
+ACE15_FADE = 3.0     # the last seconds are faded out (unless a fade-out is set in Advanced)
+
+
+def _fade_end(path: str, seconds: float) -> None:
+    """Fade out the last `seconds` of a WAV in place (any WAV subtype, also 32-bit float)."""
+    try:
+        import numpy as np
+        import soundfile as sf
+        info = sf.info(path)
+        data, sr = sf.read(path, dtype="float32", always_2d=True)
+        n = min(len(data), int(seconds * sr))
+        if n > 1:
+            data[-n:] *= (np.linspace(1.0, 0.0, n, dtype=np.float32) ** 2)[:, None]
+            sf.write(path, data, sr, subtype=info.subtype)
+    except Exception as e:  # noqa: BLE001 - never lose a song because of the fade
+        print(f"[ace15] fade-out skipped: {e}", flush=True)
+
+
 def _run_ace15_job(job_id: str, req: GenerateMusicRequest) -> None:
     """ACE-Step 1.5 turbo: songs with vocals, also on the CPU, in its own environment."""
     from services.music_engines import generate_ace15
@@ -837,7 +856,7 @@ def _run_ace15_job(job_id: str, req: GenerateMusicRequest) -> None:
     warnings: list[str] = []
     duration = max(10, min(req.duration or 60, 600))
     if req.duration is None:
-        warnings.append("Length 'Auto' uses 60 s with this engine.")
+        warnings.append("Length 'Auto' uses 60 s with this engine (plus a few seconds for a clean ending).")
     if req.loras:
         warnings.append("ACE-Step 1.5 does not use the LoRA styles of ACE-Step v1 yet; they were ignored.")
     if req.source_track:
@@ -860,17 +879,21 @@ def _run_ace15_job(job_id: str, req: GenerateMusicRequest) -> None:
                 wav = str(out_dir / f"song_{job_id}_{i + 1}.wav")
                 label = f"Song {i + 1} of {total}: " if total > 1 else ""
                 _stage(job, "load", f"{label}starting ACE-Step 1.5")
+                # ACE-Step 1.5 renders exactly the length asked for and then simply stops, often in the middle of the
+                # music ("the last few seconds are missing"): it gets a few seconds more, and the end is faded below
                 song = {"caption": _compose_prompt(req), "lyrics": _ace_lyrics(req) if not req.instrumental else "",
-                        "instrumental": req.instrumental, "seconds": duration, "bpm": req.bpm, "key": req.key,
+                        "instrumental": req.instrumental, "seconds": min(600, duration + ACE15_TAIL), "bpm": req.bpm, "key": req.key,
                         "time_signature": (req.time_signature or "").split("/")[0], "language": req.language,
                         "seed": seed, "steps": 8}
                 try:
                     secs = generate_ace15(
                         song, wav,
                         on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
-                        on_step=lambda d, t: _stage(job, "render", f"{label}composing the song", d, t),
+                        on_step=lambda d, t: _stage(job, "render", job.get("stage_text") or f"{label}composing the song", d, t),
                         on_proc=lambda pr: _procs.__setitem__(job_id, pr))
                     _stage(job, "finish", f"{label}saving and converting")
+                    if not req.fade_out:
+                        _fade_end(wav, ACE15_FADE)
                     final = _finalize(wav, req, warnings if i == 0 else [])
                 except Exception as e:
                     job.update(status="error", error=_short(e), warnings=warnings, results=results)

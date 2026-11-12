@@ -9,7 +9,7 @@ The bar across the top of the window, visible in every menu.
 | **■ Stop** | Stops; pressed again, back to the start |
 | **▶ Play / ❚❚ Pause** | Plays from the playhead (Space) |
 | **● Record** | Records from the microphone or audio interface onto the selected audio track while the song plays (count-in and punch in/out: see [[Studio]]) |
-| **BPM** | The master tempo of the project. Synced audio and MIDI follow it |
+| **BPM** | The master tempo of the project: type it and press Enter (decimals work), or arrow keys / mouse wheel (Shift: 0.1). Synced audio and MIDI follow it |
 | **AUTO SYNC** | Keeps all audio in time with the master BPM: switching it on syncs every audio clip now, and every new one automatically. With **several clips selected**, a click syncs them **together**: all start on the same bar. See [[Beat Matching and Sync]] |
 | **Metronome** | Clicks on every beat, higher on beat 1 of a bar |
 | **Time signature** | e.g. 4/4, 3/4, 6/8 (changes later in the song: right-click the ruler in the [[Studio]]) |

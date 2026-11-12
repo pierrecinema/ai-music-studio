@@ -93,6 +93,12 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.10
+
+- **The project tempo can be typed again:** the BPM field at the top took every key on its own, so typing "1" on the way to 128 was refused and the field jumped back. Now type the tempo and press Enter (or leave the field); decimals work (95.5), arrow keys and the mouse wheel change it by 1 (Shift: 0.1). The field is wider, so the whole tempo is visible.
+- **Click or double-click anywhere in the Studio to move the playhead there** (snapped to the grid, Alt: free). A double-click on an empty audio track no longer opens the file dialog (use *Import audio…*); on a MIDI track it still makes a clip.
+- **SYNC keeps a song tempo you corrected by hand:** the clip bar field is now called *Song tempo* (the tempo the song itself was made at) and shows the project tempo it plays at; SYNC used to measure again and put the measured tempo back.
+
 ### New in 0.18.9
 
 - **Track height:** every audio and MIDI track in the Studio can be made higher or lower by dragging its lower edge with the mouse (36 to 320 pixels); a double-click on the edge sets the normal height again. The height is saved with the project.

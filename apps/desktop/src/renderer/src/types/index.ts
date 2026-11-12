@@ -69,6 +69,7 @@ export interface Clip {
   fadeOut?: number    // audio clips: fade-out length in beats
   gridFirst?: number  // beat grid: time of the first beat in the FILE (seconds); with warpBpm it gives every beat of the clip
   warpBpm?: number    // synced samples: the tempo the file was made at; it is stretched to the project tempo
+  tempoManual?: boolean       // warpBpm was corrected by hand: SYNC keeps it instead of measuring again
   warpMarkers?: WarpMarker[]   // timing of the audio bent by hand (Ableton warp markers)
   name?: string
   color?: string

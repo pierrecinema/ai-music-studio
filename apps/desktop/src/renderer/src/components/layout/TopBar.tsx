@@ -69,13 +69,23 @@ export function TopBar(): React.ReactElement {
   const autoSync = useBeatMatch((s) => s.mode === 'auto')
   const setSyncMode = useBeatMatch((s) => s.setMode)
 
-  const handleBpmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value)
-    if (val >= 20 && val <= 300) {
-      setBpm(val)
-      setProjectBpm(val)
-    }
+  // the tempo field: typed freely, taken on Enter or when leaving the field (before, every key was checked at once,
+  // so typing "1" on the way to 128 was refused and the field jumped back: the tempo could not be changed)
+  const curBpm = project.bpm || bpm                 // the project's tempo is the master (a loaded project brings its own)
+  const [bpmDraft, setBpmDraft] = useState(String(curBpm))
+  useEffect(() => { setBpmDraft(String(curBpm)) }, [curBpm])
+  const applyBpm = (val: number): void => {
+    const v = Math.round(Math.max(20, Math.min(300, val)) * 100) / 100
+    setBpm(v)
+    setProjectBpm(v)
+    setBpmDraft(String(v))
   }
+  const commitBpm = (text: string): void => {
+    const val = parseFloat(text.replace(',', '.'))
+    if (val >= 20 && val <= 300) applyBpm(val)
+    else setBpmDraft(String(curBpm))
+  }
+  const stepBpm = (d: number): void => applyBpm(Math.round((curBpm + d) * 10) / 10)
 
   const toggleRecord = async (): Promise<void> => {
     if (isRecording) { pause(); return }
@@ -167,11 +177,19 @@ export function TopBar(): React.ReactElement {
         <div className="tb-bpm">
           <span style={{ color: 'var(--text-muted)', fontSize: 9, fontWeight: 600, letterSpacing: '0.08em' }}>BPM</span>
           <input
-            type="number"
-            value={bpm}
-            onChange={handleBpmChange}
-            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
-            min={20} max={300}
+            type="text" inputMode="decimal"
+            value={bpmDraft}
+            title="Project tempo: type a value (20–300) and press Enter, or use the arrow keys / mouse wheel (Shift: 0.1)"
+            onChange={(e) => setBpmDraft(e.target.value.replace(/[^0-9.,]/g, ''))}
+            onFocus={(e) => e.target.select()}
+            onBlur={() => commitBpm(bpmDraft)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+              else if (e.key === 'Escape') { setBpmDraft(String(curBpm)); (e.target as HTMLInputElement).blur() }
+              else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); stepBpm((e.key === 'ArrowUp' ? 1 : -1) * (e.shiftKey ? 0.1 : 1)) }
+              e.stopPropagation()
+            }}
+            onWheel={(e) => { e.preventDefault(); stepBpm((e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.1 : 1)) }}
           />
         </div>
       </div>

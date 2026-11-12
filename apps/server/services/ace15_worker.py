@@ -45,7 +45,8 @@ def main() -> int:
         from acestep.llm_inference import LLMHandler
         from acestep.inference import GenerationConfig, GenerationParams, generate_music
     except Exception as e:  # noqa: BLE001
-        say(error=f"ACE-Step 1.5 cannot start: {type(e).__name__}: {e}")
+        say(error=f"ACE-Step 1.5 cannot start: {type(e).__name__}: {e}. Repair it: Settings → AI Engines → "
+                  "tick ACE-Step 1.5 → Install selected.")
         return 1
 
     device = "cuda" if torch.cuda.is_available() else "cpu"

@@ -334,8 +334,18 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
       return { ok: false, error: 'Installing PyTorch (CPU) for ACE-Step 1.5 failed (see log).' }
     }
   }
+  // the PyTorch index does not bring NumPy, and without it ACE-Step 1.5 cannot start ("No module named numpy")
+  if (await run(ace15Python(), ['-m', 'pip', 'install', 'numpy', 'soundfile'], log) !== 0) {
+    return { ok: false, error: 'Installing NumPy for ACE-Step 1.5 failed (see log).' }
+  }
   if (await run(ace15Python(), ['-m', 'pip', 'install', '-e', ace15Repo()], log) !== 0) {
     return { ok: false, error: 'Installing the ACE-Step 1.5 packages failed (see log).' }
+  }
+  // check that it really starts, so a broken install shows here and not on the first song
+  const check = await capture(ace15Python(), ['-c', 'import numpy, torch; from acestep.handler import AceStepHandler; print("ok")'], 120000)
+  if (check.code !== 0) {
+    log(check.out)
+    return { ok: false, error: 'ACE-Step 1.5 is installed but does not start (see the last lines of the log). Press "Install selected" again; if it stays, send the log.' }
   }
   mkdirSync(ace15Checkpoints(), { recursive: true })
   log('ACE-Step 1.5 is installed. The model (about 10 GB) is downloaded on the first song.')

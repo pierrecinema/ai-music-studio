@@ -63,6 +63,19 @@ function createWindow(): void {
 
 setupCrashLog()
 
+// One app at a time: a second start (double-click again, start menu) only brings the open window to the front.
+// Before, every start ran its own AI backend on the next port, so splits and songs waited on each other.
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    if (!mainWindow) return
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.show()
+    mainWindow.focus()
+  })
+}
+
 app.whenReady().then(async () => {
   registerFileHandlers()
   electronApp.setAppUserModelId('com.aimusic.studio')

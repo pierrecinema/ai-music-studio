@@ -844,26 +844,39 @@ ACE15_FADE = 3.0     # the last seconds are faded out (unless a fade-out is set 
 
 
 def _fade_end(path: str, seconds: float) -> None:
-    """Cut the silence at the end, then fade out the last `seconds` of a WAV in place (any subtype, also float).
-    The silence first: when ACE-Step ends the song by itself before the length asked for, the extra seconds were
-    an empty bar at the end of the clip."""
+    """End a song cleanly, in place (any WAV subtype, also 32-bit float):
+    1. cut what comes after the music: the last 50 ms window that is still within 40 dB of the song's loudest part
+       ends it (quiet reverb tails and noise above a fixed -48 dBFS left up to a second of "nothing" at the end);
+       a tenth of a second of the decay is kept;
+    2. fade out over `seconds` only if the music stops abruptly; a song that already dies away is left as it is."""
     try:
         import numpy as np
         import soundfile as sf
         info = sf.info(path)
         data, sr = sf.read(path, dtype="float32", always_2d=True)
-        level = np.abs(data).max(axis=1)
-        loud = np.nonzero(level > 10 ** (-48 / 20))[0]                  # louder than -48 dBFS
+        win = max(1, int(0.05 * sr))
+        n_win = len(data) // win
+        if n_win < 10:
+            return
+        mono = np.abs(data[:n_win * win]).mean(axis=1).reshape(n_win, win)
+        rms = np.sqrt((mono ** 2).mean(axis=1)) + 1e-9
+        db = 20 * np.log10(rms)
+        loud = np.nonzero(db > db.max() - 40)[0]
         if len(loud):
-            end = min(len(data), int(loud[-1]) + int(0.25 * sr))        # keep a quarter second of the decay
-            if end < len(data) - int(0.5 * sr):
+            end = min(len(data), (int(loud[-1]) + 1) * win + int(0.1 * sr))
+            if end < len(data):
                 data = data[:end]
         n = min(len(data), int(seconds * sr))
         if n > 1:
-            data[-n:] *= (np.linspace(1.0, 0.0, n, dtype=np.float32) ** 2)[:, None]
-            sf.write(path, data, sr, subtype=info.subtype)
-    except Exception as e:  # noqa: BLE001 - never lose a song because of the fade
-        print(f"[ace15] fade-out skipped: {e}", flush=True)
+            # abrupt end: the last half second is about as loud as the song itself (within 12 dB of its loud parts)
+            tail = data[-int(0.5 * sr):]
+            tail_db = 20 * np.log10(float(np.sqrt((tail ** 2).mean())) + 1e-9)
+            body_db = float(np.percentile(db, 75))
+            if tail_db > body_db - 12:
+                data[-n:] *= (np.linspace(1.0, 0.0, n, dtype=np.float32) ** 2)[:, None]
+        sf.write(path, data, sr, subtype=info.subtype)
+    except Exception as e:  # noqa: BLE001 - never lose a song because of the ending
+        print(f"[ace15] ending skipped: {e}", flush=True)
 
 
 def ace15_adapter(entry: dict) -> tuple[str | None, str]:

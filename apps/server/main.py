@@ -1,6 +1,16 @@
 """AI Music Studio — local backend server."""
 import os
+import sys
 import logging
+
+# The log goes through a pipe, which on Windows uses the old ANSI code page (cp1252): a single character outside it
+# (a progress bar of block characters, an arrow, Japanese lyrics) in a printed line raised UnicodeEncodeError
+# ("'charmap' codec can't encode characters") and stopped the song that printed it. Write UTF-8 and never fail.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
 
 # Hardware-aware thread tuning for older CPUs (e.g. dual-core)
 # Must happen before any torch/numpy imports

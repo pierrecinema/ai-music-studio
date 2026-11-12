@@ -93,6 +93,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.7
+
+- **Fix: "'charmap' codec can't encode characters" when making a song** (seen with ACE-Step 1.5): the AI backend wrote its log in the old Windows code page, and a single character outside it (a progress bar of block characters, an arrow, lyrics in Japanese) stopped the song. The backend and its helpers now write UTF-8 and never fail on a character.
+
 ### New in 0.18.6
 
 - **Beat grid, checked against Mixxx and opendj:** a tempo is rounded to a whole (or half) BPM only when the song's kicks really sit on the rounded grid, as in those programs. Before, a song at 124.07 BPM was rounded to 124 and was 50 ms off after three minutes; now it stays at 124.07 (on test tracks within 1–2 ms over three minutes).

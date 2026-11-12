@@ -28,6 +28,7 @@ export interface Track {
   showAutomation?: AutoParam | null       // which automation lane is open below the track
   takes?: TakeLane[]          // loop recording: one lane per pass (comping)
   showTakes?: boolean
+  height?: number             // height of the track in the Studio (pixels), dragged at its lower edge
 }
 
 // automated parameters: volume and pan of the track, and the send level to each return track ("send:<id>")

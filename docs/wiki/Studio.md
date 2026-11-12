@@ -23,6 +23,7 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 - **Select several clips:** Ctrl+click or Shift+click, drag a frame, or **Ctrl+A**. A bar shows *N clips selected* with **Sync together**, **Consolidate**, **Loop selection**, **Group tracks** and **Clear selection**.
 - **Ctrl+C / Ctrl+X / Ctrl+V:** paste at the playhead; pressing again puts the next copy right behind. **Ctrl+D** duplicates right after the clip (loops line up without a gap).
 - **Split at the playhead:** Ctrl+E (Cubase Alt+X). **Delete:** Del (Ctrl+Z brings it back).
+- **Track height:** drag the lower edge of a track up or down; double-click the edge for the normal height.
 - **Rename a track:** double-click its name. **Reorder:** drag the `⋮⋮` grip. **Zoom:** Ctrl+mouse wheel.
 - **Clip bar** (selected audio clip): gain, fade in/out, tempo field, **SYNC**, **MASTER**.
 

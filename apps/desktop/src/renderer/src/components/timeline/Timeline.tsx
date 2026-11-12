@@ -21,7 +21,7 @@ import { Popover, type PopoverSpec } from './Popover'
 import { AutomationHeader, AutomationLane, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
 import { ChannelTab } from './ChannelTab'
 import {
-  AUTO_HEIGHT, BEAT_WIDTH, buildRows, HANDLE, HEADER_WIDTH, RULER_HEIGHT, rowHeight, rowTops, TAKE_HEIGHT, TEMPO_HEIGHT, TRACK_HEIGHT, trackPointer, type Row
+  AUTO_HEIGHT, BEAT_WIDTH, buildRows, HANDLE, HEADER_WIDTH, RULER_HEIGHT, rowHeight, rowTops, TAKE_HEIGHT, TEMPO_HEIGHT, TRACK_MAX_HEIGHT, TRACK_MIN_HEIGHT, trackHeight, trackPointer, type Row
 } from './studioLayout'
 import {
   addCycleMarkerFromLoop, addMarkerAtPlayhead, addWarpMarker, beatsLeft, consolidate, crossfade, groupSelectedTracks, loopToSelection, spbSrcOf, splitIntoStems, togglePunch, toggleLoop
@@ -498,7 +498,19 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         : renderClips(track)
     }
     return (
-      <div key={`${row.kind}-${track.id}-${row.kind === 'take' ? row.lane.id : ''}`} style={{ display: 'flex', height: h }}>
+      <div key={`${row.kind}-${track.id}-${row.kind === 'take' ? row.lane.id : ''}`} style={{ display: 'flex', height: h, position: 'relative' }}>
+        {row.kind === 'track' && (
+          // the lower edge of the track: drag to make it higher or lower, double-click for the normal height
+          <div title="Drag: track height · double-click: normal height"
+            onPointerDown={(e) => {
+              if (e.button !== 0) return
+              e.preventDefault(); e.stopPropagation()
+              const y0 = e.clientY, h0 = h
+              trackPointer((ev) => updateTrack(track.id, { height: Math.round(Math.max(TRACK_MIN_HEIGHT, Math.min(TRACK_MAX_HEIGHT, h0 + ev.clientY - y0))) }))
+            }}
+            onDoubleClick={(e) => { e.stopPropagation(); updateTrack(track.id, { height: undefined }) }}
+            style={{ position: 'absolute', left: 0, right: 0, bottom: -3, height: 7, cursor: 'ns-resize', zIndex: 6 }} />
+        )}
         <div
           onContextMenu={row.kind === 'track' ? (e) => { e.preventDefault(); selectTrack(track.id); selectClip(null); setMenu({ x: e.clientX, y: e.clientY, kind: 'track', trackId: track.id }) } : undefined}
           onClick={row.kind === 'track' ? () => { selectTrack(track.id); selectClip(null) } : undefined}
@@ -534,6 +546,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
 
   const renderClips = (track: Track): React.ReactNode => {
     const audio = track.clips.filter((c) => c.audioFile)
+    const th = trackHeight(track)
     return (
       <>
         {track.clips.map((clip) => {
@@ -547,12 +560,12 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); selectTrack(track.id); if (!selected.has(clip.id)) selectClip(clip.id); setMenu({ x: e.clientX, y: e.clientY, kind: 'clip', trackId: track.id, clipId: clip.id }) }}
               onDoubleClick={(e) => clipDoubleClick(e, track, clip, width)}
               style={{
-                position: 'absolute', left: clip.startTime * beatWidth, top: 6, width, height: TRACK_HEIGHT - 12, boxSizing: 'border-box',
+                position: 'absolute', left: clip.startTime * beatWidth, top: 6, width, height: th - 12, boxSizing: 'border-box',
                 background: missing ? 'rgba(239,68,68,0.15)' : `${track.color}${sel ? '55' : '33'}`,
                 border: `1px solid ${warpEdit ? '#facc15' : sel ? '#fff' : track.color + '88'}`, borderRadius: 4, overflow: 'hidden', cursor: 'grab', userSelect: 'none'
               }}>
-              {clip.audioFile && !missing && <Waveform clip={clip} color={track.color} height={TRACK_HEIGHT - 14} width={width} warpEdit={warpEdit} trackId={track.id} />}
-              {clip.notes && <MiniNotes clip={clip} color={track.color} />}
+              {clip.audioFile && !missing && <Waveform clip={clip} color={track.color} height={th - 14} width={width} warpEdit={warpEdit} trackId={track.id} />}
+              {clip.notes && <MiniNotes clip={clip} color={track.color} height={th - 14} />}
               <span style={{ position: 'relative', fontSize: 11, color: missing ? 'var(--red)' : '#fff', fontWeight: 600, padding: '2px 8px', whiteSpace: 'nowrap', textShadow: '0 1px 2px #000a', pointerEvents: 'none' }}>
                 {missing ? `Missing: ${clip.name ?? clip.audioFile}` : `${clip.name ?? (clip.notes ? `${clip.notes.length} notes` : 'Clip')}${clip.warpBpm ? ` · synced from ${Math.round(clip.warpBpm)} BPM` : ''}${clip.warpMarkers?.length ? ` · ${clip.warpMarkers.length} warp markers` : ''}`}
               </span>
@@ -566,7 +579,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           const from = b.startTime
           const to = Math.min(a.startTime + a.duration, b.startTime + b.duration)
           return (
-            <svg key={`x${a.id}${b.id}`} style={{ position: 'absolute', left: from * beatWidth, top: 6, width: Math.max(2, (to - from) * beatWidth), height: TRACK_HEIGHT - 12, pointerEvents: 'none', zIndex: 3 }} viewBox="0 0 100 100" preserveAspectRatio="none">
+            <svg key={`x${a.id}${b.id}`} style={{ position: 'absolute', left: from * beatWidth, top: 6, width: Math.max(2, (to - from) * beatWidth), height: th - 12, pointerEvents: 'none', zIndex: 3 }} viewBox="0 0 100 100" preserveAspectRatio="none">
               <title>Crossfade</title>
               <path d="M0,100 L100,0 M0,0 L100,100" stroke="#fff" strokeWidth={2} vectorEffect="non-scaling-stroke" opacity={0.8} />
             </svg>
@@ -864,13 +877,13 @@ function ClipInspector({ trackId, clip, bpm, warpEdit, onWarpEdit }: { trackId: 
 }
 
 // a tiny picture of the notes inside a MIDI clip
-function MiniNotes({ clip, color }: { clip: Clip; color: string }): React.ReactElement | null {
+function MiniNotes({ clip, color, height }: { clip: Clip; color: string; height: number }): React.ReactElement | null {
   const notes = clip.notes ?? []
   if (!notes.length) return null
   const lo = Math.min(...notes.map((n) => n.pitch))
   const hi = Math.max(...notes.map((n) => n.pitch))
   const span = Math.max(12, hi - lo + 1)
-  const h = TRACK_HEIGHT - 14
+  const h = height
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
       {notes.map((n) => (

@@ -95,6 +95,7 @@ All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
 ### New in 0.18.9
 
+- **Track height:** every audio and MIDI track in the Studio can be made higher or lower by dragging its lower edge with the mouse (36 to 320 pixels); a double-click on the edge sets the normal height again. The height is saved with the project.
 - **ACE-Step 1.5 songs end cleanly:** the model renders exactly the length asked for and then simply stops, often in the middle of the music, so the end of a song seemed cut off. It now renders 5 seconds more and fades out over the last 3 seconds (a fade-out set under Advanced is used instead).
 - **ACE-Step 1.5 shows its phase:** at 80 % it decodes the song into audio, which takes a few minutes on the processor without further progress. The progress now says so ("Decoding audio…"), so a standing bar is not taken for a hang.
 

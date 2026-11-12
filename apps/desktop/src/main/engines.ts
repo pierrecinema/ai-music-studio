@@ -338,6 +338,7 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
   if (await run(ace15Python(), ['-m', 'pip', 'install', 'numpy', 'soundfile'], log) !== 0) {
     return { ok: false, error: 'Installing NumPy for ACE-Step 1.5 failed (see log).' }
   }
+  // setuptools: ACE-Step 1.5 asks for <72, new PyTorch builds for >=77; either works here (pkg_resources is in both)
   // ACE-Step 1.5 lists nano-vllm (its language model runtime, a uv path source, not on PyPI), CUDA builds of
   // torch pinned to its own index (torch==2.7.1+cu128) and other GPU-only packages: pip cannot resolve them, and
   // the music part we use ("DiT only") does not need them. PyTorch is installed above for this machine.
@@ -345,7 +346,7 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
   const deps = await capture(ace15Python(), ['-c', [
     'import sys, tomllib, re',
     'd = tomllib.load(open(sys.argv[1], "rb"))["project"]["dependencies"]',
-    'skip = ("nano-vllm", "nano_vllm", "vllm", "flash-attn", "flash_attn", "triton", "triton-windows", "xformers", "torch", "torchvision", "torchaudio", "mlx", "mlx-lm")',
+    'skip = ("nano-vllm", "nano_vllm", "vllm", "flash-attn", "flash_attn", "triton", "triton-windows", "xformers", "torch", "torchvision", "torchaudio", "mlx", "mlx-lm", "setuptools")',
     'keep = [x for x in d if not re.split(r"[ <>=!~;\\[]", x.strip(), maxsplit=1)[0].lower() in skip]',
     'print("\\n".join(keep))'
   ].join('; '), join(ace15Repo(), 'pyproject.toml')], 30000)
@@ -374,7 +375,16 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
     return { ok: false, error: 'Installing ACE-Step 1.5 itself failed (see log).' }
   }
   // check that it really starts, so a broken install shows here and not on the first song
-  const check = await capture(ace15Python(), ['-c', 'import numpy, torch; from acestep.handler import AceStepHandler; print("ok")'], 120000)
+  const startCheck = (): ReturnType<typeof capture> =>
+    capture(ace15Python(), ['-c', 'import numpy, torch; from acestep.handler import AceStepHandler; print("ok")'], 120000)
+  let check = await startCheck()
+  if (check.code !== 0 && /torchvision/.test(check.out)) {
+    // torchvision is only pulled in by the training tools (lightning / torchmetrics) and is not needed for music;
+    // a torchvision that does not match PyTorch ("operator torchvision::nms does not exist") is simply removed
+    log('torchvision does not match this PyTorch and is not needed for music: removing it.')
+    await run(ace15Python(), ['-m', 'pip', 'uninstall', '-y', 'torchvision'], log)
+    check = await startCheck()
+  }
   if (check.code !== 0) {
     log(check.out)
     return { ok: false, error: 'ACE-Step 1.5 is installed but does not start (see the last lines of the log). Press "Install selected" again; if it stays, send the log.' }

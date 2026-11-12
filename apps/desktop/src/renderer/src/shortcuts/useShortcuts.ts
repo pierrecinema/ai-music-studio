@@ -1,3 +1,4 @@
+import { pianoFocus } from '../components/timeline/studioOps'
 import { useEffect } from 'react'
 import { useUIStore } from '../stores/ui.store'
 import { runAction } from './handlers'
@@ -14,6 +15,7 @@ const CLIP_VIEWS = new Set(['timeline', 'piano-roll', 'mixer'])
 
 function wantsTextCommand(id: string): boolean {
   if (!TEXT_ACTIONS.has(id)) return false
+  if (id === 'edit.selectAll' && pianoFocus.active) return false      // Ctrl+A in the Piano Roll: all notes
   if ((window.getSelection()?.toString() ?? '').trim()) return true
   if (document.querySelector('[role="dialog"], [aria-modal="true"]')) return true
   return !CLIP_VIEWS.has(useUIStore.getState().activeView)

@@ -6,6 +6,7 @@ import { previewNote } from '../../audio/engine'
 import type { Note } from '../../types'
 import { minLength, snapBeat, snapStep } from '../../edit/grid'
 import { GridControls } from '../../edit/GridControls'
+import { pianoFocus, PIANO_SELECT_ALL } from '../timeline/studioOps'
 
 const NOTE_HEIGHT = 14
 const PIANO_WIDTH = 56
@@ -25,6 +26,7 @@ interface NoteDrag {
   startY: number
   orig: Note
   moved: boolean
+  group?: Map<string, Note>     // several selected notes move together
 }
 
 export function PianoRoll(): React.ReactElement {
@@ -41,9 +43,13 @@ export function PianoRoll(): React.ReactElement {
   const gridRef = useRef<HTMLDivElement>(null)
   const drag = useRef<NoteDrag | null>(null)
   const lastLength = useRef(0.5)
-  const [selected, setSelected] = useState<string | null>(null)
-  // the selected note is shared with the store so that Quantize and the arrow keys act on it
-  const select = (id: string | null): void => { setSelected(id); useProjectStore.getState().selectNotes(id ? [id] : []) }
+  // selected notes: one (click), several (Shift+click, a frame drawn with Select or Shift+drag, Ctrl+A).
+  // Shared with the store so that Quantize acts on them.
+  const [sel, setSel] = useState<Set<string>>(new Set())
+  const selectMany = (ids: string[]): void => { setSel(new Set(ids)); useProjectStore.getState().selectNotes(ids) }
+  const select = (id: string | null): void => selectMany(id ? [id] : [])
+  const [frame, setFrame] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
 
   const track = project.tracks.find((t) => t.id === selectedTrackId)
   const clip = track?.clips.find((c) => c.id === selectedClipId && !c.audioFile) ?? track?.clips.find((c) => !c.audioFile)
@@ -87,6 +93,15 @@ export function PianoRoll(): React.ReactElement {
 
   const onGridDown = (e: React.PointerEvent<HTMLDivElement>): void => {
     if (e.target !== e.currentTarget && !(e.target as HTMLElement).dataset.bg) return
+    // a frame: with the Select tool, or Shift+drag with any tool
+    if (tool === 'select' || e.shiftKey) {
+      const rect = gridRef.current!.getBoundingClientRect()
+      const x = e.clientX - rect.left, y = e.clientY - rect.top
+      frameRef.current = { x0: x, y0: y, x1: x, y1: y }
+      setFrame(frameRef.current)
+      if (!e.shiftKey) select(null)
+      return
+    }
     select(null)
     if (tool !== 'draw' || !track) return
     const target = ensureClip()
@@ -111,15 +126,27 @@ export function PianoRoll(): React.ReactElement {
     e.stopPropagation()
     if (!track || !clip) return
     if (tool === 'erase') { removeNote(track.id, clip.id, note.id); return }
-    select(note.id)
+    if (e.shiftKey || e.ctrlKey) {                         // add to / take out of the selection
+      const next = new Set(sel); if (next.has(note.id)) next.delete(note.id); else next.add(note.id)
+      selectMany([...next]); return
+    }
+    const keepGroup = sel.has(note.id) && sel.size > 1
+    if (!keepGroup) select(note.id)
     void previewNote(note.pitch, note.velocity, track)
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const nearEnd = e.clientX > rect.right - EDGE
-    drag.current = { noteId: note.id, kind: nearEnd ? 'resize' : 'move', startX: e.clientX, startY: e.clientY, orig: { ...note }, moved: false }
+    const group = keepGroup && !nearEnd ? new Map(notes.filter((n) => sel.has(n.id)).map((n) => [n.id, { ...n }])) : undefined
+    drag.current = { noteId: note.id, kind: nearEnd ? 'resize' : 'move', startX: e.clientX, startY: e.clientY, orig: { ...note }, moved: false, group }
   }
 
   useEffect(() => {
     const onMove = (e: PointerEvent): void => {
+      if (frameRef.current) {
+        const rect = gridRef.current!.getBoundingClientRect()
+        const f = { ...frameRef.current, x1: e.clientX - rect.left, y1: e.clientY - rect.top }
+        frameRef.current = f; setFrame(f)
+        return
+      }
       const d = drag.current
       if (!d || !track || !clip) return
       if (!d.moved && Math.abs(e.clientX - d.startX) + Math.abs(e.clientY - d.startY) < 3) return
@@ -129,6 +156,14 @@ export function PianoRoll(): React.ReactElement {
         const dur = Math.max(minLength(), snapBeat(d.orig.duration + dBeats, e.altKey))
         lastLength.current = dur
         updateNote(track.id, clip.id, d.noteId, { duration: dur })
+      } else if (d.group) {
+        // several notes: same shift in time and pitch for all of them
+        const minStart = Math.min(...[...d.group.values()].map((n) => n.startTime))
+        const shift = Math.max(-minStart, snapBeat(d.orig.startTime + dBeats, e.altKey) - d.orig.startTime)
+        const dPitch = -Math.round((e.clientY - d.startY) / NOTE_HEIGHT)
+        for (const [id, n] of d.group) {
+          updateNote(track.id, clip.id, id, { startTime: n.startTime + shift, pitch: Math.max(0, Math.min(127, n.pitch + dPitch)) })
+        }
       } else {
         const start = Math.max(0, snapBeat(d.orig.startTime + dBeats, e.altKey))
         const dPitch = -Math.round((e.clientY - d.startY) / NOTE_HEIGHT)
@@ -140,27 +175,53 @@ export function PianoRoll(): React.ReactElement {
         updateNote(track.id, clip.id, d.noteId, { startTime: start, pitch })
       }
     }
-    const onUp = (): void => { drag.current = null }
+    const onUp = (e: PointerEvent): void => {
+      drag.current = null
+      const f = frameRef.current
+      if (!f) return
+      frameRef.current = null; setFrame(null)
+      // notes inside the frame
+      const bx0 = Math.min(f.x0, f.x1) / beatWidth, bx1 = Math.max(f.x0, f.x1) / beatWidth
+      const py0 = TOTAL_PITCHES - 1 - Math.floor(Math.max(f.y0, f.y1) / NOTE_HEIGHT)
+      const py1 = TOTAL_PITCHES - 1 - Math.floor(Math.min(f.y0, f.y1) / NOTE_HEIGHT)
+      const inside = notes.filter((n) => n.startTime < bx1 && n.startTime + n.duration > bx0 && n.pitch >= py0 && n.pitch <= py1).map((n) => n.id)
+      selectMany(e.shiftKey ? [...new Set([...sel, ...inside])] : inside)
+    }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
     return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp) }
-  }, [track, clip, beatWidth, updateNote])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track, clip, beatWidth, updateNote, notes, sel])
 
-  // keys: Delete removes the selected note
+  // the frame while it is drawn (a ref too: the move handler must see it without waiting for a render)
+  const frameRef = useRef<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
+
+  // Ctrl+A selects all notes while the Piano Roll was clicked last
+  useEffect(() => {
+    const onAll = (): void => selectMany(notes.map((n) => n.id))
+    const onDown = (e: PointerEvent): void => { pianoFocus.active = !!rootRef.current?.contains(e.target as Node) }
+    window.addEventListener(PIANO_SELECT_ALL, onAll)
+    window.addEventListener('pointerdown', onDown, true)
+    return () => { window.removeEventListener(PIANO_SELECT_ALL, onAll); window.removeEventListener('pointerdown', onDown, true); pianoFocus.active = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notes])
+
+  // keys: Delete removes the selected notes
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (!selected || !track || !clip) return
+      if (!sel.size || !track || !clip) return
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.stopPropagation()
-        removeNote(track.id, clip.id, selected)
+        for (const id of sel) removeNote(track.id, clip.id, id)
         select(null)
       }
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [selected, track, clip, removeNote])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sel, track, clip, removeNote])
 
   if (!track) {
     return (
@@ -175,7 +236,7 @@ export function PianoRoll(): React.ReactElement {
   const gridWidth = gridBeats * beatWidth
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-primary)' }}>
+    <div ref={rootRef} style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-primary)', userSelect: 'none' }}>
       <div style={{ height: 36, display: 'flex', alignItems: 'center', padding: '0 8px', gap: 6, borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 }}>
         {(['draw', 'select', 'erase'] as const).map((t) => (
           <button key={t} onClick={() => setTool(t)}
@@ -185,7 +246,7 @@ export function PianoRoll(): React.ReactElement {
         ))}
         <GridControls />
         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
-          {clip ? `${track.name} · ${clip.name ?? 'clip'} · ${notes.length} notes` : 'No clip yet: click in the grid to create one'}
+          {clip ? `${track.name} · ${clip.name ?? 'clip'} · ${notes.length} notes${sel.size > 1 ? ` · ${sel.size} selected` : ''}` : 'No clip yet: click in the grid to create one'}
         </span>
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Zoom</span>
@@ -234,8 +295,8 @@ export function PianoRoll(): React.ReactElement {
                 style={{
                   position: 'absolute', left: note.startTime * beatWidth, top: (TOTAL_PITCHES - 1 - note.pitch) * NOTE_HEIGHT + 1,
                   width: Math.max(note.duration * beatWidth - 2, 6), height: NOTE_HEIGHT - 2, boxSizing: 'border-box',
-                  background: `${track.color}${selected === note.id ? 'ff' : 'cc'}`,
-                  border: `1px solid ${selected === note.id ? '#fff' : track.color}`, borderRadius: 2,
+                  background: `${track.color}${sel.has(note.id) ? 'ff' : 'cc'}`,
+                  border: `1px solid ${sel.has(note.id) ? '#fff' : track.color}`, borderRadius: 2,
                   cursor: tool === 'erase' ? 'not-allowed' : 'grab', display: 'flex', alignItems: 'center', paddingLeft: 3, overflow: 'hidden', opacity: 0.45 + (note.velocity / 127) * 0.55
                 }}>
                 {note.lyric && <span style={{ fontSize: 9, color: 'white', whiteSpace: 'nowrap' }}>{note.lyric}</span>}
@@ -243,6 +304,10 @@ export function PianoRoll(): React.ReactElement {
               </div>
             ))}
 
+            {frame && (
+              <div style={{ position: 'absolute', left: Math.min(frame.x0, frame.x1), top: Math.min(frame.y0, frame.y1), width: Math.abs(frame.x1 - frame.x0), height: Math.abs(frame.y1 - frame.y0),
+                border: '1px solid var(--accent-light)', background: 'rgba(124,58,237,0.15)', pointerEvents: 'none', zIndex: 4 }} />
+            )}
             {clip && playheadX >= 0 && playheadX <= gridWidth && (
               <div style={{ position: 'absolute', left: playheadX, top: 0, bottom: 0, width: 2, background: 'var(--accent)', pointerEvents: 'none', zIndex: 2 }} />
             )}

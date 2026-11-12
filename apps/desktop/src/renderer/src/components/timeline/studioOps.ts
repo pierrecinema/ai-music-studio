@@ -39,7 +39,12 @@ export function selectedClips(): Array<{ track: Track; clip: Clip }> {
   return out
 }
 
+// set by the Piano Roll: true after a click in it, false after a click anywhere else
+export const pianoFocus = { active: false }
+export const PIANO_SELECT_ALL = 'ams:piano-select-all'
+
 export function selectAll(): void {
+  if (pianoFocus.active) { window.dispatchEvent(new CustomEvent(PIANO_SELECT_ALL)); return }
   const st = useProjectStore.getState()
   st.selectClips(st.project.tracks.flatMap((t) => t.clips.map((c) => c.id)))
 }

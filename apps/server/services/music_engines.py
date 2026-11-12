@@ -393,6 +393,10 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
         json.dump(req, f)
         req_path = f.name
+    # what the model gets, in the log: to tell "the lyrics did not arrive" from "the model did not sing them"
+    log("[ACE-Step 1.5] style: %s | lyrics: %d lines, %d characters%s | language: %s | %s s" % (
+        (req.get("caption") or "")[:200], len([l for l in (req.get("lyrics") or "").splitlines() if l.strip()]),
+        len(req.get("lyrics") or ""), " (instrumental)" if req.get("instrumental") else "", req["language"], req.get("seconds")))
     worker = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ace15_worker.py")
     env = dict(os.environ, PYTHONPATH=repo, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1", ACESTEP_INIT_LLM="false")
     if req["checkpoints"]:
@@ -441,8 +445,24 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
     except OSError:
         pass
     if seconds_out is None:
-        raise RuntimeError(error or ("ACE-Step 1.5 stopped (exit code %s): %s" % (code, " | ".join(tail[-3:]))))
+        text = error or ("ACE-Step 1.5 stopped (exit code %s): %s" % (code, " | ".join(tail[-3:])))
+        raise RuntimeError(explain_memory_error(text))
     return seconds_out
+
+
+def explain_memory_error(text: str) -> str:
+    """Windows error 1455 ("the paging file is too small"): on the processor the model is loaded in full precision
+    (about 12 to 14 GB); with 16 GB RAM Windows covers the rest with its paging file, which is often set too small.
+    Say what to do instead of only the Windows message."""
+    low = text.lower()
+    if "1455" in low or "auslagerungsdatei" in low or "paging file" in low or "pagefile" in low:
+        return ("Windows ran out of virtual memory while loading the model (the paging file is too small; the model "
+                "needs about 12 to 14 GB on the processor). Fix it once: Windows search 'Advanced system settings' -> "
+                "Performance 'Settings…' -> 'Advanced' -> Virtual memory 'Change…' -> tick 'Automatically manage paging "
+                "file size for all drives' (or set a custom size of 16384 to 32768 MB on a drive with that much free "
+                "space) -> Set -> OK, then restart Windows. Close other programs while the song is made. "
+                "(Windows: " + text[-160:] + ")")
+    return text
 
 
 def dr_python() -> str | None:

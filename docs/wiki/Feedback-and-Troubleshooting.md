@@ -13,6 +13,7 @@ Bottom right: **Feedback**. It collects system data, engine state and the last l
 | Windows shows "Windows protected your PC" | The installer is not code-signed yet: **More info → Run anyway** |
 | The AI uses the processor, not the graphics card | AMD / Intel: install *Graphics card support* and *Fast vocal separation*; NVIDIA: choose the CUDA variant of PyTorch |
 | A synced song is not quite in time | Check its tempo in the clip bar (÷2 / ×2 or type it); songs with an unsteady tempo get a warning: see [[Beat Matching and Sync]] |
+| ACE-Step 1.5: *paging file is too small* (error 1455) | On the processor the model needs about 12–14 GB. Windows search **Advanced system settings → Performance Settings… → Advanced → Virtual memory Change…**, tick *Automatically manage paging file size* (or set 16384–32768 MB on a drive with that much free space), restart Windows |
 | Update not offered | [[Settings]] → Updates → Check for updates |
 | Settings do not close | ✕ at the top right, **Esc**, or the gear again |
 

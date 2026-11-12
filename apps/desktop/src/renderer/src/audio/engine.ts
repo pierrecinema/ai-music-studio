@@ -453,7 +453,10 @@ let epoch = 0                         // invalidates a restart that is still loa
 let restartTimer = 0
 let lastSignature = ''
 // the next pass of the loop, already scheduled to start at `when`
-let pendingLoop: { when: number; beat: number; sched: Scheduled } | null = null
+let pendingLoop: { when: number; beat: number; sched: Scheduled; project: Project } | null = null
+// the project as it was scheduled: the playing position is counted in ITS tempo. After a tempo change the sound keeps
+// playing in the old tempo until the new one is ready; counting with the new tempo made the song jump.
+let playProject: Project | null = null
 const loopWraps: number[] = []        // context times at which the loop jumped back (loop recording)
 
 function ensureContext(): AudioContext {
@@ -484,6 +487,7 @@ function commitLoop(): void {
   current = pendingLoop.sched
   startCtxTime = pendingLoop.when
   startBeat = pendingLoop.beat
+  playProject = pendingLoop.project
   metroBeat = Math.ceil(startBeat - 1e-6)
   pendingLoop = null
 }
@@ -491,7 +495,7 @@ function commitLoop(): void {
 export function currentBeat(): number {
   if (!playing || !ctx) return useAudioStore.getState().currentBeat
   commitLoop()
-  const p = useProjectStore.getState().project
+  const p = playProject ?? useProjectStore.getState().project
   // the first moments after play (and the count-in) lie before the scheduled start: never report an earlier beat
   return secToBeat(p, beatToSec(p, startBeat) + Math.max(0, ctx.currentTime - startCtxTime))
 }
@@ -561,6 +565,7 @@ async function startAt(beat: number, countInBars = 0): Promise<void> {
   pendingLoop = null
   startCtxTime = when
   startBeat = beat
+  playProject = latest
   playing = true
   recPlayStart = when
   useAudioStore.setState({ isPlaying: true })
@@ -577,11 +582,12 @@ function prepareLoop(): void {
   const p = useProjectStore.getState().project
   const loop = activeLoop(p)
   if (!loop || startBeat >= loop.end) return
-  const endTime = startCtxTime + beatToSec(p, loop.end) - beatToSec(p, startBeat)
+  const pp = playProject ?? p
+  const endTime = startCtxTime + beatToSec(pp, loop.end) - beatToSec(pp, startBeat)
   if (endTime - ctx.currentTime > 0.35) return
   current.stopAt(endTime)
   const sched = scheduleProject(ctx, master, p, loop.start, endTime, { untilBeat: loop.end })
-  pendingLoop = { when: endTime, beat: loop.start, sched }
+  pendingLoop = { when: endTime, beat: loop.start, sched, project: p }
   if (recorder) loopWraps.push(endTime)
 }
 
@@ -610,7 +616,7 @@ function metronomeTick(): void {
     return
   }
   commitLoop()
-  const project = useProjectStore.getState().project
+  const project = playProject ?? useProjectStore.getState().project
   const loop = activeLoop(project)
   const base = beatToSec(project, startBeat)
   for (;;) {
@@ -665,13 +671,23 @@ export function seek(beat: number): void {
 }
 
 // restart the sound at the same position after the music changed while playing
+let restartToken = 0
+
+// the music changed while playing (tempo, a clip moved, ...): get the new sound ready first (a new tempo means
+// stretching every synced song again, which takes a moment) while the old one keeps playing, then switch over at the
+// same place. Before, it went silent while stretching, which looked as if pressing Enter in the tempo field stopped it.
 function restartSoon(): void {
   window.clearTimeout(restartTimer)
   restartTimer = window.setTimeout(() => {
     if (!playing) return
-    const beat = currentBeat()
-    halt()
-    void startAt(beat)
+    const token = ++restartToken
+    void (async () => {
+      try { await loadAllFiles(useProjectStore.getState().project) } catch { /* startAt reports problems */ }
+      if (!playing || token !== restartToken) return
+      const beat = currentBeat()
+      halt()
+      void startAt(beat)
+    })()
   }, 90)
 }
 

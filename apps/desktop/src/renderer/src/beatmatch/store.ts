@@ -203,7 +203,7 @@ export async function syncOne(trackId: string, clipId: string): Promise<string> 
     const p = proposalFor(trackId, clipId, r)
     if (!p) return `${clip.name ?? 'This clip'} has no steady beat (a one-shot or a free rhythm): it cannot be synced.`
     matchClip(p, p.bpm!, true)
-    return `${clip.name ?? 'Clip'}: ${p.bpm} BPM synced to ${useProjectStore.getState().project.bpm} BPM, beats on the grid.`
+    return `${clip.name ?? 'Clip'}: ${p.bpm} BPM synced to ${useProjectStore.getState().project.bpm} BPM, beats on the grid.${r.steady === false ? ` Note: ${unsteadyNote}` : ''}`
   } catch (e) { return `Could not measure the tempo: ${(e as Error).message}` }
 }
 
@@ -246,7 +246,7 @@ export function alignStarts(clips: Array<{ id: string; startTime: number; lead: 
   return { bar, starts: Object.fromEntries(clips.map((c) => [c.id, Math.max(0, bar - c.lead)])) }
 }
 
-export interface SyncSelectedResult { synced: number; skipped: string[]; bar: number }
+export interface SyncSelectedResult { synced: number; skipped: string[]; bar: number; unsteady: string[] }
 
 /**
  * Sync the selected clips together (songs, loops, stems): measure each one (once), stretch it to the master BPM and
@@ -257,6 +257,7 @@ export async function syncSelected(clipIds: string[], onProgress?: (done: number
   const targets = project.tracks.flatMap((t) => t.clips.filter((c) => clipIds.includes(c.id) && c.audioFile).map((c) => ({ trackId: t.id, clipId: c.id, name: c.name ?? t.name })))
   const skipped: string[] = []
   const ready: Array<{ trackId: string; clipId: string; downbeat: number; bpm: number }> = []
+  const unsteady: string[] = []
   for (const [i, t] of targets.entries()) {
     onProgress?.(i, targets.length, t.name)
     const clip = findClip(t.trackId, t.clipId)
@@ -267,6 +268,7 @@ export async function syncSelected(clipIds: string[], onProgress?: (done: number
       if (!p) { skipped.push(`${t.name}: no steady beat (one-shot or free rhythm)`); continue }
       if (!matchClip(p, p.bpm!, false)) continue                      // stretch only; the start is set below for all
       ready.push({ trackId: t.trackId, clipId: t.clipId, bpm: p.bpm!, downbeat: p.downbeat ?? p.firstBeat ?? 0 })
+      if (r.steady === false) unsteady.push(t.name)
     } catch (e) {
       skipped.push(`${t.name}: ${(e as Error).message}`)
     }
@@ -280,7 +282,7 @@ export async function syncSelected(clipIds: string[], onProgress?: (done: number
   })
   const { bar, starts } = alignStarts(placed, barBeats)
   for (const c of placed) st.updateClip(c.trackId, c.clipId, { startTime: starts[c.id] })
-  return { synced: placed.length, skipped, bar }
+  return { synced: placed.length, skipped, bar, unsteady }
 }
 
 let syncingSel = false
@@ -295,7 +297,7 @@ export async function runSyncSelected(clipIds: string[]): Promise<void> {
     const st = useProjectStore.getState().project
     const barBeats = st.timeSignature?.[0] ?? 4
     setNotice(r.synced
-      ? `${r.synced} clip(s) synced to ${st.bpm} BPM, all start together on bar ${Math.round(r.bar / barBeats) + 1}${r.skipped.length ? `. Skipped: ${r.skipped.join('; ')}` : '.'}`
+      ? `${r.synced} clip(s) synced to ${st.bpm} BPM, all start together on bar ${Math.round(r.bar / barBeats) + 1}${r.skipped.length ? `. Skipped: ${r.skipped.join('; ')}` : '.'}${r.unsteady.length ? ` Check by ear: ${r.unsteady.join(', ')} – ${unsteadyNote}` : ''}`
       : `Nothing was synced${r.skipped.length ? `: ${r.skipped.join('; ')}` : ' (select audio clips first).'}`)
   } finally {
     syncingSel = false
@@ -309,7 +311,9 @@ export function selectedAudioIds(): string[] {
   return st.project.tracks.flatMap((t) => t.clips.filter((c) => ids.has(c.id) && c.audioFile).map((c) => c.id))
 }
 
-export interface SyncAllResult { synced: number; already: number; skipped: string[] }
+export interface SyncAllResult { synced: number; already: number; skipped: string[]; unsteady: string[] }
+
+const unsteadyNote = 'its tempo is not steady (live playing?), so one grid cannot follow it everywhere: check by ear, warp markers can pin beats that drift.'
 
 /** "Sync all": measure every audio clip that is not synced yet and bring it to the master BPM, beats on the grid. */
 export async function syncAll(onProgress?: (done: number, total: number, name: string) => void): Promise<SyncAllResult> {
@@ -324,6 +328,7 @@ export async function syncAll(onProgress?: (done: number, total: number, name: s
     }
   }
   const skipped: string[] = []
+  const unsteady: string[] = []
   let synced = 0
   for (const [i, t] of targets.entries()) {
     onProgress?.(i, targets.length, t.name)
@@ -333,13 +338,13 @@ export async function syncAll(onProgress?: (done: number, total: number, name: s
       const r = await measure(clip.audioFile)
       const p = proposalFor(t.trackId, t.clipId, r)
       if (!p) { skipped.push(`${t.name}: no steady beat (one-shot or free rhythm)`); continue }
-      if (matchClip(p, p.bpm!, true)) synced++
+      if (matchClip(p, p.bpm!, true)) { synced++; if (r.steady === false) unsteady.push(t.name) }
     } catch (e) {
       skipped.push(`${t.name}: ${(e as Error).message}`)
     }
   }
   onProgress?.(targets.length, targets.length, '')
-  return { synced, already, skipped }
+  return { synced, already, skipped, unsteady }
 }
 
 let syncing = false
@@ -352,7 +357,7 @@ export async function runSyncAll(): Promise<void> {
   try {
     const r = await syncAll((d, n, name) => setNotice(d < n ? `Syncing ${d + 1} of ${n}: ${name}…` : null))
     const bpm = useProjectStore.getState().project.bpm
-    setNotice(`Synced ${r.synced} clip(s) to ${bpm} BPM${r.already ? `, ${r.already} already synced` : ''}${r.skipped.length ? `. Skipped: ${r.skipped.join('; ')}` : '.'}`)
+    setNotice(`Synced ${r.synced} clip(s) to ${bpm} BPM${r.already ? `, ${r.already} already synced` : ''}${r.skipped.length ? `. Skipped: ${r.skipped.join('; ')}` : '.'}${r.unsteady.length ? ` Check by ear: ${r.unsteady.join(', ')} – ${unsteadyNote}` : ''}`)
   } finally {
     syncing = false
   }

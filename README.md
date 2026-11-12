@@ -97,6 +97,8 @@ All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
 ### New in 0.18.6
 
+- **Beat grid, checked against Mixxx and opendj:** a tempo is rounded to a whole (or half) BPM only when the song's kicks really sit on the rounded grid, as in those programs. Before, a song at 124.07 BPM was rounded to 124 and was 50 ms off after three minutes; now it stays at 124.07 (on test tracks within 1–2 ms over three minutes).
+- **Warning for songs with an unsteady tempo** (live playing, a drummer without a click): Sync now says which clips should be checked by ear, instead of syncing them silently with a grid that drifts in and out.
 - **ACE-Step 1.5 install, third fix:** ACE-Step asks for an old setuptools (<72) while current PyTorch needs a new one (≥77), so pip could find no solution once PyTorch was held. That requirement is now skipped (both versions work). If torchvision still does not match PyTorch ("operator torchvision::nms does not exist"), it is removed: it is only used by training tools, not for making music.
 - **Sync several clips together:** select songs, loops or stems in the Studio (Ctrl/Shift+click, drag a frame or Ctrl+A), then click **Sync together** in the selection bar, **AUTO SYNC**, the toolbar's *Sync … selected* or *SYNC the selected clips together* in the right-click menu. Every clip is stretched to the master BPM and beat 1 of each one is put on the same bar line, so they all start together and stay in time. If a song has an intro before its beat 1, all clips move to a later bar so no intro is cut off.
 

@@ -36,6 +36,15 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ## Open technical items
 
+- **Beat sync, ideas from the projects the owner linked (studied 12.11.2026):**
+  Mixxx (`src/track/beatutils.cpp`: constant regions, rounding within the error range, adjustPhase) and opendj
+  (`crates/engine/src/gridfit.rs`: numbered beats, robust line fit, round tempo only if the beats fit it, tempo
+  sections, "unsure" grids) — rounding check and the unsteady warning are in 0.18.6. Still open: tempo sections for
+  live songs (one warp marker per section, set automatically). auto-dj-ai: phrase grid (16/32/64 beats from timbre
+  changes) could put "Sync together" on phrase starts. MixingBear: offset search maximising coinciding beats, a
+  possible cross-check of the phase. emcdjapp, BeatSync-Engine: plain librosa beat_track, nothing new;
+  MixPerfect: uses the BASS library's tempo detection.
+
 - Test with real models on the owner's PCs: "→ MIDI" (needs Audio → MIDI (basic-pitch) in AI Engines), the stem mixer
   remix export, ACE-Step 1.5 install, Grok / Ollama chat. Stem splitting and saving to the Library are confirmed working.
 - Test the new "Vocals + Instrumental (fastest)" mode (0.18.0) on the R9 290: does DirectML work, how fast is it,

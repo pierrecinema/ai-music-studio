@@ -61,7 +61,7 @@ export class ServerManager {
     this.process = spawn(python, ['-u', join(serverDir(), 'main.py')], {
       cwd: serverDir(),
       // downloads (ACE-Step, Whisper, Demucs ...) go to the models folder chosen in Settings → Models
-      env: { ...process.env, AMS_PORT: String(this.port), ...backendModelEnv(), ...(hasDml() ? { AMS_DML_PYTHON: dmlPython() } : {}), ...(hasDr() ? { AMS_DR_PYTHON: drPython(), AMS_DR_REPO: drRepo() } : {}), ...(hasAce15() ? { AMS_ACE15_PYTHON: ace15Python(), AMS_ACE15_REPO: ace15Repo(), AMS_ACE15_CKPT: ace15Checkpoints() } : {}), ...(hasSep() ? { AMS_SEP_PYTHON: sepPython(), AMS_SEP_MODELS: sepModels() } : {}) },
+      env: { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8', AMS_PORT: String(this.port), ...backendModelEnv(), ...(hasDml() ? { AMS_DML_PYTHON: dmlPython() } : {}), ...(hasDr() ? { AMS_DR_PYTHON: drPython(), AMS_DR_REPO: drRepo() } : {}), ...(hasAce15() ? { AMS_ACE15_PYTHON: ace15Python(), AMS_ACE15_REPO: ace15Repo(), AMS_ACE15_CKPT: ace15Checkpoints() } : {}), ...(hasSep() ? { AMS_SEP_PYTHON: sepPython(), AMS_SEP_MODELS: sepModels() } : {}) },
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true
     })

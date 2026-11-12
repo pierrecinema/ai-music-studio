@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { autoStructure, hasSections, SECTION_TAGS } from '../../lib/lyrics'
 import { api, type EngineState, type Lora, type MusicEngineInfo, type MusicJob, type MusicResult, type Resources, type Usage } from '../../lib/api'
 import { apiKeyFor, useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
@@ -319,6 +320,18 @@ export function CreateMusic(): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [aiBusy, setAiBusy] = useState<string | null>(null)
+  const lyricsRef = useRef<HTMLTextAreaElement>(null)
+  // a section tag at the cursor, on a line of its own
+  const insertSection = (tag: string): void => {
+    const el = lyricsRef.current
+    const text = p.lyrics
+    const at = el ? el.selectionStart : text.length
+    const before = text.slice(0, at), after = text.slice(at)
+    const lead = before && !before.endsWith('\n\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : ''
+    const insert = `${lead}[${tag}]\n`
+    set('lyrics', before + insert + after)
+    requestAnimationFrame(() => { if (el) { el.focus(); const c = before.length + insert.length; el.setSelectionRange(c, c) } })
+  }
   const [intoProject, setIntoProject] = useState<'none' | 'new'>('none')
   const [chipSeed, setChipSeed] = useState(0)
 
@@ -628,9 +641,18 @@ export function CreateMusic(): React.ReactElement {
                   </Field>
                 </>
               )}
-              <textarea value={p.lyrics} onChange={(e) => set('lyrics', e.target.value)} rows={studio ? 9 : 5}
-                style={{ ...full, fontFamily: 'monospace' }} placeholder={'[Verse 1]\n…\n\n[Chorus]\n…'} />
-              <span style={hint}>{tr("Section tags in brackets: [Verse], [Chorus], [Bridge]. Empty lyrics are written by the model.")}</span>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                {SECTION_TAGS.map((tag) => (
+                  <button key={tag} className="btn btn-ghost" style={{ fontSize: 10, padding: '2px 7px' }}
+                    title={tr('Insert this section at the cursor')} onClick={() => insertSection(tag)}>[{tag}]</button>
+                ))}
+                <button className="btn btn-ghost" style={{ fontSize: 10, padding: '2px 7px', marginLeft: 'auto' }} disabled={!p.lyrics.trim() || hasSections(p.lyrics)}
+                  title={tr('Lyrics without sections: stanzas become [Verse] and [Chorus] (a stanza that comes back is the chorus)')}
+                  onClick={() => set('lyrics', autoStructure(p.lyrics))}>✦ {tr('Auto structure')}</button>
+              </div>
+              <textarea ref={lyricsRef} value={p.lyrics} onChange={(e) => set('lyrics', e.target.value)} rows={studio ? 9 : 5}
+                style={{ ...full, fontFamily: 'monospace' }} placeholder={'[Verse]\n…\n\n[Chorus]\n…'} />
+              <span style={hint}>{tr("Click a section to insert it, or write stanzas separated by an empty line and press Auto structure. Lyrics without sections are structured automatically when the song is made. Empty lyrics are written by the model.")}</span>
             </>
           )}
         </Card>

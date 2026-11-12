@@ -329,8 +329,30 @@ def _ace_lyrics(req: GenerateMusicRequest) -> str:
         return "[instrumental]"
     text = req.lyrics.strip()
     if text and not _SECTION_TAG.search(text):
-        text = "[verse]\n" + text
+        text = auto_structure(text)
     return text
+
+
+def auto_structure(text: str) -> str:
+    """Lyrics without section tags get a structure (same rules as the Create page's "Auto structure"): stanzas between
+    empty lines become sections; a stanza that comes back is the chorus, the others verses; without a repeat they
+    alternate verse / chorus. One long block is cut into stanzas of four lines first."""
+    clean = text.replace("\r", "").strip()
+    blocks = [b.strip() for b in re.split(r"\n\s*\n", clean) if b.strip()]
+    if len(blocks) == 1:
+        lines = [l.strip() for l in blocks[0].split("\n") if l.strip()]
+        if len(lines) > 4:
+            blocks = ["\n".join(lines[i:i + 4]) for i in range(0, len(lines), 4)]
+    key = lambda b: re.sub(r"[^a-z0-9\u00c0-\u024f]+", " ", b.lower()).strip()  # noqa: E731
+    count: dict[str, int] = {}
+    for b in blocks:
+        count[key(b)] = count.get(key(b), 0) + 1
+    repeated = any(v > 1 for v in count.values())
+    out = []
+    for i, b in enumerate(blocks):
+        chorus = count[key(b)] > 1 if repeated else (len(blocks) > 1 and i % 2 == 1)
+        out.append(("[Chorus]" if chorus else "[Verse]") + "\n" + b)
+    return "\n\n".join(out)
 
 
 LOOP_TAGS = "loop, steady tempo, consistent groove, no intro, no outro"

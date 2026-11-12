@@ -40,6 +40,11 @@ const OPENAI_MODELS = [
   { id: 'o1-mini', label: 'o1-mini' },
 ]
 // xAI's model names change often: "Other model ID" takes any current one from console.x.ai
+const GEMINI_MODELS = [
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (fast, free tier)' },
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+  { id: 'gemini-3-pro-preview', label: 'Gemini 3 Pro (preview)' },
+]
 const GROK_MODELS = [
   { id: 'grok-4.1-fast', label: 'Grok 4.1 Fast' },
   { id: 'grok-4.3', label: 'Grok 4.3' },
@@ -199,7 +204,7 @@ function UpdatesTab(): React.ReactElement {
 export function Settings(): React.ReactElement {
   const { t } = useTranslation()
   const { theme, setTheme, language, setLanguage } = useUIStore()
-  const { provider, setProvider, claudeApiKey, setClaudeApiKey, openaiApiKey, setOpenaiApiKey, grokApiKey, setGrokApiKey, model, setModel, localUrl, setLocalUrl } = useAIStore()
+  const { provider, setProvider, claudeApiKey, setClaudeApiKey, openaiApiKey, setOpenaiApiKey, grokApiKey, setGrokApiKey, geminiApiKey, setGeminiApiKey, model, setModel, localUrl, setLocalUrl } = useAIStore()
   const [tab, setTab] = useState<SettingsTab>(() => {
     const wanted = sessionStorage.getItem('ams-settings-tab') as SettingsTab | null
     sessionStorage.removeItem('ams-settings-tab')
@@ -285,7 +290,7 @@ export function Settings(): React.ReactElement {
             <div>
               <label style={labelStyle}>{t('settings.aiProvider')}</label>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {(['claude', 'openai', 'grok', 'ollama', 'local'] as AIProvider[]).map(p => (
+                {(['claude', 'openai', 'gemini', 'grok', 'ollama', 'local'] as AIProvider[]).map(p => (
                   <button
                     key={p}
                     onClick={() => setProvider(p)}
@@ -300,7 +305,7 @@ export function Settings(): React.ReactElement {
                       fontWeight: provider === p ? 600 : 400
                     }}
                   >
-                    {p === 'claude' ? 'Claude (Anthropic)' : p === 'openai' ? 'ChatGPT (OpenAI)' : p === 'grok' ? 'Grok (xAI)' : p === 'ollama' ? 'Ollama (free, on this PC)' : 'Local server (LM Studio, KoboldCpp, llama.cpp)'}
+                    {p === 'claude' ? 'Claude (Anthropic)' : p === 'openai' ? 'ChatGPT (OpenAI)' : p === 'grok' ? 'Grok (xAI)' : p === 'gemini' ? 'Gemini (Google)' : p === 'ollama' ? 'Ollama (free, on this PC)' : 'Local server (LM Studio, KoboldCpp, llama.cpp)'}
                   </button>
                 ))}
               </div>
@@ -346,6 +351,27 @@ export function Settings(): React.ReactElement {
                 <div>
                   <label style={labelStyle}>{t('settings.model')}</label>
                   <ModelPicker models={OPENAI_MODELS} value={model} onChange={setModel} />
+                </div>
+              </>
+            )}
+
+            {provider === 'gemini' && (
+              <>
+                <div>
+                  <label style={labelStyle}>Gemini API key (Google)</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input type={showKey ? 'text' : 'password'} value={geminiApiKey} onChange={e => setGeminiApiKey(e.target.value)}
+                      placeholder="AIza..." style={{ ...inputStyle, flex: 1 }} />
+                    <button onClick={() => setShowKey(s => !s)} style={smallBtnStyle}>{showKey ? 'Hide' : 'Show'}</button>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.5 }}>
+                    Create a key at aistudio.google.com (Get API key). Google offers a free tier with limits per minute and
+                    per day. If a model name no longer exists, choose "Other model ID" and enter a current one.
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>{t('settings.model')}</label>
+                  <ModelPicker models={GEMINI_MODELS} value={model} onChange={setModel} />
                 </div>
               </>
             )}

@@ -23,7 +23,7 @@ class Message(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    provider: Literal["claude", "openai", "grok", "ollama", "local"]
+    provider: Literal["claude", "openai", "grok", "gemini", "ollama", "local"]
     apiKey: str
     model: str
     messages: list[Message]
@@ -43,6 +43,8 @@ async def chat(req: ChatRequest):
     try:
         if req.provider == "claude":
             return await _claude_chat(req.apiKey, req.model, req.messages, system)
+        if req.provider == "gemini":         # Google offers the OpenAI chat format as well
+            return await _openai_chat(req.apiKey, req.model, req.messages, system, base_url=GEMINI_URL)
         if req.provider == "grok":           # xAI speaks the OpenAI chat format
             return await _openai_chat(req.apiKey, req.model, req.messages, system, base_url=XAI_URL)
         if req.provider == "local":          # LM Studio / KoboldCpp / llama.cpp: the OpenAI chat format, e.g. over Vulkan
@@ -64,6 +66,7 @@ async def chat(req: ChatRequest):
 
 
 XAI_URL = "https://api.x.ai/v1"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 OLLAMA_URL = "http://127.0.0.1:11434/v1"
 LOCAL_URL = "http://127.0.0.1:1234/v1"
 

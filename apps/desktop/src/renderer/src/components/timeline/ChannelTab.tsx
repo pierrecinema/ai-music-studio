@@ -38,10 +38,12 @@ export function ChannelTab({ onClose }: { onClose: () => void }): React.ReactEle
               onChange={(e) => updateTrack(t.id, { volume: Number(e.target.value) })} onDoubleClick={() => updateTrack(t.id, { volume: 0.8 })} />
             <span style={{ width: 40, textAlign: 'right' }}>{db(t.volume)}</span>
           </label>
-          <label style={row}>Pan
+          <label style={row} title="Pan: where the track sits between the left and the right speaker. Double-click: center">Pan
+            <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>L</span>
             <input type="range" min={-1} max={1} step={0.01} value={t.pan} disabled={hasAutomation(t, 'pan')} style={{ flex: 1 }}
               onChange={(e) => updateTrack(t.id, { pan: Number(e.target.value) })} onDoubleClick={() => updateTrack(t.id, { pan: 0 })} />
-            <span style={{ width: 40, textAlign: 'right' }}>{t.pan === 0 ? 'C' : t.pan > 0 ? `R${Math.round(t.pan * 100)}` : `L${Math.round(-t.pan * 100)}`}</span>
+            <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>R</span>
+            <span style={{ width: 52, textAlign: 'right' }}>{Math.abs(t.pan) < 0.005 ? 'Center' : t.pan > 0 ? `${Math.round(t.pan * 100)} % R` : `${Math.round(-t.pan * 100)} % L`}</span>
           </label>
           <div style={{ display: 'flex', gap: 6 }}>
             <button className="btn btn-ghost" style={{ fontSize: 11, color: t.muted ? '#f59e0b' : undefined }} onClick={() => updateTrack(t.id, { muted: !t.muted })}>Mute</button>

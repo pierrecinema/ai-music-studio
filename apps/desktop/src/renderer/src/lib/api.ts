@@ -174,7 +174,7 @@ export const api = {
 
   ai: {
     chat: (body: {
-      provider: 'claude' | 'openai' | 'grok' | 'ollama' | 'local'
+      provider: 'claude' | 'openai' | 'grok' | 'gemini' | 'ollama' | 'local'
       apiKey: string
       model: string
       messages: Array<{ role: 'user' | 'assistant'; content: string }>

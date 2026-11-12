@@ -95,6 +95,10 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.4
+
+- **ACE-Step 1.5 installs on Windows:** its package list asks for *nano-vllm* (its language model runtime, not on PyPI) and a CUDA build of PyTorch pinned to its own server, so pip stopped with "No matching distribution found for nano-vllm". The install now takes the list without these (the music part used here does not need them), installs PyTorch for your PC, and checks that ACE-Step 1.5 starts.
+
 ### New in 0.18.3
 
 - **Resizable Studio and panel:** drag the line between the Studio and the panel below it (mixer, piano roll, ...) up or down; double-click resets it. The Studio now takes all the height the panel leaves.

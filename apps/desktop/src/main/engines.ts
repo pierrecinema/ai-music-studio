@@ -325,12 +325,12 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
   }
   if (torchVariant === 'cuda') {
     log('NVIDIA card: installing the CUDA build of PyTorch first.')
-    if (await run(ace15Python(), ['-m', 'pip', 'install', 'torch', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cu128'], log) !== 0) {
+    if (await run(ace15Python(), ['-m', 'pip', 'install', 'torch', 'torchaudio', 'torchvision', '--index-url', 'https://download.pytorch.org/whl/cu128'], log) !== 0) {
       return { ok: false, error: 'Installing PyTorch (CUDA) for ACE-Step 1.5 failed (see log).' }
     }
   } else {
     log('No NVIDIA card chosen: ACE-Step 1.5 runs on the processor (PyTorch CPU build).')
-    if (await run(ace15Python(), ['-m', 'pip', 'install', 'torch', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cpu'], log) !== 0) {
+    if (await run(ace15Python(), ['-m', 'pip', 'install', 'torch', 'torchaudio', 'torchvision', '--index-url', 'https://download.pytorch.org/whl/cpu'], log) !== 0) {
       return { ok: false, error: 'Installing PyTorch (CPU) for ACE-Step 1.5 failed (see log).' }
     }
   }
@@ -338,8 +338,28 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
   if (await run(ace15Python(), ['-m', 'pip', 'install', 'numpy', 'soundfile'], log) !== 0) {
     return { ok: false, error: 'Installing NumPy for ACE-Step 1.5 failed (see log).' }
   }
-  if (await run(ace15Python(), ['-m', 'pip', 'install', '-e', ace15Repo()], log) !== 0) {
+  // ACE-Step 1.5 lists nano-vllm (its language model runtime, a uv path source, not on PyPI), CUDA builds of
+  // torch pinned to its own index (torch==2.7.1+cu128) and other GPU-only packages: pip cannot resolve them, and
+  // the music part we use ("DiT only") does not need them. PyTorch is installed above for this machine.
+  // So: the listed dependencies without those, then the project itself without dependencies.
+  const deps = await capture(ace15Python(), ['-c', [
+    'import sys, tomllib, re',
+    'd = tomllib.load(open(sys.argv[1], "rb"))["project"]["dependencies"]',
+    'skip = ("nano-vllm", "nano_vllm", "vllm", "flash-attn", "flash_attn", "triton", "triton-windows", "xformers", "torch", "torchvision", "torchaudio", "mlx", "mlx-lm")',
+    'keep = [x for x in d if not re.split(r"[ <>=!~;\\[]", x.strip(), maxsplit=1)[0].lower() in skip]',
+    'print("\\n".join(keep))'
+  ].join('; '), join(ace15Repo(), 'pyproject.toml')], 30000)
+  const wanted = deps.out.split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !/^(Traceback|File |<string>|\s)|Warning/.test(l))
+  if (deps.code !== 0 || !wanted.length) {
+    log(deps.out)
+    return { ok: false, error: 'Could not read the ACE-Step 1.5 package list (see log).' }
+  }
+  log(`ACE-Step 1.5 packages (without nano-vllm and other GPU-only parts): ${wanted.length}`)
+  if (await run(ace15Python(), ['-m', 'pip', 'install', ...wanted], log) !== 0) {
     return { ok: false, error: 'Installing the ACE-Step 1.5 packages failed (see log).' }
+  }
+  if (await run(ace15Python(), ['-m', 'pip', 'install', '--no-deps', '-e', ace15Repo()], log) !== 0) {
+    return { ok: false, error: 'Installing ACE-Step 1.5 itself failed (see log).' }
   }
   // check that it really starts, so a broken install shows here and not on the first song
   const check = await capture(ace15Python(), ['-c', 'import numpy, torch; from acestep.handler import AceStepHandler; print("ok")'], 120000)

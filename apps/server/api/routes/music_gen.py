@@ -835,12 +835,20 @@ ACE15_FADE = 3.0     # the last seconds are faded out (unless a fade-out is set 
 
 
 def _fade_end(path: str, seconds: float) -> None:
-    """Fade out the last `seconds` of a WAV in place (any WAV subtype, also 32-bit float)."""
+    """Cut the silence at the end, then fade out the last `seconds` of a WAV in place (any subtype, also float).
+    The silence first: when ACE-Step ends the song by itself before the length asked for, the extra seconds were
+    an empty bar at the end of the clip."""
     try:
         import numpy as np
         import soundfile as sf
         info = sf.info(path)
         data, sr = sf.read(path, dtype="float32", always_2d=True)
+        level = np.abs(data).max(axis=1)
+        loud = np.nonzero(level > 10 ** (-48 / 20))[0]                  # louder than -48 dBFS
+        if len(loud):
+            end = min(len(data), int(loud[-1]) + int(0.25 * sr))        # keep a quarter second of the decay
+            if end < len(data) - int(0.5 * sr):
+                data = data[:end]
         n = min(len(data), int(seconds * sr))
         if n > 1:
             data[-n:] *= (np.linspace(1.0, 0.0, n, dtype=np.float32) ** 2)[:, None]

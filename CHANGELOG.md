@@ -5,6 +5,7 @@ on its GitHub release page, so every version needs a `## <version>` section here
 
 ## 0.18.11
 
+- **ACE-Step 1.5: no empty bar at the end:** when the model ends the song by itself before the length asked for, the extra seconds were silence. The silence at the end is now cut (a quarter second of the decay is kept) before the fade-out. The backend log also shows what the model got (style, number of lyric lines, language), to find out why a song came without vocals.
 - **Changing the tempo while the song plays keeps it playing:** pressing Enter in the BPM field stopped the music for the moment every synced song was stretched to the new tempo. The old sound now keeps playing until the new one is ready, then it switches over at the same place in the song, in time with the metronome (measured: every kick within 1 ms of its click before and after the change). The position is also counted in the old tempo up to the switch, so the song no longer jumps.
 - **ACE-Step 1.5: a clear message when Windows runs out of virtual memory** ("the paging file is too small", error 1455). On the processor the model needs about 12 to 14 GB; with 16 GB RAM Windows covers the rest with its paging file, which is often set too small. The message now says how to fix it once in Windows (let Windows manage the paging file size, or set 16–32 GB).
 

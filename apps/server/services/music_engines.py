@@ -393,6 +393,10 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
         json.dump(req, f)
         req_path = f.name
+    # what the model gets, in the log: to tell "the lyrics did not arrive" from "the model did not sing them"
+    log("[ACE-Step 1.5] style: %s | lyrics: %d lines, %d characters%s | language: %s | %s s" % (
+        (req.get("caption") or "")[:200], len([l for l in (req.get("lyrics") or "").splitlines() if l.strip()]),
+        len(req.get("lyrics") or ""), " (instrumental)" if req.get("instrumental") else "", req["language"], req.get("seconds")))
     worker = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ace15_worker.py")
     env = dict(os.environ, PYTHONPATH=repo, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1", ACESTEP_INIT_LLM="false")
     if req["checkpoints"]:

@@ -1,0 +1,1 @@
+[AI Music Studio](https://github.com/pierrecinema/ai-music-studio) · free and open source · [latest release](https://github.com/pierrecinema/ai-music-studio/releases/latest) · [changelog](https://github.com/pierrecinema/ai-music-studio/blob/main/CHANGELOG.md)

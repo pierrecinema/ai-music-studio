@@ -31,6 +31,11 @@ The in-app update only sees **releases**, not commits: without step 3 the app sa
 Read `docs/NEXT-STEPS.md` at the start of a session: what is planned next (feedback, posts in forums and blogs),
 open technical items and how the owner likes to work.
 
+## Wiki
+
+The GitHub wiki is generated from `docs/wiki` (workflow `Publish wiki` on every push to `main`). When a menu or
+function changes, update the matching page there in the same pull request.
+
 ## Checks
 
 - `apps/desktop`: `pnpm test` (unit tests), `pnpm typecheck`

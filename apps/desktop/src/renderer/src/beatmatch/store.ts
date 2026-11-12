@@ -203,7 +203,7 @@ export async function syncOne(trackId: string, clipId: string): Promise<string> 
     const p = proposalFor(trackId, clipId, r)
     if (!p) return `${clip.name ?? 'This clip'} has no steady beat (a one-shot or a free rhythm): it cannot be synced.`
     matchClip(p, p.bpm!, true)
-    return `${clip.name ?? 'Clip'}: ${p.bpm} BPM synced to ${useProjectStore.getState().project.bpm} BPM, beats on the grid.`
+    return `${clip.name ?? 'Clip'}: ${p.bpm} BPM synced to ${useProjectStore.getState().project.bpm} BPM, beats on the grid.${r.steady === false ? ` Note: ${unsteadyNote}` : ''}`
   } catch (e) { return `Could not measure the tempo: ${(e as Error).message}` }
 }
 
@@ -220,7 +220,100 @@ export async function makeMaster(trackId: string, clipId: string): Promise<strin
   } catch (e) { return `Could not measure the tempo: ${(e as Error).message}` }
 }
 
-export interface SyncAllResult { synced: number; already: number; skipped: string[] }
+/**
+ * Where beat 1 of a synced clip is: project beats from the clip's left edge to the first downbeat that is inside
+ * the clip. A synced clip plays one beat of the file per project beat, so the file's bar is one project bar.
+ */
+export function leadBeats(c: { offset?: number }, bpm: number, downbeat: number, barBeats = 4): number {
+  const secPerBeat = 60 / bpm
+  const secPerBar = secPerBeat * barBeats
+  const offset = c.offset ?? 0
+  const k = Math.max(0, Math.ceil((offset - downbeat) / secPerBar - 1e-6))
+  return (downbeat + k * secPerBar - offset) / secPerBeat
+}
+
+/**
+ * Start several synced clips together: beat 1 of every clip on the same bar line. The bar is the one nearest to the
+ * earliest clip; if a clip's intro (before its beat 1) does not fit before that bar, all move to a later bar, so no
+ * intro is cut off. Returns the new start (project beats) of every clip and the bar line (beats) they share.
+ */
+export function alignStarts(clips: Array<{ id: string; startTime: number; lead: number }>, barBeats = 4): { bar: number; starts: Record<string, number> } {
+  if (!clips.length) return { bar: 0, starts: {} }
+  const earliest = Math.min(...clips.map((c) => c.startTime + c.lead))
+  let bar = Math.max(0, Math.round(earliest / barBeats) * barBeats)
+  const need = Math.max(...clips.map((c) => c.lead))
+  if (bar < need) bar = Math.ceil(need / barBeats - 1e-6) * barBeats
+  return { bar, starts: Object.fromEntries(clips.map((c) => [c.id, Math.max(0, bar - c.lead)])) }
+}
+
+export interface SyncSelectedResult { synced: number; skipped: string[]; bar: number; unsteady: string[] }
+
+/**
+ * Sync the selected clips together (songs, loops, stems): measure each one (once), stretch it to the master BPM and
+ * put beat 1 of every clip on the same bar, so they all start together and stay in time.
+ */
+export async function syncSelected(clipIds: string[], onProgress?: (done: number, total: number, name: string) => void): Promise<SyncSelectedResult> {
+  const project = useProjectStore.getState().project
+  const targets = project.tracks.flatMap((t) => t.clips.filter((c) => clipIds.includes(c.id) && c.audioFile).map((c) => ({ trackId: t.id, clipId: c.id, name: c.name ?? t.name })))
+  const skipped: string[] = []
+  const ready: Array<{ trackId: string; clipId: string; downbeat: number; bpm: number }> = []
+  const unsteady: string[] = []
+  for (const [i, t] of targets.entries()) {
+    onProgress?.(i, targets.length, t.name)
+    const clip = findClip(t.trackId, t.clipId)
+    if (!clip?.audioFile) continue
+    try {
+      const r = await measure(clip.audioFile)
+      const p = proposalFor(t.trackId, t.clipId, r)
+      if (!p) { skipped.push(`${t.name}: no steady beat (one-shot or free rhythm)`); continue }
+      if (!matchClip(p, p.bpm!, false)) continue                      // stretch only; the start is set below for all
+      ready.push({ trackId: t.trackId, clipId: t.clipId, bpm: p.bpm!, downbeat: p.downbeat ?? p.firstBeat ?? 0 })
+      if (r.steady === false) unsteady.push(t.name)
+    } catch (e) {
+      skipped.push(`${t.name}: ${(e as Error).message}`)
+    }
+  }
+  onProgress?.(targets.length, targets.length, '')
+  const st = useProjectStore.getState()
+  const barBeats = st.project.timeSignature?.[0] ?? 4
+  const placed = ready.flatMap((r) => {
+    const clip = findClip(r.trackId, r.clipId)
+    return clip ? [{ ...r, id: r.clipId, startTime: clip.startTime, lead: leadBeats(clip, r.bpm, r.downbeat, barBeats) }] : []
+  })
+  const { bar, starts } = alignStarts(placed, barBeats)
+  for (const c of placed) st.updateClip(c.trackId, c.clipId, { startTime: starts[c.id] })
+  return { synced: placed.length, skipped, bar, unsteady }
+}
+
+let syncingSel = false
+
+/** Runs syncSelected and reports progress and result through `notice`. */
+export async function runSyncSelected(clipIds: string[]): Promise<void> {
+  if (syncingSel) return
+  syncingSel = true
+  const { setNotice } = useBeatMatch.getState()
+  try {
+    const r = await syncSelected(clipIds, (d, n, name) => setNotice(d < n ? `Syncing ${d + 1} of ${n}: ${name}…` : null))
+    const st = useProjectStore.getState().project
+    const barBeats = st.timeSignature?.[0] ?? 4
+    setNotice(r.synced
+      ? `${r.synced} clip(s) synced to ${st.bpm} BPM, all start together on bar ${Math.round(r.bar / barBeats) + 1}${r.skipped.length ? `. Skipped: ${r.skipped.join('; ')}` : '.'}${r.unsteady.length ? ` Check by ear: ${r.unsteady.join(', ')} – ${unsteadyNote}` : ''}`
+      : `Nothing was synced${r.skipped.length ? `: ${r.skipped.join('; ')}` : ' (select audio clips first).'}`)
+  } finally {
+    syncingSel = false
+  }
+}
+
+/** The selected audio clips, when there are at least two: AUTO SYNC and Sync all then work on them together. */
+export function selectedAudioIds(): string[] {
+  const st = useProjectStore.getState()
+  const ids = new Set(st.selectedClipIds)
+  return st.project.tracks.flatMap((t) => t.clips.filter((c) => ids.has(c.id) && c.audioFile).map((c) => c.id))
+}
+
+export interface SyncAllResult { synced: number; already: number; skipped: string[]; unsteady: string[] }
+
+const unsteadyNote = 'its tempo is not steady (live playing?), so one grid cannot follow it everywhere: check by ear, warp markers can pin beats that drift.'
 
 /** "Sync all": measure every audio clip that is not synced yet and bring it to the master BPM, beats on the grid. */
 export async function syncAll(onProgress?: (done: number, total: number, name: string) => void): Promise<SyncAllResult> {
@@ -235,6 +328,7 @@ export async function syncAll(onProgress?: (done: number, total: number, name: s
     }
   }
   const skipped: string[] = []
+  const unsteady: string[] = []
   let synced = 0
   for (const [i, t] of targets.entries()) {
     onProgress?.(i, targets.length, t.name)
@@ -244,13 +338,13 @@ export async function syncAll(onProgress?: (done: number, total: number, name: s
       const r = await measure(clip.audioFile)
       const p = proposalFor(t.trackId, t.clipId, r)
       if (!p) { skipped.push(`${t.name}: no steady beat (one-shot or free rhythm)`); continue }
-      if (matchClip(p, p.bpm!, true)) synced++
+      if (matchClip(p, p.bpm!, true)) { synced++; if (r.steady === false) unsteady.push(t.name) }
     } catch (e) {
       skipped.push(`${t.name}: ${(e as Error).message}`)
     }
   }
   onProgress?.(targets.length, targets.length, '')
-  return { synced, already, skipped }
+  return { synced, already, skipped, unsteady }
 }
 
 let syncing = false
@@ -263,7 +357,7 @@ export async function runSyncAll(): Promise<void> {
   try {
     const r = await syncAll((d, n, name) => setNotice(d < n ? `Syncing ${d + 1} of ${n}: ${name}…` : null))
     const bpm = useProjectStore.getState().project.bpm
-    setNotice(`Synced ${r.synced} clip(s) to ${bpm} BPM${r.already ? `, ${r.already} already synced` : ''}${r.skipped.length ? `. Skipped: ${r.skipped.join('; ')}` : '.'}`)
+    setNotice(`Synced ${r.synced} clip(s) to ${bpm} BPM${r.already ? `, ${r.already} already synced` : ''}${r.skipped.length ? `. Skipped: ${r.skipped.join('; ')}` : '.'}${r.unsteady.length ? ` Check by ear: ${r.unsteady.join(', ')} – ${unsteadyNote}` : ''}`)
   } finally {
     syncing = false
   }

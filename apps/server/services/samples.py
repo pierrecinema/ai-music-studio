@@ -205,10 +205,35 @@ def analyze(path: str) -> dict:
         if r > best_r:
             best, best_r = float(cand), r
     bpm = best
-    if abs(bpm - round(bpm)) < 0.08:                                # the fine-tune is exact: snap only real whole BPM
-        bpm = float(round(bpm))
-    elif abs(bpm * 2 - round(bpm * 2)) < 0.1:                       # x.5 BPM also happens (e.g. 87.5)
-        bpm = round(bpm * 2) / 2.0
+    # the attacks (kick, bass) the grid has to hit: onset peaks of the low end, else of the whole signal
+    try:
+        low = librosa.onset.onset_strength(y=y, sr=sr, hop_length=hop, fmax=160, n_mels=32)
+    except Exception:  # noqa: BLE001
+        low = env
+    hits = librosa.frames_to_time(librosa.onset.onset_detect(onset_envelope=low, sr=sr, hop_length=hop, units="frames", backtrack=False), sr=sr, hop_length=hop)
+    if len(hits) < 16:
+        hits = librosa.frames_to_time(librosa.onset.onset_detect(onset_envelope=env, sr=sr, hop_length=hop, units="frames", backtrack=False), sr=sr, hop_length=hop)
+
+    def grid_error(b: float) -> float:
+        """Median distance (s) of the attacks near a grid at tempo b, with the phase that fits them best."""
+        iv = 60.0 / b
+        if len(hits) < 8:
+            return 0.0
+        z = np.sum(np.exp(2j * np.pi * (hits % iv) / iv))
+        ph = (np.angle(z) % (2 * np.pi)) / (2 * np.pi) * iv
+        d = np.abs((hits - ph + iv / 2) % iv - iv / 2)
+        near = d[d < iv / 6]                                      # off-beat hits (hats, snares on 2 and 4) left out
+        return float(np.median(near)) if len(near) >= 8 else 0.0
+
+    # round tempo (like Mixxx and opendj): most music is made at a whole or half BPM, and a fit a few hundredths off
+    # drifts across a long song. But only when the attacks sit on the round grid as well as on the fitted one
+    # (within 3 ms): a song really at 124.07 stays at 124.07 (rounded to 124 it was 50 ms off after 3 minutes).
+    fitted_err = grid_error(bpm)
+    for step in (1.0, 0.5):
+        r = round(bpm / step) * step
+        if abs(r - bpm) <= 0.1 and grid_error(r) <= fitted_err + 0.003:
+            bpm = float(r)
+            break
     interval = 60.0 / bpm
 
     # phase: where the tracker's beats sit within the beat (circular mean), so hi-hats on the off-beats cannot
@@ -218,11 +243,6 @@ def analyze(path: str) -> dict:
         return float((np.angle(z) % (2 * np.pi)) / (2 * np.pi) * interval) if abs(z) > 1e-9 else None
     phase = circ(times, np.ones(len(times))) or float(times[0] % interval)
     # beat trackers often lock onto loud off-beat hi-hats: the beat is where the low end (kick, bass) hits
-    try:
-        low = librosa.onset.onset_strength(y=y, sr=sr, hop_length=hop, fmax=160, n_mels=32)
-    except Exception:  # noqa: BLE001
-        low = env
-
     def low_at(ph: float) -> float:
         grid = ph + np.arange(int((len(y) / sr - ph) / interval)) * interval
         idx = np.clip(librosa.time_to_frames(grid, sr=sr, hop_length=hop), 0, len(low) - 1)
@@ -256,8 +276,29 @@ def analyze(path: str) -> dict:
     except Exception:  # noqa: BLE001 - no downbeat: beat 1 is the first beat
         downbeat = first
 
+    # steady or not (opendj marks such grids "unsure"): live playing whose tempo moves cannot sit on one grid,
+    # and a synced copy of it drifts in and out. Measured as the attacks' distance from the final grid.
+    steady = True
+    try:
+        pk = librosa.onset.onset_detect(onset_envelope=low, sr=sr, hop_length=hop, units="frames", backtrack=False)
+        if len(pk) >= 24:
+            w = low[pk]
+            ht = librosa.frames_to_time(pk, sr=sr, hop_length=hop)[w > np.percentile(w, 60)]   # the strong hits only
+            sd = (ht - first + interval / 2) % interval - interval / 2                               # signed, seconds
+            on = np.abs(sd) < 0.06
+            # the grid drifts away from the beats somewhere (compare the thirds of the song), or most strong hits
+            # are nowhere near it
+            thirds = [sd[on & (ht >= a * ht.max()) & (ht < b * ht.max())] for a, b in ((0, 1 / 3), (1 / 3, 2 / 3), (2 / 3, 1.01))]
+            meds = [float(np.median(x)) for x in thirds if len(x) >= 6]
+            if (len(meds) >= 2 and max(meds) - min(meds) > 0.02) or float(np.mean(np.abs(sd) < 0.03)) < 0.5:
+                steady = False
+    except Exception:  # noqa: BLE001 - no verdict: treat as steady
+        steady = True
+
     bpm, first, downbeat = float(bpm), float(first), float(downbeat)
     return {
+        "steady": steady,
+        **({} if steady else {"note": "The tempo of this song is not steady (live playing?): one grid cannot follow it everywhere. Check by ear; warp markers can pin the beats that drift."}),
         "bpm": round(bpm, 2), "first_beat": round(max(0.0, first), 4), "downbeat": round(max(0.0, downbeat), 4),
         "beats": int(len(times)), "alternatives": [round(bpm / 2, 2), round(bpm * 2, 2)], "duration": total,
     }

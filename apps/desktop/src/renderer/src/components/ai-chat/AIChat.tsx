@@ -35,7 +35,8 @@ export function AIChat({ compact = false }: AIChatProps): React.ReactElement {
         apiKey,
         model,
         messages: [...messages.map(m => ({ role: m.role, content: m.content })), { role: 'user', content: text }],
-        systemContext: projectContext
+        systemContext: projectContext,
+        baseUrl: useAIStore.getState().localUrl
       })
       addMessage({ role: 'assistant', content: reply })
     } catch (err: any) {

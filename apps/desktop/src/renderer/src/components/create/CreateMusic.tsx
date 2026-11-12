@@ -178,7 +178,7 @@ async function askAI(system: string, user: string): Promise<string> {
   const apiKey = apiKeyFor(st)
   if (!apiKey) throw new Error(tr('Add an API key in Settings → AI first.'))
   return api.ai.chat({
-    provider, apiKey, model, systemContext: system,
+    provider, apiKey, model, systemContext: system, baseUrl: st.localUrl,
     messages: [{ role: 'user', content: user }],
   })
 }

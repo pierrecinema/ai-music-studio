@@ -199,7 +199,7 @@ function UpdatesTab(): React.ReactElement {
 export function Settings(): React.ReactElement {
   const { t } = useTranslation()
   const { theme, setTheme, language, setLanguage } = useUIStore()
-  const { provider, setProvider, claudeApiKey, setClaudeApiKey, openaiApiKey, setOpenaiApiKey, grokApiKey, setGrokApiKey, model, setModel } = useAIStore()
+  const { provider, setProvider, claudeApiKey, setClaudeApiKey, openaiApiKey, setOpenaiApiKey, grokApiKey, setGrokApiKey, model, setModel, localUrl, setLocalUrl } = useAIStore()
   const [tab, setTab] = useState<SettingsTab>(() => {
     const wanted = sessionStorage.getItem('ams-settings-tab') as SettingsTab | null
     sessionStorage.removeItem('ams-settings-tab')
@@ -285,7 +285,7 @@ export function Settings(): React.ReactElement {
             <div>
               <label style={labelStyle}>{t('settings.aiProvider')}</label>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {(['claude', 'openai', 'grok', 'ollama'] as AIProvider[]).map(p => (
+                {(['claude', 'openai', 'grok', 'ollama', 'local'] as AIProvider[]).map(p => (
                   <button
                     key={p}
                     onClick={() => setProvider(p)}
@@ -300,7 +300,7 @@ export function Settings(): React.ReactElement {
                       fontWeight: provider === p ? 600 : 400
                     }}
                   >
-                    {p === 'claude' ? 'Claude (Anthropic)' : p === 'openai' ? 'ChatGPT (OpenAI)' : p === 'grok' ? 'Grok (xAI)' : 'Ollama (free, on this PC)'}
+                    {p === 'claude' ? 'Claude (Anthropic)' : p === 'openai' ? 'ChatGPT (OpenAI)' : p === 'grok' ? 'Grok (xAI)' : p === 'ollama' ? 'Ollama (free, on this PC)' : 'Local server (LM Studio, KoboldCpp, llama.cpp)'}
                   </button>
                 ))}
               </div>
@@ -385,6 +385,36 @@ export function Settings(): React.ReactElement {
                 <div>
                   <label style={labelStyle}>{t('settings.model')}</label>
                   <ModelPicker models={OLLAMA_MODELS} value={model} onChange={setModel} />
+                </div>
+              </>
+            )}
+
+            {provider === 'local' && (
+              <>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  <b>Free, on this PC, also on older AMD graphics cards:</b> any program that offers an OpenAI-compatible
+                  server works. LM Studio and KoboldCpp run models on the graphics card through <b>Vulkan</b>, which also works on
+                  cards that ROCm and CUDA do not support (for example an AMD Radeon R9 290 with 4 GB: small models of 1 to 3
+                  billion parameters, 4-bit GGUF files of up to about 2.5 GB).
+                  <ol style={{ margin: '6px 0 0 18px', padding: 0 }}>
+                    <li>Install LM Studio (lmstudio.ai) or KoboldCpp (github.com/LostRuins/koboldcpp, file koboldcpp.exe).</li>
+                    <li>Choose <b>Vulkan</b> as backend (LM Studio: runtime "Vulkan llama.cpp"; KoboldCpp: preset "Use Vulkan") and load a small GGUF model.</li>
+                    <li>Start the server (LM Studio: Developer → Start Server; KoboldCpp starts it by itself), then choose the address below.</li>
+                  </ol>
+                </div>
+                <div>
+                  <label style={labelStyle}>Server address</label>
+                  <input value={localUrl} onChange={e => setLocalUrl(e.target.value.trim())} placeholder="http://127.0.0.1:1234/v1" style={inputStyle} />
+                  <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                    {[['LM Studio', 'http://127.0.0.1:1234/v1'], ['KoboldCpp', 'http://127.0.0.1:5001/v1'], ['llama.cpp server', 'http://127.0.0.1:8080/v1']].map(([n, u]) => (
+                      <button key={n} onClick={() => setLocalUrl(u)} style={{ ...smallBtnStyle, fontWeight: localUrl === u ? 700 : 400 }}>{n}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>{t('settings.model')}</label>
+                  <input value={model} onChange={e => setModel(e.target.value)} placeholder="local-model" style={inputStyle} />
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>The model loaded in the server; most servers answer with the loaded model whatever name is given here.</div>
                 </div>
               </>
             )}

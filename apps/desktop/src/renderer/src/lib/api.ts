@@ -174,11 +174,12 @@ export const api = {
 
   ai: {
     chat: (body: {
-      provider: 'claude' | 'openai' | 'grok' | 'ollama'
+      provider: 'claude' | 'openai' | 'grok' | 'ollama' | 'local'
       apiKey: string
       model: string
       messages: Array<{ role: 'user' | 'assistant'; content: string }>
       systemContext: string
+      baseUrl?: string               // provider 'local': the address of the server on this PC
     }) => post<string>('/ai/chat', body),
 
     generateChords: (body: { key: string; mode: string; bars: number; style: string }) =>

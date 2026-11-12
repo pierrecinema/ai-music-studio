@@ -220,6 +220,7 @@ class GenerateMusicRequest(BaseModel):
     prompt: str = ""
     lyrics: str = ""
     tags: list[str] = []                    # saved with every song and loop in the library (searchable)
+    preview: bool = False                   # short voice previews: kept out of the library
     instrumental: bool = False
     acapella: bool = False                  # only the voice: sung lyrics without any instruments
     loop: bool = False                      # a loop of exactly loop_bars bars that repeats seamlessly
@@ -562,6 +563,9 @@ def loop_title(base: str, bpm: float | None, bars: int) -> str:
 
 def _keep(path: str, req: "GenerateMusicRequest", seed: int, seconds: float, engine: str) -> dict:
     """Put a finished track into the library for good. Returns what the UI needs: permanent path, id and title."""
+    if req.preview:                                       # a voice preview: listen, choose, forget
+        _start_info.pop(path, None)
+        return {"audio_file": path, "library_id": None, "title": f"Voice preview (seed {seed})"}
     try:
         from services import library
         info = _start_info.pop(path, {})

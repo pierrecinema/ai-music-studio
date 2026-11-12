@@ -320,6 +320,7 @@ export function CreateMusic(): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [aiBusy, setAiBusy] = useState<string | null>(null)
+  const [previewJobId, setPreviewJobId] = useState<string | null>(null)
   const lyricsRef = useRef<HTMLTextAreaElement>(null)
   // a section tag at the cursor, on a line of its own
   const insertSection = (tag: string): void => {
@@ -406,15 +407,36 @@ export function CreateMusic(): React.ReactElement {
 
   // when a job finishes while this screen is open, put the tracks on the timeline if asked
   useEffect(() => {
-    if (job?.status !== 'done' || intoProject !== 'new') return
+    if (job?.status !== 'done' || intoProject !== 'new' || job.id === previewJobId) return
     const st = useMusicJob.getState()
     if (st.handled.includes(job.id)) return
     st.markHandled(job.id)
     addToProject(job)
-  }, [job, intoProject, addToProject])
+  }, [job, intoProject, addToProject, previewJobId])
+
+  // voice previews: three short takes of the first lines with different seeds; the chosen seed makes the whole song
+  const canPreview = !p.instrumental && (p.engine === 'ace-step' || p.engine === 'ace-step-1.5')
+  const previewVoices = async () => {
+    setError(null); setNotice(null); setJob(null)
+    try {
+      const lines = p.lyrics.split('\n').map((l) => l.trim()).filter((l) => l && !/^\[.*\]$/.test(l)).slice(0, 4)
+      const body = { ...toRequest(p), duration: 20, songs: 3, variations: 1, queue: 1, randomize_seed: true, seed: null, loop: false, preview: true,
+        lyrics: lines.length ? `[Verse]\n${lines.join('\n')}` : '' }
+      const { jobId } = await api.music.generate(body)
+      setPreviewJobId(jobId)
+      setJob({ id: jobId, status: 'queued', warnings: [], results: [] })
+      useMusicJob.getState().track(jobId)
+    } catch (e) {
+      setError(String((e as Error).message))
+    }
+  }
+  const useVoice = (seed: number) => {
+    setP((s) => ({ ...s, randomizeSeed: false, seed: String(seed) }))
+    setNotice(`${tr('Voice chosen: the song is made with seed')} ${seed}. ${tr('Press Create.')}`)
+  }
 
   const create = async () => {
-    setError(null); setNotice(null); setJob(null)
+    setError(null); setNotice(null); setJob(null); setPreviewJobId(null)
     try {
       const body = toRequest(p)
       if (mode === 'simple') body.songs = body.variations = body.queue = 1
@@ -653,6 +675,15 @@ export function CreateMusic(): React.ReactElement {
               <textarea ref={lyricsRef} value={p.lyrics} onChange={(e) => set('lyrics', e.target.value)} rows={studio ? 9 : 5}
                 style={{ ...full, fontFamily: 'monospace' }} placeholder={'[Verse]\n…\n\n[Chorus]\n…'} />
               <span style={hint}>{tr("Click a section to insert it, or write stanzas separated by an empty line and press Auto structure. Lyrics without sections are structured automatically when the song is made. Empty lyrics are written by the model.")}</span>
+              {canPreview && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={busy || !p.lyrics.trim()} onClick={previewVoices}
+                    title={tr('Three short takes (20 s) of your first lines, each with another voice. Listen, then press “Use this voice” on the one you like: the whole song is made with it.')}>
+                    🎤 {tr('Preview voices (3 × 20 s)')}
+                  </button>
+                  {!p.randomizeSeed && p.seed && <span style={hint}>{tr('Voice fixed: seed')} {p.seed}</span>}
+                </div>
+              )}
             </>
           )}
         </Card>
@@ -904,7 +935,7 @@ export function CreateMusic(): React.ReactElement {
         {job?.warnings.map((w, i) => <div key={i} style={{ color: 'var(--yellow)', fontSize: 11 }}>{w}</div>)}
         {!job && !error && <div style={hint}>{tr("Your songs appear here. Describe the music on the left and press Create.")}</div>}
         {busy && job && <ProgressPanel job={job} />}
-        {job?.status === 'done' && job.results.length > 0 && (
+        {job?.status === 'done' && job.results.length > 0 && job.id !== previewJobId && (
           <div style={{ ...hint, color: 'var(--green)' }}>
             {tr("Saved in the")} <button className="btn btn-ghost" style={{ fontSize: 11, padding: '0 6px' }} onClick={() => useUIStore.getState().setActiveView('library')}>{tr("Library")}</button>
             {tr(": you can find these songs there at any time.")}
@@ -918,8 +949,13 @@ export function CreateMusic(): React.ReactElement {
             </div>
             <AudioFile path={r.audio_file} />
             <div>
-              <button className="btn btn-ghost" style={{ fontSize: 11 }}
-                onClick={() => addToProject({ ...job, results: [r] })}>{tr("Add to project")}</button>
+              {job.id === previewJobId ? (
+                <button className="btn btn-primary" style={{ fontSize: 11 }} title={tr('Make the whole song with this voice (its seed)')}
+                  onClick={() => useVoice(r.seed)}>🎤 {tr('Use this voice')}</button>
+              ) : (
+                <button className="btn btn-ghost" style={{ fontSize: 11 }}
+                  onClick={() => addToProject({ ...job, results: [r] })}>{tr("Add to project")}</button>
+              )}
             </div>
           </div>
         ))}

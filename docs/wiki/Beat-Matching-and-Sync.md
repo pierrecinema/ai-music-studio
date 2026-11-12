@@ -9,7 +9,9 @@ When audio comes into the [[Studio]], the app builds a beat grid, like DJ progra
 3. **Downbeat:** of the four beats of a bar, the one with the strongest low-end attack is beat 1.
 4. **Steady or not:** if the tempo moves (live playing, a drummer without a click), the app says so: check those clips by ear; warp markers can pin beats that drift.
 
-Synced clips show their grid as white lines on the waveform (every 4th line stronger). Whole songs are stretched too (long files on the AI backend), without changing the pitch.
+Synced clips show their grid as white lines on the waveform (every 4th line stronger).
+
+**Stretching beat by beat:** a synced clip is cut at every beat of its grid and each piece is stretched on its own (like the *Beats* warp mode of DAWs), without changing the pitch. Every kick lands within 1 ms of its beat, also in whole songs.
 
 ## The controls
 | Where | Control | What it does |

@@ -218,7 +218,8 @@ export const api = {
     search: (q: string, root?: string, bpm?: number) =>
       get<{ total: number; count: number; items: SampleEntry[] }>(`/samples?q=${encodeURIComponent(q)}${root ? `&root=${encodeURIComponent(root)}` : ''}${bpm ? `&bpm=${bpm}` : ''}`),
     // a long file made ratio times as long (source BPM / project BPM) on the backend: returns the new file
-    stretch: (path: string, ratio: number) => post<{ path: string }>('/samples/stretch', { path, ratio }),
+    stretch: (path: string, ratio: number, grid?: { firstBeat: number; bpm: number }) =>
+      post<{ path: string }>('/samples/stretch', { path, ratio, ...(grid ? { first_beat: grid.firstBeat, bpm: grid.bpm } : {}) }),
     analyze: (path: string) => post<{ bpm: number | null; first_beat?: number | null; downbeat?: number | null; beats?: number; alternatives?: number[]; duration: number | null; note?: string; steady?: boolean }>('/samples/analyze', { path }),
   },
 

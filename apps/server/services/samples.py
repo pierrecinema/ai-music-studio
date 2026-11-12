@@ -304,7 +304,7 @@ def analyze(path: str) -> dict:
     }
 
 
-def stretch(path: str, ratio: float) -> str:
+def stretch(path: str, ratio: float, first_beat: float | None = None, bpm: float | None = None) -> str:
     """The file made `ratio` times as long without changing its pitch (ratio = source BPM / project BPM), as a
     32-bit float WAV in a cache folder. For songs too long for the Studio's own stretcher (over 90 s): before,
     they played at their own tempo next to a synced grid and drifted. Same file and ratio: the cached copy."""
@@ -312,26 +312,112 @@ def stretch(path: str, ratio: float) -> str:
     import tempfile
     import numpy as np
     import soundfile as sf
-    import librosa
     if not (0.25 < ratio < 4):
         raise ValueError("The tempo difference is too large to sync.")
     st = os.stat(path)
-    key = hashlib.sha1(f"{os.path.abspath(path)}|{st.st_mtime_ns}|{st.st_size}|{ratio:.6f}".encode()).hexdigest()[:20]
+    key = hashlib.sha1(f"wsola2|{os.path.abspath(path)}|{st.st_mtime_ns}|{st.st_size}|{ratio:.6f}|{first_beat}|{bpm}".encode()).hexdigest()[:20]
     folder = os.path.join(tempfile.gettempdir(), "ams_stretch")
     os.makedirs(folder, exist_ok=True)
     out = os.path.join(folder, f"{key}.wav")
     if os.path.exists(out) and os.path.getsize(out) > 0:
         return out
     data, sr = sf.read(path, dtype="float32", always_2d=True)          # (samples, channels)
-    rate = 1.0 / ratio                                                 # librosa: >1 plays faster
-    chans = [librosa.effects.time_stretch(np.ascontiguousarray(data[:, c]), rate=rate, n_fft=4096, hop_length=1024)
-             for c in range(data.shape[1])]
-    n = min(len(c) for c in chans)
-    y = np.stack([c[:n] for c in chans], axis=1)
+    if first_beat is not None and bpm and bpm > 20:
+        y = beat_slices(data, sr, ratio, float(first_beat), 60.0 / float(bpm))
+    else:
+        y = wsola(data, ratio)
     target = int(round(len(data) * ratio))                             # exact length: the grid stays exact
-    if n < target:
-        y = np.pad(y, ((0, target - n), (0, 0)))
+    if len(y) < target:
+        y = np.pad(y, ((0, target - len(y)), (0, 0)))
+    y = y[:target]
     tmp = out + ".part.wav"
-    sf.write(tmp, y[:target], sr, subtype="FLOAT")
+    sf.write(tmp, y, sr, subtype="FLOAT")
     os.replace(tmp, out)
     return out
+
+
+def wsola(data, ratio: float, frame: int = 2048, search: int = 384, coarse: int = 4):
+    """Time-stretch (samples, channels) by `ratio` (output / input length) without changing the pitch: WSOLA, the
+    same method as the Studio uses for loops. Pieces of the real waveform are joined where they fit best, so a kick
+    stays a sharp kick. (Up to 0.18.7 long songs went through a phase vocoder, which smeared every attack over
+    about 60 ms and moved single beats by up to 40 ms: "it does not start exactly on the beat".)
+    Each piece is taken within `search` samples of its exact place, so the timing never drifts."""
+    import numpy as np
+    half = frame // 2
+    n = len(data)
+    guide = data.mean(axis=1).astype(np.float64)
+    hop_a = half / ratio
+    frames = max(1, int(np.ceil(n / hop_a)))
+    g = guide[::coarse]                                                 # the search looks at every 4th sample
+    fc, sc = frame // coarse, search // coarse
+    pos = np.zeros(frames, dtype=np.int64)
+    prev = 0
+    for k in range(1, frames):
+        nominal = int(round(k * hop_a))
+        natural = prev + half
+        best = nominal
+        if natural + frame < n and nominal - search >= 0 and nominal + search + frame < n:
+            tmpl = g[natural // coarse:natural // coarse + fc]
+            lo = (nominal - search) // coarse
+            win = g[lo:lo + 2 * sc + fc]
+            if len(tmpl) == fc and len(win) >= fc:
+                c = lo * coarse + int(np.argmax(np.correlate(win, tmpl, mode="valid"))) * coarse
+                ref = guide[natural:natural + frame]                    # refine to the sample around the coarse hit
+                cands = [d for d in range(c - coarse, c + coarse + 1) if 0 <= d and d + frame <= n]
+                best = max(cands, key=lambda d: float(np.dot(guide[d:d + frame], ref))) if cands else nominal
+        pos[k] = min(max(0, best), max(0, n - 1))
+        prev = int(pos[k])
+    out_len = int(np.ceil(n * ratio)) + frame
+    w = (0.5 - 0.5 * np.cos(2 * np.pi * np.arange(frame) / frame)).astype(np.float32)
+    out = np.zeros((out_len, data.shape[1]), dtype=np.float32)
+    norm = np.zeros(out_len, dtype=np.float32)
+    for k in range(frames):
+        o = k * half
+        if o + frame > out_len:
+            break
+        a = int(pos[k])
+        seg = data[a:a + frame]
+        if len(seg) < frame:
+            seg = np.pad(seg, ((0, frame - len(seg)), (0, 0)))
+        out[o:o + frame] += seg * w[:, None]
+        norm[o:o + frame] += w
+    out /= np.maximum(norm, 1e-4)[:, None]
+    return out
+
+
+def beat_slices(data, sr: int, ratio: float, first_beat: float, interval: float):
+    """Stretch beat by beat (like the "Beats" warp mode of DAWs): the song is cut at every beat of its grid and each
+    piece is stretched on its own, starting exactly at its place. So every kick lands exactly on its beat (WSOLA
+    alone may put a single attack up to 15 ms early or late), and nothing can drift. The pieces are crossfaded over
+    a few milliseconds just BEFORE each cut, so the cuts cannot click and the attack after the cut keeps its full
+    strength."""
+    import numpy as np
+    n = len(data)
+    fade = int(0.004 * sr)                                              # crossfade before each cut (samples)
+    cuts = [0]
+    t = first_beat
+    while t * sr < n:
+        c = int(round(t * sr))
+        if c > cuts[-1] + fade * 4:
+            cuts.append(c)
+        t += interval
+    cuts.append(n)
+    out_len = int(round(n * ratio))
+    out = np.zeros((out_len + 8192, data.shape[1]), dtype=np.float32)
+    ramp_in = np.linspace(0, 1, fade, dtype=np.float32)[:, None]
+    for i in range(len(cuts) - 1):
+        a, b = cuts[i], cuts[i + 1]
+        oa, ob = int(round(a * ratio)), int(round(b * ratio))
+        want = ob - oa
+        piece = data[a:b]
+        st = wsola(piece, ratio)[:want] if len(piece) > 4096 else piece[np.minimum((np.arange(want) / ratio).astype(int), len(piece) - 1)]
+        if len(st) < want:
+            st = np.pad(st, ((0, want - len(st)), (0, 0)))
+        st = st.copy()
+        if i > 0 and oa >= fade and a >= fade:
+            # the last few ms before the cut: the previous piece fades out while the unstretched audio just before
+            # this cut fades in, so the join is seamless and the beat itself starts untouched
+            out[oa - fade:oa] *= (1 - ramp_in)
+            out[oa - fade:oa] += data[a - fade:a] * ramp_in
+        out[oa:oa + want] += st
+    return out[:out_len]

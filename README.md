@@ -95,6 +95,16 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.5
+
+- **ACE-Step 1.5 install, second fix:** one of its packages made pip replace the installed PyTorch with an older one that no longer matched torchvision ("operator torchvision::nms does not exist"). PyTorch is now held at its installed version while the packages are installed, a broken PyTorch is repaired by *Install selected*, and torchao / torchcodec are left out if no version of them fits.
+- **Beat matching and AUTO SYNC rebuilt like DJ software builds a beat grid:**
+  - **Whole songs are synced too.** The Studio stretched only files up to 90 seconds; longer songs kept their own tempo next to the synced grid and drifted away from the metronome ("every song a little different"). Long files are now stretched on the AI backend to the project tempo, exactly to the length the grid expects.
+  - **Exact tempo:** after the beat tracker, the tempo is fine-tuned over up to four minutes of the song (the tempo at which its attacks line up best), so 124 is 124 and not 123.6, and real in-between tempos such as 127.3 stay as they are.
+  - **Exact phase:** the grid sits on the kick, not on loud off-beat hi-hats (beat trackers often lock half a beat off), and on the attack itself, not a few milliseconds before or after. On test tracks within 1–7 ms (before: up to half a beat).
+  - **Bar sync:** the downbeat (beat 1 of a bar, found by its low-end attack) is put on a bar line of the project, not just on any beat.
+  - Songs saved earlier are measured again when they are synced (only loops keep their stored tempo).
+
 ### New in 0.18.4
 
 - **ACE-Step 1.5 installs on Windows:** its package list asks for *nano-vllm* (its language model runtime, not on PyPI) and a CUDA build of PyTorch pinned to its own server, so pip stopped with "No matching distribution found for nano-vllm". The install now takes the list without these (the music part used here does not need them), installs PyTorch for your PC, and checks that ACE-Step 1.5 starts.

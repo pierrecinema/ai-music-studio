@@ -9,6 +9,7 @@ import { useProjectStore } from '../src/renderer/src/stores/project.store'
 import type { Project, Track } from '../src/renderer/src/types'
 import { matchesQuery } from '../src/renderer/src/lib/librarySearch'
 import type { LibraryTrack } from '../src/renderer/src/lib/api'
+import { phaseAlign } from '../src/renderer/src/beatmatch/store'
 
 let failed = 0
 let passed = 0
@@ -136,6 +137,18 @@ check('search by tag', matchesQuery(loopT, 'warm') && matchesQuery(stemT, 'Synth
 check('search by bpm', matchesQuery(loopT, '124') && matchesQuery(loopT, '123') && !matchesQuery(loopT, '120'))
 check('search by bpm range', matchesQuery(stemT, '110-120') && matchesQuery(stemT, 'bpm 118') && !matchesQuery(loopT, '110-120'))
 check('search by stem name and several words', matchesQuery(stemT, 'vocals midnight') && !matchesQuery(stemT, 'vocals house'))
+
+// beat sync: a clip's beats on project beats; with a measured downbeat, its bar 1 on a project bar line
+{
+  // 120 BPM file, first beat 0.25 s in, downbeat on its 3rd beat (0.25 + 2 * 0.5 = 1.25 s); clip dropped at beat 5.3
+  const beatOnly = phaseAlign({ startTime: 5.3, duration: 16 }, 0.25, 120)
+  const firstBeatAt = beatOnly.startTime + 0.25 / 0.5
+  check('phase sync puts a beat on a project beat', near(firstBeatAt, Math.round(firstBeatAt)), String(firstBeatAt))
+  const bar = phaseAlign({ startTime: 5.3, duration: 16 }, 0.25, 120, 1.25, 4)
+  const downAt = bar.startTime + 1.25 / 0.5
+  check('bar sync puts the downbeat on a bar line', near(downAt % 4, 0) || near(downAt % 4, 4), String(downAt))
+  check('bar sync moves at most two beats', Math.abs(bar.startTime - 5.3) <= 2.0001, String(bar.startTime))
+}
 
 console.log(`${passed} passed, ${failed} failed`)
 if (failed) process.exit(1)

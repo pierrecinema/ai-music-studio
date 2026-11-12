@@ -152,17 +152,20 @@ def search(query: str = "", root: str | None = None, bpm: float | None = None, l
 
 
 def analyze(path: str) -> dict:
-    """Measure tempo and the time of the first beat (first 90 seconds).
+    """Measure tempo, first beat and first downbeat (beat 1 of a bar), like a DJ program builds a beat grid.
 
-    A beat tracker alone is only good to a few percent, which is audible when a loop is stretched. So the
-    beat times are fitted with a straight line (beat k happens at a + k * interval); outliers are dropped,
-    the slope gives the tempo and the intercept the phase. Near-whole tempos snap to the whole number,
-    because loops and songs are almost always made at those.
+    1. Tempo: the beat tracker's beats are fitted with a straight line (beat k at a + k * interval, outliers
+       dropped) over up to four minutes; near-whole tempos snap to the whole number (Mixxx does the same: most
+       music is made at whole BPM, and a fitted 123.96 drifts audibly against a 124 grid within a minute).
+    2. Phase: with the tempo fixed, the grid is laid over the strong onsets of the whole analysed part (a weighted
+       circular mean of their positions within a beat), so one early or late hit cannot shift it. Onsets are
+       taken at their peak, not backtracked to the quiet before them (that put the grid a few ms early).
+    3. Downbeat: of the four beats of a bar, the one with the most low-end (kick, bass) attack is beat 1.
     """
     import numpy as np
     import librosa
     hop = 256
-    y, sr = librosa.load(path, sr=22050, mono=True, duration=90)
+    y, sr = librosa.load(path, sr=22050, mono=True, duration=240)
     total = None
     try:
         import soundfile as sf
@@ -178,7 +181,7 @@ def analyze(path: str) -> dict:
     guess = float(np.atleast_1d(tempo)[0])
     if len(times) < 3 or guess <= 0:
         return {"bpm": None, "first_beat": None, "duration": total, "note": "No clear beat found (no steady rhythm)."}
-    bpm, phase, interval = guess, float(times[0]), 60.0 / guess
+    bpm = guess
     if len(times) >= 6:
         k = np.arange(len(times))
         slope, icpt = np.polyfit(k, times, 1)
@@ -187,22 +190,107 @@ def analyze(path: str) -> dict:
         if keep.sum() >= 5:
             slope, icpt = np.polyfit(k[keep], times[keep], 1)
         if slope > 0 and abs(60.0 / slope - guess) / guess < 0.08:
-            bpm, interval, phase = 60.0 / slope, float(slope), float(icpt)
+            bpm = 60.0 / slope
     while bpm < 70:
-        bpm, interval = bpm * 2, interval / 2
+        bpm *= 2
     while bpm > 180:
-        bpm, interval = bpm / 2, interval * 2
-    if abs(bpm - round(bpm)) < 0.35:
+        bpm /= 2
+    # fine-tune: the tempo at which the onset energy lines up best on one phase (comb over the whole analysed
+    # part). The tracker's beats are only good to about half a percent, which drifts by a beat within minutes.
+    ft = librosa.frames_to_time(np.arange(len(env)), sr=sr, hop_length=hop)
+    e = np.maximum(env - np.median(env), 0)
+    best, best_r = bpm, -1.0
+    for cand in np.arange(bpm * 0.985, bpm * 1.015, 0.01):
+        r = abs(np.sum(e * np.exp(2j * np.pi * ft * cand / 60.0)))
+        if r > best_r:
+            best, best_r = float(cand), r
+    bpm = best
+    if abs(bpm - round(bpm)) < 0.08:                                # the fine-tune is exact: snap only real whole BPM
         bpm = float(round(bpm))
-        interval = 60.0 / bpm
-    first = phase % interval if phase < 0 or phase > interval else phase      # the first beat inside the file
-    # snap the phase to the nearest real onset (within 60 ms): the line fit is smoother, the onset is exact
-    onsets = librosa.onset.onset_detect(onset_envelope=env, sr=sr, hop_length=hop, units="time", backtrack=True)
-    if len(onsets):
-        near = onsets[np.argmin(np.abs(onsets - first))]
-        if abs(near - first) < 0.06:
-            first = float(near)
+    elif abs(bpm * 2 - round(bpm * 2)) < 0.1:                       # x.5 BPM also happens (e.g. 87.5)
+        bpm = round(bpm * 2) / 2.0
+    interval = 60.0 / bpm
+
+    # phase: where the tracker's beats sit within the beat (circular mean), so hi-hats on the off-beats cannot
+    # pull the grid half a beat away; then refined by the strong onset peaks (not backtracked) near that phase
+    def circ(t: np.ndarray, w: np.ndarray) -> float | None:
+        z = np.sum(w * np.exp(2j * np.pi * (t % interval) / interval))
+        return float((np.angle(z) % (2 * np.pi)) / (2 * np.pi) * interval) if abs(z) > 1e-9 else None
+    phase = circ(times, np.ones(len(times))) or float(times[0] % interval)
+    # beat trackers often lock onto loud off-beat hi-hats: the beat is where the low end (kick, bass) hits
+    try:
+        low = librosa.onset.onset_strength(y=y, sr=sr, hop_length=hop, fmax=160, n_mels=32)
+    except Exception:  # noqa: BLE001
+        low = env
+
+    def low_at(ph: float) -> float:
+        grid = ph + np.arange(int((len(y) / sr - ph) / interval)) * interval
+        idx = np.clip(librosa.time_to_frames(grid, sr=sr, hop_length=hop), 0, len(low) - 1)
+        return float(np.mean([low[max(0, j - 2):j + 3].max() for j in idx])) if len(idx) else 0.0
+
+    if low_at((phase + interval / 2) % interval) > 1.25 * low_at(phase):
+        phase = (phase + interval / 2) % interval
+    peaks = librosa.onset.onset_detect(onset_envelope=env, sr=sr, hop_length=hop, units="frames", backtrack=False)
+    if len(peaks) >= 4:
+        pt = librosa.frames_to_time(peaks, sr=sr, hop_length=hop)
+        d = (pt - phase + interval / 2) % interval - interval / 2       # signed distance to the nearest grid line
+        near = np.abs(d) < interval / 6
+        if near.sum() >= 4:
+            w = env[peaks][near]
+            phase = (phase + float(np.sum(w * d[near]) / np.sum(w))) % interval
+    # an onset-strength peak comes one analysis frame after the attack itself (measured on test tracks: 12.8 ms
+    # late at hop 256): move the grid back by that frame
+    phase = (phase - hop / sr) % interval
+    first = phase                                                    # the first beat inside the file
+
+    # downbeat: the beat of the bar with the most low-end attack
+    downbeat = first
+    try:
+        n_beats = int((len(y) / sr - first) / interval)
+        if n_beats >= 8:
+            grid = first + np.arange(n_beats) * interval
+            idx = np.clip(librosa.time_to_frames(grid, sr=sr, hop_length=hop), 0, len(low) - 1)
+            strength = np.array([low[max(0, j - 2):j + 3].max() for j in idx])
+            score = [strength[b::4].mean() for b in range(4)]
+            downbeat = first + int(np.argmax(score)) * interval
+    except Exception:  # noqa: BLE001 - no downbeat: beat 1 is the first beat
+        downbeat = first
+
+    bpm, first, downbeat = float(bpm), float(first), float(downbeat)
     return {
-        "bpm": round(bpm, 2), "first_beat": round(max(0.0, first), 3), "beats": int(len(times)),
-        "alternatives": [round(bpm / 2, 2), round(bpm * 2, 2)], "duration": total,
+        "bpm": round(bpm, 2), "first_beat": round(max(0.0, first), 4), "downbeat": round(max(0.0, downbeat), 4),
+        "beats": int(len(times)), "alternatives": [round(bpm / 2, 2), round(bpm * 2, 2)], "duration": total,
     }
+
+
+def stretch(path: str, ratio: float) -> str:
+    """The file made `ratio` times as long without changing its pitch (ratio = source BPM / project BPM), as a
+    32-bit float WAV in a cache folder. For songs too long for the Studio's own stretcher (over 90 s): before,
+    they played at their own tempo next to a synced grid and drifted. Same file and ratio: the cached copy."""
+    import hashlib
+    import tempfile
+    import numpy as np
+    import soundfile as sf
+    import librosa
+    if not (0.25 < ratio < 4):
+        raise ValueError("The tempo difference is too large to sync.")
+    st = os.stat(path)
+    key = hashlib.sha1(f"{os.path.abspath(path)}|{st.st_mtime_ns}|{st.st_size}|{ratio:.6f}".encode()).hexdigest()[:20]
+    folder = os.path.join(tempfile.gettempdir(), "ams_stretch")
+    os.makedirs(folder, exist_ok=True)
+    out = os.path.join(folder, f"{key}.wav")
+    if os.path.exists(out) and os.path.getsize(out) > 0:
+        return out
+    data, sr = sf.read(path, dtype="float32", always_2d=True)          # (samples, channels)
+    rate = 1.0 / ratio                                                 # librosa: >1 plays faster
+    chans = [librosa.effects.time_stretch(np.ascontiguousarray(data[:, c]), rate=rate, n_fft=4096, hop_length=1024)
+             for c in range(data.shape[1])]
+    n = min(len(c) for c in chans)
+    y = np.stack([c[:n] for c in chans], axis=1)
+    target = int(round(len(data) * ratio))                             # exact length: the grid stays exact
+    if n < target:
+        y = np.pad(y, ((0, target - n), (0, 0)))
+    tmp = out + ".part.wav"
+    sf.write(tmp, y[:target], sr, subtype="FLOAT")
+    os.replace(tmp, out)
+    return out

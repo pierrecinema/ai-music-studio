@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, type EngineState, type MusicEngineInfo, type MusicJob, type MusicResult, type Resources, type Usage } from '../../lib/api'
+import { api, type EngineState, type Lora, type MusicEngineInfo, type MusicJob, type MusicResult, type Resources, type Usage } from '../../lib/api'
 import { apiKeyFor, useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
@@ -117,7 +117,7 @@ function SliderRow({ name, value, min, max, step, onChange, digits = 2, hintText
 
 function Select({ value, onChange, options, placeholder }: {
   value: string; onChange: (v: string) => void
-  options: Array<string | { value: string; label: string }>; placeholder?: string
+  options: Array<string | { value: string; label: string; disabled?: boolean }>; placeholder?: string
 }): React.ReactElement {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} style={full}>
@@ -125,10 +125,21 @@ function Select({ value, onChange, options, placeholder }: {
       {options.map((o) => {
         const v = typeof o === 'string' ? o : o.value
         const l = typeof o === 'string' ? o : o.label
-        return <option key={v} value={v}>{l}</option>
+        const off = typeof o === 'string' ? false : !!o.disabled
+        return <option key={v} value={v} disabled={off} style={off ? { color: '#888' } : undefined}>{l}</option>
       })}
     </select>
   )
+}
+
+// Which LoRAs a music model can use: ACE-Step v1 its own (and unknown ones), ACE-Step 1.5 turbo LoRAs made for 1.5
+// (not the XL ones), the other models none.
+function loraFit(engine: string, family: Lora['family']): { ok: boolean; why: string } {
+  if (engine === 'ace-step') return family === '1.5' || family === 'xl'
+    ? { ok: false, why: `made for ACE-Step 1.5${family === 'xl' ? ' XL' : ''}` } : { ok: true, why: '' }
+  if (engine === 'ace-step-1.5') return family === '1.5' ? { ok: true, why: '' }
+    : { ok: false, why: family === 'xl' ? 'made for the larger XL model' : family === 'v1' ? 'made for ACE-Step v1' : 'not an ACE-Step 1.5 LoRA' }
+  return { ok: false, why: 'this model uses no LoRA' }
 }
 
 function Segmented<T extends string>({ value, onChange, options }: {
@@ -683,12 +694,18 @@ export function CreateMusic(): React.ReactElement {
                 </div>
                 <SliderRow name={l?.kind ?? 'sound'} value={strength} min={0} max={2} step={0.05}
                   onChange={(v) => set('selectedLoras', { ...p.selectedLoras, [id]: v })} />
+                {l && !loraFit(p.engine, l.family).ok && (
+                  <span style={{ ...hint, color: 'var(--orange)' }}>{tr('Not used with this model')}: {loraFit(p.engine, l.family).why}.</span>
+                )}
               </div>
             )
           })}
           {unusedLoras.length > 0 && (
             <Select value="" onChange={(id) => id && set('selectedLoras', { ...p.selectedLoras, [id]: 0.75 })}
-              options={unusedLoras.map((l) => ({ value: l.id, label: `${l.name} (${l.kind})` }))} placeholder={tr("+ Add LoRA")} />
+              options={[...unusedLoras].sort((a, b) => Number(loraFit(p.engine, b.family).ok) - Number(loraFit(p.engine, a.family).ok)).map((l) => {
+                const f = loraFit(p.engine, l.family)
+                return { value: l.id, label: f.ok ? `${l.name} (${l.kind})` : `${l.name} — ${f.why}`, disabled: !f.ok }
+              })} placeholder={tr("+ Add LoRA")} />
           )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={() => setBrowserOpen(true)}>{tr("Find LoRA on Hugging Face\u2026")}</button>

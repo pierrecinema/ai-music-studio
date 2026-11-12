@@ -36,6 +36,7 @@ declare global {
     kind: 'style' | 'artist' | 'sound'
     path: string
     tags: string[]
+    family?: 'v1' | '1.5' | 'xl' | 'unknown'
   }
   interface EngineStatus {
     pythonFound: boolean

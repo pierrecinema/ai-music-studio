@@ -134,9 +134,24 @@ class LoraImport(BaseModel):
     copyFile: bool = True
 
 
+def lora_family(entry: dict) -> str:
+    """Which model a LoRA is made for: "1.5" (ACE-Step 1.5, the 2B turbo used here), "xl" (ACE-Step 1.5 XL),
+    "v1" (ACE-Step v1) or "unknown". The Create page shows the LoRAs that fit the chosen model and greys out the rest."""
+    try:
+        path, why = ace15_adapter(entry)
+        if path:
+            return "1.5"
+        if "XL model" in why:
+            return "xl"
+        ok, _ = lora_compat(entry)
+        return "v1" if ok else "unknown"
+    except Exception:  # noqa: BLE001
+        return "unknown"
+
+
 @router.get("/loras")
 async def list_loras():
-    return {"dir": str(LORA_DIR), "loras": _scan_loras()}
+    return {"dir": str(LORA_DIR), "loras": [{**l, "family": lora_family(l)} for l in _scan_loras()]}
 
 
 @router.post("/loras/import")

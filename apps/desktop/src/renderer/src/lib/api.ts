@@ -16,6 +16,7 @@ export interface Resources {
 }
 export interface Lora {
   id: string; name: string; kind: 'style' | 'artist' | 'sound'; path: string; tags: string[]
+  family?: 'v1' | '1.5' | 'xl' | 'unknown'      // the model it is made for (ACE-Step v1, 1.5 2B, 1.5 XL)
 }
 export interface MusicResult { audio_file: string; seed: number; duration: number; library_id?: string | null; title?: string; bpm?: number | null; first_beat?: number | null; loop_bars?: number | null }
 export interface MusicJob {

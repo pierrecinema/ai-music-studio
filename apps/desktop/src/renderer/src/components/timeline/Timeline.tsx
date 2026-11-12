@@ -27,6 +27,9 @@ import {
   addCycleMarkerFromLoop, addMarkerAtPlayhead, addWarpMarker, beatsLeft, consolidate, crossfade, groupSelectedTracks, loopToSelection, spbSrcOf, splitIntoStems, togglePunch, toggleLoop
 } from './studioOps'
 
+
+// colours to choose for a track (right-click on the track header, or the colour strip at its left)
+const TRACK_PALETTE = ['#7c3aed', '#2563eb', '#0891b2', '#059669', '#65a30d', '#ca8a04', '#ea580c', '#dc2626', '#db2777', '#9333ea', '#64748b', '#e2e8f0']
 const AUDIO_TYPES: Track['type'][] = ['audio', 'vocal', 'instrument']
 const NOTE_TYPES: Track['type'][] = ['midi', 'instrument', 'vocal']
 
@@ -534,6 +537,10 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             padding: row.kind === 'track' ? `6px 8px 4px ${8 + (row.depth ?? 0) * 12}px` : 0, cursor: row.kind === 'track' ? 'pointer' : 'default',
             background: isSel ? 'var(--bg-hover)' : row.kind === 'track' ? (track.type === 'group' ? 'var(--bg-panel)' : 'var(--bg-secondary)') : 'var(--bg-primary)'
           }}>
+          {row.kind === 'track' && (
+            <div title="Track colour: click to change" onClick={(e) => { e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, kind: 'track', trackId: track.id }) }}
+              style={{ position: 'absolute', left: -3, top: 0, bottom: 0, width: 7, cursor: 'pointer', zIndex: 2 }} />
+          )}
           {header}
         </div>
         <div
@@ -725,6 +732,22 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
       {menu && (
         <div onPointerDown={(e) => e.stopPropagation()}
           style={{ position: 'fixed', left: menu.x, top: menu.y, zIndex: 9900, minWidth: 210, background: 'var(--bg-panel)', border: '1px solid var(--border-mid)', borderRadius: 8, padding: 4, boxShadow: '0 8px 24px #000a' }}>
+          {menu.kind === 'track' && (
+            // the track colour: a palette, and any colour with the last field
+            <div style={{ padding: '6px 10px 4px' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Track colour</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 200 }}>
+                {TRACK_PALETTE.map((c) => (
+                  <span key={c} title={c} onClick={() => { updateTrack(menu.trackId, { color: c }); setMenu(null) }}
+                    style={{ width: 18, height: 18, borderRadius: 4, background: c, cursor: 'pointer',
+                      outline: project.tracks.find((t) => t.id === menu.trackId)?.color === c ? '2px solid #fff' : 'none' }} />
+                ))}
+                <input type="color" title="Any colour" value={project.tracks.find((t) => t.id === menu.trackId)?.color ?? '#7c3aed'}
+                  onChange={(e) => updateTrack(menu.trackId, { color: e.target.value })}
+                  style={{ width: 22, height: 20, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }} />
+              </div>
+            </div>
+          )}
           {(menu.kind === 'track'
             ? [
               { label: 'Rename track', run: () => setRenaming(menu.trackId) },

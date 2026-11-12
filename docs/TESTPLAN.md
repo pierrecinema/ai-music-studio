@@ -106,6 +106,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6b.13 | neu (0.18.10): oben im BPM-Feld 128 tippen + Enter; dann 95.5; Pfeil hoch/runter, Mausrad | Tempo ändert sich jedes Mal, ganze Zahl sichtbar | ✅ | | 0.18.10 ✅; Enter stoppte den Song → 0.18.11: spielt mit neuem Tempo weiter (neu testen) |
 | 6b.14 | neu (0.18.10): im Studio irgendwo einfach klicken und doppelklicken | blaue Linie springt dorthin (aufs Raster) | ✅ | | |
 | 6b.15 | neu (0.18.12): ACE-Step 1.5 Turbo mit LoRA „deep_house-acestep1.5-v1“ (Stärke 1.0), dann mit einem „…-xl-…“-LoRA | deep_house: Hinweis „LoRA … is used at strength 1.00“, Song klingt nach Deep House; XL: Hinweis „made for the larger XL model … left out“, Song entsteht trotzdem | | | |
+| 6b.16 | neu (0.18.13): ACE-Step-1.5-Song mit Text (z. B. 90 s), im Studio ans Ende zoomen | Gesang ist drin (12.11. ✅); Clip endet dort, wo die Musik ausklingt, keine Sekunde Stille dahinter | | | |
 | 6b.10 | neu (0.18.6): 2–3 Songs/Loops/Stems an verschiedenen Stellen einfügen, alle markieren (Strg+A oder Rahmen) → „Sync together“ (oder AUTO SYNC) | alle auf Master-BPM, Takt 1 von jedem auf demselben Taktstrich, starten gleichzeitig und laufen synchron (auch nach 2–3 Min.) | ✅ | | |
 
 ## 7. Mastering, AI Chat, Sonstiges (wird zuerst umgebaut)

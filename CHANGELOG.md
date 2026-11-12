@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.18.13
+
+- **ACE-Step 1.5 songs end where the music ends:** the end is now found relative to the song's own loudness (quiet reverb tails and hiss no longer leave about a second of "nothing"), and a song that already dies away is no longer faded out a second time; only a song that stops abruptly is faded.
+
 ## 0.18.12
 
 - **LoRAs work with ACE-Step 1.5 turbo:** a LoRA made for ACE-Step 1.5 (a folder with adapter_config.json, or a LoKr file) is now loaded with its strength. Packs with several LoRAs in one folder (like "...-5-LoRAs") show each LoRA on its own. LoRAs for the larger XL model ("xl" in the name) and LoRAs of ACE-Step v1 do not fit the 2B turbo model: they are left out with a note, and a LoRA that fails to load never stops the song. One LoRA per song (the strongest).

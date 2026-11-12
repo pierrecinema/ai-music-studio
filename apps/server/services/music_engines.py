@@ -376,7 +376,7 @@ def ace15_repo() -> str | None:
     return p if p and os.path.exists(os.path.join(p, "acestep", "inference.py")) else None
 
 
-def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_proc=None, log=print) -> float:
+def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_proc=None, log=print, on_warning=None) -> float:
     """Run ACE-Step 1.5 (services/ace15_worker.py) in its own environment. Returns the song length in seconds.
 
     `song`: caption, lyrics, instrumental, seconds, bpm, key, time_signature, language, seed."""
@@ -423,6 +423,10 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
                 continue
             if "error" in m:
                 error = m["error"]
+            elif m.get("warning"):
+                if on_warning:
+                    on_warning(str(m["warning"]))
+                log("[ACE-Step 1.5] " + str(m["warning"]))
             elif m.get("done"):
                 seconds_out = float(m["seconds"])
             elif m.get("stage") and on_stage:

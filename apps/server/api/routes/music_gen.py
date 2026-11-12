@@ -56,6 +56,15 @@ def _scan_loras() -> list[dict]:
         for p in LORA_DIR.iterdir():
             if p.name == "index.json" or p.name.startswith("."):   # ".engine" holds staged adapters
                 continue
+            subs = [d for d in sorted(p.iterdir()) if d.is_dir() and (d / "adapter_config.json").exists()] \
+                if p.is_dir() and not (p / "adapter_config.json").exists() else []
+            if subs:
+                # a pack of several LoRAs (one folder each, like "...-5-LoRAs"): each one can be chosen on its own
+                for d in subs:
+                    lid = f"{p.name}/{d.name}"
+                    items.setdefault(lid, {"id": lid, "name": f"{p.name} / {d.name}", "kind": "style",
+                                           "path": str(d), "tags": [], "default_strength": 1.0})
+                continue
             if p.is_dir() or p.suffix.lower() in LORA_EXTS:
                 lid = p.stem if p.is_file() else p.name
                 items.setdefault(lid, {
@@ -857,6 +866,61 @@ def _fade_end(path: str, seconds: float) -> None:
         print(f"[ace15] fade-out skipped: {e}", flush=True)
 
 
+def ace15_adapter(entry: dict) -> tuple[str | None, str]:
+    """Where ACE-Step 1.5 can load this LoRA from, or why it cannot: a folder with adapter_config.json (PEFT) or a
+    LoKr .safetensors (with "lokr_config" in its metadata). LoRAs for the XL model (4B) do not fit the 2B turbo model,
+    LoRAs of ACE-Step v1 (one .safetensors without a config) do not either."""
+    p = Path(entry["path"])
+    name = entry.get("name", p.name)
+    if re.search(r"(^|[^a-z])xl([^a-z]|$)|xlsft|xl-sft|xl_sft", name.lower()):
+        return None, (f"The LoRA '{name}' was made for the larger ACE-Step 1.5 XL model; it does not fit the 2B turbo "
+                      "model used here, so it was left out.")
+    if p.is_dir():
+        if (p / "adapter_config.json").exists():
+            return str(p), ""
+        found = sorted(p.rglob("adapter_config.json"))
+        if found:
+            return str(found[0].parent), ""
+        files = sorted(p.glob("*.safetensors"))
+    else:
+        files = [p] if p.suffix.lower() == ".safetensors" else []
+    for f in files:
+        try:
+            from safetensors import safe_open
+            with safe_open(str(f), framework="pt") as sf:
+                if (sf.metadata() or {}).get("lokr_config"):
+                    return str(f), ""
+        except Exception:  # noqa: BLE001
+            pass
+    return None, (f"The LoRA '{name}' is not an ACE-Step 1.5 LoRA (no adapter_config.json): it is probably made for "
+                  "ACE-Step v1, so it was left out.")
+
+
+def _ace15_lora(req: "GenerateMusicRequest", warnings: list[str]) -> dict | None:
+    """The LoRA to use with ACE-Step 1.5 (one per song: the strongest that fits)."""
+    if not req.loras:
+        return None
+    known = {l["id"]: l for l in _scan_loras()}
+    usable = []
+    for u in sorted(req.loras, key=lambda u: -u.strength):
+        entry = known.get(u.id)
+        if not entry:
+            warnings.append(f"LoRA '{u.id}' not found, skipped.")
+            continue
+        path, why = ace15_adapter(entry)
+        if path:
+            usable.append((entry, path, u.strength))
+        else:
+            warnings.append(why)
+    if not usable:
+        return None
+    entry, path, strength = usable[0]
+    if len(usable) > 1:
+        warnings.append(f"ACE-Step 1.5 uses one LoRA per song: '{entry['name']}' (the strongest) was used, "
+                        + ", ".join(f"'{e['name']}'" for e, _, _ in usable[1:]) + " not.")
+    return {"lora_path": path, "lora_scale": float(strength), "lora_name": entry["name"]}
+
+
 def _run_ace15_job(job_id: str, req: GenerateMusicRequest) -> None:
     """ACE-Step 1.5 turbo: songs with vocals, also on the CPU, in its own environment."""
     from services.music_engines import generate_ace15
@@ -865,8 +929,7 @@ def _run_ace15_job(job_id: str, req: GenerateMusicRequest) -> None:
     duration = max(10, min(req.duration or 60, 600))
     if req.duration is None:
         warnings.append("Length 'Auto' uses 60 s with this engine (plus a few seconds for a clean ending).")
-    if req.loras:
-        warnings.append("ACE-Step 1.5 does not use the LoRA styles of ACE-Step v1 yet; they were ignored.")
+    lora = _ace15_lora(req, warnings)
     if req.source_track:
         warnings.append("ACE-Step 1.5 cannot work from a source track here yet; it was ignored.")
     total = req.songs * req.variations * req.queue
@@ -892,13 +955,14 @@ def _run_ace15_job(job_id: str, req: GenerateMusicRequest) -> None:
                 song = {"caption": _compose_prompt(req), "lyrics": _ace_lyrics(req) if not req.instrumental else "",
                         "instrumental": req.instrumental, "seconds": min(600, duration + ACE15_TAIL), "bpm": req.bpm, "key": req.key,
                         "time_signature": (req.time_signature or "").split("/")[0], "language": req.language,
-                        "seed": seed, "steps": 8}
+                        "seed": seed, "steps": 8, **(lora or {})}
                 try:
                     secs = generate_ace15(
                         song, wav,
                         on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
                         on_step=lambda d, t: _stage(job, "render", job.get("stage_text") or f"{label}composing the song", d, t),
-                        on_proc=lambda pr: _procs.__setitem__(job_id, pr))
+                        on_proc=lambda pr: _procs.__setitem__(job_id, pr),
+                        on_warning=lambda w: None if (i > 0 or w in warnings) else warnings.append(w))
                     _stage(job, "finish", f"{label}saving and converting")
                     if not req.fade_out:
                         _fade_end(wav, ACE15_FADE)

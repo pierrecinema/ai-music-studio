@@ -35,6 +35,7 @@ A source track for a cover or remix, and a reference for the sound.
 Style or sound add-ons for ACE-Step:
 - **Import LoRA file… / folder…** (`.safetensors`, `.pt`, `.bin`), **+ Add LoRA**, strength slider. One LoRA is used per run (the strongest).
 - **Find LoRA on Hugging Face…:** search, see license, likes and downloads, check if it fits the engine, **Download** with progress.
+- **Which LoRA fits which model:** ACE-Step v1 uses LoRAs made for v1. **ACE-Step 1.5 turbo** uses LoRAs made for ACE-Step 1.5 (a folder with `adapter_config.json`); LoRAs for the larger **XL** model ("xl" in the name) do not fit turbo and are left out with a note.
 - **Train your own LoRA…:** choose a folder of songs you own, describe each one, choose length and rank; trains on an NVIDIA card or builds a ZIP bundle for another PC.
 
 ## Quality and Advanced

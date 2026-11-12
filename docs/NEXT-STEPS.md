@@ -58,6 +58,16 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 - Ideas for later: VST3 plugins, Vocal Editor, AI Instruments, Karaoke Export with lyrics, Video Composer, a cloud
   render service (check model licences first: MusicGen weights are non-commercial), Electron → Tauri.
 
+## Owner's wishes for coming features
+
+- **Vocal Editor (12.11.2026):** very short vocals must be possible too, down to a single word or a short phrase,
+  to make vocal samples (one-shots and short vocal loops for the Library / Samples). Think: word or phrase,
+  voice (male / female / style), language, tempo and key; result trimmed to the sung part (no silence), saved to the
+  Library with tags so it can be dragged into the Studio. Note: ACE-Step 1.5 sings little or nothing with a one-line
+  text in a 60–90 s song, so short vocals need their own approach (short length, the word repeated, then cut).
+- **Area 7 of the test plan** (Mastering, AI Chat, …) is rebuilt first; the owner said functions are missing there:
+  ask which before starting.
+
 ## Things learned about working with the owner
 
 - Talk German with the owner; code, docs and commits in English.

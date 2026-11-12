@@ -66,6 +66,21 @@ def main() -> int:
         say(error=f"ACE-Step 1.5 could not load the model: {type(e).__name__}: {e}")
         return 1
     llm = LLMHandler()                                             # not initialised: no language model
+    if req.get("lora_path"):
+        name = req.get("lora_name") or os.path.basename(req["lora_path"])
+        say(stage="load", text=f"Loading the LoRA {name}")
+        try:
+            msg = str(dit.load_lora(req["lora_path"]))
+            if msg.startswith("\u274c"):                             # ACE-Step reports problems with a red cross
+                say(warning=f"The LoRA '{name}' could not be loaded and was left out: {msg.lstrip(chr(0x274c)).strip()}")
+            else:
+                try:
+                    dit.set_lora_scale(float(req.get("lora_scale", 1.0)))
+                except Exception:  # noqa: BLE001 - older versions: full strength
+                    pass
+                say(warning=f"LoRA '{name}' is used at strength {float(req.get('lora_scale', 1.0)):.2f}.")
+        except Exception as e:  # noqa: BLE001 - a LoRA that does not fit (e.g. made for XL) must not stop the song
+            say(warning=f"The LoRA '{name}' does not fit this model and was left out ({type(e).__name__}: {str(e)[:160]}).")
 
     params = GenerationParams(**only_known(GenerationParams, {
         "caption": req.get("caption", "")[:512],

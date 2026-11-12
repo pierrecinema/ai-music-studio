@@ -93,6 +93,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.12
+
+- **LoRAs work with ACE-Step 1.5 turbo:** a LoRA made for ACE-Step 1.5 (a folder with adapter_config.json, or a LoKr file) is now loaded with its strength. Packs with several LoRAs in one folder (like "...-5-LoRAs") show each LoRA on its own. LoRAs for the larger XL model ("xl" in the name) and LoRAs of ACE-Step v1 do not fit the 2B turbo model: they are left out with a note, and a LoRA that fails to load never stops the song. One LoRA per song (the strongest).
+
 ### New in 0.18.11
 
 - **ACE-Step 1.5: no empty bar at the end:** when the model ends the song by itself before the length asked for, the extra seconds were silence. The silence at the end is now cut (a quarter second of the decay is kept) before the fade-out. The backend log also shows what the model got (style, number of lyric lines, language), to find out why a song came without vocals.

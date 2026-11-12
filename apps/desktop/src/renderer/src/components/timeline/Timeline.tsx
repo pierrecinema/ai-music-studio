@@ -18,15 +18,18 @@ import { beatOfSrc, srcOfBeat, validMarkers } from '../../audio/warp'
 import { hasTempoChanges } from '../../audio/timemap'
 import { Ruler } from './Ruler'
 import { Popover, type PopoverSpec } from './Popover'
-import { AutomationHeader, AutomationLane, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
+import { AutomationHeader, AutomationLane, FxHeader, FxLane, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
 import { ChannelTab } from './ChannelTab'
 import {
-  AUTO_HEIGHT, BEAT_WIDTH, buildRows, HANDLE, HEADER_WIDTH, RULER_HEIGHT, rowHeight, rowTops, TAKE_HEIGHT, TEMPO_HEIGHT, TRACK_MAX_HEIGHT, TRACK_MIN_HEIGHT, trackHeight, trackPointer, type Row
+  AUTO_HEIGHT, BEAT_WIDTH, buildRows, HANDLE, HEADER_WIDTH, RULER_HEIGHT, rowHeight, rowTops, TAKE_HEIGHT, TEMPO_HEIGHT, TRACK_MAX_HEIGHT, TRACK_MIN_HEIGHT, trackHeight, trackPointer, openLanes, toggleAutomationLanes, type Row
 } from './studioLayout'
 import {
   addCycleMarkerFromLoop, addMarkerAtPlayhead, addWarpMarker, beatsLeft, consolidate, crossfade, groupSelectedTracks, loopToSelection, spbSrcOf, splitIntoStems, togglePunch, toggleLoop
 } from './studioOps'
 
+
+// colours to choose for a track (right-click on the track header, or the colour strip at its left)
+const TRACK_PALETTE = ['#7c3aed', '#2563eb', '#0891b2', '#059669', '#65a30d', '#ca8a04', '#ea580c', '#dc2626', '#db2777', '#9333ea', '#64748b', '#e2e8f0']
 const AUDIO_TYPES: Track['type'][] = ['audio', 'vocal', 'instrument']
 const NOTE_TYPES: Track['type'][] = ['midi', 'instrument', 'vocal']
 
@@ -431,8 +434,11 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
     let header: React.ReactNode
     let lane: React.ReactNode
     if (row.kind === 'auto') {
-      header = <AutomationHeader track={track} />
-      lane = <AutomationLane track={track} param={row.param} beatWidth={beatWidth} />
+      header = <AutomationHeader track={track} param={row.param} min={row.min} />
+      lane = <AutomationLane track={track} param={row.param} beatWidth={beatWidth} min={row.min} />
+    } else if (row.kind === 'fx') {
+      header = <FxHeader track={track} />
+      lane = <FxLane track={track} />
     } else if (row.kind === 'take') {
       header = <TakeHeader track={track} lane={row.lane} />
       lane = row.lane.clips.map((clip) => {
@@ -473,8 +479,10 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             </div>
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { muted: !track.muted }) }} style={{ ...tinyBtn, color: track.muted ? '#f59e0b' : 'var(--text-muted)' }} title="Mute">M</button>
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { soloed: !track.soloed }) }} style={{ ...tinyBtn, color: track.soloed ? 'var(--accent-light)' : 'var(--text-muted)' }} title="Solo">S</button>
-            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showAutomation: track.showAutomation ? null : 'volume' }) }}
-              style={{ ...tinyBtn, color: track.showAutomation ? 'var(--accent-light)' : Object.values(track.automation ?? {}).some((l) => l?.length) ? '#eab308' : 'var(--text-muted)' }}
+            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showFx: !track.showFx }) }} title="Effects of this track (EQ, compressor, delay, reverb, filter)"
+              style={{ ...tinyBtn, color: track.showFx ? 'var(--accent-light)' : track.fx?.length ? '#22c55e' : 'var(--text-muted)' }}>FX</button>
+            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, toggleAutomationLanes(track)) }}
+              style={{ ...tinyBtn, color: openLanes(track).length ? 'var(--accent-light)' : Object.values(track.automation ?? {}).some((l) => l?.length) ? '#eab308' : 'var(--text-muted)' }}
               title="Show / hide the automation lane (volume, pan, sends)">A</button>
             {(track.takes?.length ?? 0) > 0 && (
               <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showTakes: !track.showTakes }) }} style={{ ...tinyBtn, color: track.showTakes ? 'var(--accent-light)' : 'var(--text-muted)' }} title="Show / hide the take lanes">T</button>
@@ -502,7 +510,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         : renderClips(track)
     }
     return (
-      <div key={`${row.kind}-${track.id}-${row.kind === 'take' ? row.lane.id : ''}`} style={{ display: 'flex', height: h, position: 'relative' }}>
+      <div key={`${row.kind}-${track.id}-${row.kind === 'take' ? row.lane.id : row.kind === 'auto' ? row.param : ''}`} style={{ display: 'flex', height: h, position: 'relative' }}>
         {row.kind === 'track' && (
           // the lower edge of the track: drag to make it higher or lower, double-click for the normal height
           <div title="Drag: track height · double-click: normal height"
@@ -534,6 +542,10 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             padding: row.kind === 'track' ? `6px 8px 4px ${8 + (row.depth ?? 0) * 12}px` : 0, cursor: row.kind === 'track' ? 'pointer' : 'default',
             background: isSel ? 'var(--bg-hover)' : row.kind === 'track' ? (track.type === 'group' ? 'var(--bg-panel)' : 'var(--bg-secondary)') : 'var(--bg-primary)'
           }}>
+          {row.kind === 'track' && (
+            <div title="Track colour: click to change" onClick={(e) => { e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, kind: 'track', trackId: track.id }) }}
+              style={{ position: 'absolute', left: -3, top: 0, bottom: 0, width: 7, cursor: 'pointer', zIndex: 2 }} />
+          )}
           {header}
         </div>
         <div
@@ -725,11 +737,28 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
       {menu && (
         <div onPointerDown={(e) => e.stopPropagation()}
           style={{ position: 'fixed', left: menu.x, top: menu.y, zIndex: 9900, minWidth: 210, background: 'var(--bg-panel)', border: '1px solid var(--border-mid)', borderRadius: 8, padding: 4, boxShadow: '0 8px 24px #000a' }}>
+          {menu.kind === 'track' && (
+            // the track colour: a palette, and any colour with the last field
+            <div style={{ padding: '6px 10px 4px' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Track colour</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 200 }}>
+                {TRACK_PALETTE.map((c) => (
+                  <span key={c} title={c} onClick={() => { updateTrack(menu.trackId, { color: c }); setMenu(null) }}
+                    style={{ width: 18, height: 18, borderRadius: 4, background: c, cursor: 'pointer',
+                      outline: project.tracks.find((t) => t.id === menu.trackId)?.color === c ? '2px solid #fff' : 'none' }} />
+                ))}
+                <input type="color" title="Any colour" value={project.tracks.find((t) => t.id === menu.trackId)?.color ?? '#7c3aed'}
+                  onChange={(e) => updateTrack(menu.trackId, { color: e.target.value })}
+                  style={{ width: 22, height: 20, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }} />
+              </div>
+            </div>
+          )}
           {(menu.kind === 'track'
             ? [
               { label: 'Rename track', run: () => setRenaming(menu.trackId) },
               { label: 'Duplicate track', run: () => { selectTrack(menu.trackId); runAction('edit.duplicate') } },
-              { label: 'Show automation', run: () => updateTrack(menu.trackId, { showAutomation: 'volume' }) },
+              { label: 'Show automation (volume and pan)', run: () => updateTrack(menu.trackId, { autoLanes: ['volume', 'pan'], showAutomation: null }) },
+              { label: 'Effects (FX)', run: () => updateTrack(menu.trackId, { showFx: true }) },
               ...(project.tracks.find((t) => t.id === menu.trackId)?.type === 'group'
                 ? [{ label: 'Ungroup (keep the tracks)', run: () => useProjectStore.getState().ungroup(menu.trackId) }]
                 : [{ label: 'Put into a new group (Ctrl+G)', run: () => useProjectStore.getState().groupTracks([menu.trackId]) },

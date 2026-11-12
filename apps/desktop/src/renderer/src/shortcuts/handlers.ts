@@ -4,7 +4,8 @@ import { useProjectStore } from '../stores/project.store'
 import { useUIStore } from '../stores/ui.store'
 import type { Note, Track } from '../types'
 import { markStep, redo, undo } from './history'
-import { isPlaying, pause, play, startRecording, stop } from '../audio/engine'
+import { isPlaying, pause, play, stop } from '../audio/engine'
+import { startAnyRecording } from '../audio/midiRecord'
 import { newProject, openProject, saveProject, saveProjectAs } from '../project/io'
 import { narrowerGrid, nudgeStep, tripletToggle, widerGrid } from '../edit/grid'
 import { openQuantizeDialog, quantizeSelection } from '../edit/quantize'
@@ -124,7 +125,7 @@ const HANDLERS: Record<string, () => void> = {
   'transport.toStart': () => stop(),
   'transport.record': () => {
     if (useAudioStore.getState().isRecording) pause()
-    else void startRecording().then((problem) => { if (problem) window.alert(problem) })
+    else void startAnyRecording().then((problem) => { if (problem) window.alert(problem) })
   },
   'transport.metronome': () => useAudioStore.getState().toggleMetronome(),
   'transport.loop': () => toggleLoop(),

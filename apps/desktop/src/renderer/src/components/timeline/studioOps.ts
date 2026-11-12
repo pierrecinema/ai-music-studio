@@ -8,6 +8,7 @@ import { beatOfSrc, srcOfBeat } from '../../audio/warp'
 import { encodeWav } from '../../audio/wav'
 import { api } from '../../lib/api'
 import type { AutoParam, Clip, Note, Project, Track } from '../../types'
+import { toggleAutomationLanes } from './studioLayout'
 
 // ── clip <-> file positions (sync and warp markers included) ───────────────────
 
@@ -198,7 +199,8 @@ export function toggleAutomationLane(trackId?: string, param: AutoParam = 'volum
   const st = useProjectStore.getState()
   const t = st.project.tracks.find((x) => x.id === (trackId ?? st.selectedTrackId))
   if (!t) return
-  st.updateTrack(t.id, { showAutomation: t.showAutomation ? null : param })
+  void param
+  st.updateTrack(t.id, toggleAutomationLanes(t))                 // volume and pan, each in its own lane
 }
 
 // ── clips ────────────────────────────────────────────────────────────────────

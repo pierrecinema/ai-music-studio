@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAudioStore } from '../../stores/audio.store'
 import { useProjectStore } from '../../stores/project.store'
-import { masterLevel, pause, play, startRecording, stop } from '../../audio/engine'
+import { masterLevel, pause, play, stop } from '../../audio/engine'
+import { startAnyRecording } from '../../audio/midiRecord'
 import { historySize, redo, undo } from '../../shortcuts/history'
 import { FileMenu } from './FileMenu'
 import { runSyncAll, runSyncSelected, selectedAudioIds, useBeatMatch } from '../../beatmatch/store'
@@ -39,16 +40,25 @@ function LevelMeter(): React.ReactElement {
 }
 
 // Position display (bar.beat.tick) that follows the real play position
+// The song position of the playhead: bar . beat . sixteenth (like a DAW), or minutes:seconds. A click switches.
 function PositionDisplay(): React.ReactElement {
   const beat = useAudioStore((s) => s.currentBeat)
   const perBar = useProjectStore((s) => s.project.timeSignature?.[0] ?? 4)
+  const bpm = useProjectStore((s) => s.project.bpm || 120)
+  const [asTime, setAsTime] = useState(() => { try { return localStorage.getItem('ams-pos-time') === '1' } catch { return false } })
   const whole = Math.floor(beat)
   const bar = Math.floor(whole / perBar) + 1
   const inBar = (whole % perBar) + 1
-  const tick = Math.floor((beat - whole) * 24)
+  const sixteenth = Math.floor((beat - whole) * 4) + 1
+  const sec = (beat * 60) / bpm
+  const text = asTime
+    ? `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}.${String(Math.floor((sec % 1) * 10))}`
+    : `${bar}.${inBar}.${sixteenth}`
   return (
-    <div className="tb-position">
-      {String(bar).padStart(3, ' ')}.{inBar}.{String(tick).padStart(2, '0')}
+    <div className="tb-position" style={{ cursor: 'pointer' }}
+      data-tooltip={asTime ? 'Song position in minutes:seconds. Click: bar . beat . sixteenth' : 'Song position: bar . beat . sixteenth (1.1.1 = the very start). Click: minutes:seconds'}
+      onClick={() => { const v = !asTime; setAsTime(v); try { localStorage.setItem('ams-pos-time', v ? '1' : '0') } catch { /* no storage */ } }}>
+      {text}
     </div>
   )
 }
@@ -89,7 +99,7 @@ export function TopBar(): React.ReactElement {
 
   const toggleRecord = async (): Promise<void> => {
     if (isRecording) { pause(); return }
-    const problem = await startRecording()
+    const problem = await startAnyRecording()                    // MIDI on a MIDI track / in the Piano Roll
     if (problem) window.alert(problem)
   }
 

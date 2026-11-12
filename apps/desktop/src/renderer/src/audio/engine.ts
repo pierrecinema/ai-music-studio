@@ -8,13 +8,13 @@ import { nanoid } from 'nanoid'
 import { api } from '../lib/api'
 import { useAudioStore } from '../stores/audio.store'
 import { useProjectStore } from '../stores/project.store'
-import type { Clip, Project, Track } from '../types'
+import type { Clip, InsertFx, Project, Track } from '../types'
 import { playClick, playSynthNote, type Timbre } from './synth'
 import { encodeWav, peakOf } from './wav'
 import { MAX_STRETCH_SECONDS, stretchBuffer } from './stretch'
 import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
 import { hasAutomation, scheduleLane } from './automation'
-import { makeEffect } from './fx'
+import { makeEffect, makeInsert } from './fx'
 import { beatOfSrc, renderWarped } from './warp'
 
 // ── files → buffers ──────────────────────────────────────────────────────────
@@ -237,14 +237,21 @@ interface Strip {
   sends: Map<string, GainNode>
 }
 
-function makeStrip(ctx: BaseAudioContext, dest: AudioNode): Strip {
+function makeStrip(ctx: BaseAudioContext, dest: AudioNode, inserts: InsertFx[] = [], secPerBeat = 0.5): Strip {
   const bus = ctx.createGain()
   const mute = ctx.createGain()
   const gain = ctx.createGain()
   const pan = ctx.createStereoPanner()
   const analyser = ctx.createAnalyser()
   analyser.fftSize = 1024
-  bus.connect(mute).connect(gain).connect(pan).connect(analyser).connect(dest)
+  // the track's effects (inserts) sit between its sound and the fader
+  let head: AudioNode = bus
+  for (const fx of inserts) {
+    const ins = makeInsert(ctx, fx, secPerBeat)
+    head.connect(ins.input)
+    head = ins.output
+  }
+  head.connect(mute).connect(gain).connect(pan).connect(analyser).connect(dest)
   return { bus, mute, gain, pan, analyser, sends: new Map() }
 }
 
@@ -312,7 +319,7 @@ export function scheduleProject(
   for (const track of ordered) {
     if (track.type !== 'group' && track.clips.length === 0) continue
     const parent = track.parentId ? strips.get(track.parentId) : undefined
-    const strip = makeStrip(ctx, parent?.bus ?? dest)
+    const strip = makeStrip(ctx, parent?.bus ?? dest, track.fx ?? [], 60 / bpmAt(project, fromBeat))
     strips.set(track.id, strip)
     const on = isAudible(track, project.tracks) ? 1 : 0
     strip.mute.gain.value = on
@@ -528,7 +535,7 @@ function structureSignature(p: Project): string {
   return JSON.stringify([
     p.bpm, p.tempoMap ?? [], p.returns?.map((r) => [r.id, r.effect, r.decay, r.delayBeats, r.feedback]) ?? [],
     p.tracks.map((t) => [
-      t.id, t.type, t.name, t.parentId ?? '', t.automation ?? {}, Object.keys(t.sends ?? {}).filter((k) => (t.sends?.[k] ?? 0) > 0),
+      t.id, t.type, t.name, t.parentId ?? '', t.automation ?? {}, Object.keys(t.sends ?? {}).filter((k) => (t.sends?.[k] ?? 0) > 0), t.fx ?? [],
       t.clips.map((c) => [c.id, c.startTime, c.duration, c.offset ?? 0, c.audioFile ?? '', c.gain ?? 1, c.warpBpm ?? 0, c.fadeIn ?? 0, c.fadeOut ?? 0,
         c.warpMarkers ?? [], (c.notes ?? []).map((n) => `${n.pitch}/${n.startTime}/${n.duration}/${n.velocity}`).join(';')])
     ])
@@ -641,8 +648,13 @@ function halt(): void {
   playing = false
 }
 
+// called when the transport stops (MIDI recording ends there)
+const stopHooks: Array<() => void> = []
+export function onTransportStop(fn: () => void): void { stopHooks.push(fn) }
+
 export function pause(): void {
   epoch++
+  for (const fn of stopHooks) { try { fn() } catch { /* a hook must not stop the transport from stopping */ } }
   if (playing) {
     const beat = currentBeat()
     halt()

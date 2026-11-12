@@ -10,6 +10,7 @@ import type { Project, Track } from '../src/renderer/src/types'
 import { matchesQuery } from '../src/renderer/src/lib/librarySearch'
 import type { LibraryTrack } from '../src/renderer/src/lib/api'
 import { alignStarts, leadBeats, phaseAlign } from '../src/renderer/src/beatmatch/store'
+import { autoStructure } from '../src/renderer/src/lib/lyrics'
 
 let failed = 0
 let passed = 0
@@ -166,6 +167,15 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   check('the shared bar is a bar line and fits every intro', near(r.bar % 4, 0) && r.bar >= songLead && Object.values(r.starts).every((x) => x >= 0), String(r.bar))
   const late = alignStarts([{ id: 'a', startTime: 31, lead: 0 }, { id: 'b', startTime: 40, lead: 1 }], 4)
   check('the bar nearest the earliest clip is kept', near(late.bar, 32) && near(late.starts.b, 31), JSON.stringify(late))
+}
+
+// lyrics without sections get [Verse] / [Chorus]; a repeated stanza is the chorus
+{
+  const a = autoStructure('a1\na2\n\nchorus x\nchorus y\n\nb1\nb2\n\nchorus x\nchorus y')
+  check('repeated stanza becomes the chorus', a === '[Verse]\na1\na2\n\n[Chorus]\nchorus x\nchorus y\n\n[Verse]\nb1\nb2\n\n[Chorus]\nchorus x\nchorus y', a)
+  const b = autoStructure('l1\nl2\nl3\nl4\nl5\nl6')
+  check('one long block is cut into stanzas of four', b === '[Verse]\nl1\nl2\nl3\nl4\n\n[Chorus]\nl5\nl6', b)
+  check('lyrics with sections stay as they are', autoStructure('[Intro]\nhey') === '[Intro]\nhey')
 }
 
 console.log(`${passed} passed, ${failed} failed`)

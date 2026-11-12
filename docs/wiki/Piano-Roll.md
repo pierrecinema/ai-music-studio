@@ -10,6 +10,7 @@ Edit the notes of a MIDI clip. Open it with a double-click on a MIDI clip (or Sh
 | **Delete** | Del, or the erase tool |
 | **Quantize** | Ctrl+U: the selected notes (or all) to the grid; settings (Ctrl+Shift+U): strength, swing, note ends |
 | **Hear a pitch** | click the keyboard on the left |
+| **Record** | **● Rec** or Ctrl+R: the song plays, and what you play on the keyboard on the left or on a MIDI keyboard becomes notes |
 | **Grid** | from 1 bar to 1/64, triplets, free (Alt while dragging) |
 
 Tools: Ableton **B** toggles draw mode; Cubase **1** select, **5** erase, **8** draw.

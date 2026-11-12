@@ -134,9 +134,24 @@ class LoraImport(BaseModel):
     copyFile: bool = True
 
 
+def lora_family(entry: dict) -> str:
+    """Which model a LoRA is made for: "1.5" (ACE-Step 1.5, the 2B turbo used here), "xl" (ACE-Step 1.5 XL),
+    "v1" (ACE-Step v1) or "unknown". The Create page shows the LoRAs that fit the chosen model and greys out the rest."""
+    try:
+        path, why = ace15_adapter(entry)
+        if path:
+            return "1.5"
+        if "XL model" in why:
+            return "xl"
+        ok, _ = lora_compat(entry)
+        return "v1" if ok else "unknown"
+    except Exception:  # noqa: BLE001
+        return "unknown"
+
+
 @router.get("/loras")
 async def list_loras():
-    return {"dir": str(LORA_DIR), "loras": _scan_loras()}
+    return {"dir": str(LORA_DIR), "loras": [{**l, "family": lora_family(l)} for l in _scan_loras()]}
 
 
 @router.post("/loras/import")
@@ -205,6 +220,7 @@ class GenerateMusicRequest(BaseModel):
     prompt: str = ""
     lyrics: str = ""
     tags: list[str] = []                    # saved with every song and loop in the library (searchable)
+    preview: bool = False                   # short voice previews: kept out of the library
     instrumental: bool = False
     acapella: bool = False                  # only the voice: sung lyrics without any instruments
     loop: bool = False                      # a loop of exactly loop_bars bars that repeats seamlessly
@@ -314,8 +330,30 @@ def _ace_lyrics(req: GenerateMusicRequest) -> str:
         return "[instrumental]"
     text = req.lyrics.strip()
     if text and not _SECTION_TAG.search(text):
-        text = "[verse]\n" + text
+        text = auto_structure(text)
     return text
+
+
+def auto_structure(text: str) -> str:
+    """Lyrics without section tags get a structure (same rules as the Create page's "Auto structure"): stanzas between
+    empty lines become sections; a stanza that comes back is the chorus, the others verses; without a repeat they
+    alternate verse / chorus. One long block is cut into stanzas of four lines first."""
+    clean = text.replace("\r", "").strip()
+    blocks = [b.strip() for b in re.split(r"\n\s*\n", clean) if b.strip()]
+    if len(blocks) == 1:
+        lines = [l.strip() for l in blocks[0].split("\n") if l.strip()]
+        if len(lines) > 4:
+            blocks = ["\n".join(lines[i:i + 4]) for i in range(0, len(lines), 4)]
+    key = lambda b: re.sub(r"[^a-z0-9\u00c0-\u024f]+", " ", b.lower()).strip()  # noqa: E731
+    count: dict[str, int] = {}
+    for b in blocks:
+        count[key(b)] = count.get(key(b), 0) + 1
+    repeated = any(v > 1 for v in count.values())
+    out = []
+    for i, b in enumerate(blocks):
+        chorus = count[key(b)] > 1 if repeated else (len(blocks) > 1 and i % 2 == 1)
+        out.append(("[Chorus]" if chorus else "[Verse]") + "\n" + b)
+    return "\n\n".join(out)
 
 
 LOOP_TAGS = "loop, steady tempo, consistent groove, no intro, no outro"
@@ -525,6 +563,9 @@ def loop_title(base: str, bpm: float | None, bars: int) -> str:
 
 def _keep(path: str, req: "GenerateMusicRequest", seed: int, seconds: float, engine: str) -> dict:
     """Put a finished track into the library for good. Returns what the UI needs: permanent path, id and title."""
+    if req.preview:                                       # a voice preview: listen, choose, forget
+        _start_info.pop(path, None)
+        return {"audio_file": path, "library_id": None, "title": f"Voice preview (seed {seed})"}
     try:
         from services import library
         info = _start_info.pop(path, {})

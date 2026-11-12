@@ -6,40 +6,57 @@ import { snapBeat } from '../../edit/grid'
 import { rangeOf, sortedPoints, valueAt, AUTO_LABEL } from '../../audio/automation'
 import { tempoPoints } from '../../audio/timemap'
 import { trackLevel } from '../../audio/engine'
-import type { AutoParam, ReturnTrack, TakeLane, Track } from '../../types'
-import { AUTO_HEIGHT, HEADER_WIDTH, RETURN_HEIGHT, TAKE_HEIGHT, TEMPO_HEIGHT, trackPointer } from './studioLayout'
+import type { AutoParam, InsertType, ReturnTrack, TakeLane, Track } from '../../types'
+import { AUTO_HEIGHT, AUTO_MIN_HEIGHT, FX_HEIGHT, HEADER_WIDTH, openLanes, RETURN_HEIGHT, TAKE_HEIGHT, TEMPO_HEIGHT, trackPointer } from './studioLayout'
+import { INSERT_LABEL, INSERT_PARAMS, insertDefaults } from '../../audio/fx'
+import { nanoid } from 'nanoid'
 import type { PopoverSpec } from './Popover'
 
 const small: React.CSSProperties = { fontSize: 10, padding: '1px 6px' }
 
 // ── automation ───────────────────────────────────────────────────────────────
 
-export function AutomationHeader({ track }: { track: Track }): React.ReactElement {
+export function AutomationHeader({ track, param, min }: { track: Track; param: AutoParam; min: boolean }): React.ReactElement {
   const returns = useProjectStore((s) => s.project.returns ?? [])
   const { updateTrack, setAutomation } = useProjectStore.getState()
-  const param = track.showAutomation ?? 'volume'
+  const lanes = openLanes(track)
   const options: AutoParam[] = ['volume', 'pan', ...returns.map((r) => `send:${r.id}` as AutoParam)]
   const nameOf = (id: string): string => returns.find((r) => r.id === id)?.name ?? ''
+  const setLanes = (next: AutoParam[]): void => updateTrack(track.id, { autoLanes: next, showAutomation: null })
+  const toggleMin = (): void => {
+    const cur = track.autoMin ?? []
+    updateTrack(track.id, { autoMin: cur.includes(param) ? cur.filter((x) => x !== param) : [...cur, param] })
+  }
+  const free = options.filter((o) => !lanes.includes(o))
+  const count = track.automation?.[param]?.length ?? 0
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '4px 8px 4px 18px', fontSize: 10, color: 'var(--text-muted)' }}>
-      <span>Automation of {track.name}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: min ? '2px 8px 2px 18px' : '4px 8px 4px 18px', fontSize: 10, color: 'var(--text-muted)' }}>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-        <select value={param} style={{ fontSize: 10, flex: 1 }} onChange={(e) => { updateTrack(track.id, { showAutomation: e.target.value as AutoParam }); e.target.blur() }}>
-          {options.map((o) => <option key={o} value={o}>{AUTO_LABEL(o, nameOf)}{track.automation?.[o]?.length ? ' •' : ''}</option>)}
+        <button className="btn btn-ghost" style={{ ...small, padding: '0 4px' }} title={min ? 'Show this lane in full' : 'Make this lane small'} onClick={toggleMin}>{min ? '▸' : '▾'}</button>
+        <select value={param} style={{ fontSize: 10, flex: 1, minWidth: 0, ...(min ? { height: 20, padding: '0 4px' } : {}) }} title="Which value this lane automates"
+          onChange={(e) => { setLanes(lanes.map((x) => (x === param ? e.target.value as AutoParam : x))); e.target.blur() }}>
+          {[param, ...free].map((o) => <option key={o} value={o}>{AUTO_LABEL(o, nameOf)}{track.automation?.[o]?.length ? ' •' : ''}</option>)}
         </select>
-        <button className="btn btn-ghost" style={small} title="Remove all points of this lane" onClick={() => setAutomation(track.id, param, [])}>Clear</button>
+        {!min && free.length > 0 && <button className="btn btn-ghost" style={small} title="Add a lane for another value (pan, a send…)" onClick={() => setLanes([...lanes, free[0]])}>+</button>}
+        <button className="btn btn-ghost" style={small} title="Close this lane (its points stay)" onClick={() => setLanes(lanes.filter((x) => x !== param))}>×</button>
       </div>
+      {!min && (
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <span style={{ flex: 1 }}>{count ? `${count} point${count > 1 ? 's' : ''}` : 'no points yet'}</span>
+          <button className="btn btn-ghost" style={small} title="Remove all points of this lane" onClick={() => setAutomation(track.id, param, [])}>Clear</button>
+        </div>
+      )}
     </div>
   )
 }
 
-export function AutomationLane({ track, param, beatWidth }: { track: Track; param: AutoParam; beatWidth: number }): React.ReactElement {
+export function AutomationLane({ track, param, beatWidth, min = false }: { track: Track; param: AutoParam; beatWidth: number; min?: boolean }): React.ReactElement {
   const setAutomation = useProjectStore((s) => s.setAutomation)
   const ref = useRef<HTMLDivElement>(null)
   const [lo, hi] = rangeOf(param)
   const fallback = param === 'volume' ? track.volume : param === 'pan' ? track.pan : track.sends?.[param.slice(5)] ?? 0
   const pts = sortedPoints(track.automation?.[param])
-  const h = AUTO_HEIGHT - 8
+  const h = (min ? AUTO_MIN_HEIGHT : AUTO_HEIGHT) - 8
   const yOf = (v: number): number => 4 + (1 - (v - lo) / (hi - lo)) * h
   const valueOfY = (y: number): number => Math.max(lo, Math.min(hi, lo + (1 - (y - 4) / h) * (hi - lo)))
   const pos = (e: { clientX: number; clientY: number }): { beat: number; value: number } => {
@@ -53,7 +70,7 @@ export function AutomationLane({ track, param, beatWidth }: { track: Track; para
     : ''
 
   const down = (e: React.PointerEvent): void => {
-    if (e.button !== 0 || e.target !== e.currentTarget) return
+    if (e.button !== 0 || e.target !== e.currentTarget || min) return
     const p = pos(e)
     const point = { beat: snapBeat(p.beat, e.altKey), value: pts.length ? p.value : p.value }
     const next = [...pts, point]
@@ -73,15 +90,15 @@ export function AutomationLane({ track, param, beatWidth }: { track: Track; para
 
   return (
     <div ref={ref} onPointerDown={down}
-      title="Click: add a point. Drag a point to move it (Shift: only in time, Alt: off the grid). Double-click a point to delete it."
-      style={{ position: 'absolute', inset: 0, cursor: 'crosshair', background: 'rgba(124,58,237,0.04)' }}>
-      {!pts.length && <span style={{ position: 'absolute', left: 8, top: AUTO_HEIGHT / 2 - 8, fontSize: 10, color: 'var(--text-muted)', pointerEvents: 'none' }}>
+      title={min ? 'Minimized: open it (▸) to edit the points' : 'Click: add a point. Drag a point to move it (Shift: only in time, Alt: off the grid). Double-click a point to delete it.'}
+      style={{ position: 'absolute', inset: 0, cursor: min ? 'default' : 'crosshair', background: 'rgba(124,58,237,0.04)' }}>
+      {!pts.length && !min && <span style={{ position: 'absolute', left: 8, top: AUTO_HEIGHT / 2 - 8, fontSize: 10, color: 'var(--text-muted)', pointerEvents: 'none' }}>
         No automation yet: click to add the first point. Now: {param === 'pan' ? fallback.toFixed(2) : `${Math.round(fallback * 100)} %`}
       </span>}
       <svg style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
         {line && <polyline points={line} fill="none" stroke={track.color} strokeWidth={2} />}
       </svg>
-      {pts.map((p, i) => (
+      {!min && pts.map((p, i) => (
         <div key={i} onPointerDown={(e) => dragPoint(e, i)} onDoubleClick={(e) => { e.stopPropagation(); remove(i) }}
           title={`${param === 'pan' ? p.value.toFixed(2) : `${Math.round(p.value * 100)} %`} at beat ${p.beat.toFixed(2)}`}
           style={{ position: 'absolute', left: p.beat * beatWidth - 5, top: yOf(p.value) - 5, width: 10, height: 10, borderRadius: 5, background: '#fff', border: `2px solid ${track.color}`, cursor: 'grab' }} />
@@ -91,6 +108,75 @@ export function AutomationLane({ track, param, beatWidth }: { track: Track; para
 }
 
 export { valueAt }
+
+// ── effects in a track (inserts) ─────────────────────────────────────────────
+
+const FX_TYPES: InsertType[] = ['eq', 'compressor', 'delay', 'reverb', 'filter']
+
+export function FxHeader({ track }: { track: Track }): React.ReactElement {
+  const { updateTrack } = useProjectStore.getState()
+  const add = (type: InsertType): void =>
+    updateTrack(track.id, { fx: [...(track.fx ?? []), { id: nanoid(), type, on: true, p: insertDefaults(type) }] })
+  return (
+    <div style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '4px 8px 4px 18px', fontSize: 10, color: 'var(--text-muted)' }}>
+      <span style={{ flex: 1 }}>Effects ({track.fx?.length ?? 0})</span>
+      <select value="" style={{ fontSize: 10 }} title="Add an effect to this track (VST3 plugins will appear here too)"
+        onChange={(e) => { if (e.target.value) add(e.target.value as InsertType); e.target.value = ''; e.target.blur() }}>
+        <option value="">+ Effect…</option>
+        {FX_TYPES.map((t) => <option key={t} value={t}>{INSERT_LABEL[t]}</option>)}
+        <option value="" disabled>VST3 plugins: coming</option>
+      </select>
+      <button className="btn btn-ghost" style={small} title="Close the effects lane (the effects keep playing)" onClick={() => updateTrack(track.id, { showFx: false })}>×</button>
+    </div>
+  )
+}
+
+// the effects of the track, left to right in the order the sound goes through them
+export function FxLane({ track }: { track: Track }): React.ReactElement {
+  const { updateTrack } = useProjectStore.getState()
+  const list = track.fx ?? []
+  const set = (id: string, patch: Partial<NonNullable<Track['fx']>[number]>): void =>
+    updateTrack(track.id, { fx: list.map((f) => (f.id === id ? { ...f, ...patch } : f)) })
+  const move = (i: number, d: number): void => {
+    const j = i + d
+    if (j < 0 || j >= list.length) return
+    const next = [...list]; [next[i], next[j]] = [next[j], next[i]]
+    updateTrack(track.id, { fx: next })
+  }
+  return (
+    <div style={{ position: 'sticky', left: HEADER_WIDTH, display: 'flex', gap: 6, alignItems: 'center', height: FX_HEIGHT, padding: '0 8px', overflowX: 'auto', width: 'max-content', maxWidth: '100%' }}
+      onPointerDown={(e) => e.stopPropagation()}>
+      {!list.length && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>No effects yet: add one with “+ Effect…” on the left (EQ, compressor, delay, reverb, filter).</span>}
+      {list.map((f, i) => (
+        <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 6px', borderRadius: 6, border: `1px solid ${f.on ? track.color : 'var(--border-mid)'}`, background: 'var(--bg-secondary)', opacity: f.on ? 1 : 0.55, fontSize: 10, color: 'var(--text-secondary)', flexShrink: 0 }}>
+          <button className="btn btn-ghost" style={{ ...small, padding: '0 4px', color: f.on ? 'var(--green)' : 'var(--text-muted)' }} title={f.on ? 'On: click to bypass' : 'Bypassed: click to switch on'} onClick={() => set(f.id, { on: !f.on })}>⏻</button>
+          <b style={{ color: 'var(--text-primary)' }}>{INSERT_LABEL[f.type]}</b>
+          {INSERT_PARAMS[f.type].map((d) => {
+            const v = f.p[d.key] ?? d.def
+            return d.key === 'mode' ? (
+              <label key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <select value={v >= 0.5 ? '1' : '0'} style={{ fontSize: 10 }} onChange={(e) => set(f.id, { p: { ...f.p, mode: Number(e.target.value) } })}>
+                  <option value="0">Low-pass</option><option value="1">High-pass</option>
+                </select>
+              </label>
+            ) : (
+              <label key={d.key} title={`${d.label}: ${v}${d.unit ? ' ' + d.unit : ''} (double-click: default)`} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {d.label}
+                <input type="range" min={d.min} max={d.max} step={d.step} value={v} style={{ width: 56 }}
+                  onChange={(e) => set(f.id, { p: { ...f.p, [d.key]: Number(e.target.value) } })}
+                  onDoubleClick={() => set(f.id, { p: { ...f.p, [d.key]: d.def } })} />
+                <span style={{ minWidth: 30 }}>{d.key === 'mix' || d.key === 'feedback' ? `${Math.round(v * 100)}%` : `${v}${d.unit && d.unit !== 'beats' ? d.unit : ''}`}</span>
+              </label>
+            )
+          })}
+          <button className="btn btn-ghost" style={{ ...small, padding: '0 3px' }} title="Earlier in the chain" disabled={i === 0} onClick={() => move(i, -1)}>◀</button>
+          <button className="btn btn-ghost" style={{ ...small, padding: '0 3px' }} title="Later in the chain" disabled={i === list.length - 1} onClick={() => move(i, 1)}>▶</button>
+          <button className="btn btn-ghost" style={{ ...small, padding: '0 3px', color: 'var(--red)' }} title="Remove this effect" onClick={() => updateTrack(track.id, { fx: list.filter((x) => x.id !== f.id) })}>×</button>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 // ── tempo track ──────────────────────────────────────────────────────────────
 

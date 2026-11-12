@@ -5,18 +5,25 @@ import type { AIProvider, AIMessage } from '../types'
 export const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-5-5'
 export const DEFAULT_OPENAI_MODEL = 'gpt-4o'
 export const DEFAULT_GROK_MODEL = 'grok-4.1-fast'
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
 export const DEFAULT_OLLAMA_MODEL = 'llama3.2'
+export const DEFAULT_LOCAL_URL = 'http://127.0.0.1:1234/v1'    // LM Studio's server; KoboldCpp 5001, llama.cpp 8080
+export const DEFAULT_LOCAL_MODEL = 'local-model'
 
 interface AIState {
   provider: AIProvider
   claudeApiKey: string
   openaiApiKey: string
   grokApiKey: string
+  geminiApiKey: string
   model: string
   claudeModel: string
   openaiModel: string
   grokModel: string
+  geminiModel: string
   ollamaModel: string
+  localModel: string
+  localUrl: string               // an OpenAI-compatible server on this PC (LM Studio, KoboldCpp, llama.cpp)
   messages: AIMessage[]
   isThinking: boolean
 
@@ -24,23 +31,26 @@ interface AIState {
   setClaudeApiKey: (key: string) => void
   setOpenaiApiKey: (key: string) => void
   setGrokApiKey: (key: string) => void
+  setGeminiApiKey: (key: string) => void
+  setLocalUrl: (url: string) => void
   setModel: (m: string) => void
   addMessage: (msg: Omit<AIMessage, 'timestamp'>) => void
   clearMessages: () => void
   setThinking: (v: boolean) => void
 }
 
-const MODEL_FIELD: Record<AIProvider, 'claudeModel' | 'openaiModel' | 'grokModel' | 'ollamaModel'> = {
-  claude: 'claudeModel', openai: 'openaiModel', grok: 'grokModel', ollama: 'ollamaModel'
+const MODEL_FIELD: Record<AIProvider, 'claudeModel' | 'openaiModel' | 'grokModel' | 'geminiModel' | 'ollamaModel' | 'localModel'> = {
+  claude: 'claudeModel', openai: 'openaiModel', grok: 'grokModel', gemini: 'geminiModel', ollama: 'ollamaModel', local: 'localModel'
 }
 
 /** The key for the chosen provider. Ollama runs on this PC and needs none. */
-export function apiKeyFor(s: Pick<AIState, 'provider' | 'claudeApiKey' | 'openaiApiKey' | 'grokApiKey'>): string {
-  return s.provider === 'claude' ? s.claudeApiKey : s.provider === 'openai' ? s.openaiApiKey : s.provider === 'grok' ? s.grokApiKey : 'local'
+export function apiKeyFor(s: Pick<AIState, 'provider' | 'claudeApiKey' | 'openaiApiKey' | 'grokApiKey' | 'geminiApiKey'>): string {
+  return s.provider === 'claude' ? s.claudeApiKey : s.provider === 'openai' ? s.openaiApiKey : s.provider === 'grok' ? s.grokApiKey
+    : s.provider === 'gemini' ? s.geminiApiKey : 'local'
 }
 
 export const PROVIDER_LABEL: Record<AIProvider, string> = {
-  claude: 'Claude', openai: 'GPT', grok: 'Grok', ollama: 'Ollama (local)'
+  claude: 'Claude', openai: 'GPT', grok: 'Grok', gemini: 'Gemini', ollama: 'Ollama (local)', local: 'Local server'
 }
 
 export const useAIStore = create<AIState>()(
@@ -50,11 +60,15 @@ export const useAIStore = create<AIState>()(
       claudeApiKey: '',
       openaiApiKey: '',
       grokApiKey: '',
+      geminiApiKey: '',
       model: DEFAULT_CLAUDE_MODEL,
       claudeModel: DEFAULT_CLAUDE_MODEL,
       openaiModel: DEFAULT_OPENAI_MODEL,
       grokModel: DEFAULT_GROK_MODEL,
+      geminiModel: DEFAULT_GEMINI_MODEL,
       ollamaModel: DEFAULT_OLLAMA_MODEL,
+      localModel: DEFAULT_LOCAL_MODEL,
+      localUrl: DEFAULT_LOCAL_URL,
       messages: [],
       isThinking: false,
 
@@ -63,6 +77,8 @@ export const useAIStore = create<AIState>()(
       setClaudeApiKey: (claudeApiKey) => set({ claudeApiKey }),
       setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
       setGrokApiKey: (grokApiKey) => set({ grokApiKey }),
+      setGeminiApiKey: (geminiApiKey) => set({ geminiApiKey }),
+      setLocalUrl: (localUrl) => set({ localUrl }),
       setModel: (model) => set((s) => ({ model, [MODEL_FIELD[s.provider]]: model })),
       addMessage: (msg) =>
         set((s) => ({

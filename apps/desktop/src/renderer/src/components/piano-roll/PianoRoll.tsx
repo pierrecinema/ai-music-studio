@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
 import { useAudioStore } from '../../stores/audio.store'
-import { previewNote } from '../../audio/engine'
+import { pause, previewNote } from '../../audio/engine'
+import { connectMidiKeyboards, noteOff, noteOn, startMidiRecording } from '../../audio/midiRecord'
 import type { Note } from '../../types'
 import { minLength, snapBeat, snapStep } from '../../edit/grid'
 import { GridControls } from '../../edit/GridControls'
@@ -39,6 +40,9 @@ export function PianoRoll(): React.ReactElement {
   const zoom = useUIStore((s) => s.pianoZoom)
   const setZoom = useUIStore((s) => s.setPianoZoom)
   const beat = useAudioStore((s) => s.currentBeat)
+  const recording = useAudioStore((s) => s.isRecording)
+  const [midiInputs, setMidiInputs] = useState(0)
+  useEffect(() => { void connectMidiKeyboards().then(setMidiInputs) }, [])     // a MIDI keyboard plays right away
   const scrollRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const drag = useRef<NoteDrag | null>(null)
@@ -245,6 +249,12 @@ export function PianoRoll(): React.ReactElement {
           </button>
         ))}
         <GridControls />
+        <button title="Record MIDI (Ctrl+R): the song plays, and what you play on the keyboard on the left or on a MIDI keyboard becomes notes. Press again (or Space) to stop."
+          onClick={() => { if (recording) pause(); else void startMidiRecording() }}
+          style={{ padding: '3px 10px', borderRadius: 4, border: `1px solid ${recording ? 'var(--red)' : 'var(--border)'}`, background: recording ? 'var(--red)' : 'var(--bg-primary)', color: recording ? 'white' : 'var(--red)', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
+          ● {recording ? 'Recording…' : 'Rec'}
+        </button>
+        {midiInputs > 0 && <span style={{ fontSize: 10, color: 'var(--green)' }} title="MIDI keyboards found">🎹 {midiInputs}</span>}
         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
           {clip ? `${track.name} · ${clip.name ?? 'clip'} · ${notes.length} notes${sel.size > 1 ? ` · ${sel.size} selected` : ''}` : 'No clip yet: click in the grid to create one'}
         </span>
@@ -263,7 +273,9 @@ export function PianoRoll(): React.ReactElement {
               const black = isBlack(pitch)
               return (
                 <div key={pitch}
-                  onPointerDown={() => void previewNote(pitch, 100, track)}
+                  onPointerDown={(e) => { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); noteOn(pitch, 100) }}
+                  onPointerUp={() => noteOff(pitch)} onPointerCancel={() => noteOff(pitch)}
+                  title="Play this note. While recording (● or Ctrl+R), what you play here becomes notes in the clip." 
                   style={{ height: NOTE_HEIGHT, boxSizing: 'border-box', background: black ? '#222' : '#fff', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 4, cursor: 'pointer' }}>
                   {pitch % 12 === 0 && <span style={{ fontSize: 9, color: black ? '#888' : '#555' }}>{noteName(pitch)}</span>}
                 </div>

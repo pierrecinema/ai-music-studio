@@ -16,6 +16,31 @@ export interface LoraEntry {
   default_strength: number
   source?: string    // e.g. "huggingface:owner/name"
   license?: string
+  family?: LoraFamily
+}
+
+// The model a LoRA is made for (same rules as the backend, services: ace15_adapter / lora_family):
+// "1.5" = ACE-Step 1.5 (the 2B turbo): a folder with adapter_config.json; "xl" = ACE-Step 1.5 XL ("xl" in the name);
+// "v1" = ACE-Step v1: weights without adapter_config.json
+export type LoraFamily = 'v1' | '1.5' | 'xl' | 'unknown'
+
+const hasAdapterConfig = (dir: string, depth = 2): boolean => {
+  try {
+    if (existsSync(join(dir, 'adapter_config.json'))) return true
+    if (depth <= 0) return false
+    return readdirSync(dir).some((n) => { const f = join(dir, n); return statSync(f).isDirectory() && hasAdapterConfig(f, depth - 1) })
+  } catch { return false }
+}
+
+export function loraFamily(path: string, name: string): LoraFamily {
+  if (/(^|[^a-z])xl([^a-z]|$)|xlsft|xl-sft|xl_sft/.test(name.toLowerCase())) return 'xl'
+  try {
+    if (statSync(path).isDirectory()) {
+      if (hasAdapterConfig(path)) return '1.5'
+      return readdirSync(path).some((n) => EXTS.has(extname(n).toLowerCase())) ? 'v1' : 'unknown'
+    }
+    return EXTS.has(extname(path).toLowerCase()) ? 'v1' : 'unknown'
+  } catch { return 'unknown' }
 }
 
 function readIndex(): LoraEntry[] {
@@ -39,13 +64,24 @@ export function listLoras(): { dir: string; loras: LoraEntry[] } {
       const full = join(LORA_DIR, name)
       const isDir = statSync(full).isDirectory()
       if (!isDir && !EXTS.has(extname(name).toLowerCase())) continue
+      // a pack of several LoRAs (one folder each, like "...-5-LoRAs"): each one on its own
+      if (isDir && !existsSync(join(full, 'adapter_config.json'))) {
+        const subs = readdirSync(full).filter((n) => { const f = join(full, n); return statSync(f).isDirectory() && existsSync(join(f, 'adapter_config.json')) })
+        if (subs.length) {
+          for (const sn of subs.sort()) {
+            const id = `${name}/${sn}`
+            if (!byId.has(id)) byId.set(id, { id, name: `${name} / ${sn}`, kind: 'style', path: join(full, sn), tags: [], default_strength: 1 })
+          }
+          continue
+        }
+      }
       const id = isDir ? name : basename(name, extname(name))
       if (!byId.has(id)) {
         byId.set(id, { id, name: id, kind: 'style', path: full, tags: [], default_strength: 1 })
       }
     }
   }
-  return { dir: LORA_DIR, loras: [...byId.values()].sort((a, b) => a.name.localeCompare(b.name)) }
+  return { dir: LORA_DIR, loras: [...byId.values()].map((l) => ({ ...l, family: loraFamily(l.path, l.name) })).sort((a, b) => a.name.localeCompare(b.name)) }
 }
 
 export function importLora(

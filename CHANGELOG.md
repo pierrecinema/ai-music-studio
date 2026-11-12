@@ -3,6 +3,18 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.20.0
+
+- **Studio: automation in its own lanes.** The A button (or right-click → Show automation) opens **volume and pan as two lanes** below the track; each lane can be made small (▸ / ▾), switched to another value or closed, and more lanes (sends) can be added with +.
+- **Studio: effects in every track (FX).** The FX button opens an effects lane: **EQ, compressor, delay, reverb, filter**, each with its settings, on / bypass and order. They are heard in playback and in the export. VST3 plugins will appear in the same place later.
+- **Track colour:** right-click a track header (or click the colour strip at its left) and pick a colour.
+- **MIDI recording:** the record button, **Ctrl+R** and the new **● Rec** in the Piano Roll record MIDI when a MIDI track is selected or the Piano Roll is open. What you play on the Piano Roll's keyboard or on a **MIDI keyboard** appears as notes right away, as long as you held the keys.
+- **Create music – lyrics:** buttons insert **[Intro] [Verse] [Pre-Chorus] [Chorus] [Bridge] [Outro]** at the cursor; **Auto structure** turns stanzas into verses and choruses (a stanza that comes back is the chorus); lyrics without sections are structured automatically.
+- **Create music – preview voices:** three short takes of your first lines with different voices (ACE-Step); **Use this voice** makes the whole song with that voice (its seed). Previews are not saved in the Library.
+- **Create music – LoRAs per model:** the LoRA list shows the LoRAs that fit the chosen model; the others are greyed out with the reason (made for XL, made for ACE-Step v1).
+- **AI chat: Google Gemini** (with your own key, free tier) and **Local server** (LM Studio, KoboldCpp, llama.cpp; on older AMD cards through Vulkan).
+- **Top bar:** the position display shows bar . beat . sixteenth (1.1.1 = the start) and switches to minutes:seconds with a click. **Channel tab:** pan shows L / R and "Center".
+
 ## 0.18.13
 
 - **ACE-Step 1.5 songs end where the music ends:** the end is now found relative to the song's own loudness (quiet reverb tails and hiss no longer leave about a second of "nothing"), and a song that already dies away is no longer faded out a second time; only a song that stops abruptly is faded.

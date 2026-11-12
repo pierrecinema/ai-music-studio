@@ -23,16 +23,17 @@ class Message(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    provider: Literal["claude", "openai", "grok", "ollama"]
+    provider: Literal["claude", "openai", "grok", "gemini", "ollama", "local"]
     apiKey: str
     model: str
     messages: list[Message]
     systemContext: str = ""
+    baseUrl: str = ""          # provider "local": an OpenAI-compatible server on this PC (LM Studio, KoboldCpp, llama.cpp)
 
 
 @router.post("/chat")
 async def chat(req: ChatRequest):
-    if not req.apiKey and req.provider != "ollama":
+    if not req.apiKey and req.provider not in ("ollama", "local"):
         raise HTTPException(400, "API key required. Set it in Settings → AI.")
 
     system = MUSIC_SYSTEM_PROMPT
@@ -42,14 +43,22 @@ async def chat(req: ChatRequest):
     try:
         if req.provider == "claude":
             return await _claude_chat(req.apiKey, req.model, req.messages, system)
+        if req.provider == "gemini":         # Google offers the OpenAI chat format as well
+            return await _openai_chat(req.apiKey, req.model, req.messages, system, base_url=GEMINI_URL)
         if req.provider == "grok":           # xAI speaks the OpenAI chat format
             return await _openai_chat(req.apiKey, req.model, req.messages, system, base_url=XAI_URL)
+        if req.provider == "local":          # LM Studio / KoboldCpp / llama.cpp: the OpenAI chat format, e.g. over Vulkan
+            return await _openai_chat("local", req.model or "local-model", req.messages, system,
+                                      base_url=(req.baseUrl or LOCAL_URL).rstrip("/"))
         if req.provider == "ollama":         # local and free; Ollama also speaks the OpenAI chat format
             return await _openai_chat("ollama", req.model, req.messages, system, base_url=OLLAMA_URL)
         return await _openai_chat(req.apiKey, req.model, req.messages, system)
     except Exception as e:
         msg = str(e)
-        if req.provider == "ollama" and ("Connection" in type(e).__name__ or "connect" in msg.lower()):
+        if req.provider == "local" and ("Connection" in type(e).__name__ or "connect" in msg.lower()):
+            msg = (f"No server answers at {req.baseUrl or LOCAL_URL}. Start the server in LM Studio (Developer → Start "
+                   "Server) or start KoboldCpp, load a model, and check the address in Settings → AI.")
+        elif req.provider == "ollama" and ("Connection" in type(e).__name__ or "connect" in msg.lower()):
             msg = "Ollama is not running. Install it from ollama.com, start it, and run 'ollama pull " + req.model + "' once."
         elif req.provider == "ollama" and "not found" in msg.lower():
             msg = f"The model '{req.model}' is not on this PC yet. Open a command prompt and run: ollama pull {req.model}"
@@ -57,7 +66,9 @@ async def chat(req: ChatRequest):
 
 
 XAI_URL = "https://api.x.ai/v1"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 OLLAMA_URL = "http://127.0.0.1:11434/v1"
+LOCAL_URL = "http://127.0.0.1:1234/v1"
 
 
 async def _claude_chat(api_key: str, model: str, messages: list[Message], system: str) -> str:

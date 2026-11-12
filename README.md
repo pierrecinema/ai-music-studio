@@ -93,6 +93,13 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.8
+
+- **Synced songs hit the beat exactly, from the first kick on:**
+  - **Stretched beat by beat**, like the "Beats" warp mode of DAWs: a synced clip is cut at every beat of its grid and each piece is stretched on its own, starting exactly at its place. Every kick now lands within 1 ms of its beat. Before, whole songs over 90 s went through a phase vocoder that smeared every kick over about 60 ms and moved single beats by up to 40 ms ("it does not start exactly on the beat"); loops could be up to 15 ms off.
+  - The metronome no longer misses the click on the first beat when the computer is busy at the start.
+  - A clip that starts right on a kick keeps its full attack (the fade against clicks at the clip start is 2 ms instead of 6 ms).
+
 ### New in 0.18.7
 
 - **Move the playhead by hand:** drag the blue playhead line (or the small triangle on top of it) to any point in the Studio, or click and drag in the bar numbers of the ruler. It snaps to the grid (Alt: free). While the song plays, playback jumps there when you let go. No more pressing Stop to get back.

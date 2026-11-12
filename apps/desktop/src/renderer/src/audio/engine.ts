@@ -75,7 +75,7 @@ const warpKey = (path: string, source: number, project: number): string => `${pa
 // seconds of the FILE per beat of the clip: a synced sample is measured in its own tempo
 export const sourceSecPerBeat = (clipWarpBpm: number | undefined, projectBpm: number): number => 60 / (clipWarpBpm || projectBpm || 120)
 
-export async function loadWarped(path: string, sourceBpm: number, projectBpm: number): Promise<AudioBuffer | null> {
+export async function loadWarped(path: string, sourceBpm: number, projectBpm: number, gridFirst?: number): Promise<AudioBuffer | null> {
   const key = warpKey(path, sourceBpm, projectBpm)
   const have = warped.get(key)
   if (have) return have
@@ -84,6 +84,15 @@ export async function loadWarped(path: string, sourceBpm: number, projectBpm: nu
     p = (async () => {
       const raw = await loadBuffer(path)
       if (!raw) return null
+      if (gridFirst !== undefined && Math.abs(sourceBpm / projectBpm - 1) >= 0.002) {
+        // the beat grid is known: the backend stretches beat by beat, so every kick lands exactly on its beat
+        // (within 1 ms; stretching the whole file at once let single beats wander by up to 15 ms)
+        try {
+          const r = await api.samples.stretch(path, sourceBpm / projectBpm, { firstBeat: gridFirst, bpm: sourceBpm })
+          const out = await loadBuffer(r.path)
+          if (out) { warped.set(key, out); warping.delete(key); return out }
+        } catch (e) { console.warn('[audio] beat-by-beat stretch not available, using the built-in one', path, e) }
+      }
       if (raw.duration > MAX_STRETCH_SECONDS) {
         // a whole song: too long for the stretcher here; the backend makes a synced copy (before, it played at its
         // own tempo next to the grid and drifted away from the metronome)
@@ -371,7 +380,9 @@ export function scheduleProject(
         const at = when + Math.max(0, clipStart)
         const peakGain = Math.max(0, Math.min(2, clip.gain ?? 1))
         const full = clipLen
-        const click = Math.min(0.006, full / 4)                    // tiny fades remove clicks at the cut
+        // tiny fades remove clicks at the cut; only 2 ms, so a kick right at the clip start keeps its attack (6 ms made
+        // the first beat of a clip that starts on a kick sound soft and late)
+        const click = Math.min(0.002, full / 4)
         const spb = clipLen / Math.max(1e-6, clipEnd - clip.startTime)
         const xi = (xIn.get(clip.id) ?? 0) * spb
         const xo = (xOut.get(clip.id) ?? 0) * spb
@@ -492,7 +503,7 @@ export function activeLoop(p: Project): { start: number; end: number } | null {
 
 async function loadAllFiles(p: Project): Promise<void> {
   const files = new Set<string>()
-  const synced = new Map<string, [string, number, number]>()
+  const synced = new Map<string, [string, number, number, number | undefined]>()
   const marked: Array<[Clip, number, number]> = []
   for (const t of p.tracks) {
     for (const c of t.clips) {
@@ -500,11 +511,11 @@ async function loadAllFiles(p: Project): Promise<void> {
       files.add(c.audioFile)
       const tempo = bpmAt(p, c.startTime)
       if (c.warpMarkers?.length) marked.push([c, sourceSecPerBeat(c.warpBpm, tempo), 60 / tempo])
-      else if (c.warpBpm) synced.set(warpKey(c.audioFile, c.warpBpm, tempo), [c.audioFile, c.warpBpm, tempo])
+      else if (c.warpBpm) synced.set(warpKey(c.audioFile, c.warpBpm, tempo), [c.audioFile, c.warpBpm, tempo, c.gridFirst])
     }
   }
   await Promise.all([...files].map((f) => loadBuffer(f)))
-  await Promise.all([...synced.values()].map(([f, b, tempo]) => loadWarped(f, b, tempo)))
+  await Promise.all([...synced.values()].map(([f, b, tempo, g]) => loadWarped(f, b, tempo, g)))
   await Promise.all(marked.map(([c, a, b]) => loadMarkerWarp(c, a, b)))
 }
 
@@ -556,6 +567,7 @@ async function startAt(beat: number, countInBars = 0): Promise<void> {
   metroBeat = Math.ceil(beat - 1e-6)
   tick()
   window.clearInterval(metroTimer)
+  metronomeTick()                      // at once: waiting for the first interval could skip the click on the first beat
   metroTimer = window.setInterval(metronomeTick, 40)
 }
 

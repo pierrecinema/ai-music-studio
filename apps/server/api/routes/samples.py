@@ -49,13 +49,15 @@ async def analyze(req: FolderReq):
 class StretchReq(BaseModel):
     path: str
     ratio: float          # output length / input length (source BPM / project BPM)
+    first_beat: float | None = None   # the file's beat grid: stretched beat by beat, every kick exactly on its beat
+    bpm: float | None = None
 
 
 @router.post("/stretch")
 async def stretch(req: StretchReq):
     """Long audio synced to the project tempo (the Studio stretches files up to 90 s itself)."""
     try:
-        return {"path": await asyncio.to_thread(samples.stretch, req.path, req.ratio)}
+        return {"path": await asyncio.to_thread(samples.stretch, req.path, req.ratio, req.first_beat, req.bpm)}
     except ImportError:
         raise HTTPException(400, "Syncing long audio needs the librosa package (Settings → AI Engines).")
     except Exception as e:

@@ -1,5 +1,5 @@
 import { spawn, execFile, ChildProcess } from 'child_process'
-import { existsSync, mkdirSync, rmSync } from 'fs'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
@@ -325,12 +325,12 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
   }
   if (torchVariant === 'cuda') {
     log('NVIDIA card: installing the CUDA build of PyTorch first.')
-    if (await run(ace15Python(), ['-m', 'pip', 'install', 'torch', 'torchaudio', 'torchvision', '--index-url', 'https://download.pytorch.org/whl/cu128'], log) !== 0) {
+    if (await run(ace15Python(), ['-m', 'pip', 'install', '--upgrade', 'torch', 'torchaudio', 'torchvision', '--index-url', 'https://download.pytorch.org/whl/cu128'], log) !== 0) {
       return { ok: false, error: 'Installing PyTorch (CUDA) for ACE-Step 1.5 failed (see log).' }
     }
   } else {
     log('No NVIDIA card chosen: ACE-Step 1.5 runs on the processor (PyTorch CPU build).')
-    if (await run(ace15Python(), ['-m', 'pip', 'install', 'torch', 'torchaudio', 'torchvision', '--index-url', 'https://download.pytorch.org/whl/cpu'], log) !== 0) {
+    if (await run(ace15Python(), ['-m', 'pip', 'install', '--upgrade', 'torch', 'torchaudio', 'torchvision', '--index-url', 'https://download.pytorch.org/whl/cpu'], log) !== 0) {
       return { ok: false, error: 'Installing PyTorch (CPU) for ACE-Step 1.5 failed (see log).' }
     }
   }
@@ -355,8 +355,20 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
     return { ok: false, error: 'Could not read the ACE-Step 1.5 package list (see log).' }
   }
   log(`ACE-Step 1.5 packages (without nano-vllm and other GPU-only parts): ${wanted.length}`)
-  if (await run(ace15Python(), ['-m', 'pip', 'install', ...wanted], log) !== 0) {
-    return { ok: false, error: 'Installing the ACE-Step 1.5 packages failed (see log).' }
+  // PyTorch stays exactly as installed above: one of the packages (torchao / torchcodec) made pip pull an older
+  // torch from PyPI, which no longer matched torchvision ("operator torchvision::nms does not exist")
+  const ver = await capture(ace15Python(), ['-c', 'import importlib.metadata as m; print("\\n".join(f"{p}=={m.version(p)}" for p in ("torch", "torchvision", "torchaudio")))'], 30000)
+  const pins = ver.out.split(/\r?\n/).map((l) => l.trim()).filter((l) => /^torch(vision|audio)?==/.test(l))
+  const constraints = join(ace15Dir(), 'constraints.txt')
+  writeFileSync(constraints, pins.join('\n') + '\n')
+  log(`Keeping ${pins.join(', ')}`)
+  if (await run(ace15Python(), ['-m', 'pip', 'install', '-c', constraints, ...wanted], log) !== 0) {
+    // no version of torchao / torchcodec fits this PyTorch: leave those two out (DiT-only generation runs without)
+    log('Trying again without torchao and torchcodec, which do not fit this PyTorch version.')
+    const lean = wanted.filter((w) => !/^(torchao|torchcodec)\b/i.test(w))
+    if (await run(ace15Python(), ['-m', 'pip', 'install', '-c', constraints, ...lean], log) !== 0) {
+      return { ok: false, error: 'Installing the ACE-Step 1.5 packages failed (see log).' }
+    }
   }
   if (await run(ace15Python(), ['-m', 'pip', 'install', '--no-deps', '-e', ace15Repo()], log) !== 0) {
     return { ok: false, error: 'Installing ACE-Step 1.5 itself failed (see log).' }

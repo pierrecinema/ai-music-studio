@@ -18,10 +18,10 @@ import { beatOfSrc, srcOfBeat, validMarkers } from '../../audio/warp'
 import { hasTempoChanges } from '../../audio/timemap'
 import { Ruler } from './Ruler'
 import { Popover, type PopoverSpec } from './Popover'
-import { AutomationHeader, AutomationLane, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
+import { AutomationHeader, AutomationLane, FxHeader, FxLane, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
 import { ChannelTab } from './ChannelTab'
 import {
-  AUTO_HEIGHT, BEAT_WIDTH, buildRows, HANDLE, HEADER_WIDTH, RULER_HEIGHT, rowHeight, rowTops, TAKE_HEIGHT, TEMPO_HEIGHT, TRACK_MAX_HEIGHT, TRACK_MIN_HEIGHT, trackHeight, trackPointer, type Row
+  AUTO_HEIGHT, BEAT_WIDTH, buildRows, HANDLE, HEADER_WIDTH, RULER_HEIGHT, rowHeight, rowTops, TAKE_HEIGHT, TEMPO_HEIGHT, TRACK_MAX_HEIGHT, TRACK_MIN_HEIGHT, trackHeight, trackPointer, openLanes, toggleAutomationLanes, type Row
 } from './studioLayout'
 import {
   addCycleMarkerFromLoop, addMarkerAtPlayhead, addWarpMarker, beatsLeft, consolidate, crossfade, groupSelectedTracks, loopToSelection, spbSrcOf, splitIntoStems, togglePunch, toggleLoop
@@ -434,8 +434,11 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
     let header: React.ReactNode
     let lane: React.ReactNode
     if (row.kind === 'auto') {
-      header = <AutomationHeader track={track} />
-      lane = <AutomationLane track={track} param={row.param} beatWidth={beatWidth} />
+      header = <AutomationHeader track={track} param={row.param} min={row.min} />
+      lane = <AutomationLane track={track} param={row.param} beatWidth={beatWidth} min={row.min} />
+    } else if (row.kind === 'fx') {
+      header = <FxHeader track={track} />
+      lane = <FxLane track={track} />
     } else if (row.kind === 'take') {
       header = <TakeHeader track={track} lane={row.lane} />
       lane = row.lane.clips.map((clip) => {
@@ -476,8 +479,10 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             </div>
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { muted: !track.muted }) }} style={{ ...tinyBtn, color: track.muted ? '#f59e0b' : 'var(--text-muted)' }} title="Mute">M</button>
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { soloed: !track.soloed }) }} style={{ ...tinyBtn, color: track.soloed ? 'var(--accent-light)' : 'var(--text-muted)' }} title="Solo">S</button>
-            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showAutomation: track.showAutomation ? null : 'volume' }) }}
-              style={{ ...tinyBtn, color: track.showAutomation ? 'var(--accent-light)' : Object.values(track.automation ?? {}).some((l) => l?.length) ? '#eab308' : 'var(--text-muted)' }}
+            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showFx: !track.showFx }) }} title="Effects of this track (EQ, compressor, delay, reverb, filter)"
+              style={{ ...tinyBtn, color: track.showFx ? 'var(--accent-light)' : track.fx?.length ? '#22c55e' : 'var(--text-muted)' }}>FX</button>
+            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, toggleAutomationLanes(track)) }}
+              style={{ ...tinyBtn, color: openLanes(track).length ? 'var(--accent-light)' : Object.values(track.automation ?? {}).some((l) => l?.length) ? '#eab308' : 'var(--text-muted)' }}
               title="Show / hide the automation lane (volume, pan, sends)">A</button>
             {(track.takes?.length ?? 0) > 0 && (
               <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showTakes: !track.showTakes }) }} style={{ ...tinyBtn, color: track.showTakes ? 'var(--accent-light)' : 'var(--text-muted)' }} title="Show / hide the take lanes">T</button>
@@ -505,7 +510,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         : renderClips(track)
     }
     return (
-      <div key={`${row.kind}-${track.id}-${row.kind === 'take' ? row.lane.id : ''}`} style={{ display: 'flex', height: h, position: 'relative' }}>
+      <div key={`${row.kind}-${track.id}-${row.kind === 'take' ? row.lane.id : row.kind === 'auto' ? row.param : ''}`} style={{ display: 'flex', height: h, position: 'relative' }}>
         {row.kind === 'track' && (
           // the lower edge of the track: drag to make it higher or lower, double-click for the normal height
           <div title="Drag: track height · double-click: normal height"
@@ -752,7 +757,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             ? [
               { label: 'Rename track', run: () => setRenaming(menu.trackId) },
               { label: 'Duplicate track', run: () => { selectTrack(menu.trackId); runAction('edit.duplicate') } },
-              { label: 'Show automation', run: () => updateTrack(menu.trackId, { showAutomation: 'volume' }) },
+              { label: 'Show automation (volume and pan)', run: () => updateTrack(menu.trackId, { autoLanes: ['volume', 'pan'], showAutomation: null }) },
+              { label: 'Effects (FX)', run: () => updateTrack(menu.trackId, { showFx: true }) },
               ...(project.tracks.find((t) => t.id === menu.trackId)?.type === 'group'
                 ? [{ label: 'Ungroup (keep the tracks)', run: () => useProjectStore.getState().ungroup(menu.trackId) }]
                 : [{ label: 'Put into a new group (Ctrl+G)', run: () => useProjectStore.getState().groupTracks([menu.trackId]) },

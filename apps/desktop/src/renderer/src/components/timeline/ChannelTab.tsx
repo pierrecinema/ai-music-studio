@@ -5,6 +5,7 @@ import { useProjectStore } from '../../stores/project.store'
 import { AUTO_LABEL, hasAutomation } from '../../audio/automation'
 import type { AutoParam } from '../../types'
 import { MiniMeter } from './StudioLanes'
+import { openLanes } from './studioLayout'
 
 const row: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)' }
 const db = (v: number): string => (v <= 0.0005 ? '-inf' : (20 * Math.log10(v)).toFixed(1))
@@ -73,8 +74,11 @@ export function ChannelTab({ onClose }: { onClose: () => void }): React.ReactEle
           {(['volume', 'pan', ...returns.map((r) => `send:${r.id}`)] as AutoParam[]).map((p) => (
             <div key={p} style={row}>
               <span style={{ flex: 1 }}>{AUTO_LABEL(p, nameOf)}{hasAutomation(t, p) ? ` (${t.automation![p]!.length} points)` : ''}</span>
-              <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 6px' }} onClick={() => updateTrack(t.id, { showAutomation: t.showAutomation === p ? null : p })}>
-                {t.showAutomation === p ? 'Hide' : 'Show'}
+              <button className="btn btn-ghost" style={{ fontSize: 10, padding: '1px 6px' }} onClick={() => {
+                const lanes = openLanes(t)
+                updateTrack(t.id, { autoLanes: lanes.includes(p) ? lanes.filter((x) => x !== p) : [...lanes, p], showAutomation: null })
+              }}>
+                {openLanes(t).includes(p) ? 'Hide' : 'Show'}
               </button>
             </div>
           ))}

@@ -164,7 +164,8 @@ export const useProjectStore = create<ProjectState>()(
             delete sends[id]
             const automation = { ...(t.automation ?? {}) }
             delete automation[`send:${id}`]
-            return { ...t, sends, automation, showAutomation: t.showAutomation === `send:${id}` ? null : t.showAutomation }
+            return { ...t, sends, automation, showAutomation: t.showAutomation === `send:${id}` ? null : t.showAutomation,
+              autoLanes: t.autoLanes?.filter((x) => x !== `send:${id}`) }
           })
         }
       })),

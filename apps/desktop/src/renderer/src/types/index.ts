@@ -25,7 +25,11 @@ export interface Track {
   collapsed?: boolean         // group tracks: children hidden in the Studio
   sends?: Record<string, number>          // return track id -> send level 0..1 (post fader)
   automation?: Partial<Record<AutoParam, AutoPoint[]>>
-  showAutomation?: AutoParam | null       // which automation lane is open below the track
+  showAutomation?: AutoParam | null       // older projects: the one automation lane that was open
+  autoLanes?: AutoParam[]                 // the automation lanes shown below the track (volume and pan, sends)
+  autoMin?: AutoParam[]                   // lanes made small (minimized)
+  fx?: InsertFx[]                         // effects in the track (inserts), before the fader
+  showFx?: boolean                        // the effects lane below the track is open
   takes?: TakeLane[]          // loop recording: one lane per pass (comping)
   showTakes?: boolean
   height?: number             // height of the track in the Studio (pixels), dragged at its lower edge
@@ -34,6 +38,15 @@ export interface Track {
 // automated parameters: volume and pan of the track, and the send level to each return track ("send:<id>")
 export type AutoParam = 'volume' | 'pan' | `send:${string}`
 export interface AutoPoint { beat: number; value: number }     // value: volume/send 0..1, pan -1..1
+
+// an effect in a track (insert): built in now, VST3 plugins later
+export type InsertType = 'eq' | 'compressor' | 'delay' | 'reverb' | 'filter'
+export interface InsertFx {
+  id: string
+  type: InsertType
+  on: boolean
+  p: Record<string, number>               // the settings, see INSERT_PARAMS in audio/fx.ts
+}
 
 export interface TakeLane { id: string; name: string; clips: Clip[] }
 

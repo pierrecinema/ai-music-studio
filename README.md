@@ -17,7 +17,7 @@ No programming, no command line: just the installer.
 
 **Updates come automatically:** the app checks for new versions and installs them with one click (Settings → Updates). The SmartScreen warning only comes with the installer downloaded in the browser.
 
-Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Beta testing: [docs/BETA.md](docs/BETA.md) · Test plan: [docs/TESTPLAN.md](docs/TESTPLAN.md)
+**[📖 Wiki: every menu and function explained](https://github.com/pierrecinema/ai-music-studio/wiki)** · Manual (German, incl. first-time setup): [docs/MANUAL.md](docs/MANUAL.md) · Beta testing: [docs/BETA.md](docs/BETA.md) · Test plan: [docs/TESTPLAN.md](docs/TESTPLAN.md)
 
 ### ☕ Buy me a coffee
 
@@ -38,8 +38,6 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 - **Piano Roll:** draw, move and quantize MIDI notes
 - **Right in the Studio:** split a clip into stems from the right-click menu, quick export of the song
 - **Projects:** save and open, undo / redo
-Free, open-source AI music studio and DAW for Windows: songs, loops and stems with AI on your own PC. Studio with mixer, piano roll and automation.
-- 
 
 ### AI: available now
 

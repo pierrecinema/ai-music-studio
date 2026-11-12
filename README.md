@@ -95,6 +95,16 @@ Free, open-source AI music studio and DAW for Windows: songs, loops and stems wi
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.18.3
+
+- **Resizable Studio and panel:** drag the line between the Studio and the panel below it (mixer, piano roll, ...) up or down; double-click resets it. The Studio now takes all the height the panel leaves.
+- **New-track zone in the Studio:** under the last track there is always a dashed "+ Drag a clip or an audio file here for a new track" area; it lights up while you drag a clip there.
+- **Split into stems in the Studio** shows its progress next to the toolbar and uses the graphics-card models when *Fast vocal separation* is installed (else Demucs Fast); the message says where the stems are (new tracks at the bottom, in a group).
+- **Piano Roll: select several notes:** draw a frame with the *Select* tool (or Shift+drag with any tool), Shift/Ctrl+click adds or removes a note, **Ctrl+A** selects all notes (after a click in the Piano Roll). Selected notes move and get deleted together, and *Quantize* acts on all of them.
+- **Only one app at a time:** starting AI Music Studio again now brings the open window to the front. Before, every start ran its own AI backend (the logs showed three at once), so stem splits and songs waited on each other.
+- **ACE-Step 1.5 repair:** its environment lacked NumPy, so it never started. *Install selected* now installs NumPy and checks that ACE-Step 1.5 really starts; the error message says how to repair it.
+- **No more hard distortion:** a safety limiter at the end of the master stops many notes or loud clips together from clipping.
+
 ### New in 0.18.2
 
 - **Every new clip gets its own track:** *Studio: synced* / *as is* in the Samples tab no longer put every sample onto the selected track; like *Add to project* in the Library, each one now gets a new audio track.

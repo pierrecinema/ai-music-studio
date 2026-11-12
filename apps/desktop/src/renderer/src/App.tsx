@@ -159,6 +159,7 @@ export default function App(): React.ReactElement {
   }
 
   // These views need room: they use the whole main area instead of the strip under the timeline
+  const panelHeight = useUIStore((st) => st.panelHeight)
   const FULL_VIEWS = ['create', 'library', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'video-composer', 'ai-chat', 'vocal-editor', 'instruments', 'cloud']
   const panel = renderPanel()
   const fullView = FULL_VIEWS.includes(activeView)
@@ -178,10 +179,11 @@ export default function App(): React.ReactElement {
           )}
 
           {/* Bottom panel — shows the active view under the timeline */}
+          {!fullView && panel && <PanelResizer />}
           {!fullView && panel && (
             <div style={{
               flex: '0 0 auto',
-              height: 320,
+              height: panelHeight,
               borderTop: '1px solid var(--border-mid)',
               background: 'var(--bg-secondary)',
               overflow: 'hidden',
@@ -237,5 +239,26 @@ export default function App(): React.ReactElement {
       <QuantizeDialog />
       <WinampMode open={winamp} onClose={() => setWinamp(false)} />
     </div>
+  )
+}
+
+// The line between the Studio and the panel under it: drag it up or down to share the height.
+function PanelResizer(): React.ReactElement {
+  const setPanelHeight = useUIStore((s) => s.setPanelHeight)
+  const start = React.useRef<{ y: number; h: number } | null>(null)
+  return (
+    <div title="Drag to resize the Studio and the panel below (double-click: default)"
+      style={{ flex: '0 0 auto', height: 6, cursor: 'row-resize', background: 'var(--border-mid)', position: 'relative', zIndex: 5 }}
+      onDoubleClick={() => setPanelHeight(320)}
+      onPointerDown={(e) => {
+        (e.target as HTMLElement).setPointerCapture(e.pointerId)
+        start.current = { y: e.clientY, h: useUIStore.getState().panelHeight }
+      }}
+      onPointerMove={(e) => {
+        if (!start.current) return
+        const max = Math.max(160, window.innerHeight - 220)       // keep some Studio visible
+        setPanelHeight(Math.round(Math.min(max, Math.max(120, start.current.h + (start.current.y - e.clientY)))))
+      }}
+      onPointerUp={() => { start.current = null }} />
   )
 }

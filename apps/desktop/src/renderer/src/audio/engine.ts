@@ -442,7 +442,14 @@ function ensureContext(): AudioContext {
     master.gain.value = useAudioStore.getState().masterVolume
     masterAnalyser = ctx.createAnalyser()
     masterAnalyser.fftSize = 1024
-    master.connect(masterAnalyser).connect(ctx.destination)
+    // a safety limiter at the very end: many notes or loud clips together distorted hard before
+    const limiter = ctx.createDynamicsCompressor()
+    limiter.threshold.value = -1.5
+    limiter.knee.value = 0
+    limiter.ratio.value = 20
+    limiter.attack.value = 0.002
+    limiter.release.value = 0.12
+    master.connect(masterAnalyser).connect(limiter).connect(ctx.destination)
   }
   return ctx
 }

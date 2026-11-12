@@ -396,7 +396,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
     setZoom(Math.min(4, Math.max(0.25, +(zoom * (e.deltaY < 0 ? 1.15 : 0.87)).toFixed(3))))
   }
 
-  const rootStyle: React.CSSProperties = fill ? { flex: 1, minHeight: 240 } : { height: 240, flexShrink: 0 }
+  // with a panel below (mixer, piano roll, ...) the Studio takes the rest of the height; the line between them moves it
+  const rootStyle: React.CSSProperties = fill ? { flex: 1, minHeight: 240 } : { flex: 1, minHeight: 120 }
   const empty = project.tracks.length === 0
   const selectedAudioClip = (() => {
     const id = useProjectStore.getState().selectedClipId
@@ -681,9 +682,12 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             {frame && (
               <div style={{ position: 'absolute', left: HEADER_WIDTH + Math.min(frame.x0, frame.x1), top: lanesTop + Math.min(frame.y0, frame.y1), width: Math.abs(frame.x1 - frame.x0), height: Math.abs(frame.y1 - frame.y0), border: '1px solid var(--accent-light)', background: 'rgba(124,58,237,0.12)', zIndex: 8, pointerEvents: 'none' }} />
             )}
-            {newTrackHint && (
-              <div style={{ position: 'absolute', left: 0, right: 0, top: lanesTop + lanesHeight + 4, height: 44, border: '2px dashed var(--accent)', borderRadius: 8, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', paddingLeft: 16, fontSize: 12, fontWeight: 700, color: 'var(--accent-light)', zIndex: 9, pointerEvents: 'none' }}>
-                + Release here: new {newTrackHint === 'audio' ? 'audio' : 'MIDI'} track
+            {project.tracks.length > 0 && (
+              // always there under the last track: drop a clip (or an audio file) here for a new track
+              <div style={{ position: 'absolute', left: 0, right: 0, top: lanesTop + lanesHeight + 4, height: 40, borderRadius: 8, display: 'flex', alignItems: 'center', paddingLeft: 16, fontSize: 12, zIndex: 9, pointerEvents: 'none',
+                border: `2px dashed ${newTrackHint ? 'var(--accent)' : 'var(--border-mid)'}`, background: newTrackHint ? 'rgba(124,58,237,0.12)' : 'transparent',
+                color: newTrackHint ? 'var(--accent-light)' : 'var(--text-muted)', fontWeight: newTrackHint ? 700 : 400 }}>
+                {newTrackHint ? `+ Release here: new ${newTrackHint === 'audio' ? 'audio' : 'MIDI'} track` : '+ Drag a clip or an audio file here for a new track'}
               </div>
             )}
             <Playhead scrollRef={scrollRef} beatWidth={beatWidth} />
@@ -721,7 +725,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                 { label: 'Crossfade with the clip before (X)', run: () => setMessage(crossfade()) },
                 { label: 'Loop this clip (Ctrl+L)', run: () => loopToSelection() },
                 { label: 'Edit warp markers', run: () => { setWarpClip(menu.clipId!); setMessage('Warp: double-click the waveform to set a marker, drag a marker onto another beat, Alt+click deletes it.') } },
-                { label: 'Split into stems (Demucs)', run: () => void run('Separating stems (this can take a few minutes)', () => splitIntoStems(menu.trackId, menu.clipId!)) },
+                { label: 'Split into stems (Demucs)', run: () => void run('Separating stems', () => splitIntoStems(menu.trackId, menu.clipId!, (pct, text) => setBusy(`Separating stems ${Math.floor(pct)} % · ${text}`))) },
                 { label: 'Delete clip', run: () => { const ids = selected.size > 1 && selected.has(menu.clipId!) ? [...selected] : [menu.clipId!]; useProjectStore.getState().removeClips(ids) }, danger: true }
               ]
           ).map((it) => (

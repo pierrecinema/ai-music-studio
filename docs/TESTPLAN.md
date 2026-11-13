@@ -132,6 +132,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6c.17 | neu (0.20.5): Create mit 2 oder mehr Songs / Versionen | neuester Song oben, der erste unten | ✅ | | |
 | 6c.18 | neu (0.30.4): Create, ACE-Step 1.5, Länge 240 s (oder 360 s) | kein Abbruch nach 600 s; der Song wird fertig (auf dem Prozessor dauert das lange) | ✅ | | 0.30.4: 300 s fertig nach etwa 47 min (PC i7-3930K, CPU) |
 | 6c.19 | neu (0.30.6): Create, ACE-Step 1.5 Turbo, LoRA „ACE-STEP-1.5v-rain-techno“ (Stärke 1), kurzer Song (30 s) | LoRA ist wählbar (nicht grau); Hinweis „LoRA … is used at strength 1.00“, keine Meldung „not an ACE-Step 1.5 LoRA“; Stil hörbar techno | | | |
+| 6c.20 | neu (0.30.7): fertiger Song in Create → **Stem Splitter**; Library → **Stem Splitter** | Stem Splitter öffnet sich mit dem Song und seinem Namen, „Split Stems“ startet | | | |
 
 ## 7. Mastering (neu in 0.30.0)
 

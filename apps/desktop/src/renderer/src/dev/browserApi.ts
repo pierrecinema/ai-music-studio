@@ -42,9 +42,9 @@ if (!w.api) {
   w.__browserMem = mem
   // browser tests only: read the stores from Playwright (window.__ams.project.getState())
   void Promise.all([import('../stores/project.store'), import('../stores/audio.store'), import('../stores/ui.store'),
-    import('../stores/mastering.store'), import('../audio/engine')]).then(([p, a, u, m, e]) => {
+    import('../stores/mastering.store'), import('../audio/engine'), import('../stores/stemHandoff')]).then(([p, a, u, m, e, st]) => {
     (window as unknown as { __ams: unknown }).__ams = {
-      project: p.useProjectStore, audio: a.useAudioStore, ui: u.useUIStore, mastering: m.useMasteringStore, loadBuffer: e.loadBuffer,
+      project: p.useProjectStore, audio: a.useAudioStore, ui: u.useUIStore, mastering: m.useMasteringStore, loadBuffer: e.loadBuffer, toStems: st.sendToStemSplitter,
     }
   })
 }

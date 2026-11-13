@@ -93,6 +93,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.30.7
+
+- **Finished songs go to the Stem Splitter with one click:** next to *Add to project* and *Mastering*, the results in Create music and every song in the Library now have a **Stem Splitter** button. The song opens there with its name, ready to split.
+
 ### New in 0.30.6
 
 - **Fix: ACE-Step 1.5 LoRAs from Hugging Face were left out** ("not an ACE-Step 1.5 LoRA (no adapter_config.json)"). The app's Hugging Face download saved only the weights of such a LoRA, not the small `adapter_config.json` that ACE-Step 1.5 needs. New downloads keep both in one folder; LoRAs downloaded before are recognised by their weights, and the first time one is used the app fetches its `adapter_config.json` from Hugging Face (or writes one from the weights if that is not possible).

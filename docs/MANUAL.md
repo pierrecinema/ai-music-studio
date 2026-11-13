@@ -6,7 +6,7 @@ Stand: Version 0.1.5 (Alpha). Windows 10/11, 64 Bit.
 
 1. `AIMusicStudio-Setup-<Version>.exe` von der [Releases-Seite](https://github.com/pierrecinema/ai-music-studio/releases) laden und starten.
 2. **Beim ersten Start des Installers kommt eine Windows-Warnung.** Es erscheint ein blaues Fenster „**Der Computer wurde durch Windows geschützt**“ (Microsoft Defender SmartScreen). Das liegt daran, dass der Installer (noch) nicht digital signiert ist; Windows kennt den Herausgeber deshalb nicht. Es ist kein Virusfund. So geht es weiter: auf **Weitere Informationen** klicken, dann auf **Trotzdem ausführen**. Manche Virenscanner fragen ebenfalls nach; auch dort die Datei zulassen. Die Warnung kommt bei der Installation aus dem Browser-Download; Updates, die die App selbst lädt, lösen sie in der Regel nicht aus.
-3. Die App startet auch ohne weitere Einrichtung (Oberfläche, Studio, Piano Roll, Winamp-Modus). Die KI-Funktionen brauchen das Backend, siehe Abschnitt 2.
+3. Die App startet auch ohne weitere Einrichtung (Oberfläche, Studio, Piano Roll). Die KI-Funktionen brauchen das Backend, siehe Abschnitt 2.
 
 Updates: Die App sucht beim Start und alle 4 Stunden nach neuen Versionen und zeigt unten rechts einen Hinweis. Manuell: **Einstellungen → Updates**.
 
@@ -98,7 +98,6 @@ Nach der Installation die App neu starten, damit sie die neuen Programme im PATH
 - **Stem Splitter** (✂): Vocals, Drums, Bass, Piano, Gitarre, Rest. Modell „6 Stems“ liefert Piano und Gitarre getrennt.
 - **Mastering** (◎): eigenen Track und einen Referenztrack wählen, Ausgabe 16 oder 24 Bit.
 - **Karaoke Export** (🎙): erkennt Wörter und Zeiten, erzeugt eine erweiterte `.lrc` und ein MP4 mit hervorgehobenem Text (16:9, 9:16, 1:1). Am besten mit einer isolierten Gesangsspur.
-- **Winamp-Modus**: **Strg+M** oder unten rechts „Winamp (Ctrl+M)“. Audiodateien hinzufügen. Die Musik läuft weiter, wenn du zurück ins Studio wechselst.
 - **Audio → MIDI**: Standard ist basic-pitch. Ist MuScriptor installiert, wird es automatisch bevorzugt.
 
 ## Tastenkürzel (Ableton Live 12 oder Cubase)
@@ -120,7 +119,7 @@ Nach der Installation die App neu starten, damit sie die neuen Programme im PATH
 | Zoom | + / − | H / G |
 | Piano Roll / Mixer | Umschalt+Tab / Strg+Alt+M | Strg+E / F3 |
 
-Dazu gehören Stopp, Zurück zum Anfang, Spur duplizieren (Strg+D), neues Projekt (Strg+N), Einstellungen (Strg+, bei Ableton), Vollbild (F11) und der Winamp-Modus (Strg+M in beiden). Die Liste in den Einstellungen ist vollständig.
+Dazu gehören Stopp, Zurück zum Anfang, Spur duplizieren (Strg+D), neues Projekt (Strg+N), Einstellungen (Strg+, bei Ableton) und Vollbild (F11). Die Liste in den Einstellungen ist vollständig.
 
 - **Kopieren und Einfügen:** Im Studio, in der Piano Roll und im Mixer kopiert Strg+C die gewählten Clips (überall sonst, und immer wenn Text markiert ist, kopiert es ganz normal Text; ein Rechtsklick auf markierten Text bietet Kopieren an). Strg+C kopiert dort die gewählten Clips, Strg+X schneidet sie aus. Strg+V fügt sie am Abspielkopf ein und setzt den Abspielkopf ans Ende des Eingefügten: Wer Strg+V mehrmals drückt, bekommt die Kopien lückenlos hintereinander (praktisch für Loops). Clips aus einer Spur landen auf der gewählten Spur, Clips aus mehreren Spuren bleiben auf ihren Spuren. Strg+D mit mehreren gewählten Clips dupliziert alle direkt dahinter.
 - Nach dem Wählen in einer Auswahlliste (Raster, Count-in) oder einem Klick auf einen Knopf wirken die Kürzel sofort wieder. Die Leertaste spielt auch dann ab, wenn ein Zahlenfeld (BPM) den Fokus hat.

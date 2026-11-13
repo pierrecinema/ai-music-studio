@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { UpdateToast } from './components/updater/UpdateToast'
 import { api, baseUrl } from './lib/api'
-import { useShortcuts, shortcutState } from './shortcuts/useShortcuts'
-import { WINAMP_EVENT } from './shortcuts/handlers'
+import { useShortcuts } from './shortcuts/useShortcuts'
 import { useMusicJob } from './stores/musicJob.store'
 import { useUIStore } from './stores/ui.store'
 import { useProjectStore } from './stores/project.store'
@@ -26,7 +25,6 @@ import { QuantizeDialog } from './edit/GridControls'
 import { FeedbackButton } from './components/common/Feedback'
 import { Mastering } from './components/mastering/Mastering'
 import { KaraokeExport } from './components/karaoke/KaraokeExport'
-import { WinampMode } from './components/winamp/WinampMode'
 
 // Hardware info fetched from backend
 interface HardwareInfo {
@@ -61,8 +59,8 @@ function GeneratingBadge(): React.ReactElement | null {
   )
 }
 
-function StatusBar({ hw, base, onWinamp, onSetup }: {
-  hw: HardwareInfo | null; base: string; onWinamp: () => void; onSetup: () => void
+function StatusBar({ hw, base, onSetup }: {
+  hw: HardwareInfo | null; base: string; onSetup: () => void
 }): React.ReactElement {
   const { project } = useProjectStore()
   const gpuLabel = hw
@@ -92,12 +90,6 @@ function StatusBar({ hw, base, onWinamp, onSetup }: {
       )}
       <GeneratingBadge />
       <span style={{ flex: 1 }} />
-      <button
-        onClick={onWinamp}
-        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 10 }}
-      >
-        Winamp (Ctrl+M)
-      </button>
       <FeedbackButton />
       <span style={{ color: 'var(--accent-light)' }}>MCP: {base ? `${base}/mcp` : '…'}</span>
     </footer>
@@ -110,18 +102,11 @@ export default function App(): React.ReactElement {
   const activeView = useUIStore((s) => ((s.activeView as string) === 'music-gen' ? 'create' : s.activeView))
   const [hw, setHw] = useState<HardwareInfo | null>(null)
   const [chatOpen, setChatOpen] = useState(true)
-  const [winamp, setWinamp] = useState(false)
   const [base, setBase] = useState('')
   const setActiveView = useUIStore(s => s.setActiveView)
 
   // keyboard shortcuts (Ableton Live 12 or Cubase layout, chosen in Settings → Shortcuts)
   useShortcuts()
-  useEffect(() => {
-    const toggle = () => setWinamp(v => !v)
-    window.addEventListener(WINAMP_EVENT, toggle)
-    return () => window.removeEventListener(WINAMP_EVENT, toggle)
-  }, [])
-  useEffect(() => { shortcutState.winampOpen = winamp }, [winamp])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -232,12 +217,11 @@ export default function App(): React.ReactElement {
         )}
       </div>
 
-      <StatusBar hw={hw} base={base} onWinamp={() => setWinamp(true)} onSetup={() => { sessionStorage.setItem('ams-settings-tab', 'engines'); setActiveView('settings') }} />
+      <StatusBar hw={hw} base={base} onSetup={() => { sessionStorage.setItem('ams-settings-tab', 'engines'); setActiveView('settings') }} />
       <UpdateToast />
       <Welcome />
       <BeatMatchCard />
       <QuantizeDialog />
-      <WinampMode open={winamp} onClose={() => setWinamp(false)} />
     </div>
   )
 }

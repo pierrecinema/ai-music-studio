@@ -73,7 +73,6 @@ export const ACTIONS: ActionDef[] = [
   { id: 'view.closeSettings', label: 'Close settings', group: 'Views' },
   { id: 'view.fullscreen', label: 'Full screen', group: 'Views' },
 
-  { id: 'app.winamp', label: 'Winamp mode', group: 'App' },
 ]
 
 export interface Preset {
@@ -134,7 +133,6 @@ export const PRESETS: Record<PresetId, Preset> = {
       'view.settings': ['Ctrl+,'],
       'view.closeSettings': ['Escape'],
       'view.fullscreen': ['F11'],
-      'app.winamp': ['Ctrl+M'],
     },
   },
   cubase: {
@@ -182,7 +180,6 @@ export const PRESETS: Record<PresetId, Preset> = {
       'view.pianoRoll': ['Ctrl+E'],
       'view.mixer': ['F3'],
       'view.closeSettings': ['Escape'],
-      'app.winamp': ['Ctrl+M'],
     },
   },
 }

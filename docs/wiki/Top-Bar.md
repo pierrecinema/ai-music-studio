@@ -16,6 +16,6 @@ The bar across the top of the window, visible in every menu.
 | **Time signature** | e.g. 4/4, 3/4, 6/8 (changes later in the song: right-click the ruler in the [[Studio]]) |
 | **Master level** | Volume of everything, with a level meter |
 
-**Bottom bar (status bar):** state of the AI backend, the running job with progress (click it to go back to that view), **Feedback** (see [[Feedback and Troubleshooting]]) and **Winamp (Ctrl+M)**, a simple player whose music keeps playing while you work.
+**Bottom bar (status bar):** state of the AI backend, the running job with progress (click it to go back to that view), **Feedback** (see [[Feedback and Troubleshooting]]) and the address of the MCP server.
 
 **Left menu:** **«** / **»** at its top collapses it to icons or expands it with names; the choice is remembered.

@@ -18,7 +18,6 @@ import {
   toggleAutomationLane, toggleLoop, togglePunch
 } from '../components/timeline/studioOps'
 
-export const WINAMP_EVENT = 'ams:toggle-winamp'
 
 function selectedTrack(): Track | undefined {
   const s = useProjectStore.getState()
@@ -209,7 +208,6 @@ const HANDLERS: Record<string, () => void> = {
   'view.closeSettings': () => useUIStore.getState().closeSettings(),
   'view.fullscreen': toggleFullscreen,
 
-  'app.winamp': () => window.dispatchEvent(new CustomEvent(WINAMP_EVENT)),
 }
 
 export function runAction(id: string): boolean {

@@ -4,8 +4,6 @@ import { useUIStore } from '../stores/ui.store'
 import { runAction } from './handlers'
 import { ACTIONS, buildMap, eventToCombo } from './registry'
 
-// Set by the Winamp overlay: while it is open only the Winamp toggle stays active
-export const shortcutState = { winampOpen: false }
 
 const REPEATABLE = new Set(ACTIONS.filter((a) => a.repeatable).map((a) => a.id))
 // Ctrl+C / X / V / A copy clips only in the editors. Everywhere else (logs, library, settings, dialogs), and
@@ -57,7 +55,6 @@ export function useShortcuts(): void {
       if (wantsTextCommand(id)) return                     // the browser copies / pastes the text itself
       const el = e.target as HTMLElement | null
       if (el && (el.tagName === 'SELECT' || el.tagName === 'BUTTON' || el.tagName === 'INPUT')) el.blur()   // keys go to the Studio again
-      if (shortcutState.winampOpen && id !== 'app.winamp') return
       e.preventDefault()
       if (e.repeat && !REPEATABLE.has(id)) return
       runAction(id)
@@ -65,7 +62,7 @@ export function useShortcuts(): void {
 
     // Space also "clicks" a focused button on key-up: swallow that when Space is a shortcut
     const onKeyUp = (e: KeyboardEvent): void => {
-      if (e.key === ' ' && map.has('space') && !isEditable(e.target, 'Space') && !shortcutState.winampOpen) {
+      if (e.key === ' ' && map.has('space') && !isEditable(e.target, 'Space')) {
         e.preventDefault()
       }
     }

@@ -950,7 +950,8 @@ export function CreateMusic(): React.ReactElement {
             {tr(": you can find these songs there at any time.")}
           </div>
         )}
-        {job?.results.map((r, i) => (
+        {/* the newest take on top, the first at the bottom (each keeps its take number) */}
+        {job?.results.map((r, i) => ({ r, i })).reverse().map(({ r, i }) => (
           <div key={r.audio_file} style={{ ...card, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--text-secondary)' }}>
               <ResultName result={r} fallback={`${p.title || tr('Untitled')} · take ${i + 1}`} />

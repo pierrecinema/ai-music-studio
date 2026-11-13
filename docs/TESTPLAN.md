@@ -129,6 +129,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6c.14 | neu (0.20.4): Create (ACE-Step 1.5) → **Preview voices** | 3 Proben nur Stimme ohne Musik, gleicher Text; deutlich schneller als 3 Songs (Modell wird nur einmal geladen) | | | |
 | 6c.15 | neu (0.20.4): Create, ACE-Step 1.5 Turbo → + Add LoRA | raspy-Paket und andere 1.5-LoRAs normal wählbar, nur XL- und v1-LoRAs grau | | | |
 | 6c.16 | neu (0.20.4): Studio, MIDI-Clip anklicken → Strg+R; Piano Roll → Strg+R | MIDI-Aufnahme startet (● Recording…), Strg+R stoppt | | | |
+| 6c.17 | neu (0.20.5): Create mit 2 oder mehr Songs / Versionen | neuester Song oben, der erste unten | | | |
 
 ## 7. Mastering, AI Chat, Sonstiges (wird zuerst umgebaut)
 

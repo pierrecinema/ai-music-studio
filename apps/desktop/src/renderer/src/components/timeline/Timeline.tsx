@@ -707,6 +707,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             )}
 
             {rows.map(renderRow)}
+            {/* room for the "new track" drop zone below the last track, so it does not cover the return tracks */}
+            {project.tracks.length > 0 && returns.length > 0 && <div style={{ height: 48 }} />}
             {returns.map((r) => <ReturnRow key={r.id} r={r} />)}
 
             {/* the lane area (for coordinates) with bar lines, the loop range, the frame and the playhead */}

@@ -8,6 +8,7 @@ import { EqCurve } from './EqCurve'
 
 const card: React.CSSProperties = { background: 'var(--bg-tertiary)', borderRadius: 8, padding: 10 }
 const small: React.CSSProperties = { fontSize: 10, padding: '1px 7px' }
+const grp: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 3, padding: 6, borderRadius: 6, background: 'rgba(255,255,255,0.03)' }
 
 function Knob({ name, value, min, max, step, unit, onChange, log, title, off }: {
   name: string; value: number; min: number; max: number; step: number; unit?: string
@@ -34,20 +35,27 @@ function SlotBody({ slot, set }: { slot: Slot; set: (s: Slot) => void }): React.
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <EqCurve p={p} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', columnGap: 14, rowGap: 4 }}>
-        <Knob name="Low cut" off={!p.lowCut} value={p.lowCut || 10} min={10} max={300} step={1} unit="Hz" log onChange={(v) => u('lowCut', v <= 10 ? 0 : v)} title="High-pass: removes rumble below this frequency (all the way left: off)" />
-        <Knob name="Low shelf" value={p.lowF} min={30} max={500} step={1} unit="Hz" log onChange={(v) => u('lowF', v)} />
-        <Knob name="  gain" value={p.lowG} min={-12} max={12} step={0.5} unit="dB" onChange={(v) => u('lowG', v)} />
-        {([1, 2, 3] as const).map((n) => (
-          <React.Fragment key={n}>
-            <Knob name={`Band ${n}`} value={p[`p${n}F`]} min={40} max={16000} step={1} unit="Hz" log onChange={(v) => u(`p${n}F`, v)} />
-            <Knob name="  gain" value={p[`p${n}G`]} min={-12} max={12} step={0.5} unit="dB" onChange={(v) => u(`p${n}G`, v)} />
-            <Knob name="  width (Q)" value={p[`p${n}Q`]} min={0.3} max={8} step={0.1} onChange={(v) => u(`p${n}Q`, v)} />
-          </React.Fragment>
-        ))}
-        <Knob name="High shelf" value={p.highF} min={2000} max={18000} step={1} unit="Hz" log onChange={(v) => u('highF', v)} />
-        <Knob name="  gain" value={p.highG} min={-12} max={12} step={0.5} unit="dB" onChange={(v) => u('highG', v)} />
-        <Knob name="High cut" off={!p.highCut} value={p.highCut || 22000} min={5000} max={22000} step={1} unit="Hz" log onChange={(v) => u('highCut', v >= 21900 ? 0 : v)} title="Low-pass (all the way right: off)" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', columnGap: 14, rowGap: 8 }}>
+          {/* each filter's controls stay together */}
+          <div style={grp}>
+            <Knob name="Low cut" off={!p.lowCut} value={p.lowCut || 10} min={10} max={300} step={1} unit="Hz" log onChange={(v) => u('lowCut', v <= 10 ? 0 : v)} title="High-pass: removes rumble below this frequency (all the way left: off)" />
+            <Knob name="High cut" off={!p.highCut} value={p.highCut || 22000} min={5000} max={22000} step={1} unit="Hz" log onChange={(v) => u('highCut', v >= 21900 ? 0 : v)} title="Low-pass (all the way right: off)" />
+          </div>
+          <div style={grp}>
+            <Knob name="Low shelf" value={p.lowF} min={30} max={500} step={1} unit="Hz" log onChange={(v) => u('lowF', v)} />
+            <Knob name="  gain" value={p.lowG} min={-12} max={12} step={0.5} unit="dB" onChange={(v) => u('lowG', v)} />
+          </div>
+          {([1, 2, 3] as const).map((n) => (
+            <div key={n} style={grp}>
+              <Knob name={`Band ${n}`} value={p[`p${n}F`]} min={40} max={16000} step={1} unit="Hz" log onChange={(v) => u(`p${n}F`, v)} />
+              <Knob name="  gain" value={p[`p${n}G`]} min={-12} max={12} step={0.5} unit="dB" onChange={(v) => u(`p${n}G`, v)} />
+              <Knob name="  width (Q)" value={p[`p${n}Q`]} min={0.3} max={8} step={0.1} onChange={(v) => u(`p${n}Q`, v)} />
+            </div>
+          ))}
+          <div style={grp}>
+            <Knob name="High shelf" value={p.highF} min={2000} max={18000} step={1} unit="Hz" log onChange={(v) => u('highF', v)} />
+            <Knob name="  gain" value={p.highG} min={-12} max={12} step={0.5} unit="dB" onChange={(v) => u('highG', v)} />
+          </div>
         </div>
       </div>
     )

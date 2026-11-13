@@ -126,10 +126,10 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6c.11 | neu (0.20.1): Song aus ACE-Step 1.5 in der Library → Export… WAV/MP3 (Rate 44.1 kHz) | Datei hat 44 100 Hz (Rechtsklick → Eigenschaften → Details), Plattform nimmt sie an | ✅ | | |
 | 6c.12 | neu (0.20.1): Gemini-Key eintragen, App neu starten | Key ist noch da | ✅ | | |
 | 6c.13 | neu (0.20.2): Settings → Updates → Check for updates nach einem neuen Release | neue Version wird sofort gefunden; ohne Klick sucht die App nur beim Start und einmal am Tag | ✅ | | |
-| 6c.14 | neu (0.20.4): Create (ACE-Step 1.5) → **Preview voices** | 3 Proben nur Stimme ohne Musik, gleicher Text; deutlich schneller als 3 Songs (Modell wird nur einmal geladen) | | | 0.20.4: nach 4 min noch keine Probe (Modell laden + erste Probe auf dem Prozessor) |
+| 6c.14 | neu (0.20.4): Create (ACE-Step 1.5) → **Preview voices** | 3 Proben nur Stimme ohne Musik, gleicher Text; deutlich schneller als 3 Songs (Modell wird nur einmal geladen) | | | 0.20.4: nach 5 min noch keine Probe, steht bei 80 % (Audio-Umwandlung) → 0.20.7: 3 × 10 s |
 | 6c.15 | neu (0.20.4): Create, ACE-Step 1.5 Turbo → + Add LoRA | raspy-Paket und andere 1.5-LoRAs normal wählbar, nur XL- und v1-LoRAs grau | ✅ | | |
 | 6c.16 | neu (0.20.4): Studio, MIDI-Clip anklicken → Strg+R; Piano Roll → Strg+R | MIDI-Aufnahme startet (● Recording…), Strg+R stoppt | | | 0.20.4: Rec-Knopf ✅, Strg+R ❌ (Ableton und Cubase) → behoben in 0.20.6 |
-| 6c.17 | neu (0.20.5): Create mit 2 oder mehr Songs / Versionen | neuester Song oben, der erste unten | | | |
+| 6c.17 | neu (0.20.5): Create mit 2 oder mehr Songs / Versionen | neuester Song oben, der erste unten | ✅ | | |
 
 ## 7. Mastering, AI Chat, Sonstiges (wird zuerst umgebaut)
 

@@ -93,6 +93,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.20.7
+
+- **Voice previews take about half the time:** *Preview voices* now makes three takes of 10 seconds (before 20) with your first two lines. On the processor most of the time goes into turning each take into audio (the bar stands at 80 %), and that time halves with the length.
+
 ### New in 0.20.6
 
 - **Fix: Ctrl+R did nothing in the installed app** (Record in the Ableton and Cubase layouts; Ctrl+Shift+R, Export in the Ableton layout, too). A helper meant to stop the page from reloading swallowed the keys before the app saw them; it is now only used during development.

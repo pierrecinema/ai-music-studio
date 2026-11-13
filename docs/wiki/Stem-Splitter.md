@@ -2,6 +2,8 @@
 
 Split a song into its parts (stems): vocals, drums, bass, piano, guitar, other.
 
+Drop a file on the page or choose one, or send a song here with the **Stem Splitter** button in [[Create Music]] (results) or the [[Library]].
+
 ## Modes
 | Mode | Stems | Runs on | Needs |
 |---|---|---|---|

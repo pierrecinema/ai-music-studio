@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
+import { useStemHandoff } from '../../stores/stemHandoff'
 import { useTranslation } from 'react-i18next'
 import { api } from '../../lib/api'
 import type { StemResult } from '../../types'
@@ -36,6 +37,16 @@ export function StemSplitter(): React.ReactElement {
   const [saving, setSaving] = useState(false)
   const [exporting, setExporting] = useState(false)
   const baseName = (n: string): string => n.replace(/\.[^.]+$/, '')
+
+  // a song sent here from Create music, the Library or Mastering
+  const pending = useStemHandoff((s) => s.pending)
+  useEffect(() => {
+    if (!pending || isProcessing) return
+    const p = useStemHandoff.getState().take()
+    if (!p) return
+    setFile(p.path); setFileName(p.path.split(/[\\/]/).pop() ?? p.path); setTitle(p.name)
+    setResult(null); setError(null); setSaved(null)
+  }, [pending, isProcessing])
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()

@@ -189,10 +189,11 @@ async function askAI(system: string, user: string): Promise<string> {
   const { provider, model } = st
   const apiKey = apiKeyFor(st)
   if (!apiKey) throw new Error(tr('Add an API key in Settings → AI first.'))
-  return api.ai.chat({
-    provider, apiKey, model, systemContext: system, baseUrl: st.localUrl,
+  const r = await api.ai.chat({
+    provider, apiKey, model, systemContext: system, baseUrl: st.localUrl, tools: false,
     messages: [{ role: 'user', content: user }],
   })
+  return r.reply
 }
 
 // ─── main component ──────────────────────────────────────────────────────────
@@ -321,6 +322,8 @@ export function CreateMusic(): React.ReactElement {
   const [notice, setNotice] = useState<string | null>(null)
   const [aiBusy, setAiBusy] = useState<string | null>(null)
   const [previewJobId, setPreviewJobId] = useState<string | null>(null)
+  // the AI chat makes songs with the model chosen here
+  useEffect(() => { try { localStorage.setItem('ams-last-engine', p.engine) } catch { /* no storage */ } }, [p.engine])
   const lyricsRef = useRef<HTMLTextAreaElement>(null)
   // a section tag at the cursor, on a line of its own
   const insertSection = (tag: string): void => {

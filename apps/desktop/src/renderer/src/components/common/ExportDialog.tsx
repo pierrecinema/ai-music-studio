@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { api, type ExportFormat } from '../../lib/api'
+import { exportSampleRate, setExportSampleRate } from '../../lib/sampleRate'
 
 // Export audio files (stems, loops, songs) into a folder of the user's choice: one file each, in the format
 // their DAW wants. Used by the Stem Splitter and the Library.
@@ -23,6 +24,7 @@ export function ExportDialog({ items, title, onClose }: {
   const [format, setFormat] = useState<ExportFormat>(() => {
     try { return (localStorage.getItem(FORMAT_KEY) as ExportFormat) || 'wav24' } catch { return 'wav24' }
   })
+  const [rate, setRate] = useState<number>(() => exportSampleRate())     // 0 = keep the file's own rate
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<string[] | null>(null)
@@ -34,7 +36,8 @@ export function ExportDialog({ items, title, onClose }: {
     try { localStorage.setItem(FORMAT_KEY, format) } catch { /* storage unavailable */ }
     setBusy(true)
     try {
-      const r = await api.library.exportFiles({ items, folder, format })
+      if (rate) setExportSampleRate(rate)
+      const r = await api.library.exportFiles({ items, folder, format, sampleRate: rate || null })
       setDone(r.files)
     } catch (e) {
       setError((e as Error).message)
@@ -63,6 +66,18 @@ export function ExportDialog({ items, title, onClose }: {
               </label>
             ))}
           </div>
+        )}
+        {!done && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+            Sample rate
+            <select value={String(rate)} onChange={(e) => setRate(Number(e.target.value))} style={{ fontSize: 12 }}>
+              <option value="44100">44.1 kHz (streaming platforms, CD)</option>
+              <option value="48000">48 kHz (video)</option>
+              <option value="88200">88.2 kHz</option>
+              <option value="96000">96 kHz</option>
+              <option value="0">Keep the file's own rate</option>
+            </select>
+          </label>
         )}
         {error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
         {done && (

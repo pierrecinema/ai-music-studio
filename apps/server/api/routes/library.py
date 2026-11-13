@@ -46,12 +46,13 @@ class ExportReq(BaseModel):
     items: list[ExportItem]
     folder: str
     format: str = "wav24"                  # wav16 | wav24 | wav32 | aiff | flac | mp3
+    sampleRate: int | None = 44100         # the exported files' rate (None: keep each file's own)
 
 
 @router.post("/export")
 async def export(req: ExportReq):
     try:
-        files = await asyncio.to_thread(library.export_files, [i.model_dump() for i in req.items], req.folder, req.format)
+        files = await asyncio.to_thread(library.export_files, [i.model_dump() for i in req.items], req.folder, req.format, req.sampleRate)
     except FileNotFoundError as e:
         raise HTTPException(400, f"File not found: {e}")
     except (ValueError, RuntimeError) as e:

@@ -15,6 +15,7 @@ import { MAX_STRETCH_SECONDS, stretchBuffer } from './stretch'
 import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
 import { hasAutomation, scheduleLane } from './automation'
 import { makeEffect, makeInsert } from './fx'
+import { exportSampleRate } from '../lib/sampleRate'
 import { beatOfSrc, renderWarped } from './warp'
 
 // ── files → buffers ──────────────────────────────────────────────────────────
@@ -962,7 +963,7 @@ export interface MixResult { wav: Uint8Array; seconds: number; peak: number }
 export async function renderMix(opts: { bits: 16 | 24; normalize: boolean; tailSeconds?: number }): Promise<MixResult> {
   const project = useProjectStore.getState().project
   await loadAllFiles(project)
-  const sr = 44100
+  const sr = exportSampleRate()                                  // Settings → Audio (44.1 kHz unless changed)
   const endBeat = projectEndBeat(project)
   if (endBeat <= 0) throw new Error('The project is empty: nothing to export.')
   const seconds = beatToSec(project, endBeat) + (opts.tailSeconds ?? 2)

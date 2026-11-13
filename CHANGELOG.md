@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.30.4
+
+- **Fix: long songs with ACE-Step 1.5 stopped after 10 minutes** ("Music generation timed out after 600 seconds … GPU ran out of VRAM"). ACE-Step has its own 10-minute limit per song, which a processor reaches with songs of about 2 minutes and more. The app now allows 6 hours; *Cancel* still stops a song at any time.
+
 ## 0.30.3
 
 - **Mastering, Before / After also switches the controls:** in "Before" every control of the chain jumps to its starting value (read-only, grey) and the EQ curve goes flat; in "After" your settings come back and every control you moved is marked purple with a dot. So you see at a glance what you changed.

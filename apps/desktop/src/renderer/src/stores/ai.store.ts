@@ -5,7 +5,9 @@ import type { AIProvider, AIMessage } from '../types'
 export const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-5-5'
 export const DEFAULT_OPENAI_MODEL = 'gpt-4o'
 export const DEFAULT_GROK_MODEL = 'grok-4.1-fast'
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash'
+// models Google has switched off: a stored one is replaced by the default
+const OLD_GEMINI = /^gemini-(1(\.\d)?|2(\.\d)?|3(\.0)?)(-|$)/
 export const DEFAULT_OLLAMA_MODEL = 'llama3.2'
 export const DEFAULT_LOCAL_URL = 'http://127.0.0.1:1234/v1'    // LM Studio's server; KoboldCpp 5001, llama.cpp 8080
 export const DEFAULT_LOCAL_MODEL = 'local-model'
@@ -89,7 +91,7 @@ export const useAIStore = create<AIState>()(
     }),
     {
       name: 'ams-ai',
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown, version: number) => {
         const p = (persisted ?? {}) as Partial<AIState>
         if (version < 2) {
@@ -97,7 +99,10 @@ export const useAIStore = create<AIState>()(
           p.claudeModel = p.provider === 'openai' ? DEFAULT_CLAUDE_MODEL : (p.model ?? DEFAULT_CLAUDE_MODEL)
           p.openaiModel = p.provider === 'openai' ? (p.model ?? DEFAULT_OPENAI_MODEL) : DEFAULT_OPENAI_MODEL
         }
-        return { grokApiKey: '', grokModel: DEFAULT_GROK_MODEL, ollamaModel: DEFAULT_OLLAMA_MODEL, ...p } as AIState
+        const out = { grokApiKey: '', grokModel: DEFAULT_GROK_MODEL, ollamaModel: DEFAULT_OLLAMA_MODEL, ...p } as AIState
+        if (!out.geminiModel || OLD_GEMINI.test(out.geminiModel)) out.geminiModel = DEFAULT_GEMINI_MODEL
+        if (out.provider === 'gemini' && OLD_GEMINI.test(out.model ?? '')) out.model = DEFAULT_GEMINI_MODEL
+        return out
       },
       partialize: (s) => ({
         provider: s.provider,
@@ -108,7 +113,11 @@ export const useAIStore = create<AIState>()(
         claudeModel: s.claudeModel,
         openaiModel: s.openaiModel,
         grokModel: s.grokModel,
-        ollamaModel: s.ollamaModel
+        ollamaModel: s.ollamaModel,
+        geminiApiKey: s.geminiApiKey,           // these were not saved before 0.20.1: lost on restart
+        geminiModel: s.geminiModel,
+        localUrl: s.localUrl,
+        localModel: s.localModel
       })
     }
   )

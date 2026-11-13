@@ -41,9 +41,8 @@ const OPENAI_MODELS = [
 ]
 // xAI's model names change often: "Other model ID" takes any current one from console.x.ai
 const GEMINI_MODELS = [
-  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (fast, free tier)' },
-  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-  { id: 'gemini-3-pro-preview', label: 'Gemini 3 Pro (preview)' },
+  { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash (fast, free tier)' },
+  { id: 'gemini-3.5-pro', label: 'Gemini 3.5 Pro' },
 ]
 const GROK_MODELS = [
   { id: 'grok-4.1-fast', label: 'Grok 4.1 Fast' },

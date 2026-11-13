@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.30.1
+
+- **Fix: in the Studio the "Drag a clip here for a new track" area covered the first return track** (e.g. Reverb). It now sits between the last track and the return tracks.
+- **Mastering:** the equalizer's controls are grouped per filter (low and high cut, low shelf, each band, high shelf), so frequency, gain and width of a band stay together.
+- The screenshots on the project page show the current version.
+
 ## 0.30.0
 
 **Mastering, rebuilt.** The Mastering page is now a full mastering workspace:

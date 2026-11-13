@@ -41,8 +41,11 @@ if (!w.api) {
   w.api = new Proxy({}, { get: (_, k: string) => ns(k) })
   w.__browserMem = mem
   // browser tests only: read the stores from Playwright (window.__ams.project.getState())
-  void Promise.all([import('../stores/project.store'), import('../stores/audio.store')]).then(([p, a]) => {
-    (window as unknown as { __ams: unknown }).__ams = { project: p.useProjectStore, audio: a.useAudioStore }
+  void Promise.all([import('../stores/project.store'), import('../stores/audio.store'), import('../stores/ui.store'),
+    import('../stores/mastering.store'), import('../audio/engine')]).then(([p, a, u, m, e]) => {
+    (window as unknown as { __ams: unknown }).__ams = {
+      project: p.useProjectStore, audio: a.useAudioStore, ui: u.useUIStore, mastering: m.useMasteringStore, loadBuffer: e.loadBuffer,
+    }
   })
 }
 export {}

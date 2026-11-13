@@ -336,8 +336,9 @@ EXPORT_FORMATS = {
 }
 
 
-def export_files(items: list[dict], folder: str, fmt: str) -> list[str]:
-    """Write each {path, name} into `folder` as its own file in the chosen format. Returns the written paths."""
+def export_files(items: list[dict], folder: str, fmt: str, sample_rate: int | None = 44100) -> list[str]:
+    """Write each {path, name} into `folder` as its own file in the chosen format and sample rate (None: keep the
+    file's own). Returns the written paths. AI models often render at 48 kHz, which streaming platforms reject."""
     import soundfile as sf
     if fmt not in EXPORT_FORMATS:
         raise ValueError(f"Unknown format: {fmt}")
@@ -363,12 +364,28 @@ def export_files(items: list[dict], folder: str, fmt: str) -> list[str]:
             if not ffmpeg:
                 raise RuntimeError("MP3 needs ffmpeg, which was not found. Choose WAV, AIFF or FLAC, or install ffmpeg.")
             import subprocess
-            r = subprocess.run([ffmpeg, "-y", "-i", str(src), "-c:a", "libmp3lame", "-b:a", "320k", str(dest)],
+            rate_args = ["-ar", str(sample_rate)] if sample_rate else []
+            r = subprocess.run([ffmpeg, "-y", "-i", str(src), *rate_args, "-c:a", "libmp3lame", "-b:a", "320k", str(dest)],
                                capture_output=True, text=True)
             if r.returncode != 0:
                 raise RuntimeError(f"ffmpeg failed: {(r.stderr or '')[-200:]}")
         else:
             data, sr = sf.read(str(src), dtype="float32", always_2d=True)
+            if sample_rate and sr != sample_rate:
+                data, sr = resample(data, sr, sample_rate), sample_rate
             sf.write(str(dest), data, sr, format=sf_format, subtype=subtype)
         written.append(str(dest))
     return written
+
+
+def resample(data, sr: int, target: int):
+    """(samples, channels) float32 from `sr` to `target` Hz in high quality (soxr, installed with librosa)."""
+    import numpy as np
+    try:
+        import soxr
+        return np.ascontiguousarray(soxr.resample(data, sr, target, quality="VHQ"), dtype=np.float32)
+    except ImportError:
+        from scipy.signal import resample_poly
+        from math import gcd
+        g = gcd(sr, target)
+        return resample_poly(data, target // g, sr // g, axis=0).astype(np.float32)

@@ -229,7 +229,7 @@ export const api = {
     list: () => get<{ dir: string; tracks: LibraryTrack[] }>('/library'),
     saveStems: (body: { stems: Record<string, string>; title: string; tags: string[]; source_path?: string | null }) =>
       post<{ tracks: LibraryTrack[] }>('/library/stems', body),
-    exportFiles: (body: { items: Array<{ path: string; name: string }>; folder: string; format: ExportFormat }) =>
+    exportFiles: (body: { items: Array<{ path: string; name: string }>; folder: string; format: ExportFormat; sampleRate?: number | null }) =>
       post<{ files: string[] }>('/library/export', body),
     patch: (id: string, body: { title?: string; favorite?: boolean; notes?: string; tags?: string[] }) => send<LibraryTrack>('PATCH', `/library/${id}`, body),
     remove: (id: string, deleteFile = true) => send<{ removed: string }>('DELETE', `/library/${id}?delete_file=${deleteFile}`),

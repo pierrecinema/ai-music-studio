@@ -1,4 +1,5 @@
 import logo from '../../assets/logo.png'
+import { exportSampleRate, setExportSampleRate } from '../../lib/sampleRate'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
@@ -451,12 +452,13 @@ export function Settings(): React.ReactElement {
             <div style={sectionStyle}>{t('settings.audio')}</div>
             <div>
               <label style={labelStyle}>{t('settings.sampleRate')}</label>
-              <select style={inputStyle} defaultValue="44100">
-                <option value="44100">44,100 Hz</option>
-                <option value="48000">48,000 Hz</option>
+              <select style={inputStyle} defaultValue={String(exportSampleRate())} onChange={(e) => setExportSampleRate(Number(e.target.value))}>
+                <option value="44100">44,100 Hz (streaming platforms, CD: recommended)</option>
+                <option value="48000">48,000 Hz (video)</option>
                 <option value="88200">88,200 Hz</option>
                 <option value="96000">96,000 Hz</option>
               </select>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Every export uses this rate (File → Export audio, Export… in the Library and the Stem Splitter). AI models often make 48 kHz; the files are converted.</div>
             </div>
             <div>
               <label style={labelStyle}>{t('settings.bufferSize')}</label>

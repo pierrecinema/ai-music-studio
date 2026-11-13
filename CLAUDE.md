@@ -8,12 +8,14 @@ in-app update right away. For every new version:
 1. Bump `apps/desktop/package.json` `version`, run `pnpm test` and `pnpm typecheck` in `apps/desktop`.
    Add a section `## <version>` at the top of `CHANGELOG.md` (English, user-facing: what is new, what was fixed).
    The release workflow fails without it and puts it on the GitHub release page. Keep the README's "New in" list in step.
-2. Bring the change into `main` (from a cloud session: push the work branch, open a pull request, merge it
-   yourself as soon as its checks are green).
-3. Start the workflow **Release Windows EXE** (`.github/workflows/release.yml`, `workflow_dispatch`) on `main`
-   with `version` = the new version without the `v`. It checks the version, builds the installer and creates
-   the tag `v<version>` and the GitHub release with `latest.yml`, which the in-app updater reads.
-   (A cloud session cannot push tags, so use the workflow. From the desktop, pushing the tag works too.)
+2. Bring the change into `main` (from a cloud session: push the work branch, open a pull request and switch on
+   auto-merge (merge commit) so it merges itself as soon as its checks are green; if auto-merge is not possible, merge
+   it yourself as soon as they are green).
+3. The release starts by itself: **Release Windows EXE** (`.github/workflows/release.yml`) runs on every push to `main`
+   that changes `apps/desktop/package.json` and releases the version in it when its tag `v<version>` does not exist
+   yet: it builds the installer and creates the tag and the GitHub release with `latest.yml`, which the in-app updater
+   reads (the app checks at start and once a day; during development the owner presses Check for updates). Only if it did not run, start it by hand (`workflow_dispatch`, `version`
+   without the `v`).
 4. Check that the run succeeded and the release exists, then tell the owner, with a short changelog summary in German
    (standing instruction: every release). Release notes carry the changelog and install notes, no donation link
    (that is only on the README).

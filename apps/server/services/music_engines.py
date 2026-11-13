@@ -402,6 +402,9 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
         len(req.get("lyrics") or ""), " (instrumental)" if req.get("instrumental") else "", req["language"], req.get("seconds")))
     worker = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ace15_worker.py")
     env = dict(os.environ, PYTHONPATH=repo, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1", ACESTEP_INIT_LLM="false")
+    # ACE-Step stops a song after 600 s ("timed out ... GPU ran out of VRAM"); on a processor a 4-minute song takes
+    # far longer. Allow 6 hours: the Cancel button still stops it at any time.
+    env.setdefault("ACESTEP_GENERATION_TIMEOUT", "21600")
     if req["checkpoints"]:
         env["ACESTEP_CHECKPOINTS_DIR"] = req["checkpoints"]
     proc = subprocess.Popen([py, worker, req_path], cwd=repo, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,

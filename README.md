@@ -93,6 +93,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.30.6
+
+- **Fix: ACE-Step 1.5 LoRAs from Hugging Face were left out** ("not an ACE-Step 1.5 LoRA (no adapter_config.json)"). The app's Hugging Face download saved only the weights of such a LoRA, not the small `adapter_config.json` that ACE-Step 1.5 needs. New downloads keep both in one folder; LoRAs downloaded before are recognised by their weights, and the first time one is used the app fetches its `adapter_config.json` from Hugging Face (or writes one from the weights if that is not possible).
+
 ### New in 0.30.5
 
 - **Removed: the built-in retro music player** (Ctrl+M and the button in the bottom bar). It had nothing to do with making music; the app is a little smaller, and Ctrl+M is free.

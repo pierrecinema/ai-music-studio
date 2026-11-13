@@ -920,7 +920,91 @@ def _fade_end(path: str, seconds: float) -> None:
         print(f"[ace15] ending skipped: {e}", flush=True)
 
 
-def ace15_adapter(entry: dict) -> tuple[str | None, str]:
+def _peft_keys(f: Path) -> tuple[int, list[str]] | None:
+    """A PEFT LoRA for ACE-Step 1.5 saved as weights only (adapter_model.safetensors without adapter_config.json):
+    its keys name the attention layers q_proj / k_proj / v_proj / o_proj with lora_A / lora_B. Returns the rank and
+    the target modules, or None. (ACE-Step v1 LoRAs use to_q / to_k / to_v instead.)"""
+    try:
+        with open(f, "rb") as fh:
+            n = int.from_bytes(fh.read(8), "little")
+            if n <= 0 or n > 200 * 1024 * 1024:
+                return None
+            header = json.loads(fh.read(n))
+    except Exception:  # noqa: BLE001
+        return None
+    keys = [k for k in header if k != "__metadata__"]
+    lora_a = [k for k in keys if ".lora_A." in k]
+    if not lora_a:
+        return None
+    targets = sorted({m for k in lora_a for m in ("q_proj", "k_proj", "v_proj", "o_proj") if f".{m}.lora_A." in k})
+    if not targets or any(".to_q." in k or ".to_k." in k for k in lora_a):
+        return None
+    try:
+        rank = int(header[lora_a[0]]["shape"][0])
+    except Exception:  # noqa: BLE001
+        return None
+    return rank, targets
+
+
+def _hf_config_for(f: Path) -> dict | None:
+    """The adapter_config.json that belongs to a LoRA downloaded by the app from Hugging Face as a single file
+    ("owner__repo__name.safetensors"): fetched from that repository (next to the weights)."""
+    parts = f.stem.split("__")
+    if len(parts) < 3:
+        return None
+    repo = f"{parts[0]}/{parts[1]}"
+    name = "__".join(parts[2:]) + f.suffix
+    try:
+        import httpx
+        with httpx.Client(timeout=20, follow_redirects=True, headers={"User-Agent": "AIMusicStudio"}) as c:
+            files = [s["rfilename"] for s in c.get(f"https://huggingface.co/api/models/{repo}").json().get("siblings", [])]
+            configs = [x for x in files if x.endswith("adapter_config.json")]
+            # the weights' own folder or prefix first ("male_vocals_adapter_model" -> "male_vocals_adapter_config.json")
+            prefix = name[: -len("adapter_model.safetensors")] if name.endswith("adapter_model.safetensors") else ""
+            weights = next((x for x in files if x.replace("/", "_").endswith(name) or x.endswith(name)), name)
+            folder = weights.rsplit("/", 1)[0] + "/" if "/" in weights else ""
+            wanted = [folder + "adapter_config.json", prefix + "adapter_config.json", (folder + prefix).rstrip("_") + "_adapter_config.json"]
+            pick = next((w for w in wanted if w in configs), configs[0] if len(configs) == 1 else None)
+            if not pick:
+                return None
+            r = c.get(f"https://huggingface.co/{repo}/resolve/main/{pick}")
+            return r.json() if r.status_code == 200 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _stage_peft(entry: dict, f: Path, rank: int, targets: list[str], warnings: list[str] | None) -> str:
+    """A folder ACE-Step 1.5 can load: the weights (hard link) and an adapter_config.json, fetched from the LoRA's
+    Hugging Face page or, if that fails, written from what the weights show (rank, layers; alpha = 2 x rank, the
+    ACE-Step trainer's default)."""
+    stage = LORA_DIR / ".engine" / ("peft-" + re.sub(r"[^\w.-]+", "_", entry["id"]))
+    stage.mkdir(parents=True, exist_ok=True)
+    target = stage / "adapter_model.safetensors"
+    if not target.exists() or target.stat().st_size != f.stat().st_size:
+        if target.exists():
+            target.unlink()
+        try:
+            os.link(f, target)
+        except OSError:
+            shutil.copy2(f, target)
+    cfg_file = stage / "adapter_config.json"
+    if not cfg_file.exists():
+        cfg = _hf_config_for(f)
+        if cfg and cfg.get("peft_type"):
+            cfg["base_model_name_or_path"] = None
+        else:
+            cfg = {"peft_type": "LORA", "r": rank, "lora_alpha": rank * 2, "lora_dropout": 0.0, "bias": "none",
+                   "target_modules": targets, "task_type": None, "base_model_name_or_path": None,
+                   "inference_mode": True, "use_dora": False, "use_rslora": False}
+            if warnings is not None:
+                warnings.append(f"The LoRA '{entry.get('name', f.name)}' came without its adapter_config.json; the app "
+                                "wrote one from the weights (rank " + str(rank) + "). If it sounds too weak or too strong, "
+                                "change its strength.")
+        cfg_file.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+    return str(stage)
+
+
+def ace15_adapter(entry: dict, warnings: list[str] | None = None, prepare: bool = False) -> tuple[str | None, str]:
     """Where ACE-Step 1.5 can load this LoRA from, or why it cannot: a folder with adapter_config.json (PEFT) or a
     LoKr .safetensors (with "lokr_config" in its metadata). LoRAs for the XL model (4B) do not fit the 2B turbo model,
     LoRAs of ACE-Step v1 (one .safetensors without a config) do not either."""
@@ -946,6 +1030,10 @@ def ace15_adapter(entry: dict) -> tuple[str | None, str]:
                     return str(f), ""
         except Exception:  # noqa: BLE001
             pass
+        # PEFT weights without their adapter_config.json (how the app's Hugging Face download used to save them)
+        peft = _peft_keys(f)
+        if peft:
+            return (_stage_peft(entry, f, peft[0], peft[1], warnings) if prepare else str(f)), ""
     return None, (f"The LoRA '{name}' is not an ACE-Step 1.5 LoRA (no adapter_config.json): it is probably made for "
                   "ACE-Step v1, so it was left out.")
 
@@ -961,7 +1049,7 @@ def _ace15_lora(req: "GenerateMusicRequest", warnings: list[str]) -> dict | None
         if not entry:
             warnings.append(f"LoRA '{u.id}' not found, skipped.")
             continue
-        path, why = ace15_adapter(entry)
+        path, why = ace15_adapter(entry, warnings, prepare=True)
         if path:
             usable.append((entry, path, u.strength))
         else:

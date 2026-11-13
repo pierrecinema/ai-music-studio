@@ -5,8 +5,8 @@ import { getStatus, installGroups, cancelInstall } from './engines'
 import { listLoras, importLora, removeLora, deleteLora, LORA_DIR, type LoraEntry } from './loras'
 import { clearCache, deleteModel, diskSpace, getOverview, moveModels } from './models'
 import { MODEL_SUBDIRS, modelsDir, writeSettings, type ModelId } from './settings'
-import { resolve } from 'path'
-import { downloadFile, listFiles, parseRepo, searchRepos } from './huggingface'
+import { join, resolve } from 'path'
+import { downloadFile, fetchAdapterConfig, listFiles, parseRepo, searchRepos } from './huggingface'
 import * as fs from 'fs'
 
 // A dialog without a parent window can open behind the app on Windows and look like a hang.
@@ -154,7 +154,17 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
         hfAbort.signal
       )
       const stem = repo.split('/')[1]
-      const lora = importLora(path, kind, stem, { source: `huggingface:${repo}`, license: info.repo.license })
+      // a PEFT LoRA (ACE-Step 1.5) needs its adapter_config.json next to the weights: keep both in one folder
+      let target = path
+      const config = path.endsWith('.safetensors') ? await fetchAdapterConfig(repo, file, hfAbort.signal).catch(() => null) : null
+      if (config) {
+        const dir = path.replace(/\.safetensors$/i, '')
+        fs.mkdirSync(dir, { recursive: true })
+        fs.renameSync(path, join(dir, 'adapter_model.safetensors'))
+        fs.writeFileSync(join(dir, 'adapter_config.json'), config, 'utf-8')
+        target = dir
+      }
+      const lora = importLora(target, kind, stem, { source: `huggingface:${repo}`, license: info.repo.license })
       return { ok: true as const, lora }
     } catch (err) {
       return { ok: false as const, error: (err as Error).message }

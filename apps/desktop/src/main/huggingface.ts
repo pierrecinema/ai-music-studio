@@ -155,3 +155,23 @@ export async function downloadFile(
     throw e
   }
 }
+
+/** The adapter_config.json that belongs to a PEFT LoRA file in the repository (same folder, or the same name
+ *  prefix like "male_vocals_adapter_model" / "male_vocals_adapter_config.json"); null if there is none.
+ *  Without it ACE-Step 1.5 cannot load the LoRA. */
+export async function fetchAdapterConfig(repo: string, file: string, signal?: AbortSignal): Promise<string | null> {
+  const m = await hfJson<{ siblings?: Array<{ rfilename: string }> }>(`${HF}/api/models/${repo}`, signal)
+  const configs = (m.siblings ?? []).map((x) => x.rfilename).filter((x) => x.endsWith('adapter_config.json'))
+  if (!configs.length) return null
+  const folder = file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : ''
+  const base = file.slice(folder.length)
+  const prefix = base.endsWith('adapter_model.safetensors') ? base.slice(0, -'adapter_model.safetensors'.length) : ''
+  const wanted = [folder + prefix + 'adapter_config.json', folder + 'adapter_config.json']
+  const pick = wanted.find((w) => configs.includes(w)) ?? (configs.length === 1 ? configs[0] : null)
+  if (!pick) return null
+  const r = await fetch(`${HF}/${repo}/resolve/main/${pick.split('/').map(encodeURIComponent).join('/')}`, { headers: UA, signal })
+  if (!r.ok) return null
+  const text = await r.text()
+  try { if (!JSON.parse(text).peft_type) return null } catch { return null }
+  return text
+}

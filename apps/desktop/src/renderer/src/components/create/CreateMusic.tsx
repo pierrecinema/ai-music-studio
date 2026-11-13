@@ -138,8 +138,9 @@ function Select({ value, onChange, options, placeholder }: {
 function loraFit(engine: string, family: Lora['family']): { ok: boolean; why: string } {
   if (engine === 'ace-step') return family === '1.5' || family === 'xl'
     ? { ok: false, why: `made for ACE-Step 1.5${family === 'xl' ? ' XL' : ''}` } : { ok: true, why: '' }
-  if (engine === 'ace-step-1.5') return family === '1.5' ? { ok: true, why: '' }
-    : { ok: false, why: family === 'xl' ? 'made for the larger XL model' : family === 'v1' ? 'made for ACE-Step v1' : 'not an ACE-Step 1.5 LoRA' }
+  // only LoRAs known not to fit are greyed out; an unclear one may be tried (the engine skips it with a note)
+  if (engine === 'ace-step-1.5') return family === 'xl' ? { ok: false, why: 'made for the larger XL model' }
+    : family === 'v1' ? { ok: false, why: 'made for ACE-Step v1' } : { ok: true, why: '' }
   return { ok: false, why: 'this model uses no LoRA' }
 }
 
@@ -346,6 +347,11 @@ export function CreateMusic(): React.ReactElement {
     const l = await window.api.loras.list()
     setLoras(l.loras)
     setLoraDir(l.dir)
+    // which model a LoRA fits: the backend reads the files the way the engine loads them (LoKr, nested folders)
+    try {
+      const fam = new Map((await api.music.loras()).loras.map((b) => [b.id, b.family]))
+      setLoras(l.loras.map((x) => (fam.get(x.id) ? { ...x, family: fam.get(x.id) } : x)))
+    } catch { /* backend offline: keep the app's own guess */ }
   }, [])
 
   const loadStatus = useCallback(async () => {
@@ -681,7 +687,7 @@ export function CreateMusic(): React.ReactElement {
               {canPreview && (
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={busy || !p.lyrics.trim()} onClick={previewVoices}
-                    title={tr('Three short takes (20 s) of your first lines, each with another voice. Listen, then press “Use this voice” on the one you like: the whole song is made with it.')}>
+                    title={tr('Three short takes (20 s) of the voice alone, without music, each singing your first lines with another voice. Listen, then press “Use this voice” on the one you like: the whole song is made with it.')}>
                     🎤 {tr('Preview voices (3 × 20 s)')}
                   </button>
                   {!p.randomizeSeed && p.seed && <span style={hint}>{tr('Voice fixed: seed')} {p.seed}</span>}

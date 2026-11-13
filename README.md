@@ -93,6 +93,12 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.20.4
+
+- **Voice previews: the voice alone, and faster.** *Preview voices* now makes three takes of the voice without music (a cappella), all singing your first lines, so the voices are easy to compare (before, a take could be only an instrumental intro). ACE-Step 1.5 loads the model once for all three takes instead of once per take; the same goes for several songs made in one run.
+- **Fix: LoRAs greyed out with ACE-Step 1.5 turbo.** The Create page now asks the backend which model a LoRA fits, with the same check used to load it (PEFT folders, LoKr files, packs); only LoRAs made for ACE-Step v1 or the XL model are greyed out.
+- **Fix: Ctrl+R records MIDI** also when a MIDI clip is selected or the Piano Roll was clicked last (before, it could start a microphone recording instead).
+
 ### New in 0.20.3
 
 - **Fix: the AI chat with Gemini stopped with "Error code: 400" when it made a song.** Gemini 3 attaches a signature to every tool call and needs it back in the next step; the app dropped it. The tool call now goes back exactly as Gemini sent it. If a song has already started when an error comes, the chat still shows it with its progress, and errors show the provider's own reason instead of only the code.

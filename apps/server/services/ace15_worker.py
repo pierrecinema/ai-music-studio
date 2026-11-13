@@ -1,7 +1,8 @@
 """Runs ACE-Step 1.5 in its own environment (started by services.music_engines.generate_ace15).
 
 Usage: python ace15_worker.py request.json
-The request holds the song (caption, lyrics, length, tempo, ...) and the output WAV path. Progress and the result
+The request holds the song (caption, lyrics, length, tempo, ...) and the output WAV path; "more" can list further
+takes ({"seed", "out"}) that are made with the same loaded model. Progress and the result
 are printed as one JSON object per line: {"stage": ...}, {"step": n, "total": m}, {"done": true, "seconds": s} or
 {"error": "..."}. Anything else on stdout is library chatter and is ignored by the backend.
 
@@ -82,6 +83,19 @@ def main() -> int:
         except Exception as e:  # noqa: BLE001 - a LoRA that does not fit (e.g. made for XL) must not stop the song
             say(warning=f"The LoRA '{name}' does not fit this model and was left out ({type(e).__name__}: {str(e)[:160]}).")
 
+    # several songs (other seeds, e.g. the three voice previews) in one run: the model is loaded only once
+    takes = [{"seed": req.get("seed", -1), "out": req["out"]}] + list(req.get("more") or [])
+    for index, take in enumerate(takes):
+        seconds = render(dit, llm, req, take, GenerationParams, GenerationConfig, generate_music)
+        if seconds is None:
+            return 1
+        say(done=True, seconds=round(seconds, 2), index=index)
+    return 0
+
+
+def render(dit, llm, req: dict, take: dict, GenerationParams, GenerationConfig, generate_music) -> float | None:
+    """One song with the loaded model; prints the error and returns None when it fails."""
+    seed = int(take.get("seed", -1))
     params = GenerationParams(**only_known(GenerationParams, {
         "caption": req.get("caption", "")[:512],
         "lyrics": (req.get("lyrics") or "")[:4096] or ("[Instrumental]" if req.get("instrumental") else ""),
@@ -92,7 +106,7 @@ def main() -> int:
         "vocal_language": req.get("language") or "unknown",
         "duration": float(req["seconds"]),
         "inference_steps": int(req.get("steps", 8)),
-        "seed": int(req.get("seed", -1)),
+        "seed": seed,
         "shift": 3.0,                                              # recommended for the turbo model
         "thinking": False,
         "use_cot_metas": False,
@@ -102,10 +116,11 @@ def main() -> int:
     config = GenerationConfig(**only_known(GenerationConfig, {
         "batch_size": 1,
         "use_random_seed": False,
-        "seeds": [int(req.get("seed", 0))],
+        "seeds": [seed],
         "audio_format": "wav",
     }))
-    out_dir = os.path.dirname(os.path.abspath(req["out"]))
+    out = take["out"]
+    out_dir = os.path.dirname(os.path.abspath(out))
 
     def progress(value=None, desc=None, *a, **kw):                 # gradio-style progress(value, desc=...)
         try:
@@ -122,25 +137,23 @@ def main() -> int:
             result = generate_music(dit, llm, params, config, save_dir=out_dir)
     except Exception as e:  # noqa: BLE001
         say(error=f"ACE-Step 1.5 failed: {type(e).__name__}: {e}")
-        return 1
+        return None
     if not getattr(result, "success", False) or not getattr(result, "audios", None):
         say(error=f"ACE-Step 1.5 failed: {getattr(result, 'error', 'no audio returned')}")
-        return 1
+        return None
     src = result.audios[0].get("path")
     if not src or not os.path.exists(src):
         say(error="ACE-Step 1.5 returned no audio file.")
-        return 1
-    if os.path.abspath(src) != os.path.abspath(req["out"]):
-        shutil.move(src, req["out"])
+        return None
+    if os.path.abspath(src) != os.path.abspath(out):
+        shutil.move(src, out)
     try:
-        with wave.open(req["out"], "rb") as w:
-            seconds = w.getnframes() / float(w.getframerate())
+        with wave.open(out, "rb") as w:
+            return w.getnframes() / float(w.getframerate())
     except wave.Error:                                             # e.g. 32-bit float WAV
         import soundfile as sf
-        info = sf.info(req["out"])
-        seconds = info.frames / float(info.samplerate)
-    say(done=True, seconds=round(seconds, 2))
-    return 0
+        info = sf.info(out)
+        return info.frames / float(info.samplerate)
 
 
 if __name__ == "__main__":

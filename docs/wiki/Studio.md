@@ -51,7 +51,7 @@ The blue line shows where the song plays. **Click or double-click** any empty pl
 Right-click a track header, or click the colour strip at its left: pick a colour from the palette or any colour.
 
 ## Recording
-**MIDI:** select a MIDI track (or open the Piano Roll) and press ● (top bar), **Ctrl+R** or **● Rec** in the Piano Roll. The song plays; what you play on the Piano Roll's keyboard or on a MIDI keyboard becomes notes in the clip, as long as you hold the keys. Press again or Space to stop.
+**MIDI:** select a MIDI track or a MIDI clip (or open the Piano Roll) and press ● (top bar), **Ctrl+R** or **● Rec** in the Piano Roll. The song plays; what you play on the Piano Roll's keyboard or on a MIDI keyboard becomes notes in the clip, as long as you hold the keys. Press again or Space to stop.
 **Audio:** on an audio track the same buttons record from the microphone or audio interface. In a loop, every pass becomes a take in its own lane (**T** on the track shows them); click a take to use it.
 ## Warp markers
 Right-click → *Edit warp markers*: double-click the waveform to set a marker, drag it onto another beat (the audio between is stretched without changing the pitch), Alt+click deletes it.

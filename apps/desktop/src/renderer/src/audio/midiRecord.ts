@@ -5,6 +5,7 @@ import { useAudioStore } from '../stores/audio.store'
 import { useUIStore } from '../stores/ui.store'
 import { currentBeat, isPlaying, onTransportStop, play, previewNote, startRecording } from './engine'
 import type { Track } from '../types'
+import { pianoFocus } from '../components/timeline/studioOps'
 
 const NOTE_TRACKS: Track['type'][] = ['midi', 'instrument', 'vocal']
 
@@ -17,9 +18,12 @@ function noteTrack(): Track | undefined {
   return st.project.tracks.find((t) => t.id === st.selectedTrackId && NOTE_TRACKS.includes(t.type))
 }
 
-/** Record: MIDI when a MIDI track is selected or the Piano Roll is open, audio (microphone) otherwise. */
+/** Record: MIDI when a MIDI track or a MIDI clip is selected, the Piano Roll is open or was clicked last;
+ *  audio (microphone) otherwise. */
 export async function startAnyRecording(): Promise<string | null> {
-  if (noteTrack() || useUIStore.getState().activeView === 'piano-roll') return startMidiRecording()
+  const st = useProjectStore.getState()
+  const midiClip = st.project.tracks.some((t) => NOTE_TRACKS.includes(t.type) && t.clips.some((c) => c.id === st.selectedClipId && !c.audioFile))
+  if (noteTrack() || midiClip || pianoFocus.active || useUIStore.getState().activeView === 'piano-roll') return startMidiRecording()
   return startRecording()
 }
 

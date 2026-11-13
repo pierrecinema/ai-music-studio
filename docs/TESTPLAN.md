@@ -113,19 +113,22 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 
 | # | Test | Erwartet | A | B | Notiz |
 |---|---|---|---|---|---|
-| 6c.1 | Studio: **A** an einer Spur | Volume und Pan als zwei eigene Spuren darunter; ▾/▸ macht eine klein; Punkte setzen geht | | | |
-| 6c.2 | Studio: **FX** an einer Spur → + Effect… Delay, dann EQ; abspielen, Regler bewegen, ⏻ aus/an | Effekt hörbar, Bypass hörbar, auch im Export | | | |
-| 6c.3 | Rechtsklick auf Spurkopf (oder Farbstreifen links) → Farbe wählen | Spur und Clips in der neuen Farbe | | | |
-| 6c.4 | MIDI-Spur wählen, Piano Roll → **● Rec** (oder Strg+R), auf der Klaviatur links spielen; mit MIDI-Keyboard, falls vorhanden | Noten erscheinen als Kästchen, so lang wie gehalten; Strg+R stoppt | | | |
-| 6c.5 | Create: Text eingeben, **[Chorus]**-Knopf, **Auto structure** | Abschnitte werden eingefügt bzw. automatisch gesetzt | | | |
-| 6c.6 | Create (ACE-Step 1.5): **Preview voices** → 3 Proben → **Use this voice** → Create | 3 kurze Proben, nicht in der Library; Song mit der gewählten Stimme (ähnlich) | | | |
-| 6c.7 | Create: LoRA-Liste bei ACE-Step 1.5 und bei v1 | passende LoRAs normal, unpassende grau mit Grund | | | |
-| 6c.8 | Settings → AI → Gemini mit Key; AI Chat | Antwort von Gemini | | | |
-| 6c.9 | Positionsanzeige oben anklicken; Channel-Tab Pan | wechselt zu Minuten:Sekunden; Pan zeigt L/R und „Center“ | | | |
-| 6c.10 | neu (0.20.1): AI Chat (z. B. Gemini 3.5 Flash): „Mach mir einen kurzen Afro-House-Track mit Frauenstimme“ | KI startet den Song selbst, Fortschritt im Chat, danach „Add to the Studio“; Song in der Library | ❌ | | 0.20.1: Gemini „Error code: 400“ beim Song-Auftrag (Signatur fehlte) → 0.20.3 neu testen |
+| 6c.1 | Studio: **A** an einer Spur | Volume und Pan als zwei eigene Spuren darunter; ▾/▸ macht eine klein; Punkte setzen geht | ✅ | | |
+| 6c.2 | Studio: **FX** an einer Spur → + Effect… Delay, dann EQ; abspielen, Regler bewegen, ⏻ aus/an | Effekt hörbar, Bypass hörbar, auch im Export | ✅ | | |
+| 6c.3 | Rechtsklick auf Spurkopf (oder Farbstreifen links) → Farbe wählen | Spur und Clips in der neuen Farbe | ✅ | | |
+| 6c.4 | MIDI-Spur wählen, Piano Roll → **● Rec** (oder Strg+R), auf der Klaviatur links spielen; mit MIDI-Keyboard, falls vorhanden | Noten erscheinen als Kästchen, so lang wie gehalten; Strg+R stoppt | ✅ | | ● Rec ✅, Strg+R ging nicht → 6c.16 |
+| 6c.5 | Create: Text eingeben, **[Chorus]**-Knopf, **Auto structure** | Abschnitte werden eingefügt bzw. automatisch gesetzt | ✅ | | |
+| 6c.6 | Create (ACE-Step 1.5): **Preview voices** → 3 Proben → **Use this voice** → Create | 3 kurze Proben, nicht in der Library; Song mit der gewählten Stimme (ähnlich) | ❌ | | sehr langsam, nur Gitarren-Intro ohne Stimme → 6c.14 |
+| 6c.7 | Create: LoRA-Liste bei ACE-Step 1.5 und bei v1 | passende LoRAs normal, unpassende grau mit Grund | ❌ | | bei ACE Turbo alle grau → 6c.15 |
+| 6c.8 | Settings → AI → Gemini mit Key; AI Chat | Antwort von Gemini | ✅ | | |
+| 6c.9 | Positionsanzeige oben anklicken; Channel-Tab Pan | wechselt zu Minuten:Sekunden; Pan zeigt L/R und „Center“ | ✅ | | |
+| 6c.10 | neu (0.20.1): AI Chat (z. B. Gemini 3.5 Flash): „Mach mir einen kurzen Afro-House-Track mit Frauenstimme“ | KI startet den Song selbst, Fortschritt im Chat, danach „Add to the Studio“; Song in der Library | ✅ | | 0.20.3: Gemini schreibt arabischen Text, startet den Song, Fortschritt in % im Chat ✅ (0.20.1: Error 400) |
 | 6c.11 | neu (0.20.1): Song aus ACE-Step 1.5 in der Library → Export… WAV/MP3 (Rate 44.1 kHz) | Datei hat 44 100 Hz (Rechtsklick → Eigenschaften → Details), Plattform nimmt sie an | ✅ | | |
 | 6c.12 | neu (0.20.1): Gemini-Key eintragen, App neu starten | Key ist noch da | ✅ | | |
-| 6c.13 | neu (0.20.2): Settings → Updates → Check for updates nach einem neuen Release | neue Version wird sofort gefunden; ohne Klick sucht die App nur beim Start und einmal am Tag | | | |
+| 6c.13 | neu (0.20.2): Settings → Updates → Check for updates nach einem neuen Release | neue Version wird sofort gefunden; ohne Klick sucht die App nur beim Start und einmal am Tag | ✅ | | |
+| 6c.14 | neu (0.20.4): Create (ACE-Step 1.5) → **Preview voices** | 3 Proben nur Stimme ohne Musik, gleicher Text; deutlich schneller als 3 Songs (Modell wird nur einmal geladen) | | | |
+| 6c.15 | neu (0.20.4): Create, ACE-Step 1.5 Turbo → + Add LoRA | raspy-Paket und andere 1.5-LoRAs normal wählbar, nur XL- und v1-LoRAs grau | | | |
+| 6c.16 | neu (0.20.4): Studio, MIDI-Clip anklicken → Strg+R; Piano Roll → Strg+R | MIDI-Aufnahme startet (● Recording…), Strg+R stoppt | | | |
 
 ## 7. Mastering, AI Chat, Sonstiges (wird zuerst umgebaut)
 

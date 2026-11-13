@@ -999,34 +999,46 @@ def _run_ace15_job(job_id: str, req: GenerateMusicRequest) -> None:
         stop_watch = threading.Event()
         threading.Thread(target=_watch_downloads, args=(job, stop_watch), daemon=True).start()
         try:
-            for i in range(total):
-                seed = random.randint(0, 2**31 - 1) if req.randomize_seed else base_seed + i
-                wav = str(out_dir / f"song_{job_id}_{i + 1}.wav")
-                label = f"Song {i + 1} of {total}: " if total > 1 else ""
-                _stage(job, "load", f"{label}starting ACE-Step 1.5")
-                # ACE-Step 1.5 renders exactly the length asked for and then simply stops, often in the middle of the
-                # music ("the last few seconds are missing"): it gets a few seconds more, and the end is faded below
-                song = {"caption": _compose_prompt(req), "lyrics": _ace_lyrics(req) if not req.instrumental else "",
-                        "instrumental": req.instrumental, "seconds": min(600, duration + ACE15_TAIL), "bpm": req.bpm, "key": req.key,
-                        "time_signature": (req.time_signature or "").split("/")[0], "language": req.language,
-                        "seed": seed, "steps": 8, **(lora or {})}
-                try:
-                    secs = generate_ace15(
-                        song, wav,
-                        on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
-                        on_step=lambda d, t: _stage(job, "render", job.get("stage_text") or f"{label}composing the song", d, t),
-                        on_proc=lambda pr: _procs.__setitem__(job_id, pr),
-                        on_warning=lambda w: None if (i > 0 or w in warnings) else warnings.append(w))
-                    _stage(job, "finish", f"{label}saving and converting")
-                    if not req.fade_out:
-                        _fade_end(wav, ACE15_FADE)
-                    final = _finalize(wav, req, warnings if i == 0 else [])
-                except Exception as e:
-                    job.update(status="error", error=_short(e), warnings=warnings, results=results)
-                    return
-                results.append({"seed": seed, "duration": round(secs, 1), **_keep(final, req, seed, secs, "ace-step-1.5")})
+            # all takes in one run of the engine: the model (several GB) is loaded once, not once per song
+            seeds = [random.randint(0, 2**31 - 1) if req.randomize_seed else base_seed + i for i in range(total)]
+            wavs = [str(out_dir / f"song_{job_id}_{i + 1}.wav") for i in range(total)]
+            label = lambda i: f"Song {i + 1} of {total}: " if total > 1 else ""  # noqa: E731
+            current = {"i": 0}
+            _stage(job, "load", f"{label(0)}starting ACE-Step 1.5")
+            # ACE-Step 1.5 renders exactly the length asked for and then simply stops, often in the middle of the
+            # music ("the last few seconds are missing"): it gets a few seconds more, and the end is faded below.
+            # A voice preview is the voice alone (a cappella), singing the same lines in every take, at once (no intro)
+            caption = _compose_prompt(req)
+            if req.preview:
+                caption = ("a cappella, solo lead vocal only, no instruments, no drums, no music, singing from the "
+                           "first second, " + caption)
+            song = {"caption": caption, "lyrics": _ace_lyrics(req) if not req.instrumental else "",
+                    "instrumental": req.instrumental, "seconds": min(600, duration + (0 if req.preview else ACE15_TAIL)),
+                    "bpm": req.bpm, "key": req.key,
+                    "time_signature": (req.time_signature or "").split("/")[0], "language": req.language,
+                    "seed": seeds[0], "steps": 8, **(lora or {})}
+
+            def done(i: int, secs: float) -> None:
+                wav = wavs[i]
+                _stage(job, "finish", f"{label(i)}saving and converting")
+                if not req.fade_out:
+                    _fade_end(wav, ACE15_FADE)
+                final = _finalize(wav, req, warnings if i == 0 else [])
+                results.append({"seed": seeds[i], "duration": round(secs, 1), **_keep(final, req, seeds[i], secs, "ace-step-1.5")})
                 job["progress"] = {"done": i + 1, "total": total}
                 job["results"] = list(results)
+                current["i"] = i + 1
+
+            try:
+                generate_ace15(
+                    song, wavs[0], more=[{"seed": seeds[i], "out": wavs[i]} for i in range(1, total)], on_done=done,
+                    on_stage=lambda st, tx: _stage(job, st, f"{label(current['i'])}{tx}"),
+                    on_step=lambda d, t: _stage(job, "render", job.get("stage_text") or f"{label(current['i'])}composing the song", d, t),
+                    on_proc=lambda pr: _procs.__setitem__(job_id, pr),
+                    on_warning=lambda w: None if w in warnings else warnings.append(w))
+            except Exception as e:
+                job.update(status="error", error=_short(e), warnings=warnings, results=results)
+                return
         finally:
             stop_watch.set()
     job.update(status="done", engine="ace-step-1.5", audio_file=results[0]["audio_file"], results=results,

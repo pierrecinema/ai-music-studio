@@ -19,10 +19,13 @@ class MasterPlayer {
   loopOn = false
   bypass = false                // A/B: true = before (original)
   matchDb = 0                   // gain for "before" so both sound equally loud
+  matchOn = true                // off: "before" plays at its own level (hear how much louder the master is)
   // nodes
   dryGain: GainNode | null = null
   wetGain: GainNode | null = null
   dryDelay: DelayNode | null = null
+  monDry: GainNode | null = null
+  monWet: GainNode | null = null
   preAnalyser: AnalyserNode | null = null
   postAnalyser: AnalyserNode | null = null
   goniL: AnalyserNode | null = null
@@ -51,10 +54,17 @@ class MasterPlayer {
         processorOptions: { kind: 'meter', k: kWeighting(c.sampleRate), tp: truePeakTaps() },
       })
       this.meter.port.onmessage = (e) => { if (e.data.report) { this.report = e.data.report; this.emit() } }
+      // heard: original (dry) or master (wet), one of them turned down for "Same loudness" (never up: no clipping)
       const out = c.createGain()
       this.dryDelay.connect(this.dryGain); this.dryGain.connect(out); this.wetGain.connect(out)
-      out.connect(this.meter); this.meter.connect(c.destination)
-      out.connect(this.postAnalyser); out.connect(split)
+      out.connect(c.destination)
+      // measured: the real signal of the side that is heard, without the loudness matching
+      this.monDry = c.createGain(); this.monWet = c.createGain()
+      const mon = c.createGain()
+      this.dryDelay.connect(this.monDry); this.monDry.connect(mon); this.monWet.connect(mon)
+      const silent = c.createGain(); silent.gain.value = 0
+      mon.connect(this.meter); this.meter.connect(silent); silent.connect(c.destination)   // pulled, not heard
+      mon.connect(split)
       split.connect(this.goniL, 0); split.connect(this.goniR, 1)
       this.applyAB()
     }
@@ -88,6 +98,8 @@ class MasterPlayer {
     const nodes = await buildChain(c, chain)
     nodes.onReduction = (r) => { this.reduction = { ...r }; }
     nodes.output.connect(this.wetGain!)
+    nodes.output.connect(this.monWet!)
+    nodes.output.connect(this.postAnalyser!)
     this.dryDelay!.delayTime.value = nodes.latency
     this.chain = nodes
     this.shape = shape
@@ -103,13 +115,18 @@ class MasterPlayer {
 
   setMatch(db: number): void { this.matchDb = db; this.applyAB() }
   setBypass(b: boolean): void { this.bypass = b; this.applyAB(); this.emit() }
+  setMatchOn(on: boolean): void { this.matchOn = on; this.applyAB(); this.emit() }
 
   applyAB(): void {
     if (!this.ctx || !this.dryGain || !this.wetGain) return
     const t = this.ctx.currentTime
-    const dry = this.bypass ? Math.pow(10, this.matchDb / 20) : 0
+    const m = this.matchOn && Number.isFinite(this.matchDb) ? this.matchDb : 0      // master minus original, dB
+    const dry = this.bypass ? (m < 0 ? Math.pow(10, m / 20) : 1) : 0
+    const wet = this.bypass ? 0 : (m > 0 ? Math.pow(10, -m / 20) : 1)
     this.dryGain.gain.setTargetAtTime(dry, t, 0.01)
-    this.wetGain.gain.setTargetAtTime(this.bypass ? 0 : 1, t, 0.01)
+    this.wetGain.gain.setTargetAtTime(wet, t, 0.01)
+    this.monDry!.gain.setTargetAtTime(this.bypass ? 1 : 0, t, 0.01)
+    this.monWet!.gain.setTargetAtTime(this.bypass ? 0 : 1, t, 0.01)
   }
 
   position(): number {

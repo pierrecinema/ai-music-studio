@@ -42,7 +42,7 @@ export function Mastering(): React.ReactElement {
   const [measuring, setMeasuring] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dropping, setDropping] = useState(false)
-  const [show, setShow] = useState<'both' | 'before' | 'after'>('both')
+  const [show, setShow] = useState<'follow' | 'both' | 'before' | 'after'>('follow')
   const [target, setTarget] = useState<string>(() => localStorage.getItem('ams-master-target') ?? 'streaming')
   const [reaching, setReaching] = useState(false)
   const [output, setOutput] = useState<OutputSettings | null>(null)
@@ -166,6 +166,8 @@ export function Mastering(): React.ReactElement {
   }
 
   const pos = masterPlayer.position()
+  const active: 'before' | 'after' = masterPlayer.bypass ? 'before' : 'after'   // what is heard: the page shows that
+  const shown = show === 'follow' ? active : show
   return (
     <div style={{ height: '100%', overflow: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 12, position: 'relative' }}
       onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDropping(true) } }}
@@ -217,18 +219,23 @@ export function Mastering(): React.ReactElement {
               <button className="btn" style={{ borderRadius: 0, background: masterPlayer.bypass ? 'var(--bg-elevated)' : 'var(--accent)', color: '#fff' }} onClick={() => masterPlayer.setBypass(false)}>After</button>
               <button className="btn" style={{ borderRadius: 0, background: masterPlayer.bypass ? 'var(--accent)' : 'var(--bg-elevated)', color: '#fff' }} onClick={() => masterPlayer.setBypass(true)}>Before</button>
             </div>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{Number.isFinite(masterPlayer.matchDb) && aAfter ? `"Before" at ${masterPlayer.matchDb >= 0 ? '+' : ''}${masterPlayer.matchDb.toFixed(1)} dB (same loudness)` : ''}</span>
+            <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'inline-flex', gap: 4, alignItems: 'center' }}
+              title={'On: the louder of the two is turned down while listening, so you hear only what the chain does to the sound (the meters and the export are not changed). Off: both at their real level, so you also hear how much louder the master is.'}>
+              <input type="checkbox" checked={masterPlayer.matchOn} onChange={(e) => masterPlayer.setMatchOn(e.target.checked)} />
+              Same loudness{masterPlayer.matchOn && aAfter && Number.isFinite(masterPlayer.matchDb) && Math.abs(masterPlayer.matchDb) >= 0.1
+                ? ` (${masterPlayer.matchDb > 0 ? '"After"' : '"Before"'} played ${Math.abs(masterPlayer.matchDb).toFixed(1)} dB quieter)` : ''}
+            </label>
             <button className={`btn ${masterPlayer.loopOn ? 'btn-primary' : 'btn-ghost'}`} disabled={!masterPlayer.loop} title="Loop the marked region (drag in the waveform to mark one)"
               onClick={() => masterPlayer.setLoop(masterPlayer.loop, !masterPlayer.loopOn)}>⟲ Loop</button>
             {masterPlayer.loop && <button className="btn btn-ghost" style={{ fontSize: 10 }} onClick={() => masterPlayer.setLoop(null, false)}>Clear region</button>}
             <span style={{ flex: 1 }} />
             <select value={show} onChange={(e) => setShow(e.target.value as typeof show)} style={{ fontSize: 11 }} title="Which waveform to show">
-              <option value="both">Waveform: before + after</option><option value="after">Waveform: after</option><option value="before">Waveform: before</option>
+              <option value="follow">Waveform: follows Before / After</option><option value="both">Waveform: before + after</option><option value="after">Waveform: after</option><option value="before">Waveform: before</option>
             </select>
             <button className="btn btn-primary" onClick={() => { setResults(null); setOutput(loadOutput(name)) }}>Export…</button>
           </div>
 
-          <MasterWave before={buffer} after={after} clips={show === 'before' ? aBefore?.clips ?? [] : aAfter?.clips ?? []} show={show} />
+          <MasterWave before={buffer} after={after} clips={shown === 'before' ? aBefore?.clips ?? [] : aAfter?.clips ?? []} show={shown} />
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(340px, 1fr) minmax(320px, 420px)', minWidth: 0, gap: 14, alignItems: 'start' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -237,7 +244,7 @@ export function Mastering(): React.ReactElement {
                 onReachTarget={() => void reachTarget()} reaching={reaching} />
               <ReferenceMatch open={refOpen} setOpen={setRefOpen} target={current!} onDone={(p) => open({ path: p, name: `${name} (reference match)` })} />
             </div>
-            <MasterMeters before={aBefore} after={aAfter} target={tgt.lufs} busy={measuring} />
+            <MasterMeters before={aBefore} after={aAfter} target={tgt.lufs} busy={measuring} active={active} />
           </div>
         </>
       )}

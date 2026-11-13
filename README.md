@@ -93,6 +93,12 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.30.2
+
+- **Mastering, Before / After shows the side you hear:** the waveform, the numbers (large and bright), the spectrum and the loudness curve switch to the original or the master, so you see what the chain changed.
+- **"Same loudness" can be switched off:** with it on (default) the louder side is turned down while comparing, so you judge only the sound; off, you hear how much louder the master really is.
+- **Fix:** for the comparison the original was turned *up* and could distort; now the louder side is turned down instead. The live meters always show the real level.
+
 ### New in 0.30.1
 
 - **Fix: in the Studio the "Drag a clip here for a new track" area covered the first return track** (e.g. Reverb). It now sits between the last track and the return tracks.

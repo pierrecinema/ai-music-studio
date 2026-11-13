@@ -65,6 +65,7 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
   voice (male / female / style), language, tempo and key; result trimmed to the sung part (no silence), saved to the
   Library with tags so it can be dragged into the Studio. Note: ACE-Step 1.5 sings little or nothing with a one-line
   text in a 60–90 s song, so short vocals need their own approach (short length, the word repeated, then cut).
+- **Where we stopped (13.11.2026, 0.30.7):** area 7 (Mastering 0.30.x) tested by the owner; open tests 6c.19 (rain-techno LoRA with 0.30.6) and 6c.20 (Stem Splitter button). The owner continues with the **Mastering tool** next session (step 4 or 5, owner's choice).
 - **Mastering:** steps 1–3 of `docs/MASTERING-PLAN.md` are in 0.30.0 (test plan area 7). Next, step by step with the
   owner: 4 (assistant, editing), 5 (VST3 host), 6 (album). AI Chat and the rest (test plan 7b): ask what is missing.
 

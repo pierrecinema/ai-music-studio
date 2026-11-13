@@ -14,7 +14,7 @@ in-app update right away. For every new version:
 3. The release starts by itself: **Release Windows EXE** (`.github/workflows/release.yml`) runs on every push to `main`
    that changes `apps/desktop/package.json` and releases the version in it when its tag `v<version>` does not exist
    yet: it builds the installer and creates the tag and the GitHub release with `latest.yml`, which the in-app updater
-   reads (the app checks every 15 minutes). Only if it did not run, start it by hand (`workflow_dispatch`, `version`
+   reads (the app checks at start and once a day; during development the owner presses Check for updates). Only if it did not run, start it by hand (`workflow_dispatch`, `version`
    without the `v`).
 4. Check that the run succeeded and the release exists, then tell the owner, with a short changelog summary in German
    (standing instruction: every release). Release notes carry the changelog and install notes, no donation link

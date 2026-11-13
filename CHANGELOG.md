@@ -5,7 +5,7 @@ on its GitHub release page, so every version needs a `## <version>` section here
 
 ## 0.20.2
 
-- **Updates arrive faster:** the app looks for a new version every 15 minutes (before: every 4 hours), and new versions are published by themselves as soon as they are ready.
+- **Updates:** new versions are published by themselves as soon as they are ready. The app looks for one when it starts and then once a day (before: every 4 hours), so testers are not asked too often; Settings → Updates → *Check for updates* finds a new version at once.
 
 ## 0.20.1
 

@@ -60,7 +60,8 @@ export function setupUpdater(win: BrowserWindow, stopBackend: () => Promise<void
   // the same when an update that was downloaded earlier is installed on quit
   app.on('before-quit-for-update', () => { void stopBackend() })
 
-  // Auto-check 5 s after launch, then every 15 minutes (new versions come often; a check is one small request)
+  // Auto-check 5 s after launch, then once a day (testers should not get a message for every small version;
+  // during development the owner presses "Check for updates")
   setTimeout(() => void check(false), 5000)
-  setInterval(() => void check(false), 15 * 60 * 1000)
+  setInterval(() => void check(false), 24 * 60 * 60 * 1000)
 }

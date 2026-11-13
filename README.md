@@ -93,6 +93,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.20.2
+
+- **Updates arrive faster:** the app looks for a new version every 15 minutes (before: every 4 hours), and new versions are published by themselves as soon as they are ready.
+
 ### New in 0.20.1
 
 - **The AI chat can use the app:** with every provider (Claude, ChatGPT, Gemini, Grok, Ollama and local servers that support tools) the assistant can now **make a song itself** ("make me an afro house track with female vocals"), check how far it is, list LoRAs, split stems, master a track, suggest chords and read the system info: the same tools the app offers over MCP. A song it starts shows its progress in the chat and, when ready, can go to the Studio with one click; it is saved in the Library. It uses the music model chosen in Create music.

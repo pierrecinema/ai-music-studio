@@ -138,15 +138,16 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 7.1 | Song aus dem Explorer auf die Mastering-Seite ziehen; **Open…**; Library → **Mastering**; Create → **Mastering**; Studio → File → **Send song to Mastering** | Song öffnet sich als Tab, Wellenform und Werte „vorher“ erscheinen | ✅ | | |
 | 7.2 | ▶ Play, Leertaste, in die Wellenform klicken, Bereich ziehen → ⟲ Loop | spielt, springt, wiederholt den Bereich | ✅ | | |
 | 7.3 | **After / Before** beim Abspielen umschalten | gleich laut, nur der Klang ändert sich | ✅ | | |
-| 7.4 | Target Streaming → **Reach −14 LUFS** | Loudness „nachher“ −14 ±0,5 LUFS, True Peak ≤ −1,0 dBTP, „reached“ grün | | | 0.30.1: „merke keinen Unterschied“ (A/B war absichtlich gleich laut) → 0.30.2: „Same loudness“ ausschalten zum Hören, Werte zeigen das Ziel |
+| 7.4 | Target Streaming → **Reach −14 LUFS** | Loudness „nachher“ −14 ±0,5 LUFS, True Peak ≤ −1,0 dBTP, „reached“ grün | ✅ | | 0.30.2 ✅ |
 | 7.5 | EQ öffnen, Band verstellen; Kompressor, Multiband (⏻ an), Stereo-Breite / Mono-Bass | hörbar beim Abspielen, Kurve und Werte ändern sich, Gain Reduction bewegt sich | ✅ | | |
 | 7.6 | Slot ↑ ↓ verschieben, × entfernen, + Add…, Preset laden und eigenes speichern | Kette ändert sich, Preset ist nach Neustart noch da | ✅ | | |
 | 7.7 | Anzeigen beim Abspielen: LUFS M/S, True Peak, Korrelation, Goniometer, Spektrum, Lautheitsverlauf | bewegen sich passend zur Musik | ✅ | | |
 | 7.8 | **Export…** WAV 24 + MP3 320, 44.1 kHz, Titel, Interpret, Cover | zwei Dateien; in Windows (Eigenschaften → Details) 44 100 Hz, Titel / Interpret; MP3 zeigt das Cover | ✅ | | alle spielen ab |
 | 7.9 | Export FLAC, ALAC, AAC, OGG, Opus, WAV 16 mit Dither | alle Dateien spielen ab; Lautheit wie in der App gemessen | ✅ | | |
-| 7.10 | Reference match mit einem Referenz-Song | Ergebnis öffnet sich als neuer Tab | | | Anleitung: Matchering installieren, Referenz-Song wählen |
-| 7.11 | neu (0.30.2): beim Abspielen **Before** / **After** drücken | Wellenform, Zahlen (groß/hell), Spektrum und Lautheitskurve springen auf Original bzw. Master | | | |
-| 7.12 | neu (0.30.2): **Same loudness** aus, dann Before / After | After ist jetzt deutlich lauter (so laut wie exportiert); mit Häkchen wieder gleich laut, ohne Verzerrung | | | |
+| 7.10 | Reference match mit einem Referenz-Song | Ergebnis öffnet sich als neuer Tab | ✅ | |  |
+| 7.11 | neu (0.30.2): beim Abspielen **Before** / **After** drücken | Wellenform, Zahlen (groß/hell), Spektrum und Lautheitskurve springen auf Original bzw. Master | ✅ | | 0.30.2: Regler sollen mitspringen → 7.13 |
+| 7.12 | neu (0.30.2): **Same loudness** aus, dann Before / After | After ist jetzt deutlich lauter (so laut wie exportiert); mit Häkchen wieder gleich laut, ohne Verzerrung | ✅ | |  |
+| 7.13 | neu (0.30.3): EQ / Kompressor / Louder verstellen, dann **Before** und **After** drücken | Before: alle Regler auf Ausgangsstellung (grau), EQ-Kurve flach; After: deine Einstellung, verstellte Regler lila mit • | | | |
 
 ## 7b. AI Chat, Sonstiges
 

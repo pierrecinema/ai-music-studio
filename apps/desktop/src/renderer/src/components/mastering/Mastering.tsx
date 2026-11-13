@@ -241,7 +241,7 @@ export function Mastering(): React.ReactElement {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <MasterRack chain={chain} onChange={setChain} target={target}
                 onTarget={(t) => { setTarget(t); try { localStorage.setItem('ams-master-target', t) } catch { /* */ } }}
-                onReachTarget={() => void reachTarget()} reaching={reaching} />
+                onReachTarget={() => void reachTarget()} reaching={reaching} view={active} />
               <ReferenceMatch open={refOpen} setOpen={setRefOpen} target={current!} onDone={(p) => open({ path: p, name: `${name} (reference match)` })} />
             </div>
             <MasterMeters before={aBefore} after={aAfter} target={tgt.lufs} busy={measuring} active={active} />

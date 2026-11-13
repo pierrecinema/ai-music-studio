@@ -428,8 +428,8 @@ export function CreateMusic(): React.ReactElement {
   const previewVoices = async () => {
     setError(null); setNotice(null); setJob(null)
     try {
-      const lines = p.lyrics.split('\n').map((l) => l.trim()).filter((l) => l && !/^\[.*\]$/.test(l)).slice(0, 4)
-      const body = { ...toRequest(p), duration: 20, songs: 3, variations: 1, queue: 1, randomize_seed: true, seed: null, loop: false, preview: true,
+      const lines = p.lyrics.split('\n').map((l) => l.trim()).filter((l) => l && !/^\[.*\]$/.test(l)).slice(0, 2)
+      const body = { ...toRequest(p), duration: 10, songs: 3, variations: 1, queue: 1, randomize_seed: true, seed: null, loop: false, preview: true,
         lyrics: lines.length ? `[Verse]\n${lines.join('\n')}` : '' }
       const { jobId } = await api.music.generate(body)
       setPreviewJobId(jobId)
@@ -687,8 +687,8 @@ export function CreateMusic(): React.ReactElement {
               {canPreview && (
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={busy || !p.lyrics.trim()} onClick={previewVoices}
-                    title={tr('Three short takes (20 s) of the voice alone, without music, each singing your first lines with another voice. Listen, then press “Use this voice” on the one you like: the whole song is made with it.')}>
-                    🎤 {tr('Preview voices (3 × 20 s)')}
+                    title={tr('Three short takes (10 s) of the voice alone, without music, each singing your first lines with another voice. Listen, then press “Use this voice” on the one you like: the whole song is made with it.')}>
+                    🎤 {tr('Preview voices (3 × 10 s)')}
                   </button>
                   {!p.randomizeSeed && p.seed && <span style={hint}>{tr('Voice fixed: seed')} {p.seed}</span>}
                 </div>

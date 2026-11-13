@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.20.7
+
+- **Voice previews take about half the time:** *Preview voices* now makes three takes of 10 seconds (before 20) with your first two lines. On the processor most of the time goes into turning each take into audio (the bar stands at 80 %), and that time halves with the length.
+
 ## 0.20.6
 
 - **Fix: Ctrl+R did nothing in the installed app** (Record in the Ableton and Cubase layouts; Ctrl+Shift+R, Export in the Ableton layout, too). A helper meant to stop the page from reloading swallowed the keys before the app saw them; it is now only used during development.

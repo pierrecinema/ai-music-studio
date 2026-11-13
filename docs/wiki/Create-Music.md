@@ -21,7 +21,7 @@ Make songs and loops with AI on your own PC. Two modes at the top: **Simple** (s
 - **Instrumental**, or **A cappella (voice only)**: only the singing, no instruments (the app removes leftover sounds with Demucs). Needs a model that can sing.
 - **Language**, **Voice** (any / male / female).
 - **Lyrics:** the buttons **[Intro] [Verse] [Pre-Chorus] [Chorus] [Bridge] [Outro]** insert a section at the cursor; **Auto structure** turns stanzas (separated by an empty line) into verses and choruses; lyrics without sections are structured automatically. ✨ lets the AI write lyrics.
-- **🎤 Preview voices (3 × 20 s):** three short takes of the voice alone (a cappella, no music), each singing your first lines with another voice (ACE-Step). The model is loaded once for all three. **Use this voice** fixes it (its seed) for the whole song; similar, but not always identical, because the song is longer.
+- **🎤 Preview voices (3 × 10 s):** three short takes of the voice alone (a cappella, no music), each singing your first two lines with another voice (ACE-Step). The model is loaded once for all three. **Use this voice** fixes it (its seed) for the whole song; similar, but not always identical, because the song is longer.
 
 ## Song parameters
 Length (seconds), BPM, key, time signature. **Auto** leaves it to the model; **Complete the metadata** fills the fields with AI.

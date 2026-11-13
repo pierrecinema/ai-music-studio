@@ -12,9 +12,11 @@ plugin needed); what you hear while playing is exactly what is written to the fi
 
 ## Listen and compare
 - **▶ Play / ❚❚ Pause** (or **Space** on this page), **⏮** back to the start.
-- **After / Before (A/B):** "Before" is the original, played **at the loudness of the master**, so you judge the sound,
-  not the volume.
-- **Waveform:** before (grey) and after (purple), clipping in red. Click to play from there, **drag to mark a region**,
+- **After / Before (A/B):** "Before" is the original, "After" the master. The whole page follows: the numbers, the
+  waveform, the spectrum and the loudness curve of the side you hear are shown bright, the other side dim.
+- **Same loudness** (on by default): while comparing, the louder of the two is turned down, so you judge the sound,
+  not the volume. Switch it off to hear how much louder the master really is. The meters always show the real level.
+- **Waveform:** follows Before / After (or both, grey and purple), clipping in red. Click to play from there, **drag to mark a region**,
   **⟲ Loop** plays it again and again. **Ctrl + wheel** or the slider zooms.
 
 ## The chain

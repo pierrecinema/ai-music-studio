@@ -10,13 +10,19 @@ const fmt = (v: number | undefined, d = 1): string => (v === undefined || !Numbe
 const box: React.CSSProperties = { background: 'var(--bg-tertiary)', borderRadius: 8, padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }
 const label: React.CSSProperties = { fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.4 }
 
-function Row({ name, before, after, unit, warn, title }: { name: string; before?: number; after?: number; unit: string; warn?: boolean; title?: string }): React.ReactElement {
+// the side that is heard (Before / After) is shown large and bright, the other one small and dim
+let side: 'before' | 'after' = 'after'
+
+function Row({ name, before, after, unit, warn, warnBefore, title }: { name: string; before?: number; after?: number; unit: string; warn?: boolean; warnBefore?: boolean; title?: string }): React.ReactElement {
+  const on = (s: 'before' | 'after'): React.CSSProperties => side === s
+    ? { fontWeight: 700, fontSize: 13, color: (s === 'after' ? warn : warnBefore) ? 'var(--red)' : 'var(--text-primary)' }
+    : { fontWeight: 400, fontSize: 11, color: 'var(--text-muted)' }
   return (
-    <div title={title} style={{ display: 'grid', gridTemplateColumns: '1fr 52px 14px 58px', alignItems: 'baseline', fontSize: 12 }}>
+    <div title={title} style={{ display: 'grid', gridTemplateColumns: '1fr 58px 14px 58px', alignItems: 'baseline', fontSize: 12 }}>
       <span style={{ color: 'var(--text-secondary)' }}>{name}</span>
-      <span style={{ textAlign: 'right', color: 'var(--text-muted)' }}>{fmt(before)}</span>
+      <span style={{ textAlign: 'right', ...on('before') }}>{fmt(before)}</span>
       <span style={{ textAlign: 'center', color: 'var(--text-muted)' }}>→</span>
-      <span style={{ textAlign: 'right', fontWeight: 600, color: warn ? 'var(--red)' : 'var(--text-primary)' }}>{fmt(after)} <span style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 400 }}>{unit}</span></span>
+      <span style={{ textAlign: 'right', ...on('after') }}>{fmt(after)} <span style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 400 }}>{unit}</span></span>
     </div>
   )
 }
@@ -31,7 +37,8 @@ function Bar({ value, min, max, color, text }: { value: number; min: number; max
   )
 }
 
-export function MasterMeters({ before, after, target, busy }: { before: Analysis | null; after: Analysis | null; target: number; busy: boolean }): React.ReactElement {
+export function MasterMeters({ before, after, target, busy, active }: { before: Analysis | null; after: Analysis | null; target: number; busy: boolean; active: 'before' | 'after' }): React.ReactElement {
+  side = active
   const [, tick] = useState(0)
   useEffect(() => masterPlayer.on(() => tick((n) => n + 1)), [])
   const r = masterPlayer.report
@@ -43,26 +50,26 @@ export function MasterMeters({ before, after, target, busy }: { before: Analysis
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={box}>
         <div style={{ ...label, display: 'flex', justifyContent: 'space-between' }}>
-          <span>Whole song: before → after</span>{busy && <span style={{ color: 'var(--accent-light)' }}>measuring…</span>}
+          <span>Whole song: <span style={{ color: active === 'before' ? 'var(--text-primary)' : undefined }}>before</span> → <span style={{ color: active === 'after' ? 'var(--accent-light)' : undefined }}>after</span> · now: <b style={{ color: 'var(--text-primary)' }}>{active === 'before' ? 'Before (original)' : 'After (master)'}</b></span>{busy && <span style={{ color: 'var(--accent-light)' }}>measuring…</span>}
         </div>
         <Row name="Loudness (integrated)" before={before?.integrated} after={after?.integrated} unit="LUFS"
           title="Integrated loudness after ITU-R BS.1770 / EBU R128: what streaming services measure" />
-        <Row name="True peak" before={before?.truePeak} after={after?.truePeak} unit="dBTP" warn={(after?.truePeak ?? -99) > -0.95}
+        <Row name="True peak" before={before?.truePeak} after={after?.truePeak} unit="dBTP" warn={(after?.truePeak ?? -99) > -0.95} warnBefore={(before?.truePeak ?? -99) > -0.95}
           title="The highest peak, also between samples (4x oversampled). Above −1 dBTP a lossy file (MP3, AAC) can distort." />
         <Row name="Sample peak" before={before?.samplePeak} after={after?.samplePeak} unit="dBFS" />
         <Row name="Loudness range" before={before?.range} after={after?.range} unit="LU" title="How much the loudness changes over the song (EBU Tech 3342)" />
         <Row name="RMS" before={before?.rms} after={after?.rms} unit="dBFS" />
         <Row name="Crest factor" before={before?.crest} after={after?.crest} unit="dB" title="Peak to RMS: lower means more compressed" />
         <Row name="Short-term max" before={before?.shortTermMax} after={after?.shortTermMax} unit="LUFS" />
-        <Row name="Clipping" before={before?.clips.length} after={after?.clips.length} unit="×" warn={(after?.clips.length ?? 0) > 0} title="Places where the waveform reaches 0 dBFS (red in the waveform)" />
+        <Row name="Clipping" before={before?.clips.length} after={after?.clips.length} unit="×" warn={(after?.clips.length ?? 0) > 0} warnBefore={(before?.clips.length ?? 0) > 0} title="Places where the waveform reaches 0 dBFS (red in the waveform)" />
         {after && Number.isFinite(after.integrated) && (
           <div style={{ fontSize: 11, color: Math.abs(after.integrated - target) <= 0.5 ? 'var(--green)' : 'var(--text-secondary)' }}>
-            Target {target} LUFS: {Math.abs(after.integrated - target) <= 0.5 ? 'reached' : `${after.integrated > target ? '+' : ''}${(after.integrated - target).toFixed(1)} LU`}
+            Target {target} LUFS (master): {Math.abs(after.integrated - target) <= 0.5 ? 'reached' : `${after.integrated > target ? '+' : ''}${(after.integrated - target).toFixed(1)} LU`}
           </div>
         )}
       </div>
       <div style={box}>
-        <div style={label}>Live {masterPlayer.bypass ? '(before)' : '(after)'}</div>
+        <div style={label}>Live, real level {masterPlayer.bypass ? '(before)' : '(after)'}</div>
         <Bar value={live ? r!.momentary : -Infinity} min={-40} max={0} color="var(--accent)" text={`M ${fmt(live ? r!.momentary : undefined)} LUFS`} />
         <Bar value={live ? r!.shortTerm : -Infinity} min={-40} max={0} color="var(--accent-light)" text={`S ${fmt(live ? r!.shortTerm : undefined)} LUFS`} />
         <Bar value={live ? r!.truePeak : -Infinity} min={-30} max={0} color={live && r!.truePeak > -1 ? 'var(--red)' : 'var(--green)'} text={`TP ${fmt(live ? r!.truePeak : undefined)} (max ${fmt(r?.truePeakMax)}) dBTP`} />
@@ -87,7 +94,7 @@ export function MasterMeters({ before, after, target, busy }: { before: Analysis
       </div>
       <div style={box}>
         <div style={label}>Loudness over time (short-term) · <span style={{ color: '#9ca3af' }}>before</span> / <span style={{ color: 'var(--accent-light)' }}>after</span> · target</div>
-        <History before={before} after={after} target={target} />
+        <History before={before} after={after} target={target} active={active} />
       </div>
     </div>
   )
@@ -161,12 +168,17 @@ const drawSpectrum = (g: CanvasRenderingContext2D, W: number, H: number): void =
     }
     if (fill) { g.lineTo(W, H); g.lineTo(0, H); g.closePath(); g.fillStyle = color; g.fill() } else { g.strokeStyle = color; g.lineWidth = 1.5; g.stroke() }
   }
-  draw(masterPlayer.preAnalyser, specBufs.pre, 'rgba(156,163,175,0.35)', true)
-  draw(masterPlayer.postAnalyser!, specBufs.post, '#9d5ff8', false)
+  if (side === 'after') {
+    draw(masterPlayer.preAnalyser, specBufs.pre, 'rgba(156,163,175,0.25)', true)
+    draw(masterPlayer.postAnalyser!, specBufs.post, '#9d5ff8', false)
+  } else {
+    draw(masterPlayer.postAnalyser!, specBufs.post, 'rgba(157,95,248,0.18)', true)
+    draw(masterPlayer.preAnalyser, specBufs.pre, '#d1d5db', false)
+  }
 }
 function Spectrum(): React.ReactElement { return <canvas ref={useAnimation(drawSpectrum, 130)} style={{ width: '100%', display: 'block' }} /> }
 
-function History({ before, after, target }: { before: Analysis | null; after: Analysis | null; target: number }): React.ReactElement {
+function History({ before, after, target, active }: { before: Analysis | null; after: Analysis | null; target: number; active: 'before' | 'after' }): React.ReactElement {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const cv = ref.current
@@ -181,14 +193,14 @@ function History({ before, after, target }: { before: Analysis | null; after: An
     g.fillStyle = '#6b7280'; g.font = '9px system-ui'
     for (const v of [-30, -20, -10]) { g.fillRect(0, y(v), W, 0.5); g.fillText(`${v}`, 2, y(v) - 2) }
     g.strokeStyle = 'rgba(34,197,94,0.7)'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(0, y(target)); g.lineTo(W, y(target)); g.stroke(); g.setLineDash([])
-    const line = (a: Analysis | null, color: string): void => {
+    const line = (a: Analysis | null, color: string, width = 1.5): void => {
       if (!a || a.history.length < 2) return
-      g.strokeStyle = color; g.lineWidth = 1.5; g.beginPath()
+      g.strokeStyle = color; g.lineWidth = width; g.beginPath()
       a.history.forEach((v, i) => { const x = (i / (a.history.length - 1)) * W; if (i === 0) g.moveTo(x, y(v)); else g.lineTo(x, y(v)) })
       g.stroke()
     }
-    line(before, 'rgba(156,163,175,0.8)')
-    line(after, '#9d5ff8')
-  }, [before, after, target])
+    if (active === 'after') { line(before, 'rgba(156,163,175,0.4)', 1); line(after, '#9d5ff8', 2.2) }
+    else { line(after, 'rgba(157,95,248,0.35)', 1); line(before, '#e5e7eb', 2.2) }
+  }, [before, after, target, active])
   return <canvas ref={ref} style={{ width: '100%', display: 'block' }} />
 }

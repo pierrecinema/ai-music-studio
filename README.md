@@ -93,6 +93,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.20.5
+
+- **Create music: the newest song on top.** When a run makes several songs or versions, the newest is now shown at the top of the results and the first at the bottom (each keeps its take number).
+
 ### New in 0.20.4
 
 - **Voice previews: the voice alone, and faster.** *Preview voices* now makes three takes of the voice without music (a cappella), all singing your first lines, so the voices are easy to compare (before, a take could be only an instrumental intro). ACE-Step 1.5 loads the model once for all three takes instead of once per take; the same goes for several songs made in one run.

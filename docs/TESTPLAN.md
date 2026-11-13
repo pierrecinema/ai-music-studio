@@ -131,15 +131,29 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6c.16 | neu (0.20.4): Studio, MIDI-Clip anklicken → Strg+R; Piano Roll → Strg+R | MIDI-Aufnahme startet (● Recording…), Strg+R stoppt | ✅ | | 0.20.4: Rec-Knopf ✅, Strg+R ❌ (Ableton und Cubase) → 0.20.6 ✅ |
 | 6c.17 | neu (0.20.5): Create mit 2 oder mehr Songs / Versionen | neuester Song oben, der erste unten | ✅ | | |
 
-## 7. Mastering, AI Chat, Sonstiges (wird zuerst umgebaut)
+## 7. Mastering (neu in 0.30.0)
 
 | # | Test | Erwartet | A | B | Notiz |
 |---|---|---|---|---|---|
-| 7.1 | Mastering mit Referenz-Track | gemasterte Datei | | | |
-| 7.2 | AI Chat mit Ollama (lokal) | Antwort ohne Schlüssel | | | |
-| 7.3 | AI Chat mit Grok / Claude / ChatGPT (mit Schlüssel) | Antwort | | | |
-| 7.4 | Coming-soon-Menüpunkte | „Coming soon“-Seite, kein Fehler | | | |
-| 7.5 | MCP: Claude Code lokal mit `http://127.0.0.1:38765/mcp` | Claude sieht die App-Werkzeuge | | | |
+| 7.1 | Song aus dem Explorer auf die Mastering-Seite ziehen; **Open…**; Library → **Mastering**; Create → **Mastering**; Studio → File → **Send song to Mastering** | Song öffnet sich als Tab, Wellenform und Werte „vorher“ erscheinen | | | |
+| 7.2 | ▶ Play, Leertaste, in die Wellenform klicken, Bereich ziehen → ⟲ Loop | spielt, springt, wiederholt den Bereich | | | |
+| 7.3 | **After / Before** beim Abspielen umschalten | gleich laut, nur der Klang ändert sich | | | |
+| 7.4 | Target Streaming → **Reach −14 LUFS** | Loudness „nachher“ −14 ±0,5 LUFS, True Peak ≤ −1,0 dBTP, „reached“ grün | | | |
+| 7.5 | EQ öffnen, Band verstellen; Kompressor, Multiband (⏻ an), Stereo-Breite / Mono-Bass | hörbar beim Abspielen, Kurve und Werte ändern sich, Gain Reduction bewegt sich | | | |
+| 7.6 | Slot ↑ ↓ verschieben, × entfernen, + Add…, Preset laden und eigenes speichern | Kette ändert sich, Preset ist nach Neustart noch da | | | |
+| 7.7 | Anzeigen beim Abspielen: LUFS M/S, True Peak, Korrelation, Goniometer, Spektrum, Lautheitsverlauf | bewegen sich passend zur Musik | | | |
+| 7.8 | **Export…** WAV 24 + MP3 320, 44.1 kHz, Titel, Interpret, Cover | zwei Dateien; in Windows (Eigenschaften → Details) 44 100 Hz, Titel / Interpret; MP3 zeigt das Cover | | | |
+| 7.9 | Export FLAC, ALAC, AAC, OGG, Opus, WAV 16 mit Dither | alle Dateien spielen ab; Lautheit wie in der App gemessen | | | |
+| 7.10 | Reference match mit einem Referenz-Song | Ergebnis öffnet sich als neuer Tab | | | |
+
+## 7b. AI Chat, Sonstiges
+
+| # | Test | Erwartet | A | B | Notiz |
+|---|---|---|---|---|---|
+| 7b.1 | AI Chat mit Ollama (lokal) | Antwort ohne Schlüssel | | | |
+| 7b.2 | AI Chat mit Grok / Claude / ChatGPT (mit Schlüssel) | Antwort | | | |
+| 7b.3 | Coming-soon-Menüpunkte | „Coming soon“-Seite, kein Fehler | | | |
+| 7b.4 | MCP: Claude Code lokal mit `http://127.0.0.1:38765/mcp` | Claude sieht die App-Werkzeuge | | | |
 
 ## Ergebnisse
 

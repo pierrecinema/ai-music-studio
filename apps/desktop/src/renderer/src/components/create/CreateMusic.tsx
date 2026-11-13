@@ -1,3 +1,4 @@
+import { sendToMastering } from '../../stores/mastering.store'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { autoStructure, hasSections, SECTION_TAGS } from '../../lib/lyrics'
 import { api, type EngineState, type Lora, type MusicEngineInfo, type MusicJob, type MusicResult, type Resources, type Usage } from '../../lib/api'
@@ -963,8 +964,12 @@ export function CreateMusic(): React.ReactElement {
                 <button className="btn btn-primary" style={{ fontSize: 11 }} title={tr('Make the whole song with this voice (its seed)')}
                   onClick={() => useVoice(r.seed)}>🎤 {tr('Use this voice')}</button>
               ) : (
-                <button className="btn btn-ghost" style={{ fontSize: 11 }}
-                  onClick={() => addToProject({ ...job, results: [r] })}>{tr("Add to project")}</button>
+                <>
+                  <button className="btn btn-ghost" style={{ fontSize: 11 }}
+                    onClick={() => addToProject({ ...job, results: [r] })}>{tr("Add to project")}</button>
+                  <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Open this song in Mastering')}
+                    onClick={() => sendToMastering(r.audio_file, `${p.title || tr('Untitled')} ${i + 1}`)}>{tr('Mastering')}</button>
+                </>
               )}
             </div>
           </div>

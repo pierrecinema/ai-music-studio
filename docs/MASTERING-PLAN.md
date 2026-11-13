@@ -4,6 +4,17 @@ Collected with the owner on 12.11.2026 (area 7 of the test plan is rebuilt first
 matches a mix to a reference track (Matchering, `apps/server/api/routes/mastering.py`, 68 lines of UI). The goal is a
 full mastering workspace like a professional mastering editor, with open-source processing that really works.
 
+## Status
+
+- **0.30.0 (13.11.2026): steps 1 to 3 done** (agreed with the owner: built together, one release): workspace, meters,
+  built-in chain (EQ with curve, compressor, multiband, stereo / mono bass, true-peak limiter with "Louder" and loudness
+  targets, presets), output menu (8 formats, sample rates, dither, metadata, cover, destination presets).
+  How it works: `apps/desktop/src/renderer/src/audio/master/` (`dsp.ts` holds the processors and the BS.1770 meter as
+  self-contained classes that run both in AudioWorklets and offline; `chain.ts` builds the graph; `player.ts` plays,
+  A/B, meters), `components/mastering/`, backend `services/master_export.py` (`/mastering/export`).
+- **Next, step by step:** 4 (assistant, editing), 5 (VST3 host, wishes 5, 7, 8), 6 (album).
+  Not in 0.30.0: dynamic EQ and saturation (step 2 extras), the built-in effects as Studio inserts (wish 8 without VST).
+
 ## The owner's wishes
 
 1. **Drag your track in:** from Explorer, the Library, Create music and the Studio (also "Send the song to

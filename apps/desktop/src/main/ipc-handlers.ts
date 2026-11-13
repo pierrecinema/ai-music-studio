@@ -43,6 +43,14 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     return result
   })
 
+  ipcMain.handle('dialog:open-image', async (e) => {
+    const result = await openDialog(e, {
+      filters: [{ name: 'Image', extensions: ['jpg', 'jpeg', 'png'] }],
+      properties: ['openFile']
+    })
+    return result.filePaths[0] ?? null
+  })
+
   ipcMain.handle('dialog:open-audio', async (e) => {
     const result = await openDialog(e, {
       filters: [

@@ -46,4 +46,4 @@ Steps, songs × variations, queue, seed; language-model level, rendering, LoRA p
 ## Create, cancel, results
 - **Create** starts; one job at a time, in the background. The progress shows the phase, percent, time left and what is used (graphics card or processor). It stays visible in the bottom bar when you switch menus.
 - **✕ Cancel** stops within seconds; finished songs of the job are kept.
-- **Results** (newest on top, the first take at the bottom): play, rename (name field above the player), **Into project** (onto new tracks in the [[Studio]]). Every song is cut to start exactly on beat 1.
+- **Results** (newest on top, the first take at the bottom): play, rename (name field above the player), **Into project** (onto new tracks in the [[Studio]]), **Mastering** (opens it in [[Mastering]]). Every song is cut to start exactly on beat 1.

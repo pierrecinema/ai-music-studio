@@ -1,3 +1,5 @@
+import { sendToMastering } from '../../stores/mastering.store'
+import { renderMix } from '../../audio/engine'
 import React, { useEffect, useRef, useState } from 'react'
 import { newProject, openProject, recentProjects, saveProject, saveProjectAs } from '../../project/io'
 import { useProjectStore } from '../../stores/project.store'
@@ -56,6 +58,11 @@ export function FileMenu(): React.ReactElement {
           <Item label="Save as…" keys="Ctrl+Shift+S" onClick={() => run(() => saveProjectAs(name))} />
           <Sep />
           <Item label="Export audio (WAV / MP3)…" onClick={() => { setOpen(false); setExporting(true) }} />
+          <Item label="Send song to Mastering" onClick={() => run(async () => {
+            const mix = await renderMix({ bits: 24, normalize: false })
+            const path = await window.api.files.saveTemp(mix.wav, `${(name || 'song').replace(/[^\w.-]+/g, '_')}-mix-${Date.now()}.wav`)
+            sendToMastering(path, name || 'Studio mix')
+          })} />
           <Item label="Library" onClick={() => { setOpen(false); setActiveView('library') }} />
         </div>
       )}

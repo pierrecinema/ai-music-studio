@@ -6,6 +6,7 @@ import type { Note, Track } from '../types'
 import { markStep, redo, undo } from './history'
 import { isPlaying, pause, play, stop } from '../audio/engine'
 import { startAnyRecording } from '../audio/midiRecord'
+import { masterPlayer } from '../audio/master/player'
 import { newProject, openProject, saveProject, saveProjectAs } from '../project/io'
 import { narrowerGrid, nudgeStep, tripletToggle, widerGrid } from '../edit/grid'
 import { openQuantizeDialog, quantizeSelection } from '../edit/quantize'
@@ -119,7 +120,11 @@ const HANDLERS: Record<string, () => void> = {
   'note.up': () => transpose(1),
   'note.down': () => transpose(-1),
 
-  'transport.playStop': () => { if (isPlaying()) pause(); else void play() },
+  'transport.playStop': () => {
+    if (useUIStore.getState().activeView === 'mastering') { if (masterPlayer.playing) masterPlayer.pause(); else { if (isPlaying()) pause(); void masterPlayer.play() } return }
+    if (masterPlayer.playing) masterPlayer.pause()
+    if (isPlaying()) pause(); else void play()
+  },
   'transport.play': () => { void play() },
   'transport.stop': () => pause(),
   'transport.toStart': () => stop(),

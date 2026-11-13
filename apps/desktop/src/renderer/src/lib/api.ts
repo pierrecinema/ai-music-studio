@@ -252,6 +252,11 @@ export const api = {
   mastering: {
     master: (body: { targetPath: string; referencePath: string; bitDepth: 16 | 24 }) =>
       post<{ audioFile: string }>('/mastering/master', body),
+    export: (body: {
+      source: string; folder: string; name: string; dither: boolean; cover?: string | null
+      meta: Record<string, string>
+      outputs: Array<{ format: string; bits?: number; sampleRate?: number | null; kbps?: number; vbr?: boolean }>
+    }) => post<{ results: Array<{ format: string; path?: string; error?: string; warning?: string }> }>('/mastering/export', body),
   },
 
   karaoke: {

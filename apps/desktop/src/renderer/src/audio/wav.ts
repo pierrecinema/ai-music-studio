@@ -40,3 +40,22 @@ export function encodeWav(buf: AudioBuffer, bits: 16 | 24 = 16, gain = 1): Uint8
   }
   return new Uint8Array(out)
 }
+
+/** 32-bit float WAV (no clipping, no rounding): the mastered song on its way to the backend's format writer. */
+export function encodeWavFloat(buf: AudioBuffer): Uint8Array {
+  const ch = Math.min(2, buf.numberOfChannels)
+  const frames = buf.length
+  const dataSize = frames * ch * 4
+  const out = new ArrayBuffer(44 + dataSize)
+  const v = new DataView(out)
+  const str = (o: number, s: string): void => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)) }
+  str(0, 'RIFF'); v.setUint32(4, 36 + dataSize, true); str(8, 'WAVE')
+  str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 3, true); v.setUint16(22, ch, true)
+  v.setUint32(24, buf.sampleRate, true); v.setUint32(28, buf.sampleRate * ch * 4, true)
+  v.setUint16(32, ch * 4, true); v.setUint16(34, 32, true)
+  str(36, 'data'); v.setUint32(40, dataSize, true)
+  const data = Array.from({ length: ch }, (_, c) => buf.getChannelData(c))
+  const f = new Float32Array(out, 44)
+  for (let i = 0, o = 0; i < frames; i++) for (let c = 0; c < ch; c++) f[o++] = data[c][i]
+  return new Uint8Array(out)
+}

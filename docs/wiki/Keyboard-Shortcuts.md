@@ -6,7 +6,7 @@ Choose the layout in [[Settings]] → Shortcuts: **Ableton Live 12** or **Cubase
 
 | Action | Ableton Live 12 | Cubase |
 |---|---|---|
-| Play / pause | Space | Space |
+| Play / pause (on the Mastering page: the song there) | Space | Space |
 | Play (continue) | Shift+Space | NumEnter |
 | Stop | – | Num0 |
 | Stop and return to start | Home | Num. |

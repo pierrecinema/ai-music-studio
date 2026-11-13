@@ -3,6 +3,26 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.30.0
+
+**Mastering, rebuilt.** The Mastering page is now a full mastering workspace:
+
+- **Open a song** by dragging it in from the Explorer, with *Open…*, or with one click from the Library, Create music
+  and the Studio (*File → Send song to Mastering*). Several songs as tabs, recent files.
+- **Listen and compare:** play, click in the waveform to jump, drag to loop a region, zoom. **A/B** switches between
+  the master and the original, played at the same loudness so you judge the sound, not the volume.
+- **Built-in chain:** equalizer (with its curve over the live spectrum), compressor, three-band multiband compressor,
+  stereo width and mono bass, and a **true-peak limiter** (4x oversampled, look-ahead) with a **Louder** control.
+  Slots can be switched off, moved, added and removed; built-in and your own presets.
+- **Loudness targets:** Streaming −14, Apple −16, Loud −9, Broadcast −23, Podcast −16 LUFS: *Reach* sets the song to it.
+- **Meters, before → after:** integrated loudness (ITU-R BS.1770 / EBU R128), true peak, sample peak, loudness range,
+  RMS, crest factor, clipping; live momentary / short-term loudness, true peak, gain reduction, stereo correlation,
+  goniometer, spectrum and loudness over time.
+- **Export:** WAV, AIFF, FLAC, ALAC, MP3, AAC, OGG and Opus, several at once; 44.1 to 96 kHz, 16 / 24 / 32-bit with
+  dither; title, artist, album, year, ISRC, comment and cover picture; presets for streaming, CD, Bandcamp, hi-res,
+  YouTube and more. What you hear while playing is exactly what is written to the file.
+- The reference match (Matchering) is still there and opens its result as a new tab.
+
 ## 0.20.7
 
 - **Voice previews take about half the time:** *Preview voices* now makes three takes of 10 seconds (before 20) with your first two lines. On the processor most of the time goes into turning each take into audio (the bar stands at 80 %), and that time halves with the length.

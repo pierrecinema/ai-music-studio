@@ -93,6 +93,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
 
+### New in 0.20.3
+
+- **Fix: the AI chat with Gemini stopped with "Error code: 400" when it made a song.** Gemini 3 attaches a signature to every tool call and needs it back in the next step; the app dropped it. The tool call now goes back exactly as Gemini sent it. If a song has already started when an error comes, the chat still shows it with its progress, and errors show the provider's own reason instead of only the code.
+
 ### New in 0.20.2
 
 - **Updates:** new versions are published by themselves as soon as they are ready. The app looks for one when it starts and then once a day (before: every 4 hours), so testers are not asked too often; Settings → Updates → *Check for updates* finds a new version at once.

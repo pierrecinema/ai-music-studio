@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.20.3
+
+- **Fix: the AI chat with Gemini stopped with "Error code: 400" when it made a song.** Gemini 3 attaches a signature to every tool call and needs it back in the next step; the app dropped it. The tool call now goes back exactly as Gemini sent it. If a song has already started when an error comes, the chat still shows it with its progress, and errors show the provider's own reason instead of only the code.
+
 ## 0.20.2
 
 - **Updates:** new versions are published by themselves as soon as they are ready. The app looks for one when it starts and then once a day (before: every 4 hours), so testers are not asked too often; Settings → Updates → *Check for updates* finds a new version at once.

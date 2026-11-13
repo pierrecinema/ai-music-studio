@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.30.3
+
+- **Mastering, Before / After also switches the controls:** in "Before" every control of the chain jumps to its starting value (read-only, grey) and the EQ curve goes flat; in "After" your settings come back and every control you moved is marked purple with a dot. So you see at a glance what you changed.
+
 ## 0.30.2
 
 - **Mastering, Before / After shows the side you hear:** the waveform, the numbers (large and bright), the spectrum and the loudness curve switch to the original or the master, so you see what the chain changed.

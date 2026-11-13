@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.20.1
+
+- **The AI chat can use the app:** with every provider (Claude, ChatGPT, Gemini, Grok, Ollama and local servers that support tools) the assistant can now **make a song itself** ("make me an afro house track with female vocals"), check how far it is, list LoRAs, split stems, master a track, suggest chords and read the system info: the same tools the app offers over MCP. A song it starts shows its progress in the chat and, when ready, can go to the Studio with one click; it is saved in the Library. It uses the music model chosen in Create music.
+- **Gemini 3.5:** the model list now offers Gemini 3.5 Flash and Pro; the older models Google switched off are replaced on start. **Fix:** the Gemini key and the local server address were not saved and were gone after a restart.
+- **Fix: exports at 44.1 kHz.** ACE-Step 1.5 makes songs at 48 kHz, and *Export…* in the Library and the Stem Splitter kept that rate, so a platform rejected the file. Exports now use the rate from **Settings → Audio** (44.1 kHz unless changed; the setting did nothing before), converted in high quality; the export dialog shows the rate and can keep the file's own. File → Export audio uses the same setting.
+
 ## 0.20.0
 
 - **Studio: automation in its own lanes.** The A button (or right-click → Show automation) opens **volume and pan as two lanes** below the track; each lane can be made small (▸ / ▾), switched to another value or closed, and more lanes (sends) can be added with +.

@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { apiKeyFor, PROVIDER_LABEL, useAIStore } from '../../stores/ai.store'
 import { useProjectStore } from '../../stores/project.store'
 import { api } from '../../lib/api'
+import { useMusicJob } from '../../stores/musicJob.store'
+import { useUIStore } from '../../stores/ui.store'
+import { importAudioFiles } from '../timeline/Timeline'
 
 interface AIChatProps {
   compact?: boolean
@@ -13,6 +16,9 @@ export function AIChat({ compact = false }: AIChatProps): React.ReactElement {
   const { provider, messages, isThinking, addMessage, setThinking, model } = useAIStore()
   const { project } = useProjectStore()
   const [input, setInput] = useState('')
+  const [chatJob, setChatJob] = useState<string | null>(null)
+  const job = useMusicJob((s) => s.job)
+  const shownJob = job && job.id === chatJob ? job : null
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -30,15 +36,20 @@ export function AIChat({ compact = false }: AIChatProps): React.ReactElement {
     setThinking(true)
     try {
       const apiKey = apiKeyFor(useAIStore.getState())
-      const reply = await api.ai.chat({
+      let musicEngine = ''
+      try { musicEngine = localStorage.getItem('ams-last-engine') ?? '' } catch { /* no storage */ }
+      const r = await api.ai.chat({
         provider,
         apiKey,
         model,
         messages: [...messages.map(m => ({ role: m.role, content: m.content })), { role: 'user', content: text }],
         systemContext: projectContext,
-        baseUrl: useAIStore.getState().localUrl
+        baseUrl: useAIStore.getState().localUrl,
+        musicEngine
       })
-      addMessage({ role: 'assistant', content: reply })
+      addMessage({ role: 'assistant', content: r.reply || '…' })
+      // a song the AI started: its progress shows here and in the status bar, like one from Create music
+      if (r.jobs.length) { setChatJob(r.jobs[r.jobs.length - 1]); useMusicJob.getState().track(r.jobs[r.jobs.length - 1]) }
     } catch (err: any) {
       addMessage({ role: 'assistant', content: `Error: ${err.message ?? 'Unknown error'}` })
     } finally {
@@ -131,6 +142,24 @@ export function AIChat({ compact = false }: AIChatProps): React.ReactElement {
                 animation: `pulse 1s ${i * 0.2}s infinite`
               }} />
             ))}
+          </div>
+        )}
+        {shownJob && (
+          // a song the AI is making: progress, then into the Studio or the Library
+          <div style={{ margin: '4px 0', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border-mid)', background: 'var(--bg-primary)', fontSize: 12, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span>🎵 {shownJob.status === 'done' ? `Ready: ${shownJob.results.length} song(s) in the Library`
+              : shownJob.status === 'error' ? `The song could not be made: ${shownJob.error ?? ''}`
+              : shownJob.status === 'cancelled' ? 'Cancelled'
+              : `Making the song… ${shownJob.stage_text ?? ''}${shownJob.step && shownJob.step_total ? ` ${Math.round((shownJob.step / shownJob.step_total) * 100)} %` : ''}`}</span>
+            {shownJob.status === 'done' && shownJob.results.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <button className="btn btn-primary" style={{ fontSize: 11 }} onClick={() => void (async () => {
+                  for (const res of shownJob.results) await importAudioFiles([res.audio_file], { startBeat: 0 })
+                  useUIStore.getState().setActiveView('timeline')
+                })()}>Add to the Studio</button>
+                <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => useUIStore.getState().setActiveView('library')}>Open Library</button>
+              </div>
+            )}
           </div>
         )}
         <div ref={bottomRef} />

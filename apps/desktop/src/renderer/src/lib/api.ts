@@ -181,7 +181,10 @@ export const api = {
       messages: Array<{ role: 'user' | 'assistant'; content: string }>
       systemContext: string
       baseUrl?: string               // provider 'local': the address of the server on this PC
-    }) => post<string>('/ai/chat', body),
+      musicEngine?: string           // the music model of Create music: used when the AI makes a song
+      tools?: boolean                // let the AI use the app (make songs, ...); default on
+    }) => post<{ reply: string; jobs: string[] } | string>('/ai/chat', body)
+      .then((r) => (typeof r === 'string' ? { reply: r, jobs: [] as string[] } : r)),
 
     generateChords: (body: { key: string; mode: string; bars: number; style: string }) =>
       post<{ chords: string[]; notes: unknown[] }>('/ai/generate-chords', body),

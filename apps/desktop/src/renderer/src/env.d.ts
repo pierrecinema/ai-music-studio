@@ -86,6 +86,7 @@ declare global {
       dialog: {
         openAudio: () => Promise<string[]>
         openVideo: () => Promise<string | null>
+        openImage: () => Promise<string | null>
         pickFolder: (title?: string) => Promise<string | null>
         save: (name: string) => Promise<string | null>
       }
@@ -103,6 +104,7 @@ declare global {
       files: {
         exists: (paths: string[]) => Promise<boolean[]>
         saveRecording: (bytes: Uint8Array) => Promise<string>
+        saveTemp: (bytes: Uint8Array, name: string) => Promise<string>
         showItem: (path: string) => Promise<void>
       }
       exporter: {

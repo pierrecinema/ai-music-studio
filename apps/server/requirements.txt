@@ -20,6 +20,7 @@ psutil>=5.9.8
 
 # Mastering / lyric timing / karaoke (ffmpeg must be on PATH for video export)
 matchering>=2.0.6
+imageio-ffmpeg>=0.5.1
 faster-whisper>=1.0.3
 
 # Full-song generation (ACE-Step, runs in ~8 GB VRAM with CPU offload):

@@ -13,6 +13,7 @@ Songs and loops from [[Create Music]] and files you added.
 | **Rename** (or double-click the name) | renames it |
 | **Tags** | genre, mood or anything to search for (commas between tags) |
 | **Add to project** | puts it into the [[Studio]], always on a **new audio track** (at bar 1, or at the playhead) |
+| **Mastering** | opens the song in [[Mastering]] |
 | **Export…** | saves a copy as WAV 16/24/32 bit, AIFF, FLAC or MP3 in a folder you choose |
 | **Show file** / **Open folder** | opens Windows Explorer there |
 | **Start on beat 1** / **Restore original** | cuts the lead-in of an older song so it starts on beat 1; the original is kept and can be restored |

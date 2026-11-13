@@ -4,7 +4,7 @@ The bar across the top of the window, visible in every menu.
 
 | Element | What it does |
 |---|---|
-| **File ▾** | **New project**, **Open…**, **Recent** (last projects), **Save** / **Save as…** (`.ams` project file), **Export audio (WAV / MP3)…** (mixes the whole song as you hear it, WAV 16/24 bit or MP3, optional normalising to −1 dBFS), **Library** |
+| **File ▾** | **New project**, **Open…**, **Recent** (last projects), **Save** / **Save as…** (`.ams` project file), **Export audio (WAV / MP3)…** (mixes the whole song as you hear it, WAV 16/24 bit or MP3, optional normalising to −1 dBFS), **Send song to Mastering** (renders the mix and opens it in [[Mastering]]), **Library** |
 | **↶ / ↷** | Undo / redo every change to the project (tracks, clips, notes, tempo). Ctrl+Z / Ctrl+Y (Cubase: Ctrl+Shift+Z) |
 | **■ Stop** | Stops; pressed again, back to the start |
 | **▶ Play / ❚❚ Pause** | Plays from the playhead (Space) |

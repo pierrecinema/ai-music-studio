@@ -47,7 +47,7 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 | **Create loop** | Exactly 1–16 bars, starts on beat 1, repeats seamlessly, named with tempo and bars | own loop cutter on the beat grid |
 | **Stem Splitter** | Vocals, drums, bass, piano, guitar and more; a stem mixer (solo, mute, volume) with remix export, e.g. karaoke without vocals; saved to the Library and exported for any DAW | Meta Demucs (htdemucs_ft) |
 | **Audio → MIDI** | The melody of a stem as notes on a MIDI track, opened in the Piano Roll | Spotify basic-pitch |
-| **Mastering** | Matches your mix to a reference track | Matchering |
+| **Mastering** | Full mastering workspace: EQ, compressor, multiband, stereo, true-peak limiter to a loudness target, LUFS / true peak / spectrum / goniometer before and after, export in 8 formats with metadata; reference match | own DSP (Web Audio worklets), Matchering, ffmpeg |
 | **Library** | Songs, loops, stems and samples with tempo and tags; search by name, tag or BPM; export as WAV, AIFF, FLAC or MP3 | |
 | **AI Chat** | Music assistant for chords, lyrics and ideas | Claude, ChatGPT, Grok, or free and local with Ollama |
 | **Hardware** | Runs on the CPU; faster on NVIDIA (CUDA) and AMD / Intel graphics cards (DirectML) | PyTorch |
@@ -81,7 +81,7 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 |---|---|
 | <img src="docs/screenshots/piano-roll.png" alt="Piano Roll" width="100%"><br>**Piano Roll** – draw, move and quantize MIDI notes | <img src="docs/screenshots/mixer.png" alt="Mixer" width="100%"><br>**Mixer** – faders, pan, mute/solo, level meters, master |
 | <img src="docs/screenshots/vocal-editor.png" alt="Vocal Editor" width="100%"><br>**Vocal Editor** – voices and lyrics for AI singing (in development) | <img src="docs/screenshots/instruments.png" alt="AI Instruments" width="100%"><br>**AI Instruments** – instruments for MIDI tracks (in development) |
-| <img src="docs/screenshots/stem-splitter.png" alt="Stem Splitter" width="100%"><br>**Stem Splitter** – vocals, drums, bass and more with Demucs | <img src="docs/screenshots/mastering.png" alt="Mastering" width="100%"><br>**Mastering** – match a mix to a reference track |
+| <img src="docs/screenshots/stem-splitter.png" alt="Stem Splitter" width="100%"><br>**Stem Splitter** – vocals, drums, bass and more with Demucs | <img src="docs/screenshots/mastering.png" alt="Mastering" width="100%"><br>**Mastering** – chain, loudness target, meters before and after, export in every format |
 | <img src="docs/screenshots/karaoke.png" alt="Karaoke Export" width="100%"><br>**Karaoke Export** – word timing, .lrc and lyric videos | <img src="docs/screenshots/video-composer.png" alt="Video Composer" width="100%"><br>**Video Composer** – music that follows the cuts of a video |
 | <img src="docs/screenshots/ai-chat.png" alt="AI Chat" width="100%"><br>**AI Chat** – Claude or ChatGPT as a music assistant (your own API key) | <img src="docs/screenshots/settings-ai-engines.png" alt="Settings → AI Engines" width="100%"><br>**Settings → AI Engines** – install the local AI models with one click |
 | <img src="docs/screenshots/settings-hardware.png" alt="Settings → Hardware" width="100%"><br>**Settings → Hardware** – what this PC can run, and how fast | <img src="docs/screenshots/settings-models.png" alt="Settings → Models" width="100%"><br>**Settings → Models** – downloaded models, sizes and the models folder |
@@ -92,6 +92,26 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 **Beta testers wanted** ([guide, German](docs/BETA.md)): we are looking for testers, especially with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 
 All changes of every version: [CHANGELOG.md](CHANGELOG.md)
+
+### New in 0.30.0
+
+**Mastering, rebuilt.** The Mastering page is now a full mastering workspace:
+
+- **Open a song** by dragging it in from the Explorer, with *Open…*, or with one click from the Library, Create music
+  and the Studio (*File → Send song to Mastering*). Several songs as tabs, recent files.
+- **Listen and compare:** play, click in the waveform to jump, drag to loop a region, zoom. **A/B** switches between
+  the master and the original, played at the same loudness so you judge the sound, not the volume.
+- **Built-in chain:** equalizer (with its curve over the live spectrum), compressor, three-band multiband compressor,
+  stereo width and mono bass, and a **true-peak limiter** (4x oversampled, look-ahead) with a **Louder** control.
+  Slots can be switched off, moved, added and removed; built-in and your own presets.
+- **Loudness targets:** Streaming −14, Apple −16, Loud −9, Broadcast −23, Podcast −16 LUFS: *Reach* sets the song to it.
+- **Meters, before → after:** integrated loudness (ITU-R BS.1770 / EBU R128), true peak, sample peak, loudness range,
+  RMS, crest factor, clipping; live momentary / short-term loudness, true peak, gain reduction, stereo correlation,
+  goniometer, spectrum and loudness over time.
+- **Export:** WAV, AIFF, FLAC, ALAC, MP3, AAC, OGG and Opus, several at once; 44.1 to 96 kHz, 16 / 24 / 32-bit with
+  dither; title, artist, album, year, ISRC, comment and cover picture; presets for streaming, CD, Bandcamp, hi-res,
+  YouTube and more. What you hear while playing is exactly what is written to the file.
+- The reference match (Matchering) is still there and opens its result as a new tab.
 
 ### New in 0.20.7
 

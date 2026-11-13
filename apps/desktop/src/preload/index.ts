@@ -55,6 +55,7 @@ const api = {
   dialog: {
     openAudio: () => ipcRenderer.invoke('dialog:open-audio'),
     openVideo: () => ipcRenderer.invoke('dialog:open-video'),
+    openImage: () => ipcRenderer.invoke('dialog:open-image'),
     pickFolder: (title?: string) => ipcRenderer.invoke('dialog:pick-folder', title),
     save: (name: string) => ipcRenderer.invoke('dialog:save', name)
   },
@@ -77,6 +78,7 @@ const api = {
   files: {
     exists: (paths: string[]) => ipcRenderer.invoke('files:exists', paths),
     saveRecording: (bytes: Uint8Array) => ipcRenderer.invoke('files:save-recording', bytes),
+    saveTemp: (bytes: Uint8Array, name: string) => ipcRenderer.invoke('files:save-temp', bytes, name),
     showItem: (path: string) => ipcRenderer.invoke('files:show-item', path)
   },
   exporter: {

@@ -24,7 +24,7 @@ The menu on the left of the app, from top to bottom:
 | 🎻 AI Instruments | [[Coming Soon]] |
 | 🎚 [[Mixer]] | Faders, pan, mute, solo, level meters, returns and groups |
 | ✂ [[Stem Splitter]] | Vocals, drums, bass and more; stem mixer, karaoke remix, Audio → MIDI |
-| ◎ [[Mastering]] | Match your mix to a reference track |
+| ◎ [[Mastering]] | Master a song: EQ, compressor, multiband, stereo, limiter to a loudness target, every meter, export in all formats |
 | 🎙 Karaoke Export | [[Coming Soon]] |
 | 🎬 Video Composer | [[Coming Soon]] |
 | 💬 [[AI Chat]] | Music assistant: Claude, ChatGPT, Grok or free and local with Ollama |

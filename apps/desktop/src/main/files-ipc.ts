@@ -121,6 +121,14 @@ export function registerFileHandlers(): void {
     writeFileSync(path, Buffer.from(bytes))
     return path
   })
+  // a rendered file for the backend (the mastered song before it is written in the chosen formats)
+  ipcMain.handle('files:save-temp', (_, bytes: Uint8Array, name: string) => {
+    const dir = join(app.getPath('userData'), 'mastering')
+    mkdirSync(dir, { recursive: true })
+    const path = join(dir, basename(name).replace(/[^\w.-]+/g, '_'))
+    writeFileSync(path, Buffer.from(bytes))
+    return path
+  })
   ipcMain.handle('files:show-item', (_, path: string) => { shell.showItemInFolder(path) })
 
   // ── export ──────────────────────────────────────────────────────────────────

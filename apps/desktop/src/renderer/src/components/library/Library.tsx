@@ -1,3 +1,4 @@
+import { sendToMastering } from '../../stores/mastering.store'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type LibraryTrack } from '../../lib/api'
 import { useProjectStore } from '../../stores/project.store'
@@ -245,6 +246,7 @@ export function Library(): React.ReactElement {
           <button className="btn btn-ghost" style={{ fontSize: 16, color: t.favorite ? 'var(--yellow)' : 'var(--text-muted)' }} title="Favourite"
             onClick={() => void act(() => api.library.patch(t.id, { favorite: !t.favorite }))}>{t.favorite ? '★' : '☆'}</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} onClick={() => void toProject(t)}>Add to project</button>
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} title="Open this song in Mastering" onClick={() => sendToMastering(t.path, t.title)}>Mastering</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} title="Save a copy as WAV, AIFF, FLAC or MP3"
             onClick={() => setExporting({ title: `"${t.title}"`, items: [{ path: t.path, name: t.title }] })}>Export…</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} onClick={() => void window.api.files.showItem(t.path)}>Show file</button>

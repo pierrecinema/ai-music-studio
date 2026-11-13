@@ -11,6 +11,7 @@ import { matchesQuery } from '../src/renderer/src/lib/librarySearch'
 import type { LibraryTrack } from '../src/renderer/src/lib/api'
 import { alignStarts, leadBeats, phaseAlign } from '../src/renderer/src/beatmatch/store'
 import { autoStructure } from '../src/renderer/src/lib/lyrics'
+import { analyze, BiquadBank, CompressorCore, crossover, LimiterCore, MultibandCore, truePeakTaps } from '../src/renderer/src/audio/master/dsp'
 
 let failed = 0
 let passed = 0
@@ -176,6 +177,40 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   const b = autoStructure('l1\nl2\nl3\nl4\nl5\nl6')
   check('one long block is cut into stanzas of four', b === '[Verse]\nl1\nl2\nl3\nl4\n\n[Chorus]\nl5\nl6', b)
   check('lyrics with sections stay as they are', autoStructure('[Intro]\nhey') === '[Intro]\nhey')
+}
+
+// mastering: loudness after ITU-R BS.1770, true peak, limiter ceiling, multiband sums flat
+{
+  const sr = 48000, n = sr * 6
+  const sine = (f: number, a: number, ph = 0): Float32Array => { const d = new Float32Array(n); for (let i = 0; i < n; i++) d[i] = a * Math.sin(2 * Math.PI * f * i / sr + ph); return d }
+  const full = analyze([sine(997, 1), sine(997, 1)], sr)
+  check('997 Hz at 0 dBFS in both channels is 0.0 LUFS', Math.abs(full.integrated) < 0.05, full.integrated.toFixed(3))
+  const one = analyze([sine(997, 1), new Float32Array(n)], sr)
+  check('one channel only is -3.01 LUFS', Math.abs(one.integrated + 3.01) < 0.05, one.integrated.toFixed(3))
+  const q = analyze([sine(sr / 4, 1, Math.PI / 4), sine(sr / 4, 1, Math.PI / 4)], sr)
+  check('true peak finds the peak between samples', Math.abs(q.samplePeak + 3.01) < 0.05 && q.truePeak > -0.3, `${q.samplePeak.toFixed(2)} / ${q.truePeak.toFixed(2)}`)
+  const x = sine(100, 0.9), y = sine(3000, 0.9)
+  for (let i = 0; i < n; i++) { const r = Math.sin(i * 12.9898) * 43758.5453; const v = (r - Math.floor(r) - 0.5) * 0.6; x[i] += v; y[i] -= v }
+  const lim = new LimiterCore({ sr, channels: 2, tp: truePeakTaps() })
+  lim.set({ gainDb: 12, ceilingDb: -1 })
+  const o = [new Float32Array(n), new Float32Array(n)]
+  for (let i = 0; i < n; i += 128) lim.process([x.subarray(i, i + 128), y.subarray(i, i + 128)], [o[0].subarray(i, i + 128), o[1].subarray(i, i + 128)], 128)
+  const l = analyze(o, sr)
+  check('limiter keeps the true peak at the ceiling', l.truePeak <= -0.95, l.truePeak.toFixed(2))
+  const c = new CompressorCore({ sr, channels: 1 })
+  c.set({ thresholdDb: -20, ratio: 4, kneeDb: 0 })
+  check('compressor 4:1 above -20 dB: 12 dB over gives 9 dB less', Math.abs(c.curve(-8) + 9) < 1e-9, String(c.curve(-8)))
+  const mb = new MultibandCore({ sr, channels: 1, Comp: CompressorCore, Bank: BiquadBank, xo: [crossover(sr, 200), crossover(sr, 3000)].map((z) => [z.low, z.high]) })
+  for (let b = 0; b < 3; b++) mb.set(b, { thresholdDb: 0, ratio: 1 })
+  let worst = 0
+  for (const f of [60, 200, 1000, 2950, 9000]) {
+    const s = sine(f, 0.5), out = new Float32Array(n)
+    for (let i = 0; i < n; i += 128) mb.process([s.subarray(i, i + 128)], [out.subarray(i, i + 128)], 128)
+    let e = 0, ei = 0
+    for (let i = n / 2; i < n; i++) { e += out[i] * out[i]; ei += s[i] * s[i] }
+    worst = Math.max(worst, Math.abs(10 * Math.log10(e / ei)))
+  }
+  check('multiband with no compression sums flat (±0.05 dB)', worst < 0.05, worst.toFixed(3))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

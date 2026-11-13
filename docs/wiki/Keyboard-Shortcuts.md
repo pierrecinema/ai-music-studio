@@ -93,6 +93,5 @@ Choose the layout in [[Settings]] → Shortcuts: **Ableton Live 12** or **Cubase
 
 | Action | Ableton Live 12 | Cubase |
 |---|---|---|
-| Winamp mode | Ctrl+M | Ctrl+M |
 
 *This table is generated from the app's shortcut list.*

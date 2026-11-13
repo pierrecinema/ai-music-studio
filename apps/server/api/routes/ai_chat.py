@@ -68,7 +68,10 @@ async def chat(req: ChatRequest):
                     raise
         return {"reply": text, "jobs": ctx["jobs"]}
     except Exception as e:
-        msg = str(e)
+        msg = _provider_error(e)
+        if ctx["jobs"]:                      # a song was started before the error: the app still shows it
+            return {"reply": f"The song has started (it shows below and lands in the Library). The AI could not finish its answer: {msg}",
+                    "jobs": ctx["jobs"]}
         if req.provider == "local" and ("Connection" in type(e).__name__ or "connect" in msg.lower()):
             msg = (f"No server answers at {req.baseUrl or LOCAL_URL}. Start the server in LM Studio (Developer → Start "
                    "Server) or start KoboldCpp, load a model, and check the address in Settings → AI.")
@@ -77,6 +80,19 @@ async def chat(req: ChatRequest):
         elif req.provider == "ollama" and "not found" in msg.lower():
             msg = f"The model '{req.model}' is not on this PC yet. Open a command prompt and run: ollama pull {req.model}"
         raise HTTPException(500, msg)
+
+
+def _provider_error(e: Exception) -> str:
+    """The provider's own message (e.g. Google's reason for a 400) instead of only "Error code: 400"."""
+    body = getattr(e, "body", None)
+    detail = ""
+    if isinstance(body, dict):
+        err = body.get("error", body)
+        detail = err.get("message") if isinstance(err, dict) else str(err)
+    elif isinstance(body, list) and body and isinstance(body[0], dict):
+        detail = str(body[0].get("error", {}).get("message", body[0]))
+    base = str(e).split(" - ")[0]
+    return f"{base}: {detail}" if detail and detail not in base else str(e)
 
 
 XAI_URL = "https://api.x.ai/v1"
@@ -179,8 +195,12 @@ async def _openai_chat(api_key: str, model: str, messages: list[Message], system
         calls = getattr(msg, "tool_calls", None) or []
         if not calls or ctx is None:
             return msg.content or ""
-        msgs.append({"role": "assistant", "content": msg.content or "",
-                     "tool_calls": [{"id": c.id, "type": "function", "function": {"name": c.function.name, "arguments": c.function.arguments or "{}"}} for c in calls]})
+        # the assistant turn goes back exactly as it came, extra fields included: Gemini 3 attaches a "thought
+        # signature" to every tool call (extra_content.google.thought_signature) and answers 400 Bad Request when
+        # it is missing in the next request
+        turn = msg.model_dump(exclude_none=True)
+        turn["role"] = "assistant"
+        msgs.append(turn)
         for c in calls:
             try:
                 args = json.loads(c.function.arguments or "{}")

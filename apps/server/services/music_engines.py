@@ -376,10 +376,13 @@ def ace15_repo() -> str | None:
     return p if p and os.path.exists(os.path.join(p, "acestep", "inference.py")) else None
 
 
-def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_proc=None, log=print, on_warning=None) -> float:
+def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_proc=None, log=print, on_warning=None,
+                   more: list[dict] | None = None, on_done=None) -> float:
     """Run ACE-Step 1.5 (services/ace15_worker.py) in its own environment. Returns the song length in seconds.
 
-    `song`: caption, lyrics, instrumental, seconds, bpm, key, time_signature, language, seed."""
+    `song`: caption, lyrics, instrumental, seconds, bpm, key, time_signature, language, seed.
+    `more`: further takes [{"seed", "out"}] made in the same run (the model is loaded once); `on_done(index, seconds)`
+    is called as each take is ready (index 0 = `wav_path`)."""
     import json
     import subprocess
     import tempfile
@@ -388,7 +391,7 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
     if not py or not repo:
         raise RuntimeError("ACE-Step 1.5 is not installed. Open Settings → AI Engines, tick ACE-Step 1.5 and press Install selected.")
     lang = (song.get("language") or "").strip().lower()
-    req = dict(song, out=wav_path, repo=repo, checkpoints=os.environ.get("AMS_ACE15_CKPT", ""),
+    req = dict(song, out=wav_path, more=more or [], repo=repo, checkpoints=os.environ.get("AMS_ACE15_CKPT", ""),
                language=LANG_CODES.get(lang, lang[:2] if len(lang) == 2 else "unknown"))
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
         json.dump(req, f)
@@ -428,7 +431,11 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
                     on_warning(str(m["warning"]))
                 log("[ACE-Step 1.5] " + str(m["warning"]))
             elif m.get("done"):
-                seconds_out = float(m["seconds"])
+                secs = float(m["seconds"])
+                if int(m.get("index", 0)) == 0:
+                    seconds_out = secs
+                if on_done:
+                    on_done(int(m.get("index", 0)), secs)
             elif m.get("stage") and on_stage:
                 on_stage(m["stage"], m.get("text", ""))
             elif m.get("step") is not None:
@@ -448,7 +455,7 @@ def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_pr
         os.unlink(req_path)
     except OSError:
         pass
-    if seconds_out is None:
+    if seconds_out is None or error:
         text = error or ("ACE-Step 1.5 stopped (exit code %s): %s" % (code, " | ".join(tail[-3:])))
         raise RuntimeError(explain_memory_error(text))
     return seconds_out

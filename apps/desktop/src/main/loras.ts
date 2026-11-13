@@ -1,4 +1,4 @@
-import { cpSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
+import { closeSync, cpSync, copyFileSync, existsSync, openSync, readSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
 import { homedir } from 'os'
 import { basename, extname, join, resolve, sep } from 'path'
 
@@ -24,7 +24,25 @@ export interface LoraEntry {
 // "v1" = ACE-Step v1: weights without adapter_config.json
 export type LoraFamily = 'v1' | '1.5' | 'xl' | 'unknown'
 
-const hasAdapterConfig = (dir: string, depth = 2): boolean => {
+// a LoKr adapter for ACE-Step 1.5 is one .safetensors file with "lokr_config" in its header metadata
+const isLokr = (file: string): boolean => {
+  if (extname(file).toLowerCase() !== '.safetensors') return false
+  try {
+    const fd = openSync(file, 'r')
+    try {
+      const len = Buffer.alloc(8)
+      readSync(fd, len, 0, 8, 0)
+      const n = Number(len.readBigUInt64LE(0))
+      if (n <= 0 || n > 64 * 1024 * 1024) return false
+      const head = Buffer.alloc(n)
+      readSync(fd, head, 0, n, 8)
+      const meta = (JSON.parse(head.toString('utf-8')) as { __metadata__?: Record<string, string> }).__metadata__
+      return !!meta?.lokr_config
+    } finally { closeSync(fd) }
+  } catch { return false }
+}
+
+const hasAdapterConfig = (dir: string, depth = 4): boolean => {
   try {
     if (existsSync(join(dir, 'adapter_config.json'))) return true
     if (depth <= 0) return false
@@ -37,8 +55,11 @@ export function loraFamily(path: string, name: string): LoraFamily {
   try {
     if (statSync(path).isDirectory()) {
       if (hasAdapterConfig(path)) return '1.5'
-      return readdirSync(path).some((n) => EXTS.has(extname(n).toLowerCase())) ? 'v1' : 'unknown'
+      const files = readdirSync(path).filter((n) => EXTS.has(extname(n).toLowerCase()))
+      if (files.some((n) => isLokr(join(path, n)))) return '1.5'
+      return files.length ? 'v1' : 'unknown'
     }
+    if (isLokr(path)) return '1.5'
     return EXTS.has(extname(path).toLowerCase()) ? 'v1' : 'unknown'
   } catch { return 'unknown' }
 }

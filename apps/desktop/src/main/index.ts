@@ -85,9 +85,14 @@ app.whenReady().then(async () => {
   Menu.setApplicationMenu(null)
   console.log(`[app] application menu removed: ${Menu.getApplicationMenu() === null}`)
 
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
+  // The toolkit's shortcut helper swallows Ctrl+R (and Ctrl+Shift+R) in the installed app to stop a page reload,
+  // so the record and export shortcuts never reached the page. Without the application menu Ctrl+R reloads
+  // nothing anyway: the helper is only used while developing (F12 opens the DevTools there).
+  if (is.dev) {
+    app.on('browser-window-created', (_, window) => {
+      optimizer.watchWindowShortcuts(window)
+    })
+  }
 
   registerIpcHandlers(serverManager)
 

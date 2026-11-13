@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.20.6
+
+- **Fix: Ctrl+R did nothing in the installed app** (Record in the Ableton and Cubase layouts; Ctrl+Shift+R, Export in the Ableton layout, too). A helper meant to stop the page from reloading swallowed the keys before the app saw them; it is now only used during development.
+
 ## 0.20.5
 
 - **Create music: the newest song on top.** When a run makes several songs or versions, the newest is now shown at the top of the results and the first at the bottom (each keeps its take number).

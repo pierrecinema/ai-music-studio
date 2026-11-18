@@ -227,7 +227,8 @@ export async function closeHostDevice(): Promise<void> {
 export async function showHostPanel(): Promise<void> {
   const { host } = await import('./vst/host')
   await host.call('audioPanel', {}, 600000)
-  await openHostDevice()
+  // the driver keeps its device open: only read its (maybe changed) settings. Opening it again failed with ASIO4ALL.
+  try { setHostInfo(await host.call<HostDeviceInfo>('audioInfo')) } catch { /* keeps the old info */ }
 }
 
 export async function hostStats(): Promise<{ underruns: number; dropped: number; fill: number; open: boolean } | null> {

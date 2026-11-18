@@ -18,6 +18,7 @@ public:
     void close();
     bool showPanel();                                           // the driver's own settings window (ASIO)
     juce::var stats();
+    juce::var info();                                           // the open device: rates, buffers, outputs, panel
     // planar float32 from the app (any number of channels, the first two are used)
     void push (const float* planar, int channels, int frames);
     bool isOpen() const { return running.load(); }
@@ -34,4 +35,5 @@ private:
     std::atomic<bool> running { false }, primed { false };
     std::atomic<int> underruns { 0 }, dropped { 0 }, cardBuffer { 0 };
     std::atomic<int> outChannel { 0 };
+    bool initialised = false;
 };

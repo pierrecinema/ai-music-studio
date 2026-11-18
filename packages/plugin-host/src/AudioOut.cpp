@@ -24,8 +24,9 @@ juce::var AudioOut::devices()
 juce::var AudioOut::open (const juce::String& type, const juce::String& device, double rate, int buffer, int firstChannel)
 {
     close();
-    dm.initialise (0, 2, nullptr, false);
-    dm.setCurrentAudioDeviceType (type, true);
+    // once only: initialising again opened the default device of the current type (the ASIO driver) behind our back
+    if (! initialised) { dm.initialise (0, 2, nullptr, false); dm.closeAudioDevice(); initialised = true; }
+    dm.setCurrentAudioDeviceType (type, false);
     auto setup = dm.getAudioDeviceSetup();
     setup.outputDeviceName = device;
     setup.inputDeviceName = {};
@@ -36,10 +37,10 @@ juce::var AudioOut::open (const juce::String& type, const juce::String& device, 
     outChannel = juce::jmax (0, firstChannel);
     setup.outputChannels.setRange (outChannel, 2, true);
     auto err = dm.setAudioDeviceSetup (setup, true);
-    auto* r = new juce::DynamicObject();
     auto* dev = dm.getCurrentAudioDevice();
     if (err.isNotEmpty() || dev == nullptr)
     {
+        auto* r = new juce::DynamicObject();
         r->setProperty ("ok", false);
         r->setProperty ("error", err.isNotEmpty() ? err : juce::String ("The device could not be opened (it may be in use by another program)."));
         return juce::var (r);
@@ -48,6 +49,14 @@ juce::var AudioOut::open (const juce::String& type, const juce::String& device, 
     primed = false;
     underruns = 0; dropped = 0;
     dm.addAudioCallback (this);
+    return info();
+}
+
+juce::var AudioOut::info()
+{
+    auto* r = new juce::DynamicObject();
+    auto* dev = dm.getCurrentAudioDevice();
+    if (dev == nullptr) { r->setProperty ("ok", false); r->setProperty ("error", "no device open"); return juce::var (r); }
     r->setProperty ("ok", true);
     r->setProperty ("type", dm.getCurrentAudioDeviceType());
     r->setProperty ("device", dev->getName());
@@ -68,7 +77,7 @@ juce::var AudioOut::open (const juce::String& type, const juce::String& device, 
 void AudioOut::close()
 {
     dm.removeAudioCallback (this);
-    dm.closeAudioDevice();
+    dm.closeAudioDevice();          // deletes the device: the ASIO driver lets go of the sound card (ASIO4ALL holds it exclusively)
     running = false;
 }
 
@@ -76,10 +85,8 @@ bool AudioOut::showPanel()
 {
     auto* dev = dm.getCurrentAudioDevice();
     if (dev == nullptr || ! dev->hasControlPanel()) return false;
-    dm.removeAudioCallback (this);
-    bool changed = dev->showControlPanel();       // modal; the driver may change its settings
-    if (changed) dm.restartLastAudioDevice();
-    dm.addAudioCallback (this);
+    bool changed = dev->showControlPanel();       // modal; the driver may change its settings (JUCE reopens it then)
+    if (changed && dm.getCurrentAudioDevice() == nullptr) dm.restartLastAudioDevice();
     return true;
 }
 

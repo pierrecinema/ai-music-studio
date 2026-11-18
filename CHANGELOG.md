@@ -3,6 +3,11 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.60.2
+
+- **VST instruments:** right after choosing an instrument, the notes of the Piano Roll sometimes stayed silent until it was switched off and on: opening its window and the first note each loaded their own copy of the plugin, and the notes went to the copy nobody heard. Now only one copy is loaded, and the notes always go to it.
+- **ASIO:** after the **ASIO control panel** the device is no longer opened a second time (with ASIO4ALL that failed with "could not be opened"); the driver's changed settings are just read. Closing the device (back to *Windows*) releases the ASIO driver fully, so the Windows sound works again without restarting the app.
+
 ## 0.60.1
 
 - **Hardware rack look:** the menu is back at the side (as rack keys), which leaves more room for the pages; the effect rack at the right only shows in the Studio, Piano Roll and Mixer.

@@ -211,6 +211,7 @@ juce::var PluginHost::handle (std::shared_ptr<WsConnection>, const juce::var& ms
         return audioOut.open (msg["type"].toString(), msg["device"].toString(), (double) msg["sampleRate"], (int) msg["buffer"], (int) msg["channel"]);
     if (cmd == "audioClose") { audioOut.close(); return okay(); }
     if (cmd == "audioPanel") { bool shown = audioOut.showPanel(); auto r = okay(); r.getDynamicObject()->setProperty ("shown", shown); return r; }
+    if (cmd == "audioInfo") return audioOut.info();
     if (cmd == "audioStats") { auto r = audioOut.stats(); r.getDynamicObject()->setProperty ("ok", true); return r; }
     if (cmd == "stats")
     {

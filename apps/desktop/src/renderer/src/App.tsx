@@ -228,7 +228,7 @@ export default function App(): React.ReactElement {
         </main>
 
         {/* Hardware rack look: the effects of the selected track as rack modules */}
-        {theme === 'rack' && <RackPanel />}
+        {theme === 'rack' && ['timeline', 'piano-roll', 'mixer'].includes(activeView) && <RackPanel />}
 
         {/* AI Chat sidebar */}
         <div className={`ai-chat-sidebar${chatOpen ? '' : ' collapsed'}`}>

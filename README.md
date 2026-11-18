@@ -104,7 +104,7 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 **Swiss** – white and black, heavy type, no rounded corners, orange as the only colour, the menu as a bar along the bottom.
 
 <img src="docs/screenshots/layout-rack.png" alt="Look: Hardware rack" width="100%">
-**Hardware rack** – grey device fronts with screws, a wide green LCD for position and tempo, the menu as a row of rack keys, the selected track's effects as rack modules with knobs at the right.
+**Hardware rack** – grey device fronts with screws, a wide green LCD for position and tempo, the menu at the side as rack keys, the selected track's effects as rack modules with knobs at the right.
 
 | | |
 |---|---|

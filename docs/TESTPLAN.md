@@ -260,7 +260,7 @@ Vorbereitung: VST3- oder VST2-Effekte auf dem PC, am besten ein 64-Bit- und ein 
 | 10.21 | Einstellungen → **Shortcuts**: bei „Audiospur hinzufügen“ in der Spalte **Eigene** auf **+ Taste**, dann Leertaste drücken | Abgelehnt: „Space ist schon belegt: Abspielen / Pause“ | ✅ | | 0.51.5 |
 | 10.22 | Noch einmal **+ Taste**, dann z. B. Strg+Alt+K; ins Studio wechseln und Strg+Alt+K drücken | Taste erscheint in der Spalte; im Studio kommt eine neue Audiospur dazu; nach Neustart der App noch da; × entfernt sie | ❌ | Strg+Alt+K: nichts passiert (Windows meldet Strg+Alt als AltGr) → 0.51.6 | 0.51.5 |
 | 10.22b | Shortcuts → bei „Audiospur hinzufügen“ **+ Taste**, Strg+Alt+K drücken; im Studio Strg+Alt+K; App neu starten | Taste erscheint in „Eigene“; im Studio kommt eine Audiospur dazu; nach dem Neustart noch da | ❌ | Taste gesetzt, aber im Studio passiert nichts → 0.51.7 | 0.51.6 |
-| 10.22c | Shortcuts: bei „Audiospur hinzufügen“ das alte Ctrl+Alt+K mit × entfernen, **+ Taste**, Strg+Alt+K neu setzen; im Studio einmal klicken, Strg+Alt+K | Neue Audiospur. Wenn nicht: Feedback → Log senden (im Log steht dann, welche Taste ankam) | | | |
+| 10.22c | Shortcuts: bei „Audiospur hinzufügen“ das alte Ctrl+Alt+K mit × entfernen, **+ Taste**, Strg+Alt+K neu setzen; im Studio einmal klicken, Strg+Alt+K | Neue Audiospur. Wenn nicht: Feedback → Log senden (im Log steht dann, welche Taste ankam) | ✅ | Lag an einer anderen Tastaturbelegung; mit 0.51.7 unabhängig davon | 0.51.7 |
 
 ## Ergebnisse
 

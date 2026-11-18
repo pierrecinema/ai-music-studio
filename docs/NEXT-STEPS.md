@@ -89,6 +89,7 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 ## Things learned about working with the owner
 
 - Talk German with the owner; code, docs and commits in English.
+- Texts for the owner (YouTube texts, posts, emails) always shown in the chat itself, not only as a file.
 - The owner does not want manual release steps: see the release procedure in CLAUDE.md, merge own PRs when green.
 - Do not name other commercial products in texts (no "alternative to ACE Studio", no "RipX"); describe our own features.
 - Do not use or download "free pro version" repositories of commercial software (cracks / malware risk, licence).

@@ -133,7 +133,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6c.18 | neu (0.30.4): Create, ACE-Step 1.5, Länge 240 s (oder 360 s) | kein Abbruch nach 600 s; der Song wird fertig (auf dem Prozessor dauert das lange) | ✅ | | 0.30.4: 300 s fertig nach etwa 47 min (PC i7-3930K, CPU) |
 | 6c.19 | neu (0.30.6): Create, ACE-Step 1.5 Turbo, LoRA „ACE-STEP-1.5v-rain-techno“ (Stärke 1), kurzer Song (30 s) | LoRA ist wählbar (nicht grau); Hinweis „LoRA … is used at strength 1.00“, keine Meldung „not an ACE-Step 1.5 LoRA“; Stil hörbar techno | ✅ | | 0.30.8: techno-acestep1.5-v1 geladen (Stärke 0.75), 60-s-Song ohne Speicherfehler |
 | 6c.20 | neu (0.30.7): fertiger Song in Create → **Stem Splitter**; Library → **Stem Splitter** | Stem Splitter öffnet sich mit dem Song und seinem Namen, „Split Stems“ startet | ✅ | | 0.30.8: Stems direkt aus dem fertigen Song |
-| 6c.21 | neu (0.30.9): Create mit ACE-Step 1.5, auf die Fortschrittsanzeige am Anfang achten | „Loading ACE-Step 1.5 from the disk (already downloaded …)“; falls „Downloading … missing: …“ erscheint: Text an Claude schicken | | | |
+| 6c.21 | neu (0.30.9): Create mit ACE-Step 1.5, auf die Fortschrittsanzeige am Anfang achten | „Loading ACE-Step 1.5 from the disk (already downloaded …)“; falls „Downloading … missing: …“ erscheint: Text an Claude schicken | ✅ |  | 0.51.7 |
 
 ## 7. Mastering (neu in 0.30.0)
 
@@ -151,7 +151,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 7.10 | Reference match mit einem Referenz-Song | Ergebnis öffnet sich als neuer Tab | ✅ | |  |
 | 7.11 | neu (0.30.2): beim Abspielen **Before** / **After** drücken | Wellenform, Zahlen (groß/hell), Spektrum und Lautheitskurve springen auf Original bzw. Master | ✅ | | 0.30.2: Regler sollen mitspringen → 7.13 |
 | 7.12 | neu (0.30.2): **Same loudness** aus, dann Before / After | After ist jetzt deutlich lauter (so laut wie exportiert); mit Häkchen wieder gleich laut, ohne Verzerrung | ✅ | |  |
-| 7.13 | neu (0.30.3): EQ / Kompressor / Louder verstellen, dann **Before** und **After** drücken | Before: alle Regler auf Ausgangsstellung (grau), EQ-Kurve flach; After: deine Einstellung, verstellte Regler lila mit • | | | |
+| 7.13 | neu (0.30.3): EQ / Kompressor / Louder verstellen, dann **Before** und **After** drücken | Before: alle Regler auf Ausgangsstellung (grau), EQ-Kurve flach; After: deine Einstellung, verstellte Regler lila mit • | ✅ |  | 0.51.7 |
 
 ## 7c. Mastering 0.31.0: Assistent, Schneiden, neue Effekte
 
@@ -184,10 +184,10 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 
 | # | Test | Erwartet | A | B | Notiz |
 |---|---|---|---|---|---|
-| 7b.1 | AI Chat mit Ollama (lokal) | Antwort ohne Schlüssel | | | |
-| 7b.2 | AI Chat mit Grok / Claude / ChatGPT (mit Schlüssel) | Antwort | | | |
-| 7b.3 | Coming-soon-Menüpunkte | „Coming soon“-Seite, kein Fehler | | | |
-| 7b.4 | MCP: Claude Code lokal mit `http://127.0.0.1:38765/mcp` | Claude sieht die App-Werkzeuge | | | |
+| 7b.1 | AI Chat mit Ollama (lokal) | Antwort ohne Schlüssel | ✅ | nur mit Gemini getestet; die anderen Anbieter werden als gleich angenommen | 0.51.7 |
+| 7b.2 | AI Chat mit Grok / Claude / ChatGPT (mit Schlüssel) | Antwort | ✅ | nur mit Gemini getestet; die anderen Anbieter werden als gleich angenommen | 0.51.7 |
+| 7b.3 | Coming-soon-Menüpunkte | „Coming soon“-Seite, kein Fehler | ✅ |  | 0.51.7 |
+| 7b.4 | MCP: Claude Code lokal mit `http://127.0.0.1:38765/mcp` | Claude sieht die App-Werkzeuge | ✅ |  | 0.51.7 |
 
 ## 8. Neu in 0.40.0: Übersetzung, Speichern beim Schließen
 

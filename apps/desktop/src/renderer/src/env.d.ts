@@ -108,6 +108,11 @@ declare global {
         windowHandle: () => Promise<string>
         listRead: () => Promise<unknown>
         listWrite: (data: unknown) => Promise<void>
+        freeDir?: () => Promise<string>
+        freeInstalled?: () => Promise<Record<string, boolean>>
+        freeInstall?: (id: string) => Promise<{ ok: boolean; dir?: string; tag?: string; asset?: string; reason?: string; page?: string }>
+        freePage?: (id: string) => Promise<void>
+        onFreeProgress?: (cb: (p: { id: string; done: number; total: number; text: string }) => void) => () => void
         onHostExit: (cb: (info: { code: number | null; signal: string | null; arch?: string }) => void) => () => void
       }
       app?: {

@@ -31,6 +31,7 @@ import { AskTextDialog } from './components/common/AskText'
 import { FeedbackButton } from './components/common/Feedback'
 import { Mastering } from './components/mastering/Mastering'
 import { KaraokeExport } from './components/karaoke/KaraokeExport'
+import { watchHostDevice } from './audio/output'
 import { tr, trf } from './i18n/tr'
 
 // Hardware info fetched from backend
@@ -149,6 +150,9 @@ export default function App(): React.ReactElement {
 
   // keyboard shortcuts (Ableton Live 12 or Cubase layout, chosen in Settings → Shortcuts)
   useShortcuts()
+
+  // Settings → Audio → ASIO: the plugin host plays the sound on the chosen device
+  useEffect(() => watchHostDevice(), [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)

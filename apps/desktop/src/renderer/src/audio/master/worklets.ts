@@ -111,6 +111,30 @@ class AmsVst extends AudioWorkletProcessor {
 }
 registerProcessor('ams-vst', AmsVst)
 
+// Settings → Audio → ASIO: the master mix in blocks of 512 to the plugin host, which plays it on the sound card
+class AmsOut extends AudioWorkletProcessor {
+  constructor() {
+    super()
+    this.B = 512; this.fill = 0; this.cur = [new Float32Array(this.B), new Float32Array(this.B)]
+    this.wport = null; this.alive = true
+    this.port.onmessage = (e) => { const d = e.data || {}; if (d.link) this.wport = d.link; if (d.dispose) this.alive = false }
+  }
+  process(inputs) {
+    const inp = inputs[0] || []
+    const n = (inp[0] && inp[0].length) || 128
+    for (let i = 0; i < n; i++) {
+      for (let c = 0; c < 2; c++) { const src = inp[Math.min(c, inp.length - 1)]; this.cur[c][this.fill] = src ? src[i] : 0 }
+      if (++this.fill === this.B) {
+        const b = this.cur
+        if (this.wport) this.wport.postMessage({ block: b }, b.map((x) => x.buffer))
+        this.cur = [new Float32Array(this.B), new Float32Array(this.B)]; this.fill = 0
+      }
+    }
+    return this.alive
+  }
+}
+registerProcessor('ams-out', AmsOut)
+
 // Settings → Audio, "Simulated CPU load": spends the given share of every block doing nothing useful, to find a
 // buffer size that does not crackle
 class AmsCpu extends AudioWorkletProcessor {

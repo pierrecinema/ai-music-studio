@@ -15,7 +15,7 @@ import { MAX_STRETCH_SECONDS, stretchBuffer } from './stretch'
 import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
 import { hasAutomation, scheduleLane } from './automation'
 import { makeEffect, makeInsert } from './fx'
-import { applyOutput, audioSettings, contextOptions, inputConstraints, onAudioSettings, stopTests } from './output'
+import { applyOutput, audioSettings, outputBus, contextOptions, inputConstraints, onAudioSettings, stopTests } from './output'
 import { makeVstInstrument, prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
 import { loadWorklets } from './master/worklets'
 import { exportSampleRate } from '../lib/sampleRate'
@@ -524,7 +524,7 @@ function ensureContext(): AudioContext {
     limiter.ratio.value = 20
     limiter.attack.value = 0.002
     limiter.release.value = 0.12
-    master.connect(masterAnalyser).connect(limiter).connect(ctx.destination)
+    master.connect(masterAnalyser).connect(limiter).connect(outputBus(ctx))       // Windows device, or the plugin host (ASIO)
   }
   return ctx
 }

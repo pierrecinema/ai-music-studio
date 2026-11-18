@@ -84,6 +84,11 @@ onmessage = (e) => {
       out.set(g, { key, seq: m.seq })
       ws.send(pack(l.instance, g, m.block, m.reset, m.midi))
     }
+  } else if (d.stream) {
+    // the app's master mix for the host's sound card (Settings → Audio → ASIO): sent on, no answer
+    const sp = d.stream.port
+    links.set(d.stream.key, { port: sp, instance: 0, latency: 0 })
+    sp.onmessage = (ev) => { if (ready && ws) ws.send(pack(0xFFFFFFF0, 0, ev.data.block, false)) }
   } else if (d.instance) {
     const l = links.get(d.instance.key); if (l) l.instance = d.instance.instance
   } else if (d.detach) {
@@ -198,6 +203,13 @@ class HostClient {
     this.worker.postMessage({ attach: { key, instance, port: ch.port2 } }, [ch.port2])
   }
   detach(key: string): void { this.worker?.postMessage({ detach: key }) }
+  /** the master mix of a context goes to the host's sound card (ASIO) */
+  stream(node: AudioWorkletNode, key: string): void {
+    if (!this.worker) return
+    const ch = new MessageChannel()
+    node.port.postMessage({ link: ch.port1 }, [ch.port1])
+    this.worker.postMessage({ stream: { key, port: ch.port2 } }, [ch.port2])
+  }
 
   /** waits until every block sent so far has come back into its worklet (offline rendering) */
   flush(): Promise<void> {
@@ -264,9 +276,13 @@ async function loadInstance(ref: VstRef, sampleRate: number): Promise<{ instance
   return { ...r, client: c }
 }
 
+/** the 64-bit host also plays the sound (Settings → Audio → ASIO): it must keep running without plugins */
+let hostOutput = false
+export function setHostOutput(on: boolean): void { hostOutput = on; if (!on) releaseIdle() }
+
 /** stops the hosts that no plugin uses any more */
 function releaseIdle(): void {
-  for (const c of clients) if (c.connected && !vstInUse(c) && ![...offlineClients].includes(c)) c.release()
+  for (const c of clients) if (c.connected && !vstInUse(c) && ![...offlineClients].includes(c) && !(hostOutput && c === host)) c.release()
 }
 
 /** every plugin of a project: the effects (inserts) and the instruments of MIDI tracks */

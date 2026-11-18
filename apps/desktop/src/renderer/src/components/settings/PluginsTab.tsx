@@ -3,6 +3,60 @@ import { usePluginsStore, DEFAULT_FOLDERS } from '../../stores/plugins.store'
 import { tr, trf } from '../../i18n/tr'
 
 // Settings → Plugins: where VST plugins are searched, the search, and which plugins appear in the app.
+const muted: React.CSSProperties = { fontSize: 11, color: 'var(--text-muted)' }
+const box: React.CSSProperties = { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }
+
+// free open-source instruments: downloaded from their official releases into the app's own plugin folder
+const FREE = [
+  { id: 'dexed', name: 'Dexed', what: 'FM synthesizer modelled on the classic DX7 (electric pianos, basses, bells)', license: 'GPL-3' },
+  { id: 'surge', name: 'Surge XT', what: 'Big all-round synthesizer: pads, leads, basses, thousands of sounds', license: 'GPL-3' },
+]
+
+function FreeInstruments(): React.ReactElement {
+  const s = usePluginsStore()
+  const [installed, setInstalled] = React.useState<Record<string, boolean>>({})
+  const [busy, setBusy] = React.useState<Record<string, string>>({})
+  const [msg, setMsg] = React.useState<string | null>(null)
+  const api = window.api?.plugins
+  React.useEffect(() => {
+    void api?.freeInstalled?.().then(setInstalled)
+    return api?.onFreeProgress?.((p) => setBusy((b) => ({ ...b, [p.id]: p.total ? `${p.text} ${Math.round((p.done / p.total) * 100)} %` : p.text })))
+  }, [])
+  if (!api?.freeInstall) return <></>
+  const install = async (id: string, name: string): Promise<void> => {
+    setMsg(null); setBusy((b) => ({ ...b, [id]: tr('starting') }))
+    try {
+      const r = await api.freeInstall!(id)
+      if (!r.ok) { setMsg(trf('{name}: no zip download in the current release ({tag}). The release page opens: install it from there, then press Search for plugins.', { name, tag: r.tag ?? '' })); void api.freePage?.(id); return }
+      const dir = await api.freeDir!()
+      s.addFolder(dir)
+      setInstalled((x) => ({ ...x, [id]: true }))
+      setBusy((b) => ({ ...b, [id]: tr('searching') }))
+      await s.scan()
+      setMsg(trf('{name} {tag} is installed. Choose it on a MIDI track: Channel → Instrument.', { name, tag: r.tag ?? '' }))
+    } catch (e) {
+      setMsg(trf('{name} could not be installed: {m}', { name, m: (e as Error).message }))
+    } finally { setBusy((b) => { const n = { ...b }; delete n[id]; return n }) }
+  }
+  return (
+    <div style={box}>
+      <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{tr('Free instruments (open source)')}</div>
+      <div style={{ ...muted, marginBottom: 8 }}>{tr('Downloaded from the official release of each project into the app’s plugin folder, then found by the search. Use them on MIDI tracks (Channel → Instrument).')}</div>
+      {FREE.map((f) => (
+        <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0', borderTop: '1px solid var(--border-subtle)' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{f.name} <span style={{ ...muted, fontWeight: 400 }}>· {f.license}</span></div>
+            <div style={muted}>{tr(f.what)}</div>
+          </div>
+          {busy[f.id] ? <span style={muted}>{busy[f.id]}</span>
+            : <button className={installed[f.id] ? 'btn btn-ghost' : 'btn btn-primary'} style={{ fontSize: 11 }} onClick={() => void install(f.id, f.name)}>{installed[f.id] ? tr('Update') : tr('Install')}</button>}
+        </div>
+      ))}
+      {msg && <div style={{ ...muted, marginTop: 6, color: 'var(--text-secondary)' }}>{msg}</div>}
+    </div>
+  )
+}
+
 export function PluginsTab(): React.ReactElement {
   const s = usePluginsStore()
   const [filter, setFilter] = useState('')
@@ -10,8 +64,6 @@ export function PluginsTab(): React.ReactElement {
   useEffect(() => { if (!s.loaded) void s.load() }, [s.loaded])
 
   const shown = s.plugins.filter((p) => !filter || `${p.name} ${p.vendor} ${p.format}`.toLowerCase().includes(filter.toLowerCase()))
-  const muted: React.CSSProperties = { fontSize: 11, color: 'var(--text-muted)' }
-  const box: React.CSSProperties = { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }
   const pick = async (): Promise<void> => {
     const f = await window.api?.dialog?.pickFolder?.(tr('Choose a folder with VST plugins'))
     if (typeof f === 'string' && f) s.addFolder(f)
@@ -25,6 +77,8 @@ export function PluginsTab(): React.ReactElement {
           {tr('Your VST3 and VST2 effects can be used in the Studio (effects of a track: “+ Effect…”). 64-bit and 32-bit plugins work; a 32-bit plugin runs in its own 32-bit plugin host.')}
         </div>
       </div>
+
+      <FreeInstruments />
 
       {s.available === false && (
         <div style={{ ...box, color: 'var(--orange)', fontSize: 12 }}>

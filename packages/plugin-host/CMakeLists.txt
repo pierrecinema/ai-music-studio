@@ -17,6 +17,9 @@ endif()
 
 set(JUCE_DIR "" CACHE PATH "JUCE 7 source folder (empty: downloaded)")
 set(AMS_FST_DIR "" CACHE PATH "FST folder (free VST2 headers); empty: VST3 only")
+# ASIO output (Windows) needs Steinberg's ASIO SDK (GPL-3 since 2025): the folder that holds common/iasiodrv.h.
+# Without it the host still plays through the other Windows drivers (Windows Audio / WASAPI, DirectSound).
+set(AMS_ASIO_SDK_DIR "" CACHE PATH "ASIO SDK folder (contains common/iasiodrv.h); empty: no ASIO")
 option(AMS_BUILD_TEST_PLUGIN "Also build a small VST3 test effect (gain) for the end-to-end test" OFF)
 
 if(JUCE_DIR)
@@ -35,7 +38,8 @@ juce_add_gui_app(AMSPluginHost
 target_sources(AMSPluginHost PRIVATE
   src/Main.cpp
   src/WebSocketServer.cpp
-  src/PluginHost.cpp)
+  src/PluginHost.cpp
+  src/AudioOut.cpp)
 
 set(AMS_VST2 0)
 if(AMS_FST_DIR)
@@ -52,7 +56,15 @@ if(AMS_FST_DIR)
   set(AMS_VST2 1)
 endif()
 
+set(AMS_ASIO 0)
+if(WIN32 AND AMS_ASIO_SDK_DIR AND EXISTS "${AMS_ASIO_SDK_DIR}/common/iasiodrv.h")
+  set(AMS_ASIO 1)
+  target_include_directories(AMSPluginHost PRIVATE "${AMS_ASIO_SDK_DIR}/common")
+  message(STATUS "ASIO SDK: ${AMS_ASIO_SDK_DIR}")
+endif()
+
 target_compile_definitions(AMSPluginHost PRIVATE
+  JUCE_ASIO=${AMS_ASIO}
   JUCE_PLUGINHOST_VST3=1
   JUCE_PLUGINHOST_VST=${AMS_VST2}
   JUCE_PLUGINHOST_AU=0

@@ -9,10 +9,16 @@ export interface AudioSettings {
   sampleRate: number        // 0 = what the device uses
   buffer: number            // samples; 0 = automatic (small)
   compensationMs: number    // recordings are moved this much earlier (driver error compensation)
+  // driver 'asio': the sound plays through the plugin host on a device of a JUCE driver type (ASIO, Windows Audio, ...)
+  hostType: string          // 'ASIO', 'Windows Audio', 'DirectSound' ...
+  hostDevice: string        // '' = the first device of that type
+  hostRate: number          // the device's sample rate (the app runs at it); 0 = the device's own
+  hostBuffer: number        // samples; 0 = the driver's
+  hostChannel: number       // first output channel (0 = outputs 1/2, 2 = outputs 3/4, ...)
 }
 
 const KEY = 'ams-audio-device'
-const DEFAULTS: AudioSettings = { driver: 'windows', outputId: '', inputId: '', sampleRate: 0, buffer: 0, compensationMs: 0 }
+const DEFAULTS: AudioSettings = { driver: 'windows', outputId: '', inputId: '', sampleRate: 0, buffer: 0, compensationMs: 0, hostType: 'ASIO', hostDevice: '', hostRate: 0, hostBuffer: 0, hostChannel: 0 }
 
 let current: AudioSettings = load()
 const listeners = new Set<(s: AudioSettings, rebuild: boolean) => void>()
@@ -28,7 +34,7 @@ export function setAudioSettings(patch: Partial<AudioSettings>): void {
   const before = current
   current = { ...current, ...patch }
   try { localStorage.setItem(KEY, JSON.stringify(current)) } catch { /* not saved */ }
-  const rebuild = before.sampleRate !== current.sampleRate || before.buffer !== current.buffer
+  const rebuild = before.sampleRate !== current.sampleRate || before.buffer !== current.buffer || before.driver !== current.driver || (current.driver === 'asio' && before.hostRate !== current.hostRate)
   for (const l of listeners) l(current, rebuild)
 }
 
@@ -40,17 +46,56 @@ export function onAudioSettings(fn: (s: AudioSettings, rebuild: boolean) => void
 /** options for the Studio's AudioContext */
 export function contextOptions(): AudioContextOptions {
   const s = current
-  const rate = s.sampleRate || undefined
+  // ASIO: the app runs at the device's rate, so the host does not have to convert
+  const rate = (s.driver === 'asio' ? s.hostRate : s.sampleRate) || undefined
   const o: AudioContextOptions = { latencyHint: s.buffer > 0 ? s.buffer / (rate ?? 48000) : 'interactive' }
   if (rate) o.sampleRate = rate
   return o
 }
 
-type Sinkable = { setSinkId?: (id: string) => Promise<void> }
+type Sinkable = { setSinkId?: (id: string | { type: 'none' }) => Promise<void> }
+
+// every player's sound ends in its context's output bus: to the Windows device, or (ASIO) to the plugin host
+const buses = new WeakMap<BaseAudioContext, { bus: GainNode; out?: AudioWorkletNode; key?: string }>()
+let streamCount = 0
+
+/** where a player connects its final sound (instead of ctx.destination) */
+export function outputBus(ctx: AudioContext): AudioNode {
+  let b = buses.get(ctx)
+  if (!b) { const bus = ctx.createGain(); bus.connect(ctx.destination); b = { bus }; buses.set(ctx, b) }
+  return b.bus
+}
+
+async function routeContext(ctx: AudioContext): Promise<void> {
+  outputBus(ctx)
+  const b = buses.get(ctx)!
+  const t = ctx as unknown as Sinkable
+  if (current.driver === 'asio') {
+    const { loadWorklets } = await import('./master/worklets')
+    const { host, setHostOutput } = await import('./vst/host')
+    await loadWorklets(ctx)
+    if (!b.out) {
+      b.out = new AudioWorkletNode(ctx, 'ams-out', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit' })
+      b.key = `out#${streamCount++}`
+    }
+    b.bus.disconnect(); b.bus.connect(b.out); b.out.connect(ctx.destination)
+    setHostOutput(true)
+    await host.ensure()
+    host.stream(b.out, b.key!)
+    try { await t.setSinkId?.({ type: 'none' }) } catch { /* plays on the default device as well */ }
+  } else {
+    b.bus.disconnect(); b.bus.connect(ctx.destination)
+    if (b.out) { b.out.port.postMessage({ dispose: true }); b.out.disconnect(); b.out = undefined }
+  }
+}
 
 /** sends a player (AudioContext or <audio>) to the chosen output device; false when that device is gone */
 export async function applyOutput(target: AudioContext | HTMLMediaElement | null | undefined): Promise<boolean> {
   const t = target as unknown as Sinkable | null
+  if (target instanceof AudioContext) {
+    if (current.driver === 'asio') { try { await routeContext(target); return true } catch { return false } }
+    await routeContext(target)
+  }
   if (!t || typeof t.setSinkId !== 'function') return true
   try { await t.setSinkId(current.outputId || ''); return true }
   catch {
@@ -107,7 +152,7 @@ export function testTone(ctx: AudioContext, on: boolean, db: number, freq: numbe
   const gain = ctx.createGain()
   gain.gain.value = 0
   gain.gain.setTargetAtTime(level, ctx.currentTime, 0.05)            // fades in: no click, no jump in loudness
-  osc.connect(gain).connect(ctx.destination)
+  osc.connect(gain).connect(outputBus(ctx))
   osc.start()
   tone = { osc, gain }
 }
@@ -134,4 +179,74 @@ export function stopTests(ctx: AudioContext | null): void {
   if (!ctx) return
   testTone(ctx, false, 0, 0)
   simulateLoad(ctx, 0)
+}
+
+// ── ASIO and the other drivers of the plugin host ────────────────────────────────────────────────────────────────
+export interface HostDeviceType { type: string; devices: string[] }
+export interface HostDeviceInfo {
+  ok: boolean; error?: string; type?: string; device?: string; sampleRate?: number; buffer?: number; outputLatency?: number
+  sampleRates?: number[]; buffers?: number[]; channels?: string[]; hasPanel?: boolean
+}
+let hostInfo: HostDeviceInfo | null = null
+const hostListeners = new Set<(i: HostDeviceInfo | null) => void>()
+export function hostDevice(): HostDeviceInfo | null { return hostInfo }
+export function onHostDevice(fn: (i: HostDeviceInfo | null) => void): () => void { hostListeners.add(fn); return () => hostListeners.delete(fn) }
+function setHostInfo(i: HostDeviceInfo | null): void { hostInfo = i; for (const l of hostListeners) l(i) }
+
+/** the device types and devices the plugin host can play on (ASIO only when the host was built with it) */
+export async function listHostDevices(): Promise<HostDeviceType[]> {
+  const { host } = await import('./vst/host')
+  await host.ensure()
+  return (await host.call<{ types: HostDeviceType[] }>('audioDevices', {}, 30000)).types
+}
+
+/** opens the chosen device in the host (driver 'asio'); a different sample rate makes the app run at the device's */
+export async function openHostDevice(): Promise<HostDeviceInfo> {
+  const { host } = await import('./vst/host')
+  try {
+    await host.ensure()
+    const r = await host.call<HostDeviceInfo>('audioOpen', { type: current.hostType, device: current.hostDevice, sampleRate: current.hostRate, buffer: current.hostBuffer, channel: current.hostChannel }, 30000)
+    setHostInfo(r)
+    if (r.sampleRate && r.sampleRate !== current.hostRate) setAudioSettings({ hostRate: r.sampleRate })
+    return r
+  } catch (e) {
+    const r = { ok: false, error: (e as Error).message }
+    setHostInfo(r)
+    return r
+  }
+}
+
+export async function closeHostDevice(): Promise<void> {
+  const { host, setHostOutput } = await import('./vst/host')
+  try { if (host.connected) await host.call('audioClose') } catch { /* gone already */ }
+  setHostInfo(null)
+  setHostOutput(false)
+}
+
+/** the driver's own settings window (ASIO control panel) */
+export async function showHostPanel(): Promise<void> {
+  const { host } = await import('./vst/host')
+  await host.call('audioPanel', {}, 600000)
+  await openHostDevice()
+}
+
+export async function hostStats(): Promise<{ underruns: number; dropped: number; fill: number; open: boolean } | null> {
+  const { host } = await import('./vst/host')
+  if (!host.connected) return null
+  try { return await host.call('audioStats') } catch { return null }
+}
+
+/** keeps the host's device in step with the settings: opens it with driver 'asio', closes it otherwise */
+export function watchHostDevice(): () => void {
+  let last = ''
+  const sync = (s: AudioSettings): void => {
+    const key = s.driver === 'asio' ? JSON.stringify([s.hostType, s.hostDevice, s.hostRate, s.hostBuffer, s.hostChannel]) : ''
+    if (key === last) return
+    const was = last
+    last = key
+    if (key) void openHostDevice()
+    else if (was) void closeHostDevice()
+  }
+  sync(current)
+  return onAudioSettings((s) => sync(s))
 }

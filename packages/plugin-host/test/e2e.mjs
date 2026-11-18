@@ -110,6 +110,17 @@ assert.equal((await call('unload', { instance: ld.instance })).ok, true)
   assert.equal((await call('unload', { instance: sy.instance })).ok, true)
   console.log('instrument: MIDI OK')
 }
+// sound output (Settings → Audio, ASIO): the device list answers; master frames without an open device are dropped
+{
+  const dv = await call('audioDevices')
+  assert.equal(dv.ok, true); assert.ok(Array.isArray(dv.types))
+  console.log('audio device types', dv.types.map((t) => `${t.type} (${t.devices.length})`))
+  const st0 = await call('audioStats'); assert.equal(st0.ok, true); assert.equal(st0.open, false)
+  const z = new Float32Array(512), b = new ArrayBuffer(24 + 2 * 512 * 4), v = new DataView(b)
+  v.setUint32(0, 0x41534D41, true); v.setUint32(4, 0xFFFFFFF0, true); v.setUint16(12, 2, true); v.setUint32(16, 512, true)
+  ws.send(b)
+  const st1 = await call('audioStats'); assert.equal(st1.fill, 0, 'nothing kept while no device is open')
+}
 // unknown instance: the sound passes through unchanged
 const pass = new Float32Array(await block(999, [L, R]), 24, n)
 assert.equal(pass[0], L[0])

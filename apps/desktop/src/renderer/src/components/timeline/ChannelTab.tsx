@@ -4,7 +4,7 @@ import React from 'react'
 import { useProjectStore } from '../../stores/project.store'
 import { AUTO_LABEL, hasAutomation } from '../../audio/automation'
 import type { AutoParam, InsertFx } from '../../types'
-import { FxAddSelect, MiniMeter, openPlugin } from './StudioLanes'
+import { FxAddSelect, InstrumentSelect, MiniMeter, openPlugin } from './StudioLanes'
 import { INSERT_LABEL } from '../../audio/fx'
 import { openLanes } from './studioLayout'
 import { tr } from '../../i18n/tr'
@@ -52,6 +52,21 @@ export function ChannelTab({ onClose }: { onClose: () => void }): React.ReactEle
             <button className="btn btn-ghost" style={{ fontSize: 11, color: t.muted ? '#f59e0b' : undefined }} onClick={() => updateTrack(t.id, { muted: !t.muted })}>{tr('Mute')}</button>
             <button className="btn btn-ghost" style={{ fontSize: 11, color: t.soloed ? 'var(--accent-light)' : undefined }} onClick={() => updateTrack(t.id, { soloed: !t.soloed })}>{tr('Solo')}</button>
           </div>
+
+          {(t.type === 'midi' || t.type === 'instrument') && (
+            <>
+              <b style={{ fontSize: 11, color: 'var(--text-primary)' }}>{tr('Instrument')}</b>
+              <div style={row}>
+                {t.instrument && (
+                  <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 4px', color: t.instrument.on ? 'var(--green)' : 'var(--text-muted)' }}
+                    title={t.instrument.on ? tr('On: click to play the notes with the built-in synth') : tr('Off: click to switch the instrument on')}
+                    onClick={() => updateTrack(t.id, { instrument: { ...t.instrument!, on: !t.instrument!.on } })}>⏻</button>
+                )}
+                <InstrumentSelect track={t} style={{ flex: 1, fontSize: 11, minWidth: 0 }} />
+                {t.instrument && <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 5px' }} title={tr('Open the plugin window')} onClick={() => void openPlugin(t.instrument!, t.name)}>{tr('Open')}</button>}
+              </div>
+            </>
+          )}
 
           {(
             <>

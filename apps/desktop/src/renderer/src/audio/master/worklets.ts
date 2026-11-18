@@ -72,7 +72,9 @@ class AmsVst extends AudioWorkletProcessor {
     this.first = true
     this.wport = null
     this.lastUnder = 0
-    this.link = new VstLink({ block: o.block, delay: o.delay, on: o.on, send: (seq, b) => this.toWorker(seq, b) })
+    this.link = new VstLink({ block: o.block, delay: o.delay, on: o.on, send: (seq, b, midi) => this.toWorker(seq, b, midi) })
+    this.start = -1            // context frame of the link's first input sample
+    this.pending = []          // MIDI with context times (seconds), until the start is known
     this.port.onmessage = (e) => {
       const d = e.data || {}
       if (d.link) {
@@ -84,15 +86,23 @@ class AmsVst extends AudioWorkletProcessor {
         }
       }
       if ('on' in d) this.link.on = !!d.on
+      if (d.events) { for (const e of d.events) this.pending.push(e); this.place() }
       if (d.dispose) { this.alive = false; if (this.wport) this.wport.close() }
     }
   }
-  toWorker(seq, b) {
+  // MIDI times (context seconds) become input frames of the link
+  place() {
+    if (this.start < 0 || !this.pending.length) return
+    this.link.addEvents(this.pending.map((e) => [Math.max(0, Math.round(e[0] * sampleRate) - this.start), e[1], e[2], e[3]]))
+    this.pending = []
+  }
+  toWorker(seq, b, midi) {
     if (!this.wport) return
-    this.wport.postMessage({ seq, block: b, reset: this.first }, b.map((x) => x.buffer))
+    this.wport.postMessage({ seq, block: b, midi, reset: this.first }, b.map((x) => x.buffer))
     this.first = false
   }
   process(inputs, outputs) {
+    if (this.start < 0) { this.start = currentFrame; this.place() }
     const out = outputs[0]
     this.link.process(inputs[0] || [], out, out[0].length)
     if (this.link.underruns !== this.lastUnder && this.link.t % 12288 < 128) { this.lastUnder = this.link.underruns; this.port.postMessage({ underruns: this.lastUnder }) }

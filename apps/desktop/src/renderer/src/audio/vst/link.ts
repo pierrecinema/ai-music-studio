@@ -17,9 +17,10 @@ export class VstLink {
   done: Map<number, Float32Array[]>
   underruns: number
   sent: number
-  send: (seq: number, block: Float32Array[]) => void
+  events: number[][]                           // MIDI waiting to be sent: [input frame, status, data1, data2], sorted
+  send: (seq: number, block: Float32Array[], midi: number[][]) => void
 
-  constructor(o: { block: number; delay: number; channels?: number; on?: boolean; send: (seq: number, block: Float32Array[]) => void }) {
+  constructor(o: { block: number; delay: number; channels?: number; on?: boolean; send: (seq: number, block: Float32Array[], midi: number[][]) => void }) {
     this.B = o.block
     this.D = Math.max(o.block, o.delay)
     this.ch = o.channels ?? 2
@@ -32,6 +33,24 @@ export class VstLink {
     this.done = new Map()
     this.underruns = 0
     this.sent = 0
+    this.events = []
+  }
+
+  /** MIDI for an instrument: [input frame, status, data1, data2]; each goes out with the block that holds its frame
+   *  (an event whose block has already gone out goes with the next one, at its start) */
+  addEvents(list: number[][]): void {
+    for (const e of list) this.events.push(e)
+    this.events.sort((a, b) => a[0] - b[0])
+  }
+
+  /** the events of block `seq`, as [offset in the block, status, data1, data2] */
+  takeEvents(seq: number): number[][] {
+    const start = seq * this.B, end = start + this.B
+    let n = 0
+    while (n < this.events.length && this.events[n][0] < end) n++
+    if (!n) return []
+    const out = this.events.splice(0, n).map((e) => [Math.max(0, e[0] - start), e[1], e[2], e[3]])
+    return out
   }
 
   fresh(): Float32Array[] {
@@ -60,7 +79,7 @@ export class VstLink {
         const full = this.cur
         this.cur = this.fresh()
         this.fill = 0
-        if (this.on) { this.sent++; this.send(seq, full) } else this.done.set(seq, full)   // off: plays dry, same delay
+        if (this.on) { this.sent++; this.send(seq, full, this.takeEvents(seq)) } else { this.takeEvents(seq); this.done.set(seq, full) }   // off: plays dry, same delay
       }
     }
     // output: what came in `D` samples ago, processed
@@ -83,9 +102,10 @@ export class VstLink {
 // ── the binary audio frame of the host protocol (see packages/plugin-host/src/PluginHost.h) ──
 export const AUDIO_MAGIC = 0x41534d41
 
-export function packBlock(instance: number, seq: number, block: Float32Array[], reset: boolean): ArrayBuffer {
+export function packBlock(instance: number, seq: number, block: Float32Array[], reset: boolean, midi: number[][] = []): ArrayBuffer {
   const frames = block[0].length
-  const buf = new ArrayBuffer(24 + block.length * frames * 4)
+  const head = 24 + midi.length * 8                    // MIDI events (8 bytes each) between the header and the audio
+  const buf = new ArrayBuffer(head + block.length * frames * 4)
   const v = new DataView(buf)
   v.setUint32(0, AUDIO_MAGIC, true)
   v.setUint32(4, instance, true)
@@ -93,8 +113,9 @@ export function packBlock(instance: number, seq: number, block: Float32Array[], 
   v.setUint16(12, block.length, true)
   v.setUint16(14, reset ? 1 : 0, true)
   v.setUint32(16, frames, true)
-  v.setUint32(20, 0, true)
-  block.forEach((c, i) => new Float32Array(buf, 24 + i * frames * 4, frames).set(c))
+  v.setUint32(20, midi.length, true)
+  midi.forEach((e, i) => { const o = 24 + i * 8; v.setUint32(o, e[0], true); v.setUint8(o + 4, e[1]); v.setUint8(o + 5, e[2]); v.setUint8(o + 6, e[3]) })
+  block.forEach((c, i) => new Float32Array(buf, head + i * frames * 4, frames).set(c))
   return buf
 }
 

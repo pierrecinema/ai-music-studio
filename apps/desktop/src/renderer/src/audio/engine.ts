@@ -16,7 +16,7 @@ import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
 import { hasAutomation, scheduleLane } from './automation'
 import { makeEffect, makeInsert } from './fx'
 import { applyOutput, audioSettings, contextOptions, inputConstraints, onAudioSettings, stopTests } from './output'
-import { prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
+import { makeVstInstrument, prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
 import { loadWorklets } from './master/worklets'
 import { exportSampleRate } from '../lib/sampleRate'
 import { beatOfSrc, renderWarped } from './warp'
@@ -294,6 +294,18 @@ export interface Scheduled {
 export interface ScheduleOptions { untilBeat?: number }
 
 // Schedules everything from `fromBeat` on. `when` is the context time that corresponds to `fromBeat`.
+/** how much earlier than its place the sound of the project has to start (plugins on tracks, groups, instruments):
+ *  an export starts the song this much later and cuts the time off again, so nothing at bar 1 comes late */
+export function pluginLead(ctx: BaseAudioContext, project: Project): number {
+  const own = (t: Track): number => (t.fx ?? []).filter((f) => f.type === 'vst' && f.on).reduce((a, f) => a + vstDelaySeconds(ctx, f), 0)
+    + (t.instrument?.vst && t.instrument.on ? vstDelaySeconds(ctx, t.instrument) : 0)
+  const total = (t: Track, depth = 0): number => {
+    const parent = t.parentId && depth < 8 ? project.tracks.find((x) => x.id === t.parentId) : undefined
+    return own(t) + (parent ? total(parent, depth + 1) : 0)
+  }
+  return project.tracks.reduce((m, t) => Math.max(m, total(t)), 0)
+}
+
 export function scheduleProject(
   ctx: BaseAudioContext,
   dest: AudioNode,
@@ -326,6 +338,7 @@ export function scheduleProject(
   // its sound is started that much earlier, so it stays in time with the others. Tracks in a group add the
   // group's delay.
   const ownDelay = (t: Track): number => (t.fx ?? []).filter((f) => f.type === 'vst').reduce((a, f) => a + vstDelaySeconds(ctx, f), 0)
+    + (t.instrument?.vst && t.instrument.on ? vstDelaySeconds(ctx, t.instrument) : 0)
   const lookahead = (t: Track, depth = 0): number => {
     const parent = t.parentId && depth < 8 ? project.tracks.find((x) => x.id === t.parentId) : undefined
     return ownDelay(t) + (parent ? lookahead(parent, depth + 1) : 0)
@@ -357,6 +370,13 @@ export function scheduleProject(
     const timbre = timbreOf(track)
     const la = lookahead(track)
     const TT = (beat: number): number => T(beat) - la
+    // how early (seconds before `when`, so <= 0) this track's sound may start: its plugins' delay, but not in the past.
+    // Clamping to `when` made the first notes and clips at the start come late by that delay.
+    const earliest = Math.min(0, Math.max(ctx.currentTime, when - la) - when)
+    // a VST instrument plays the notes of this track (instead of the built-in synth)
+    const instrument = track.instrument?.vst ? makeVstInstrument(ctx, track.instrument) : null
+    const midi: number[][] = []
+    if (instrument) { instrument.output.connect(strip.bus); strip.dispose.push(instrument.dispose) }
 
     // crossfades: where two audio clips of the track overlap, both fade over the overlap (equal power)
     const audio = track.clips.filter((c) => c.audioFile).sort((a, b) => a.startTime - b.startTime)
@@ -377,7 +397,7 @@ export function scheduleProject(
       if (clipEnd <= fromBeat || clip.startTime >= until) continue
       const clipStart = TT(clip.startTime) - when                // seconds from `when` (earlier by the plugins' delay)
       const clipLen = T(clipEnd) - T(clip.startTime)
-      const skip = Math.max(0, -clipStart)                        // playing from the middle of the clip
+      const skip = Math.max(0, earliest - clipStart)              // playing from the middle of the clip
 
       if (clip.audioFile) {
         const tempo = bpmAt(project, clip.startTime)
@@ -402,7 +422,7 @@ export function scheduleProject(
         const src = ctx.createBufferSource()
         src.buffer = buf
         const g = ctx.createGain()
-        const at = when + Math.max(0, clipStart)
+        const at = when + Math.max(earliest, clipStart)
         const peakGain = Math.max(0, Math.min(2, clip.gain ?? 1))
         const full = clipLen
         // tiny fades remove clicks at the cut; only 2 ms, so a kick right at the clip start keeps its attack (6 ms made
@@ -426,13 +446,18 @@ export function scheduleProject(
           if (ne <= fromBeat || nb >= clipEnd) continue
           const nStart = TT(nb) - when
           const nLen = T(ne) - T(nb)
-          const at = when + Math.max(0, nStart)
-          const dur = nStart < 0 ? nLen + nStart : nLen
+          const at = when + Math.max(earliest, nStart)
+          const dur = nLen - Math.max(0, earliest - nStart)
           if (dur <= 0.005) continue
-          nodes.push(...playSynthNote(ctx, strip.bus, n.pitch, n.velocity, at, dur, timbre))
+          if (instrument) {
+            const vel = Math.max(1, Math.min(127, Math.round(n.velocity)))
+            midi.push([at, 0x90, n.pitch, vel], [at + dur, 0x80, n.pitch, 0])
+          } else nodes.push(...playSynthNote(ctx, strip.bus, n.pitch, n.velocity, at, dur, timbre))
         }
       }
     }
+    // note-offs before note-ons at the same moment: a repeated note is not cut by the end of the one before
+    if (instrument) instrument.play(midi.sort((a, b) => a[0] - b[0] || ((a[1] & 0xf0) === 0x80 ? -1 : 1) - ((b[1] & 0xf0) === 0x80 ? -1 : 1)))
   }
 
   const all = (): Strip[] => [...strips.values(), ...returns.values()]
@@ -573,6 +598,7 @@ function structureSignature(p: Project): string {
     p.bpm, p.tempoMap ?? [], p.returns?.map((r) => [r.id, r.effect, r.decay, r.delayBeats, r.feedback]) ?? [],
     p.tracks.map((t) => [
       t.id, t.type, t.name, t.parentId ?? '', t.automation ?? {}, Object.keys(t.sends ?? {}).filter((k) => (t.sends?.[k] ?? 0) > 0), (t.fx ?? []).map((f) => (f.vst ? { ...f, vst: { ...f.vst, state: undefined } } : f)),
+      t.instrument ? [t.instrument.id, t.instrument.on] : 0,
       t.clips.map((c) => [c.id, c.startTime, c.duration, c.offset ?? 0, c.audioFile ?? '', c.gain ?? 1, c.warpBpm ?? 0, c.fadeIn ?? 0, c.fadeOut ?? 0,
         c.warpMarkers ?? [], (c.notes ?? []).map((n) => `${n.pitch}/${n.startTime}/${n.duration}/${n.velocity}`).join(';')])
     ])
@@ -860,10 +886,46 @@ export function seekPreview(seconds: number): void {
 
 // ── note preview (piano roll) ────────────────────────────────────────────────
 
-export async function previewNote(pitch: number, velocity = 100, track?: Track): Promise<void> {
+// a MIDI track with a VST instrument: the notes you play (Piano Roll, MIDI keyboard) sound through the plugin,
+// on its own live node (one per track), also while the song is stopped
+const monitors = new Map<string, { fxId: string; node: NonNullable<ReturnType<typeof makeVstInstrument>>; gain: GainNode }>()
+
+async function monitorFor(track: Track): Promise<NonNullable<ReturnType<typeof makeVstInstrument>> | null> {
+  const fx = track.instrument
+  if (!fx?.vst || !fx.on) return null
+  const m = monitors.get(track.id)
+  if (m && m.fxId === fx.id) { m.gain.gain.value = track.volume; return m.node }
+  if (m) { m.node.dispose(); m.gain.disconnect(); monitors.delete(track.id) }
+  const c = ensureContext()
+  await loadWorklets(c)
+  await prepareVst(useProjectStore.getState().project, c.sampleRate)
+  const node = makeVstInstrument(c, fx)
+  if (!node) return null
+  const gain = c.createGain()
+  gain.gain.value = track.volume
+  node.output.connect(gain).connect(master!)
+  monitors.set(track.id, { fxId: fx.id, node, gain })
+  return node
+}
+
+/** a note sounds for a moment; `hold`: it sounds until releaseNote (a key held on a MIDI keyboard) */
+export async function previewNote(pitch: number, velocity = 100, track?: Track, hold = false): Promise<void> {
   const c = ensureContext()
   if (c.state === 'suspended') await c.resume()
+  const inst = track ? await monitorFor(track) : null
+  if (inst) {
+    const t = c.currentTime, v = Math.max(1, Math.min(127, Math.round(velocity)))
+    inst.play(hold ? [[t, 0x90, pitch, v]] : [[t, 0x90, pitch, v], [t + 0.35, 0x80, pitch, 0]])
+    return
+  }
+  if (hold && track?.instrument?.vst) return
   playSynthNote(c, master!, pitch, velocity, c.currentTime + 0.01, 0.35, track ? timbreOf(track) : 'soft')
+}
+
+/** the key of a held note comes up (only instruments hold notes; the built-in synth plays a short note) */
+export function releaseNote(pitch: number, track?: Track): void {
+  const m = track ? monitors.get(track.id) : undefined
+  if (m && ctx) m.node.play([[ctx.currentTime, 0x80, pitch, 0]])
 }
 
 // ── recording (microphone / audio interface) ─────────────────────────────────
@@ -998,6 +1060,13 @@ export async function stopRecording(): Promise<void> {
 
 export interface MixResult { wav: Uint8Array; seconds: number; peak: number }
 
+function sliceBuffer(b: AudioBuffer, from: number, frames: number): AudioBuffer {
+  const n = Math.max(1, Math.min(frames, b.length - from))
+  const out = new AudioBuffer({ numberOfChannels: b.numberOfChannels, length: n, sampleRate: b.sampleRate })
+  for (let c = 0; c < b.numberOfChannels; c++) out.copyToChannel(b.getChannelData(c).subarray(from, from + n), c)
+  return out
+}
+
 export async function renderMix(opts: { bits: 16 | 24; normalize: boolean; tailSeconds?: number }): Promise<MixResult> {
   const project = useProjectStore.getState().project
   await loadAllFiles(project)
@@ -1005,16 +1074,20 @@ export async function renderMix(opts: { bits: 16 | 24; normalize: boolean; tailS
   const endBeat = projectEndBeat(project)
   if (endBeat <= 0) throw new Error('The project is empty: nothing to export.')
   const seconds = beatToSec(project, endBeat) + (opts.tailSeconds ?? 2)
-  const off = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr)
+  // with plugins the song starts a little later (their delay) and that time is cut off again
+  const lead = projectHasVst(project) ? 0.25 : 0
+  const off = new OfflineAudioContext(2, Math.ceil((seconds + lead) * sr), sr)
   await loadWorklets(off)
   const out = off.createGain()
   out.gain.value = useAudioStore.getState().masterVolume
   out.connect(off.destination)
   const vst = projectHasVst(project) && await prepareVstOffline(off, project)
-  scheduleProject(off, out, project, 0, 0)
-  if (vst) pumpOffline(off, seconds)
-  let rendered: AudioBuffer
-  try { rendered = await off.startRendering() } finally { if (vst) await releaseVstOffline(off) }
+  const start = vst ? Math.max(lead, pluginLead(off, project)) : 0
+  scheduleProject(off, out, project, 0, start)
+  if (vst) pumpOffline(off, seconds + start)
+  let full: AudioBuffer
+  try { full = await off.startRendering() } finally { if (vst) await releaseVstOffline(off) }
+  const rendered = start > 0 ? sliceBuffer(full, Math.round(start * sr), Math.ceil(seconds * sr)) : full
   const peak = peakOf(rendered)
   const gain = opts.normalize && peak > 0 ? 0.891 / peak : 1                 // -1 dBFS
   return { wav: encodeWav(rendered, opts.bits, gain), seconds, peak: peak * gain }

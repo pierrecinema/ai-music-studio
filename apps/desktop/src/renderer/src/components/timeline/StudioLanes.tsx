@@ -228,6 +228,30 @@ function VstControls({ fx, track }: { fx: InsertFx; track: Track }): React.React
   )
 }
 
+// the instrument of a MIDI track: the built-in synth, or one of the VST instruments found in Settings → Plugins
+export function InstrumentSelect({ track, style }: { track: Track; style?: React.CSSProperties }): React.ReactElement {
+  const plugins = usePluginsStore((s) => s.plugins.filter((p) => p.isInstrument && !s.off.includes(p.id)))
+  const updateTrack = useProjectStore((s) => s.updateTrack)
+  const cur = track.instrument?.vst?.pluginId ?? ''
+  return (
+    <select value={cur} style={style} title={tr('What plays the notes of this track')} onChange={(e) => {
+      const p = plugins.find((x) => x.id === e.target.value)
+      e.target.blur()
+      if (!p) { updateTrack(track.id, { instrument: undefined }); return }
+      const fx: InsertFx = { id: nanoid(), type: 'vst', on: true, p: {}, vst: { pluginId: p.id, name: p.name, vendor: p.vendor, format: p.format, xml: p.xml, arch: p.arch } }
+      updateTrack(track.id, { instrument: fx })
+      void openPlugin(fx, track.name)
+    }}>
+      <option value="">{tr('Built-in synth')}</option>
+      {plugins.length > 0 && <optgroup label={tr('VST instruments')}>
+        {plugins.map((p) => <option key={p.id} value={p.id}>{p.name}{p.vendor ? ` (${p.vendor})` : ''} · {p.format}{p.arch === 'x86' ? ' · 32-bit' : ''}</option>)}
+      </optgroup>}
+      {cur && !plugins.some((p) => p.id === cur) && <option value={cur}>{track.instrument?.vst?.name} ({tr('not found')})</option>}
+      {!plugins.length && <option value="" disabled>{tr('No VST instruments yet: Settings → Plugins')}</option>}
+    </select>
+  )
+}
+
 export async function openPlugin(fx: InsertFx, trackName: string): Promise<void> {
   try { await showVstEditor(fx, liveSampleRate(), trackName) }
   catch (e) { window.alert(trf('The plugin could not be opened: {m}', { m: (e as Error).message })) }

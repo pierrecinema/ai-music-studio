@@ -17,19 +17,18 @@ exported song without help from outside the app. Linux comes after RC 1.0.
 | Mastering step 6 | Album: several songs, the same loudness, gaps, one export | |
 | Looks | Analog console (#72) and Swiss (#73) rebuilt like the rack, with own panels | The owner likes them |
 
-## 0.80: the "coming soon" pages: **decide** for each
+## 0.80: Vocal Editor (owner, 18.11.2026)
 
-Each page either works in 1.0 or is hidden until it works (no "coming soon" in 1.0).
+- Short vocals first: a word, a phrase, one-shots and short vocal loops (owner's wish of 12.11.), voice (male / female / style), language, tempo and key; trimmed to the sung part and saved to the Library with tags.
+- Then longer vocals from notes and lyrics on a MIDI track, placed in the Studio.
 
-| Page | Proposal |
-|---|---|
-| Vocal Editor | **Build** a first version: short vocals (word, phrase, one-shots) with ACE-Step, saved to the Library (owner's wish of 12.11.) |
-| AI Instruments | **Build** small: MIDI track → AI-rendered audio in a chosen instrument style |
-| Karaoke Export | **Build**: Stem Splitter already gives the instrumental; add word timing, .lrc and a simple lyric video |
-| Video Composer | Hide until after 1.0 |
-| Cloud Rendering (Pro) | Hide until after 1.0 (licences and costs first) |
+## 0.90: AI Instruments (owner, 18.11.2026)
 
-## 0.90: help, languages, first start
+- A MIDI track rendered to audio by AI in a chosen instrument or style, placed back in the Studio as an audio clip.
+
+Karaoke Export, Video Composer and Cloud Rendering (Pro): **decide**: hidden in 1.0 (no "coming soon" pages) or built later.
+
+## 0.95: help, languages, first start
 
 - **Help in the app:** the manual and wiki inside the app, in the chosen language, a "?" on each page that opens its part.
 - **First start guide:** three steps: install an AI engine, make a first song, open it in the Studio. A demo project to try at once.
@@ -48,7 +47,7 @@ Each page either works in 1.0 or is hidden until it works (no "coming soon" in 1
 ## After 1.0
 
 - Linux (AppImage, engine install; owner tests in WSL2 or a VM).
-- Video Composer, Cloud Rendering (Pro), more looks (tape machine, modular, blueprint …), macOS if asked for.
+- Karaoke Export, Video Composer, Cloud Rendering (Pro) if not built before, more looks (tape machine, modular, blueprint …), macOS if asked for.
 
 ## Alongside, all the time
 

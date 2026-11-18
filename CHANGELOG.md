@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.60.4
+
+- **ASIO: no sound.** The app stopped the plugin host when no plugin was in use, and with it the opened ASIO device; the Studio then started a new host without the device and stayed silent while Settings still showed it open. The host now keeps running while ASIO is chosen, and if it has to start again the device is reopened and the sound reconnected by itself.
+
 ## 0.60.3
 
 - **VST instruments:** the first note no longer waits until every plugin of the project is loaded (with big plugins that took up to a minute, and again after switching the audio driver): only the instrument is loaded, and it is made ready as soon as it is chosen.

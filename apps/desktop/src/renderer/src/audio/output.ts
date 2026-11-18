@@ -58,6 +58,9 @@ type Sinkable = { setSinkId?: (id: string | { type: 'none' }) => Promise<void> }
 // every player's sound ends in its context's output bus: to the Windows device, or (ASIO) to the plugin host
 const buses = new WeakMap<BaseAudioContext, { bus: GainNode; out?: AudioWorkletNode; key?: string }>()
 let streamCount = 0
+// the contexts that send their sound to the host: after a restart of the host they are connected to the new one
+const streaming = new Set<AudioContext>()
+let watchingHost = false
 
 /** where a player connects its final sound (instead of ctx.destination) */
 export function outputBus(ctx: AudioContext): AudioNode {
@@ -82,10 +85,15 @@ async function routeContext(ctx: AudioContext): Promise<void> {
     setHostOutput(true)
     await host.ensure()
     host.stream(b.out, b.key!)
+    streaming.add(ctx)
+    watchHost()
+    // the device may not be open in this host (it was started again): open it
+    if (!hostInfo?.ok) void openHostDevice()
     try { await t.setSinkId?.({ type: 'none' }) } catch { /* plays on the default device as well */ }
   } else {
     b.bus.disconnect(); b.bus.connect(ctx.destination)
     if (b.out) { b.out.port.postMessage({ dispose: true }); b.out.disconnect(); b.out = undefined }
+    streaming.delete(ctx)
   }
 }
 
@@ -202,7 +210,10 @@ export async function listHostDevices(): Promise<HostDeviceType[]> {
 
 /** opens the chosen device in the host (driver 'asio'); a different sample rate makes the app run at the device's */
 export async function openHostDevice(): Promise<HostDeviceInfo> {
-  const { host } = await import('./vst/host')
+  const { host, setHostOutput } = await import('./vst/host')
+  // the host must keep running now, also without plugins (it was stopped as "unused" and the device went with it)
+  setHostOutput(true)
+  watchHost()
   try {
     await host.ensure()
     const r = await host.call<HostDeviceInfo>('audioOpen', { type: current.hostType, device: current.hostDevice, sampleRate: current.hostRate, buffer: current.hostBuffer, channel: current.hostChannel }, 30000)
@@ -250,4 +261,30 @@ export function watchHostDevice(): () => void {
   }
   sync(current)
   return onAudioSettings((s) => sync(s))
+}
+
+/** when the host stops (crash, or stopped from outside) while ASIO is chosen: start it again, open the device and
+ *  connect the players' sound to it */
+function watchHost(): void {
+  if (watchingHost) return
+  watchingHost = true
+  void import('./vst/host').then(({ host }) => {
+    host.onExit(() => {
+      setHostInfo(null)
+      if (current.driver !== 'asio') return
+      window.setTimeout(() => {
+        void (async () => {
+          try {
+            await host.ensure()
+            await openHostDevice()
+            for (const ctx of [...streaming]) {
+              if (ctx.state === 'closed') { streaming.delete(ctx); continue }
+              const b = buses.get(ctx)
+              if (b?.out) { b.key = `out#${streamCount++}`; host.stream(b.out, b.key) }
+            }
+          } catch { /* shown in Settings → Audio */ }
+        })()
+      }, 500)
+    })
+  })
 }

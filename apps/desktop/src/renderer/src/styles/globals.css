@@ -471,3 +471,24 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 [data-theme="rack"] .btn { border-radius: 2px; box-shadow: 0 2px 0 #000; }
 [data-theme="rack"] .btn-primary { color: #111; background: #f5a623; }
 [data-theme="rack"] .panel { border-radius: 2px; background: linear-gradient(#34373d, #2a2d32); }
+
+/* Hardware rack: the menu as a row of rack keys under the top bar, the effect rack at the right, a big LCD */
+[data-theme="rack"] .app-body { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-rows: 46px minmax(0, 1fr); }
+[data-theme="rack"] .app-body > .app-nav-bar { grid-column: 1 / -1; grid-row: 1; padding: 6px 30px !important; gap: 6px !important; border-right: none !important; border-bottom: 2px solid #000; position: relative; }
+[data-theme="rack"] .app-body > .app-nav-bar::before, [data-theme="rack"] .app-body > .app-nav-bar::after {
+  content: ''; position: absolute; top: 50%; margin-top: -5px; width: 10px; height: 10px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #bbb, #555);
+}
+[data-theme="rack"] .app-body > .app-nav-bar::before { left: 10px; }
+[data-theme="rack"] .app-body > .app-nav-bar::after { right: 10px; }
+[data-theme="rack"] .app-nav-bar button { background: #24262a !important; color: #9aa1ab !important; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.5), 0 1px 0 #555a62 !important; font-weight: 700 !important; font-size: 10px !important; }
+[data-theme="rack"] .app-nav-bar button[style*="var(--accent)"] { background: #f5a623 !important; color: #111 !important; }
+[data-theme="rack"] .app-body > .app-main { grid-column: 1; grid-row: 2; min-height: 0; border: 6px solid #2c2f34; box-shadow: inset 0 0 0 1px #000; }
+[data-theme="rack"] .app-body > .rack-panel { grid-column: 2; grid-row: 2; min-height: 0; }
+[data-theme="rack"] .app-body > .ai-chat-sidebar { grid-column: 3; grid-row: 2; min-height: 0; }
+[data-theme="rack"] .app-topbar { height: 58px; }
+[data-theme="rack"] .tb-position { min-width: 150px; font-size: 20px !important; text-align: center; padding: 4px 14px !important; letter-spacing: 0.08em; }
+[data-theme="rack"] .tb-bpm { padding: 4px 10px !important; }
+/* mixer faders and other sliders: light fader caps */
+[data-theme="rack"] input[type=range] { accent-color: #f5a623; }
+[data-theme="rack"] input[type=range]::-webkit-slider-thumb { background: linear-gradient(#e8e8e8, #a8a8a8); border: 1px solid #111; border-radius: 2px; }

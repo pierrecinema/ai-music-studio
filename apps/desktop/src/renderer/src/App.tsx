@@ -32,6 +32,7 @@ import { FeedbackButton } from './components/common/Feedback'
 import { Mastering } from './components/mastering/Mastering'
 import { KaraokeExport } from './components/karaoke/KaraokeExport'
 import { watchHostDevice } from './audio/output'
+import { RackPanel } from './components/layout/RackPanel'
 import { tr, trf } from './i18n/tr'
 
 // Hardware info fetched from backend
@@ -225,6 +226,9 @@ export default function App(): React.ReactElement {
             </div>
           )}
         </main>
+
+        {/* Hardware rack look: the effects of the selected track as rack modules */}
+        {theme === 'rack' && <RackPanel />}
 
         {/* AI Chat sidebar */}
         <div className={`ai-chat-sidebar${chatOpen ? '' : ' collapsed'}`}>

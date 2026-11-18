@@ -29,9 +29,9 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.51
+### New in 0.52
 
-- **VST plugins in Mastering** (own **+ VST plugin…** menu, anywhere in the chain, saved with the song, in the export), **Stem Splitter → Studio** (all stems on their own tracks in one group), Studio groups show every stem with its name and waveform, and a double-click makes the group's row large, round hardware-style knobs in Mastering, three new looks (**Analog console**, **Swiss**, **Hardware rack**) in Settings → Appearance, your own keyboard shortcuts on free keys, and a new **Settings → Audio** page (output and input device, sample rate, buffer and latency, test tone).
+- **VST instruments on MIDI tracks** (Channel → Instrument; Piano Roll, MIDI keyboard, recording and export), two **free open-source instruments** to install with one click (**Dexed**, **Surge XT**), **ASIO output** through the plugin host (Settings → Audio, with the ASIO control panel), and the **Hardware rack** look rebuilt with an LCD, rack keys and an effect rack.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
@@ -104,7 +104,7 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 **Swiss** – white and black, heavy type, no rounded corners, orange as the only colour, the menu as a bar along the bottom.
 
 <img src="docs/screenshots/layout-rack.png" alt="Look: Hardware rack" width="100%">
-**Hardware rack** – grey device fronts with screws, a green LCD for position and tempo, keys with a light, amber.
+**Hardware rack** – grey device fronts with screws, a wide green LCD for position and tempo, the menu as a row of rack keys, the selected track's effects as rack modules with knobs at the right.
 
 | | |
 |---|---|

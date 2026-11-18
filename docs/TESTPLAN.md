@@ -266,3 +266,24 @@ Vorbereitung: VST3- oder VST2-Effekte auf dem PC, am besten ein 64-Bit- und ein 
 
 Nach dem Test: Datei mit den Einträgen an Claude geben („hier der Testplan mit Ergebnissen“). Fehler (❌) werden zuerst
 behoben, dann der nächste Bereich.
+
+## 11. Neu in 0.52.0: Instrumente, ASIO, Hardware-Rack
+
+| Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 11.1 | Einstellungen → Plugins → **Kostenlose Instrumente**: bei Dexed **Installieren** | Fortschritt, dann „Dexed … ist installiert“; Dexed erscheint in der Plugin-Liste (Typ Instrument) | | | |
+| 11.2 | Ebenso **Surge XT** installieren | Wie 11.1 | | | |
+| 11.3 | Studio: **+ MIDI-Spur**, rechts **Kanal** → **Instrument** → Dexed wählen | Das Fenster von Dexed öffnet sich; im Spurkopf steht „midi · Dexed“ | | | |
+| 11.4 | Im Piano Roll Noten zeichnen / anklicken | Man hört Dexed (nicht den eingebauten Synth) | | | |
+| 11.5 | Song abspielen | Die Noten der MIDI-Spur spielen mit Dexed, im Takt mit den anderen Spuren | | | |
+| 11.6 | MIDI-Keyboard (falls vorhanden): Taste halten | Ton klingt, solange die Taste gedrückt ist | | | |
+| 11.7 | In Dexed einen anderen Klang wählen, Projekt speichern, schließen, wieder öffnen | Der gewählte Klang ist wieder da | | | |
+| 11.8 | Datei → Exportieren | Die MIDI-Spur ist mit Dexed im Export, die erste Note nicht verspätet | | | |
+| 11.9 | Kanal → Instrument: ⏻ aus | Die Noten spielen wieder mit dem eingebauten Synth | | | |
+| 11.10 | ASIO4ALL oder FlexASIO installieren; Einstellungen → Audio → Treibertyp **ASIO / andere Treiber** | Treiber „ASIO“ in der Liste; nach Wahl des Geräts grüne Zeile „Spielt auf …“ | | | |
+| 11.11 | Testton an; dann Song im Studio und im Mastering abspielen | Ton kommt über ASIO; keine Aussetzer (sonst Puffer größer) | | | |
+| 11.12 | **Treiber-Einstellungen (ASIO-Bedienfeld)…** | Das Fenster des ASIO-Treibers öffnet sich; Änderungen gelten danach | | | |
+| 11.13 | Zurück auf **Windows (Standard)** | Ton wieder über das gewählte Windows-Gerät | | | |
+| 11.14 | Einstellungen → Erscheinungsbild → **Hardware-Rack** | Großes grünes LCD oben, Menü als Rack-Tasten, rechts Effekt-Rack der gewählten Spur | | | |
+| 11.15 | Im Effekt-Rack einen Knopf drehen, ein Modul mit der Lampe aus/an, **+ Effekt…** | Klang ändert sich; Modul aus/an; neues Modul erscheint | | | |
+| 11.16 | Mastering: Song abspielen, auf die drei Anzeigen neben dem Master-Fader achten | Sie bleiben ruhig an ihrer Stelle | | | |

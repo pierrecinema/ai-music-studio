@@ -76,10 +76,13 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 ## Screenshots
 
-*Shown with demo content: example songs, a demo project and a PC without AI engines installed yet. Studio, Piano Roll, Mixer, Mastering and Settings are shown in the Hardware rack look.*
+*Shown with demo content: example songs, a demo project and a PC without AI engines installed yet. Piano Roll, Mixer, Mastering and Settings are shown in the Hardware rack look.*
 
-<img src="docs/screenshots/studio.png" alt="Studio" width="100%">
-**Studio** (Hardware rack look) – arrangement with loop and markers, volume automation, tempo-synced loops pasted one after the other, MIDI tracks with the free instruments Dexed and Surge XT, a reverb return track, and the selected track's effects (EQ, compressor, reverb) as rack modules with knobs.
+<img src="docs/screenshots/layout-dark.png" alt="Studio" width="100%">
+**Studio** – arrangement with loop and markers, volume automation, tempo-synced loops pasted one after the other, MIDI tracks with the free instruments Dexed and Surge XT and a reverb return track.
+
+<img src="docs/screenshots/studio.png" alt="Studio in the Hardware rack look" width="100%">
+**The same Studio in the Hardware rack look** – the selected track's effects (EQ, compressor, reverb) as rack modules with knobs at the right.
 
 <img src="docs/screenshots/create-studio.png" alt="Create music" width="100%">
 **Create music** – describe the style, write lyrics, pick a model and make a song or a seamless loop (1–16 bars). Simple and Studio mode.

@@ -482,3 +482,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 /* mixer faders and other sliders: light fader caps */
 [data-theme="rack"] input[type=range] { accent-color: #f5a623; }
 [data-theme="rack"] input[type=range]::-webkit-slider-thumb { background: linear-gradient(#e8e8e8, #a8a8a8); border: 1px solid #111; border-radius: 2px; }
+
+/* light looks: the clip names in dark ink (white on the light clips could not be read) */
+[data-theme="light"] .clip-title, [data-theme="swiss"] .clip-title { color: #111 !important; text-shadow: 0 0 3px rgba(255,255,255,0.9) !important; }

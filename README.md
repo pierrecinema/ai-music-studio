@@ -76,10 +76,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 ## Screenshots
 
-*Shown with demo content: example songs, a demo project and a PC without AI engines installed yet.*
+*Shown with demo content: example songs, a demo project and a PC without AI engines installed yet. Studio, Piano Roll, Mixer, Mastering and Settings are shown in the Hardware rack look.*
 
 <img src="docs/screenshots/studio.png" alt="Studio" width="100%">
-**Studio** – arrangement with loop and markers, volume and pan automation lanes, effects on a track (EQ, compressor), tempo-synced loops pasted one after the other, MIDI clip, reverb return track.
+**Studio** (Hardware rack look) – arrangement with loop and markers, volume automation, tempo-synced loops pasted one after the other, MIDI tracks with the free instruments Dexed and Surge XT, a reverb return track, and the selected track's effects (EQ, compressor, reverb) as rack modules with knobs.
 
 <img src="docs/screenshots/create-studio.png" alt="Create music" width="100%">
 **Create music** – describe the style, write lyrics, pick a model and make a song or a seamless loop (1–16 bars). Simple and Studio mode.
@@ -95,7 +95,15 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 ### Looks
 
-*Settings → Appearance* has five looks: Dark (above), Light and three that change more than the colours.
+*Settings → Appearance* has five looks. Here is the same Studio project in each of them:
+
+<img src="docs/screenshots/looks-all.png" alt="The Studio in all five looks" width="100%">
+
+<img src="docs/screenshots/layout-dark.png" alt="Look: Dark" width="100%">
+**Dark** – the standard look.
+
+<img src="docs/screenshots/layout-light.png" alt="Look: Light" width="100%">
+**Light** – the same layout on a light background.
 
 <img src="docs/screenshots/layout-console.png" alt="Look: Analog console" width="100%">
 **Analog console** – warm wood at the sides, amber and brown, round transport keys and a glowing position display.

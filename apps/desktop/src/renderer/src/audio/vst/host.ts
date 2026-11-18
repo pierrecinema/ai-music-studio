@@ -321,6 +321,25 @@ export async function prepareVst(project: Project, sampleRate: number): Promise<
   }))
 }
 
+/** loads one plugin of the Studio (the instrument whose note is played): not the whole project, which took a
+ *  minute with big plugins in it before the first note sounded */
+export async function prepareOne(fx: InsertFx, sampleRate: number): Promise<void> {
+  if (!fx.vst) return
+  const l = live.get(fx.id)
+  if (l && l.sampleRate === sampleRate && l.ref.pluginId === fx.vst.pluginId) return
+  if (l) { live.delete(fx.id); l.client.call('unload', { instance: l.instance }).catch(() => {}) }
+  let p = loading.get(fx.id)
+  if (!p) {
+    const ref = fx.vst
+    p = loadInstance(ref, sampleRate)
+      .then((r) => { const n: Live = { ...r, ref, sampleRate, scope: 'studio' }; live.set(fx.id, n); failures.delete(fx.id); return n })
+      .catch((e: Error) => { failures.set(fx.id, e.message); return null })
+      .finally(() => { loading.delete(fx.id); changed() })
+    loading.set(fx.id, p)
+  }
+  await p
+}
+
 // ── plugins in the Mastering chain (their own scope: the Studio does not unload them) ─────────────────────────
 const masterIds = new Set<string>()
 

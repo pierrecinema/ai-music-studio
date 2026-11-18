@@ -3,6 +3,11 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.60.3
+
+- **VST instruments:** the first note no longer waits until every plugin of the project is loaded (with big plugins that took up to a minute, and again after switching the audio driver): only the instrument is loaded, and it is made ready as soon as it is chosen.
+- **ASIO:** on a PC without an ASIO driver the app now says so ("No ASIO driver is installed…") instead of "the device could not be opened", and points to ASIO4ALL / FlexASIO.
+
 ## 0.60.2
 
 - **VST instruments:** right after choosing an instrument, the notes of the Piano Roll sometimes stayed silent until it was switched off and on: opening its window and the first note each loaded their own copy of the plugin, and the notes went to the copy nobody heard. Now only one copy is loaded, and the notes always go to it.

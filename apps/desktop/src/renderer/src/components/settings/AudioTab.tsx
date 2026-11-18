@@ -25,7 +25,7 @@ function HostDeviceSection({ s }: { s: ReturnType<typeof audioSettings> }): Reac
   useEffect(() => { load(); return onHostDevice(setInfo) }, [])
   useEffect(() => { const t = window.setInterval(() => { void hostStats().then((x) => setSt(x)) }, 1000); return () => window.clearInterval(t) }, [])
   const type = types?.find((t) => t.type === s.hostType) ?? types?.[0]
-  const asio = types?.some((t) => t.type === 'ASIO')
+  const asio = types?.some((t) => t.type === 'ASIO' && t.devices.length > 0)
   const pairs = (info?.channels ?? []).map((_, i) => i).filter((i) => i % 2 === 0)
   return (
     <>

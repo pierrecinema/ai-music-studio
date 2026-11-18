@@ -276,7 +276,7 @@ behoben, dann der nächste Bereich.
 | 11.3 | Studio: **+ MIDI-Spur**, rechts **Kanal** → **Instrument** → Dexed wählen | Das Fenster von Dexed öffnet sich; im Spurkopf steht „midi · Dexed“ | ⚠️ | Piano-Roll-Noten erst stumm (zweite Plugin-Kopie) → 0.60.2 | 0.60.0 |
 | 11.4 | Im Piano Roll Noten zeichnen / anklicken | Man hört Dexed (nicht den eingebauten Synth) | ⚠️ | erst nach Aus/An → 0.60.2 | 0.60.0 |
 | 11.5 | Song abspielen | Die Noten der MIDI-Spur spielen mit Dexed, im Takt mit den anderen Spuren | ✅ |  | 0.60.0 |
-| 11.6 | MIDI-Keyboard (falls vorhanden): Taste halten | Ton klingt, solange die Taste gedrückt ist | | | |
+| 11.6 | MIDI-Keyboard (falls vorhanden): Taste halten | Ton klingt, solange die Taste gedrückt ist | ✅ | | 0.60.0 |
 | 11.7 | In Dexed einen anderen Klang wählen, Projekt speichern, schließen, wieder öffnen | Der gewählte Klang ist wieder da | ✅ |  | 0.60.0 |
 | 11.8 | Datei → Exportieren | Die MIDI-Spur ist mit Dexed im Export, die erste Note nicht verspätet | ✅ |  | 0.60.0 |
 | 11.9 | Kanal → Instrument: ⏻ aus | Die Noten spielen wieder mit dem eingebauten Synth | ✅ |  | 0.60.0 |
@@ -287,7 +287,10 @@ behoben, dann der nächste Bereich.
 | 11.14 | Einstellungen → Erscheinungsbild → **Hardware-Rack** | Großes grünes LCD oben, Menü als Rack-Tasten, rechts Effekt-Rack der gewählten Spur | ✅ |  | 0.60.0 |
 | 11.15 | Im Effekt-Rack einen Knopf drehen, ein Modul mit der Lampe aus/an, **+ Effekt…** | Klang ändert sich; Modul aus/an; neues Modul erscheint | ⚠️ | nach Zurück zu Windows kein Ton bis Neustart → 0.60.2 | 0.60.0 |
 | 11.16 | Mastering: Song abspielen, auf die drei Anzeigen neben dem Master-Fader achten | Sie bleiben ruhig an ihrer Stelle | ✅ |  | 0.60.0 |
-| 11.14b | Erscheinungsbild **Hardware-Rack**: Menü und KI-Chat ansehen | Menü links an der Seite (Rack-Tasten); das Effekt-Rack rechts nur im Studio, Piano Roll und Mixer | | | |
-| 11.3b | Neue MIDI-Spur, Kanal → Instrument → Dexed; sofort im Piano Roll Noten anklicken | Gleich Dexed-Ton, ohne Aus/An | | | |
-| 11.12b | ASIO: **Treiber-Einstellungen (ASIO-Bedienfeld)…**, etwas ändern, schließen | Keine Fehlermeldung; die grüne Zeile zeigt die neuen Werte; Ton läuft weiter | | | |
-| 11.13b | Von ASIO zurück auf **Windows (Standard)**, Song abspielen | Ton kommt sofort über Windows, ohne Neustart | | | |
+| 11.14b | Erscheinungsbild **Hardware-Rack**: Menü und KI-Chat ansehen | Menü links an der Seite (Rack-Tasten); das Effekt-Rack rechts nur im Studio, Piano Roll und Mixer | ✅ |  | 0.60.2 |
+| 11.3b | Neue MIDI-Spur, Kanal → Instrument → Dexed; sofort im Piano Roll Noten anklicken | Gleich Dexed-Ton, ohne Aus/An | ⚠️ | Ton erst nach ca. 1 Minute (alle Plugins wurden geladen) → 0.60.3 | 0.60.2 |
+| 11.12b | ASIO: **Treiber-Einstellungen (ASIO-Bedienfeld)…**, etwas ändern, schließen | Keine Fehlermeldung; die grüne Zeile zeigt die neuen Werte; Ton läuft weiter | ❌ | kein ASIO-Treiber auf diesem PC; Meldung unklar → 0.60.3 | 0.60.2 |
+| 11.13b | Von ASIO zurück auf **Windows (Standard)**, Song abspielen | Ton kommt sofort über Windows, ohne Neustart | ⚠️ | Ton geht, Noten ca. 4 s verzögert (Plugins neu geladen) → 0.60.3 | 0.60.2 |
+| 11.3c | Projekt mit Surge XT auf einer Spur; neue MIDI-Spur → Instrument Dexed; sofort Noten im Piano Roll | Dexed klingt nach wenigen Sekunden (nicht erst nach einer Minute) | | | |
+| 11.12c | PC ohne ASIO-Treiber: Treibertyp ASIO / andere Treiber, Treiber ASIO | Klare Meldung „Kein ASIO-Treiber installiert …“; mit Treiber „Windows Audio“ spielt es | | | |
+| 11.13c | Von ASIO zurück auf Windows, dann Noten im Piano Roll anklicken | Noten nach kurzer Ladezeit ohne Verzögerung | | | |

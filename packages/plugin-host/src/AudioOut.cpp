@@ -26,6 +26,20 @@ juce::var AudioOut::open (const juce::String& type, const juce::String& device, 
     close();
     // once only: initialising again opened the default device of the current type (the ASIO driver) behind our back
     if (! initialised) { dm.initialise (0, 2, nullptr, false); dm.closeAudioDevice(); initialised = true; }
+    // a driver type without any device (ASIO with no ASIO driver installed) cannot be opened: say so clearly
+    for (auto* t : dm.getAvailableDeviceTypes())
+    {
+        if (t->getTypeName() != type) continue;
+        t->scanForDevices();
+        if (t->getDeviceNames (false).isEmpty())
+        {
+            auto* r = new juce::DynamicObject();
+            r->setProperty ("ok", false);
+            r->setProperty ("error", type == "ASIO" ? juce::String ("No ASIO driver is installed on this PC (install the driver of your audio interface, or ASIO4ALL / FlexASIO).")
+                                                     : "No device of this driver type was found.");
+            return juce::var (r);
+        }
+    }
     dm.setCurrentAudioDeviceType (type, false);
     auto setup = dm.getAudioDeviceSetup();
     setup.outputDeviceName = device;

@@ -2,7 +2,7 @@
 // track, take lanes for comping, and the return tracks with their effects.
 import { usePluginsStore } from '../../stores/plugins.store'
 import { onVstChange, showVstEditor, vstFailure } from '../../audio/vst/host'
-import { liveSampleRate } from '../../audio/engine'
+import { liveSampleRate, warmInstrument } from '../../audio/engine'
 import React, { useEffect, useRef, useState } from 'react'
 import { useProjectStore } from '../../stores/project.store'
 import { snapBeat } from '../../edit/grid'
@@ -240,7 +240,10 @@ export function InstrumentSelect({ track, style }: { track: Track; style?: React
       if (!p) { updateTrack(track.id, { instrument: undefined }); return }
       const fx: InsertFx = { id: nanoid(), type: 'vst', on: true, p: {}, vst: { pluginId: p.id, name: p.name, vendor: p.vendor, format: p.format, xml: p.xml, arch: p.arch } }
       updateTrack(track.id, { instrument: fx })
-      void openPlugin(fx, track.name)
+      void openPlugin(fx, track.name).then(() => {
+        const t = useProjectStore.getState().project.tracks.find((x) => x.id === track.id)
+        if (t) warmInstrument(t)
+      })
     }}>
       <option value="">{tr('Built-in synth')}</option>
       {plugins.length > 0 && <optgroup label={tr('VST instruments')}>

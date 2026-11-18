@@ -16,7 +16,7 @@ import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
 import { hasAutomation, scheduleLane } from './automation'
 import { makeEffect, makeInsert } from './fx'
 import { applyOutput, audioSettings, outputBus, contextOptions, inputConstraints, onAudioSettings, stopTests } from './output'
-import { liveInstance, makeVstInstrument, prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
+import { liveInstance, makeVstInstrument, prepareOne, prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
 import { loadWorklets } from './master/worklets'
 import { exportSampleRate } from '../lib/sampleRate'
 import { beatOfSrc, renderWarped } from './warp'
@@ -908,7 +908,7 @@ async function makeMonitor(track: Track): Promise<NonNullable<ReturnType<typeof 
   if (m) { m.node.dispose(); m.gain.disconnect(); monitors.delete(track.id) }
   const c = ensureContext()
   await loadWorklets(c)
-  await prepareVst(useProjectStore.getState().project, c.sampleRate)
+  await prepareOne(fx, c.sampleRate)                 // only this instrument, not every plugin of the project
   const node = makeVstInstrument(c, fx)
   if (!node) return null
   const gain = c.createGain()
@@ -917,6 +917,9 @@ async function makeMonitor(track: Track): Promise<NonNullable<ReturnType<typeof 
   monitors.set(track.id, { fxId: fx.id, node, gain, ctx: c })
   return node
 }
+
+/** gets a track's instrument ready to play notes (when it is chosen), so the first note does not wait for it */
+export function warmInstrument(track: Track): void { void monitorFor(track) }
 
 /** a note sounds for a moment; `hold`: it sounds until releaseNote (a key held on a MIDI keyboard) */
 export async function previewNote(pitch: number, velocity = 100, track?: Track, hold = false): Promise<void> {

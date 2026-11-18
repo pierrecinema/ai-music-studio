@@ -16,7 +16,7 @@ import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
 import { hasAutomation, scheduleLane } from './automation'
 import { makeEffect, makeInsert } from './fx'
 import { applyOutput, audioSettings, outputBus, contextOptions, inputConstraints, onAudioSettings, stopTests } from './output'
-import { makeVstInstrument, prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
+import { liveInstance, makeVstInstrument, prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
 import { loadWorklets } from './master/worklets'
 import { exportSampleRate } from '../lib/sampleRate'
 import { beatOfSrc, renderWarped } from './warp'
@@ -888,13 +888,23 @@ export function seekPreview(seconds: number): void {
 
 // a MIDI track with a VST instrument: the notes you play (Piano Roll, MIDI keyboard) sound through the plugin,
 // on its own live node (one per track), also while the song is stopped
-const monitors = new Map<string, { fxId: string; node: NonNullable<ReturnType<typeof makeVstInstrument>>; gain: GainNode }>()
+const monitors = new Map<string, { fxId: string; node: NonNullable<ReturnType<typeof makeVstInstrument>>; gain: GainNode; ctx: AudioContext }>()
+const monitorLoads = new Map<string, Promise<NonNullable<ReturnType<typeof makeVstInstrument>> | null>>()
 
-async function monitorFor(track: Track): Promise<NonNullable<ReturnType<typeof makeVstInstrument>> | null> {
+function monitorFor(track: Track): Promise<NonNullable<ReturnType<typeof makeVstInstrument>> | null> {
+  // one at a time per track: quick notes while the plugin loads made several monitors
+  let p = monitorLoads.get(track.id)
+  if (!p) { p = makeMonitor(track).finally(() => monitorLoads.delete(track.id)); monitorLoads.set(track.id, p) }
+  return p
+}
+
+async function makeMonitor(track: Track): Promise<NonNullable<ReturnType<typeof makeVstInstrument>> | null> {
   const fx = track.instrument
   if (!fx?.vst || !fx.on) return null
   const m = monitors.get(track.id)
-  if (m && m.fxId === fx.id) { m.gain.gain.value = track.volume; return m.node }
+  // still the plugin copy that is loaded now, in the context that plays now (opening the plugin window or a new
+  // sample rate can load it again: notes then went to a copy nobody heard)
+  if (m && m.fxId === fx.id && m.node.instance === liveInstance(fx.id) && m.ctx === ctx) { m.gain.gain.value = track.volume; return m.node }
   if (m) { m.node.dispose(); m.gain.disconnect(); monitors.delete(track.id) }
   const c = ensureContext()
   await loadWorklets(c)
@@ -904,7 +914,7 @@ async function monitorFor(track: Track): Promise<NonNullable<ReturnType<typeof m
   const gain = c.createGain()
   gain.gain.value = track.volume
   node.output.connect(gain).connect(master!)
-  monitors.set(track.id, { fxId: fx.id, node, gain })
+  monitors.set(track.id, { fxId: fx.id, node, gain, ctx: c })
   return node
 }
 

@@ -388,10 +388,13 @@ export async function showVstEditor(fx: InsertFx, sampleRate: number, trackName:
   if (!live.get(fx.id) && loading.has(fx.id)) await loading.get(fx.id)
   let l = live.get(fx.id)
   if (!l) {
-    const r = await loadInstance(fx.vst, sampleRate)
-    l = { ...r, ref: fx.vst, sampleRate, scope: masterIds.has(fx.id) ? 'master' : 'studio' }
-    live.set(fx.id, l)
-    changed()
+    // through the loading map, so a note played meanwhile (Piano Roll) does not load a second copy of the plugin
+    const ref = fx.vst
+    const p = loadInstance(ref, sampleRate)
+      .then((r) => { const n: Live = { ...r, ref, sampleRate, scope: masterIds.has(fx.id) ? 'master' : 'studio' }; live.set(fx.id, n); failures.delete(fx.id); return n })
+      .finally(() => { loading.delete(fx.id); changed() })
+    loading.set(fx.id, p.catch(() => null))
+    l = await p
   }
   await l.client.call('editor', { instance: l.instance, show: true, title: `${fx.vst.name} – ${trackName}`, parent: l.client.windowHandle })
 }
@@ -472,7 +475,10 @@ export function projectHasVst(project: Project): boolean {
 }
 
 /** an instrument plugin of a MIDI track: no input, the notes go in as MIDI events with their context times */
-export function makeVstInstrument(ctx: BaseAudioContext, fx: InsertFx): { output: AudioNode; play: (events: number[][]) => void; dispose: () => void } | null {
+/** the host instance a plugin of the Studio runs in right now (0: not loaded) */
+export function liveInstance(fxId: string): number { return live.get(fxId)?.instance ?? 0 }
+
+export function makeVstInstrument(ctx: BaseAudioContext, fx: InsertFx): { output: AudioNode; play: (events: number[][]) => void; dispose: () => void; instance: number } | null {
   const inst = instanceFor(ctx, fx)
   if (!inst || !fx.on) return null
   const node = new AudioWorkletNode(ctx, 'ams-vst', {
@@ -483,6 +489,7 @@ export function makeVstInstrument(ctx: BaseAudioContext, fx: InsertFx): { output
   inst.client.attach(node, key, inst.instance)
   return {
     output: node,
+    instance: inst.instance,
     // events: [context time in seconds, status, data1, data2]
     play: (events) => { if (events.length) node.port.postMessage({ events }) },
     dispose: () => {

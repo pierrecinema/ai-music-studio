@@ -475,6 +475,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 /* Hardware rack: the menu at the side as rack keys, the effect rack at the right, a big LCD */
 [data-theme="rack"] .app-nav button { background: #24262a !important; color: #9aa1ab !important; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.5), 0 1px 0 #555a62 !important; margin-bottom: 3px; }
 [data-theme="rack"] .app-nav button[style*="var(--accent)"] { background: #f5a623 !important; color: #111 !important; }
+/* rack: menu icons grey and white, only Create music keeps its yellow; the AI assistant key has the colour of the lit menu key */
+[data-theme="rack"] .nav-icon:not(.nav-icon-create) { filter: grayscale(1) brightness(1.5); }
+[data-theme="rack"] .tb-ai { background: #f5a623 !important; color: #111 !important; border-radius: 2px !important; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.3); }
 [data-theme="rack"] .app-main { border: 6px solid #2c2f34; box-shadow: inset 0 0 0 1px #000; }
 [data-theme="rack"] .app-topbar { height: 58px; }
 [data-theme="rack"] .tb-position { min-width: 150px; font-size: 20px !important; text-align: center; padding: 4px 14px !important; letter-spacing: 0.08em; }

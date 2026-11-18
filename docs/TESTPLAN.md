@@ -133,7 +133,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 6c.18 | neu (0.30.4): Create, ACE-Step 1.5, Länge 240 s (oder 360 s) | kein Abbruch nach 600 s; der Song wird fertig (auf dem Prozessor dauert das lange) | ✅ | | 0.30.4: 300 s fertig nach etwa 47 min (PC i7-3930K, CPU) |
 | 6c.19 | neu (0.30.6): Create, ACE-Step 1.5 Turbo, LoRA „ACE-STEP-1.5v-rain-techno“ (Stärke 1), kurzer Song (30 s) | LoRA ist wählbar (nicht grau); Hinweis „LoRA … is used at strength 1.00“, keine Meldung „not an ACE-Step 1.5 LoRA“; Stil hörbar techno | ✅ | | 0.30.8: techno-acestep1.5-v1 geladen (Stärke 0.75), 60-s-Song ohne Speicherfehler |
 | 6c.20 | neu (0.30.7): fertiger Song in Create → **Stem Splitter**; Library → **Stem Splitter** | Stem Splitter öffnet sich mit dem Song und seinem Namen, „Split Stems“ startet | ✅ | | 0.30.8: Stems direkt aus dem fertigen Song |
-| 6c.21 | neu (0.30.9): Create mit ACE-Step 1.5, auf die Fortschrittsanzeige am Anfang achten | „Loading ACE-Step 1.5 from the disk (already downloaded …)“; falls „Downloading … missing: …“ erscheint: Text an Claude schicken | | | |
+| 6c.21 | neu (0.30.9): Create mit ACE-Step 1.5, auf die Fortschrittsanzeige am Anfang achten | „Loading ACE-Step 1.5 from the disk (already downloaded …)“; falls „Downloading … missing: …“ erscheint: Text an Claude schicken | ✅ |  | 0.51.7 |
 
 ## 7. Mastering (neu in 0.30.0)
 
@@ -151,7 +151,7 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 | 7.10 | Reference match mit einem Referenz-Song | Ergebnis öffnet sich als neuer Tab | ✅ | |  |
 | 7.11 | neu (0.30.2): beim Abspielen **Before** / **After** drücken | Wellenform, Zahlen (groß/hell), Spektrum und Lautheitskurve springen auf Original bzw. Master | ✅ | | 0.30.2: Regler sollen mitspringen → 7.13 |
 | 7.12 | neu (0.30.2): **Same loudness** aus, dann Before / After | After ist jetzt deutlich lauter (so laut wie exportiert); mit Häkchen wieder gleich laut, ohne Verzerrung | ✅ | |  |
-| 7.13 | neu (0.30.3): EQ / Kompressor / Louder verstellen, dann **Before** und **After** drücken | Before: alle Regler auf Ausgangsstellung (grau), EQ-Kurve flach; After: deine Einstellung, verstellte Regler lila mit • | | | |
+| 7.13 | neu (0.30.3): EQ / Kompressor / Louder verstellen, dann **Before** und **After** drücken | Before: alle Regler auf Ausgangsstellung (grau), EQ-Kurve flach; After: deine Einstellung, verstellte Regler lila mit • | ✅ |  | 0.51.7 |
 
 ## 7c. Mastering 0.31.0: Assistent, Schneiden, neue Effekte
 
@@ -184,10 +184,10 @@ Tipp: Pro Sitzung einen Bereich testen (z. B. heute 1–3, morgen 4–6). Nach j
 
 | # | Test | Erwartet | A | B | Notiz |
 |---|---|---|---|---|---|
-| 7b.1 | AI Chat mit Ollama (lokal) | Antwort ohne Schlüssel | | | |
-| 7b.2 | AI Chat mit Grok / Claude / ChatGPT (mit Schlüssel) | Antwort | | | |
-| 7b.3 | Coming-soon-Menüpunkte | „Coming soon“-Seite, kein Fehler | | | |
-| 7b.4 | MCP: Claude Code lokal mit `http://127.0.0.1:38765/mcp` | Claude sieht die App-Werkzeuge | | | |
+| 7b.1 | AI Chat mit Ollama (lokal) | Antwort ohne Schlüssel | ✅ | nur mit Gemini getestet; die anderen Anbieter werden als gleich angenommen | 0.51.7 |
+| 7b.2 | AI Chat mit Grok / Claude / ChatGPT (mit Schlüssel) | Antwort | ✅ | nur mit Gemini getestet; die anderen Anbieter werden als gleich angenommen | 0.51.7 |
+| 7b.3 | Coming-soon-Menüpunkte | „Coming soon“-Seite, kein Fehler | ✅ |  | 0.51.7 |
+| 7b.4 | MCP: Claude Code lokal mit `http://127.0.0.1:38765/mcp` | Claude sieht die App-Werkzeuge | ✅ |  | 0.51.7 |
 
 ## 8. Neu in 0.40.0: Übersetzung, Speichern beim Schließen
 
@@ -260,9 +260,30 @@ Vorbereitung: VST3- oder VST2-Effekte auf dem PC, am besten ein 64-Bit- und ein 
 | 10.21 | Einstellungen → **Shortcuts**: bei „Audiospur hinzufügen“ in der Spalte **Eigene** auf **+ Taste**, dann Leertaste drücken | Abgelehnt: „Space ist schon belegt: Abspielen / Pause“ | ✅ | | 0.51.5 |
 | 10.22 | Noch einmal **+ Taste**, dann z. B. Strg+Alt+K; ins Studio wechseln und Strg+Alt+K drücken | Taste erscheint in der Spalte; im Studio kommt eine neue Audiospur dazu; nach Neustart der App noch da; × entfernt sie | ❌ | Strg+Alt+K: nichts passiert (Windows meldet Strg+Alt als AltGr) → 0.51.6 | 0.51.5 |
 | 10.22b | Shortcuts → bei „Audiospur hinzufügen“ **+ Taste**, Strg+Alt+K drücken; im Studio Strg+Alt+K; App neu starten | Taste erscheint in „Eigene“; im Studio kommt eine Audiospur dazu; nach dem Neustart noch da | ❌ | Taste gesetzt, aber im Studio passiert nichts → 0.51.7 | 0.51.6 |
-| 10.22c | Shortcuts: bei „Audiospur hinzufügen“ das alte Ctrl+Alt+K mit × entfernen, **+ Taste**, Strg+Alt+K neu setzen; im Studio einmal klicken, Strg+Alt+K | Neue Audiospur. Wenn nicht: Feedback → Log senden (im Log steht dann, welche Taste ankam) | | | |
+| 10.22c | Shortcuts: bei „Audiospur hinzufügen“ das alte Ctrl+Alt+K mit × entfernen, **+ Taste**, Strg+Alt+K neu setzen; im Studio einmal klicken, Strg+Alt+K | Neue Audiospur. Wenn nicht: Feedback → Log senden (im Log steht dann, welche Taste ankam) | ✅ | Lag an einer anderen Tastaturbelegung; mit 0.51.7 unabhängig davon | 0.51.7 |
 
 ## Ergebnisse
 
 Nach dem Test: Datei mit den Einträgen an Claude geben („hier der Testplan mit Ergebnissen“). Fehler (❌) werden zuerst
 behoben, dann der nächste Bereich.
+
+## 11. Neu in 0.60.0: Instrumente, ASIO, Hardware-Rack
+
+| Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 11.1 | Einstellungen → Plugins → **Kostenlose Instrumente**: bei Dexed **Installieren** | Fortschritt, dann „Dexed … ist installiert“; Dexed erscheint in der Plugin-Liste (Typ Instrument) | | | |
+| 11.2 | Ebenso **Surge XT** installieren | Wie 11.1 | | | |
+| 11.3 | Studio: **+ MIDI-Spur**, rechts **Kanal** → **Instrument** → Dexed wählen | Das Fenster von Dexed öffnet sich; im Spurkopf steht „midi · Dexed“ | | | |
+| 11.4 | Im Piano Roll Noten zeichnen / anklicken | Man hört Dexed (nicht den eingebauten Synth) | | | |
+| 11.5 | Song abspielen | Die Noten der MIDI-Spur spielen mit Dexed, im Takt mit den anderen Spuren | | | |
+| 11.6 | MIDI-Keyboard (falls vorhanden): Taste halten | Ton klingt, solange die Taste gedrückt ist | | | |
+| 11.7 | In Dexed einen anderen Klang wählen, Projekt speichern, schließen, wieder öffnen | Der gewählte Klang ist wieder da | | | |
+| 11.8 | Datei → Exportieren | Die MIDI-Spur ist mit Dexed im Export, die erste Note nicht verspätet | | | |
+| 11.9 | Kanal → Instrument: ⏻ aus | Die Noten spielen wieder mit dem eingebauten Synth | | | |
+| 11.10 | ASIO4ALL oder FlexASIO installieren; Einstellungen → Audio → Treibertyp **ASIO / andere Treiber** | Treiber „ASIO“ in der Liste; nach Wahl des Geräts grüne Zeile „Spielt auf …“ | | | |
+| 11.11 | Testton an; dann Song im Studio und im Mastering abspielen | Ton kommt über ASIO; keine Aussetzer (sonst Puffer größer) | | | |
+| 11.12 | **Treiber-Einstellungen (ASIO-Bedienfeld)…** | Das Fenster des ASIO-Treibers öffnet sich; Änderungen gelten danach | | | |
+| 11.13 | Zurück auf **Windows (Standard)** | Ton wieder über das gewählte Windows-Gerät | | | |
+| 11.14 | Einstellungen → Erscheinungsbild → **Hardware-Rack** | Großes grünes LCD oben, Menü als Rack-Tasten, rechts Effekt-Rack der gewählten Spur | | | |
+| 11.15 | Im Effekt-Rack einen Knopf drehen, ein Modul mit der Lampe aus/an, **+ Effekt…** | Klang ändert sich; Modul aus/an; neues Modul erscheint | | | |
+| 11.16 | Mastering: Song abspielen, auf die drei Anzeigen neben dem Master-Fader achten | Sie bleiben ruhig an ihrer Stelle | | | |

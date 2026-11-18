@@ -16,7 +16,7 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 | **Count-in** | off, 1, 2 or 4 bars of clicks before recording |
 | **+ Marker** | a marker at the playhead |
 | **Tempo** | shows the tempo track (tempo changes during the song) |
-| **Channel** | the channel tab of the selected track: colour, volume, pan, mute/solo, sends, group, automation, meter |
+| **Channel** | the channel tab of the selected track: colour, volume, pan, mute/solo, the **instrument** of a MIDI track, effects, sends, group, automation, meter |
 
 ## Tracks and clips
 - **Drag** clips to move them (also to another track), drag their edges to trim. **Drag a clip onto the dashed area under the last track** ("+ Drag a clip here for a new track"): a new track is made for it (audio or MIDI).
@@ -64,3 +64,8 @@ Right-click → *Edit warp markers*: double-click the waveform to set a marker, 
 Drag the divider between the Studio and the [[Mixer]] to any height; double-click resets it.
 
 **Groups:** a group track shows the clips of its tracks as bars with their name and waveform, one row per track (the group is as high as its tracks need). Double-click the group's lane (a bar or anywhere on it): the group's own row becomes large, every stem in it with a big waveform; another double-click, or the **⇕** button in the group's header, brings it back to its normal height (▶ / ▼ opens the group with its tracks below) (handy after *Split into stems*).
+
+## Instruments (VST)
+
+A MIDI track plays its notes with the built-in synth, or with a **VST instrument**: *Channel → Instrument*, then pick one of your instrument plugins (Settings → Plugins; free ones: *Free instruments* there). Its window opens; **Open** opens it again, ⏻ switches back to the built-in synth. The instrument plays the clips, the notes you play in the Piano Roll and on a MIDI keyboard, MIDI recordings and the export. Its settings are saved with the project.
+

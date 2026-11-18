@@ -27,11 +27,13 @@ let ws = null, ready = false, gseq = 1
 const links = new Map()          // key -> { port, instance }
 const out = new Map()            // global seq -> { key, seq }
 let flushing = null
-function pack(instance, seq, block, reset) {
-  const frames = block[0].length, buf = new ArrayBuffer(24 + block.length * frames * 4), v = new DataView(buf)
+function pack(instance, seq, block, reset, midi) {
+  midi = midi || []
+  const frames = block[0].length, head = 24 + midi.length * 8, buf = new ArrayBuffer(head + block.length * frames * 4), v = new DataView(buf)
   v.setUint32(0, MAGIC, true); v.setUint32(4, instance, true); v.setUint32(8, seq >>> 0, true)
-  v.setUint16(12, block.length, true); v.setUint16(14, reset ? 1 : 0, true); v.setUint32(16, frames, true); v.setUint32(20, 0, true)
-  block.forEach((c, i) => new Float32Array(buf, 24 + i * frames * 4, frames).set(c))
+  v.setUint16(12, block.length, true); v.setUint16(14, reset ? 1 : 0, true); v.setUint32(16, frames, true); v.setUint32(20, midi.length, true)
+  midi.forEach((e, i) => { const o = 24 + i * 8; v.setUint32(o, e[0], true); v.setUint8(o + 4, e[1]); v.setUint8(o + 5, e[2]); v.setUint8(o + 6, e[3]) })
+  block.forEach((c, i) => new Float32Array(buf, head + i * frames * 4, frames).set(c))
   return buf
 }
 function checkFlush() {
@@ -80,8 +82,13 @@ onmessage = (e) => {
       if (!ready || !l.instance) { port.postMessage({ seq: m.seq, block: m.block }, m.block.map((b) => b.buffer)); return }   // no host: dry
       const g = gseq++
       out.set(g, { key, seq: m.seq })
-      ws.send(pack(l.instance, g, m.block, m.reset))
+      ws.send(pack(l.instance, g, m.block, m.reset, m.midi))
     }
+  } else if (d.stream) {
+    // the app's master mix for the host's sound card (Settings → Audio → ASIO): sent on, no answer
+    const sp = d.stream.port
+    links.set(d.stream.key, { port: sp, instance: 0, latency: 0 })
+    sp.onmessage = (ev) => { if (ready && ws) ws.send(pack(0xFFFFFFF0, 0, ev.data.block, false)) }
   } else if (d.instance) {
     const l = links.get(d.instance.key); if (l) l.instance = d.instance.instance
   } else if (d.detach) {
@@ -196,6 +203,13 @@ class HostClient {
     this.worker.postMessage({ attach: { key, instance, port: ch.port2 } }, [ch.port2])
   }
   detach(key: string): void { this.worker?.postMessage({ detach: key }) }
+  /** the master mix of a context goes to the host's sound card (ASIO) */
+  stream(node: AudioWorkletNode, key: string): void {
+    if (!this.worker) return
+    const ch = new MessageChannel()
+    node.port.postMessage({ link: ch.port1 }, [ch.port1])
+    this.worker.postMessage({ stream: { key, port: ch.port2 } }, [ch.port2])
+  }
 
   /** waits until every block sent so far has come back into its worklet (offline rendering) */
   flush(): Promise<void> {
@@ -262,15 +276,29 @@ async function loadInstance(ref: VstRef, sampleRate: number): Promise<{ instance
   return { ...r, client: c }
 }
 
+/** the 64-bit host also plays the sound (Settings → Audio → ASIO): it must keep running without plugins */
+let hostOutput = false
+export function setHostOutput(on: boolean): void { hostOutput = on; if (!on) releaseIdle() }
+
 /** stops the hosts that no plugin uses any more */
 function releaseIdle(): void {
-  for (const c of clients) if (c.connected && !vstInUse(c) && ![...offlineClients].includes(c)) c.release()
+  for (const c of clients) if (c.connected && !vstInUse(c) && ![...offlineClients].includes(c) && !(hostOutput && c === host)) c.release()
+}
+
+/** every plugin of a project: the effects (inserts) and the instruments of MIDI tracks */
+export function projectPlugins(project: Project): InsertFx[] {
+  const list: InsertFx[] = []
+  for (const t of project.tracks) {
+    for (const fx of t.fx ?? []) if (fx.type === 'vst' && fx.vst) list.push(fx)
+    if (t.instrument?.vst) list.push(t.instrument)
+  }
+  return list
 }
 
 /** loads every plugin of the project (live playback at `sampleRate`); unloads plugins no longer in it */
 export async function prepareVst(project: Project, sampleRate: number): Promise<void> {
   const wanted = new Map<string, InsertFx>()
-  for (const t of project.tracks) for (const fx of t.fx ?? []) if (fx.type === 'vst' && fx.vst) wanted.set(fx.id, fx)
+  for (const fx of projectPlugins(project)) wanted.set(fx.id, fx)
   for (const [id, l] of live) {
     if (l.scope !== 'studio') continue
     if (!wanted.has(id) || l.sampleRate !== sampleRate || l.ref.pluginId !== wanted.get(id)!.vst!.pluginId) {
@@ -341,11 +369,15 @@ export async function collectVstStates(project: Project): Promise<Project> {
     try { states.set(id, (await l.client.call<{ state: string }>('getState', { instance: l.instance })).state) } catch { /* keep the old state */ }
   }))
   if (!states.size) return project
+  const withState = (f: InsertFx): InsertFx => (states.has(f.id) && f.vst ? { ...f, vst: { ...f.vst, state: states.get(f.id) } } : f)
   return {
     ...project,
-    tracks: project.tracks.map((t) => (t.fx?.some((f) => states.has(f.id))
-      ? { ...t, fx: t.fx!.map((f) => (states.has(f.id) && f.vst ? { ...f, vst: { ...f.vst, state: states.get(f.id) } } : f)) }
-      : t)),
+    tracks: project.tracks.map((t) => {
+      let n = t
+      if (t.fx?.some((f) => states.has(f.id))) n = { ...n, fx: t.fx!.map(withState) }
+      if (t.instrument && states.has(t.instrument.id)) n = { ...n, instrument: withState(t.instrument) }
+      return n
+    }),
   }
 }
 
@@ -369,7 +401,7 @@ const offline = new WeakMap<BaseAudioContext, Map<string, { instance: number; la
 const offlineClients = new Set<HostClient>()
 
 export async function prepareVstOffline(ctx: BaseAudioContext, project: Project): Promise<boolean> {
-  const fxs = project.tracks.flatMap((t) => (t.fx ?? []).filter((f) => f.type === 'vst' && f.vst && f.on))
+  const fxs = projectPlugins(project).filter((f) => f.on)
   return prepareVstOfflineList(ctx, fxs.map((f) => ({ id: f.id, vst: f.vst! })))
 }
 
@@ -436,5 +468,28 @@ export function makeVstInsert(ctx: BaseAudioContext, fx: InsertFx): { input: Aud
 }
 
 export function projectHasVst(project: Project): boolean {
-  return project.tracks.some((t) => (t.fx ?? []).some((f) => f.type === 'vst'))
+  return projectPlugins(project).length > 0
+}
+
+/** an instrument plugin of a MIDI track: no input, the notes go in as MIDI events with their context times */
+export function makeVstInstrument(ctx: BaseAudioContext, fx: InsertFx): { output: AudioNode; play: (events: number[][]) => void; dispose: () => void } | null {
+  const inst = instanceFor(ctx, fx)
+  if (!inst || !fx.on) return null
+  const node = new AudioWorkletNode(ctx, 'ams-vst', {
+    numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit',
+    processorOptions: { block: VST_BLOCK, delay: VST_DELAY + inst.latency, on: true },
+  })
+  const key = `${offline.has(ctx) ? 'off:' : 'live:'}${fx.id}#${nodeCount++}`
+  inst.client.attach(node, key, inst.instance)
+  return {
+    output: node,
+    // events: [context time in seconds, status, data1, data2]
+    play: (events) => { if (events.length) node.port.postMessage({ events }) },
+    dispose: () => {
+      // all notes off on every channel, so nothing hangs when playback stops
+      const t = ctx.currentTime
+      node.port.postMessage({ events: Array.from({ length: 16 }, (_, ch) => [t, 0xb0 | ch, 123, 0]) })
+      setTimeout(() => { node.port.postMessage({ dispose: true }); inst.client.detach(key) }, 200)
+    },
+  }
 }

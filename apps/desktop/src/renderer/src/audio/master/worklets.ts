@@ -72,7 +72,9 @@ class AmsVst extends AudioWorkletProcessor {
     this.first = true
     this.wport = null
     this.lastUnder = 0
-    this.link = new VstLink({ block: o.block, delay: o.delay, on: o.on, send: (seq, b) => this.toWorker(seq, b) })
+    this.link = new VstLink({ block: o.block, delay: o.delay, on: o.on, send: (seq, b, midi) => this.toWorker(seq, b, midi) })
+    this.start = -1            // context frame of the link's first input sample
+    this.pending = []          // MIDI with context times (seconds), until the start is known
     this.port.onmessage = (e) => {
       const d = e.data || {}
       if (d.link) {
@@ -84,15 +86,23 @@ class AmsVst extends AudioWorkletProcessor {
         }
       }
       if ('on' in d) this.link.on = !!d.on
+      if (d.events) { for (const e of d.events) this.pending.push(e); this.place() }
       if (d.dispose) { this.alive = false; if (this.wport) this.wport.close() }
     }
   }
-  toWorker(seq, b) {
+  // MIDI times (context seconds) become input frames of the link
+  place() {
+    if (this.start < 0 || !this.pending.length) return
+    this.link.addEvents(this.pending.map((e) => [Math.max(0, Math.round(e[0] * sampleRate) - this.start), e[1], e[2], e[3]]))
+    this.pending = []
+  }
+  toWorker(seq, b, midi) {
     if (!this.wport) return
-    this.wport.postMessage({ seq, block: b, reset: this.first }, b.map((x) => x.buffer))
+    this.wport.postMessage({ seq, block: b, midi, reset: this.first }, b.map((x) => x.buffer))
     this.first = false
   }
   process(inputs, outputs) {
+    if (this.start < 0) { this.start = currentFrame; this.place() }
     const out = outputs[0]
     this.link.process(inputs[0] || [], out, out[0].length)
     if (this.link.underruns !== this.lastUnder && this.link.t % 12288 < 128) { this.lastUnder = this.link.underruns; this.port.postMessage({ underruns: this.lastUnder }) }
@@ -100,6 +110,30 @@ class AmsVst extends AudioWorkletProcessor {
   }
 }
 registerProcessor('ams-vst', AmsVst)
+
+// Settings → Audio → ASIO: the master mix in blocks of 512 to the plugin host, which plays it on the sound card
+class AmsOut extends AudioWorkletProcessor {
+  constructor() {
+    super()
+    this.B = 512; this.fill = 0; this.cur = [new Float32Array(this.B), new Float32Array(this.B)]
+    this.wport = null; this.alive = true
+    this.port.onmessage = (e) => { const d = e.data || {}; if (d.link) this.wport = d.link; if (d.dispose) this.alive = false }
+  }
+  process(inputs) {
+    const inp = inputs[0] || []
+    const n = (inp[0] && inp[0].length) || 128
+    for (let i = 0; i < n; i++) {
+      for (let c = 0; c < 2; c++) { const src = inp[Math.min(c, inp.length - 1)]; this.cur[c][this.fill] = src ? src[i] : 0 }
+      if (++this.fill === this.B) {
+        const b = this.cur
+        if (this.wport) this.wport.postMessage({ block: b }, b.map((x) => x.buffer))
+        this.cur = [new Float32Array(this.B), new Float32Array(this.B)]; this.fill = 0
+      }
+    }
+    return this.alive
+  }
+}
+registerProcessor('ams-out', AmsOut)
 
 // Settings → Audio, "Simulated CPU load": spends the given share of every block doing nothing useful, to find a
 // buffer size that does not crackle

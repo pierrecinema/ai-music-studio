@@ -78,13 +78,14 @@ export function MasterFader({ chain, onChange, height = 220 }: { chain: Chain; o
         {[{ label: 'TP', v: tp, lo: -30, color: tp > -1 ? 'var(--red)' : 'var(--green)', text: Number.isFinite(tp) ? tp.toFixed(1) : '–' },
           { label: 'LUFS S', v: st, lo: -40, color: 'var(--accent-light)', text: Number.isFinite(st) ? st.toFixed(1) : '–' },
           { label: 'GR', v: -lim, lo: -12, color: 'var(--orange)', text: lim ? `−${lim.toFixed(1)}` : '0', invert: true }].map((m) => (
-          <div key={m.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          // a fixed width: the changing numbers below (−9.8, −12.3) made the meters shift sideways while music played
+          <div key={m.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: 40, flexShrink: 0 }}>
             <div style={{ position: 'relative', width: 14, height: H, background: '#0d0e11', borderRadius: 3, overflow: 'hidden' }}>
               <div style={{ position: 'absolute', left: 0, right: 0, background: m.color, transition: 'height 80ms, top 80ms',
                 ...(m.invert ? { top: 0, height: `${(1 - meterY(m.v, m.lo)) * 100}%` } : { bottom: 0, height: `${meterY(m.v, m.lo) * 100}%` }) }} />
             </div>
             <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{m.label}</span>
-            <span style={{ fontSize: 10, fontVariantNumeric: 'tabular-nums' }}>{m.text}</span>
+            <span style={{ fontSize: 10, fontVariantNumeric: 'tabular-nums', width: '100%', textAlign: 'center', whiteSpace: 'nowrap' }}>{m.text}</span>
           </div>
         ))}
       </div>

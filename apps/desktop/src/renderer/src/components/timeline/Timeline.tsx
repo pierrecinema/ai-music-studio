@@ -487,7 +487,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                 <div onDoubleClick={() => setRenaming(track.id)} title={tr('Double-click to rename')}
                   style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{track.name}</div>
               )}
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{isGroup ? `group · ${childCount(track)} tracks` : track.type}{track.takes?.length ? ` · ${track.takes.length} takes` : ''}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{isGroup ? `group · ${childCount(track)} tracks` : track.instrument?.vst ? `${track.type} · ${track.instrument.vst.name}` : track.type}{track.takes?.length ? ` · ${track.takes.length} takes` : ''}</div>
             </div>
             {isGroup && (
               <button onClick={(e) => { e.stopPropagation(); openGroup(track) }} style={{ ...tinyBtn, color: track.height !== undefined ? 'var(--accent-light)' : 'var(--text-muted)' }}

@@ -3,6 +3,15 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.60.0
+
+- **VST instruments on MIDI tracks:** a MIDI track can now be played by an instrument plugin (VST3 / VST2, 64- and 32-bit) instead of the built-in synth: *Channel → Instrument*. The plugin plays the notes of the clips, the notes you play in the Piano Roll and on a MIDI keyboard (held keys sound until you let go), MIDI recordings, and the export. **Open** shows the plugin's window; its settings are saved with the project.
+- **Free instruments:** *Settings → Plugins → Free instruments* installs **Dexed** (FM synth like the DX7) and **Surge XT** (big all-round synth), both open source (GPL-3), with one click from their official releases.
+- **ASIO:** *Settings → Audio → Driver type* now has **ASIO / other drivers**: the sound of the Studio and Mastering plays through the plugin host on an ASIO device (or Windows Audio, DirectSound), with the device's sample rates and buffer sizes, the outputs to use and the **ASIO control panel**. For the sound of the mainboard, install ASIO4ALL or FlexASIO.
+- **Hardware rack look, rebuilt:** a wide green LCD for position and tempo, the menu as a row of rack keys under it, the selected track's effects as rack modules with knobs and lamps at the right, and the Studio framed like a device screen.
+- With plugins, the first notes and clips at the start of the song are no longer late (live and in the export).
+- **Mastering:** the three meters next to the master gain fader no longer shift sideways while a song plays.
+
 ## 0.51.7
 
 - **Own shortcuts with Ctrl+Alt (again):** with Ctrl+Alt held, Windows does not always send the letter of the key (it depends on the keyboard layout), so a key like Ctrl+Alt+K could be set but did nothing. The letter or digit is now taken from the key itself, the same on every keyboard layout. Ctrl+Alt keys are written to the diagnostics log, so a key that still does nothing can be traced.

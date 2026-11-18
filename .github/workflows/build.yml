@@ -37,11 +37,23 @@ jobs:
           git clone --depth 1 https://git.iem.at/zmoelnig/FST.git "$env:RUNNER_TEMP/FST"
           if ($LASTEXITCODE -ne 0) { Write-Warning "FST not available: the plugin host is built for VST3 only" }
 
+      - name: Get the ASIO SDK (Steinberg, GPL-3)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          # the first download that works; the SDK folder is the one that holds common/iasiodrv.h
+          $urls = @('https://www.steinberg.net/asiosdk', 'https://download.steinberg.net/sdk_downloads/asiosdk_2.3.3_2019-06-14.zip')
+          foreach ($u in $urls) {
+            try { Invoke-WebRequest -Uri $u -OutFile "$env:RUNNER_TEMP/asiosdk.zip" -MaximumRedirection 5 -UseBasicParsing; Expand-Archive "$env:RUNNER_TEMP/asiosdk.zip" "$env:RUNNER_TEMP/asiosdk" -Force; break } catch { Write-Warning "ASIO SDK not from $u : $_" }
+          }
+          $h = Get-ChildItem "$env:RUNNER_TEMP/asiosdk" -Recurse -Filter iasiodrv.h -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($h) { "ASIO_SDK=$($h.Directory.Parent.FullName)" | Out-File -Append $env:GITHUB_ENV; Write-Host "ASIO SDK: $($h.Directory.Parent.FullName)" } else { Write-Warning "no ASIO SDK: the host is built without ASIO" }
+
       - name: Build the plugin host (64-bit and 32-bit)
         shell: pwsh
         run: |
           $fst = if (Test-Path "$env:RUNNER_TEMP/FST") { "$env:RUNNER_TEMP/FST" } else { "" }
-          cmake -S packages/plugin-host -B "$env:RUNNER_TEMP/phbuild" -DAMS_FST_DIR="$fst"
+          cmake -S packages/plugin-host -B "$env:RUNNER_TEMP/phbuild" -DAMS_FST_DIR="$fst" -DAMS_ASIO_SDK_DIR="$env:ASIO_SDK"
           if ($LASTEXITCODE -ne 0) { throw "cmake configure failed" }
           cmake --build "$env:RUNNER_TEMP/phbuild" --config Release --target AMSPluginHost
           if ($LASTEXITCODE -ne 0) { throw "plugin host build failed" }
@@ -50,7 +62,7 @@ jobs:
           Copy-Item $exe.FullName packages/plugin-host/dist/ams-plugin-host.exe -Force
           Get-Item packages/plugin-host/dist/ams-plugin-host.exe | Select-Object Name, Length
           # the 32-bit host for 32-bit plugins (same program, built for x86)
-          cmake -S packages/plugin-host -B "$env:RUNNER_TEMP/phbuild32" -A Win32 -DAMS_FST_DIR="$fst"
+          cmake -S packages/plugin-host -B "$env:RUNNER_TEMP/phbuild32" -A Win32 -DAMS_FST_DIR="$fst" -DAMS_ASIO_SDK_DIR="$env:ASIO_SDK"
           if ($LASTEXITCODE -ne 0) { throw "cmake configure (32-bit) failed" }
           cmake --build "$env:RUNNER_TEMP/phbuild32" --config Release --target AMSPluginHost
           if ($LASTEXITCODE -ne 0) { throw "32-bit plugin host build failed" }
@@ -76,7 +88,7 @@ jobs:
         run: |
           cmake -S packages/plugin-host -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DAMS_BUILD_TEST_PLUGIN=ON
           cmake --build build -j4
-          mkdir -p vst3 && cp -r "build/AMSTestGain_artefacts/Release/VST3/AMS Test Gain.vst3" vst3/
+          mkdir -p vst3 && cp -r "build/AMSTestGain_artefacts/Release/VST3/AMS Test Gain.vst3" "build/AMSTestSynth_artefacts/Release/VST3/AMS Test Synth.vst3" vst3/
       - name: End-to-end test (scan, load, audio, state, editor)
         run: xvfb-run -a node packages/plugin-host/test/e2e.mjs build/AMSPluginHost_artefacts/Release/ams-plugin-host vst3
 

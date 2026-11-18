@@ -342,5 +342,23 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   check('Ctrl+Alt+K without AltGr', eventToCombo({ key: 'k', code: 'KeyK', ctrlKey: true, altKey: true, shiftKey: false }) === 'Ctrl+Alt+K')
 }
 
+// ── VST instruments: MIDI goes out with the block that holds its frame ──
+{
+  const sent: Array<[number, number[][]]> = []
+  const link = new VstLink({ block: 256, delay: 512, send: (seq, _b, midi) => sent.push([seq, midi]) })
+  link.addEvents([[300, 0x80, 60, 0], [10, 0x90, 60, 100], [600, 0x90, 64, 90]])
+  const buf = [new Float32Array(128)], out = [new Float32Array(128), new Float32Array(128)]
+  for (let k = 0; k < 6; k++) link.process(buf, out, 128)
+  check('midi: note-on in block 0 at its offset', JSON.stringify(sent[0][1]) === JSON.stringify([[10, 0x90, 60, 100]]), JSON.stringify(sent[0]))
+  check('midi: note-off in block 1', JSON.stringify(sent[1][1]) === JSON.stringify([[44, 0x80, 60, 0]]), JSON.stringify(sent[1]))
+  check('midi: event 600 in block 2', sent[2][1][0][0] === 600 - 512)
+  link.addEvents([[0, 0x90, 1, 1]])                  // late: goes with the next block, at its start
+  link.process(buf, out, 128); link.process(buf, out, 128)
+  check('midi: late event at the start of the next block', sent[3][1][0][0] === 0 && sent[3][1][0][2] === 1)
+  const f = packBlock(3, 9, [new Float32Array([0.5, 0.25])], false, [[1, 0x90, 60, 100]])
+  const v = new DataView(f)
+  check('midi frame: count, offset, bytes, audio after the events', v.getUint32(20, true) === 1 && v.getUint32(24, true) === 1 && v.getUint8(28) === 0x90 && v.getUint8(29) === 60 && v.getUint8(30) === 100 && new Float32Array(f, 32, 2)[1] === 0.25)
+}
+
 console.log(`${passed} passed, ${failed} failed`)
 if (failed) process.exit(1)

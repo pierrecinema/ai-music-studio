@@ -206,6 +206,12 @@ juce::var PluginHost::handle (std::shared_ptr<WsConnection>, const juce::var& ms
         p->setProperty ("outputs", inst->plugin->getTotalNumOutputChannels());
         return o;
     }
+    if (cmd == "audioDevices") { auto r = audioOut.devices(); r.getDynamicObject()->setProperty ("ok", true); return r; }
+    if (cmd == "audioOpen")
+        return audioOut.open (msg["type"].toString(), msg["device"].toString(), (double) msg["sampleRate"], (int) msg["buffer"], (int) msg["channel"]);
+    if (cmd == "audioClose") { audioOut.close(); return okay(); }
+    if (cmd == "audioPanel") { bool shown = audioOut.showPanel(); auto r = okay(); r.getDynamicObject()->setProperty ("shown", shown); return r; }
+    if (cmd == "audioStats") { auto r = audioOut.stats(); r.getDynamicObject()->setProperty ("ok", true); return r; }
     if (cmd == "stats")
     {
         auto o = okay(); auto* p = o.getDynamicObject();
@@ -290,6 +296,12 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
     int iid = (int) u32 (4), channels = u16 (12), flags = u16 (14), frames = (int) u32 (16), midiCount = (int) u32 (20);
     size_t audioOffset = 24 + (size_t) midiCount * 8;
     if (channels < 1 || channels > 8 || frames < 1 || frames > 65536 || data.getSize() < audioOffset + (size_t) channels * frames * 4) return;
+    // the app's master mix for the sound card (Settings → Audio → ASIO): no reply
+    if ((uint32_t) iid == kOutputInstance)
+    {
+        audioOut.push (reinterpret_cast<const float*> (bytes + audioOffset), channels, frames);
+        return;
+    }
     auto inst = find (iid);
 
     juce::MemoryBlock out (data.getData(), audioOffset);     // header (+ MIDI) back, then the audio

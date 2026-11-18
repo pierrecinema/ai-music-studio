@@ -82,6 +82,15 @@ const api = {
     windowHandle: () => ipcRenderer.invoke('plugins:window-handle'),
     listRead: () => ipcRenderer.invoke('plugins:list-read'),
     listWrite: (data: unknown) => ipcRenderer.invoke('plugins:list-write', data),
+    freeDir: () => ipcRenderer.invoke('plugins:free-dir'),
+    freeInstalled: () => ipcRenderer.invoke('plugins:free-installed'),
+    freeInstall: (id: string) => ipcRenderer.invoke('plugins:free-install', id),
+    freePage: (id: string) => ipcRenderer.invoke('plugins:free-page', id),
+    onFreeProgress: (cb: (p: { id: string; done: number; total: number; text: string }) => void) => {
+      const h = (_: unknown, p: { id: string; done: number; total: number; text: string }): void => cb(p)
+      ipcRenderer.on('plugins:free-progress', h)
+      return () => ipcRenderer.removeListener('plugins:free-progress', h)
+    },
     onHostExit: (cb: (info: { code: number | null; signal: string | null; arch?: string }) => void): (() => void) => {
       const h = (_: unknown, i: { code: number | null; signal: string | null; arch?: string }): void => cb(i)
       ipcRenderer.on('plugins:host-exit', h)

@@ -29,7 +29,7 @@ const knobs: React.CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: '6p
 
 // a round knob like on a mastering unit: a dark knob with a ring of lights showing the value.
 // Drag up / down (Shift: fine), mouse wheel, arrow keys; double-click: back to the starting value.
-function Knob({ name, value: setValue, min, max, step, unit, onChange, log, title, off: setOff, refv }: {
+export function Knob({ name, value: setValue, min, max, step, unit, onChange, log, title, off: setOff, refv }: {
   name: string; value: number; min: number; max: number; step: number; unit?: string
   onChange: (v: number) => void; log?: boolean; title?: string; off?: boolean; refv?: number
 }): React.ReactElement {

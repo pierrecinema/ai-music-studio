@@ -3,7 +3,7 @@
 import { useProjectStore } from '../stores/project.store'
 import { useAudioStore } from '../stores/audio.store'
 import { useUIStore } from '../stores/ui.store'
-import { currentBeat, isPlaying, onTransportStop, play, previewNote, startRecording } from './engine'
+import { currentBeat, isPlaying, onTransportStop, play, previewNote, releaseNote, startRecording } from './engine'
 import type { Track } from '../types'
 import { pianoFocus } from '../components/timeline/studioOps'
 
@@ -67,12 +67,14 @@ onTransportStop(stopMidiRecording)
 export function noteOn(pitch: number, velocity = 100): void {
   const st = useProjectStore.getState()
   const track = rec ? st.project.tracks.find((t) => t.id === rec!.trackId) : noteTrack()
-  void previewNote(pitch, velocity, track)
+  void previewNote(pitch, velocity, track, !!track?.instrument?.vst)
   if (rec && isPlaying()) rec.held.set(pitch, { beat: currentBeat(), velocity })
 }
 
 /** The key comes up: while recording, the note is written into the clip (which grows bar by bar if needed). */
 export function noteOff(pitch: number): void {
+  const st0 = useProjectStore.getState()
+  releaseNote(pitch, rec ? st0.project.tracks.find((t) => t.id === rec!.trackId) : noteTrack())
   if (!rec) return
   const h = rec.held.get(pitch)
   if (!h) return

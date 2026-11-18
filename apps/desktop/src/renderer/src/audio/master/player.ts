@@ -1,6 +1,6 @@
 // Mastering playback: plays the loaded file through the chain, switches between before and after (A/B at matched
 // loudness), loops a region and feeds the live meters (loudness meter worklet, spectrum, goniometer).
-import { applyOutput, onAudioSettings } from '../output'
+import { applyOutput, onAudioSettings, outputBus } from '../output'
 import { buildChain, chainShape, type Chain, type ChainNodes } from './chain'
 import { kWeighting, truePeakTaps, type MeterReport } from './dsp'
 import { loadWorklets } from './worklets'
@@ -59,7 +59,7 @@ class MasterPlayer {
       // heard: original (dry) or master (wet), one of them turned down for "Same loudness" (never up: no clipping)
       const out = c.createGain()
       this.dryDelay.connect(this.dryGain); this.dryGain.connect(out); this.wetGain.connect(out)
-      out.connect(c.destination)
+      out.connect(outputBus(c))
       // measured: the real signal of the side that is heard, without the loudness matching
       this.monDry = c.createGain(); this.monWet = c.createGain()
       const mon = c.createGain()

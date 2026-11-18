@@ -12,6 +12,10 @@
 //   reset {instance}                   clears tails (after a jump in the song)
 //   stats                              -> {instances, cpu}  (cpu: processing time / real time of the last second)
 //   events: {event: "changed", instance}  the plugin's settings changed (in its window): the project has unsaved changes
+//   audioDevices                       -> {types: [{type ("ASIO", "Windows Audio", ...), devices: [..]}]}
+//   audioOpen {type, device, sampleRate, buffer, channel}  -> {sampleRate, buffer, outputLatency, sampleRates, buffers, channels, hasPanel}
+//   audioClose      audioPanel (the driver's own settings window)      audioStats -> {open, fill, underruns, dropped, ...}
+//   the app's master mix: audio frames to instance 0xFFFFFFF0 (no reply), played on the opened device
 //
 // Audio (binary frames, little endian), header of 24 bytes then MIDI events (8 bytes each) then planar float32:
 //   u32 magic 'AMSA' | u32 instance | u32 seq | u16 channels | u16 flags (1: reset first) | u32 frames | u32 midiCount
@@ -19,6 +23,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "WebSocketServer.h"
+#include "AudioOut.h"
 #include <map>
 
 static constexpr uint32_t kAudioMagic = 0x41534D41;   // "AMSA"
@@ -55,4 +60,5 @@ private:
     void timerCallback() override;
     std::vector<std::weak_ptr<WsConnection>> clients;
     std::mutex clientsLock;
+    AudioOut audioOut;
 };

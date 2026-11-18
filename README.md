@@ -29,7 +29,7 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.52
+### New in 0.60
 
 - **VST instruments on MIDI tracks** (Channel → Instrument; Piano Roll, MIDI keyboard, recording and export), two **free open-source instruments** to install with one click (**Dexed**, **Surge XT**), **ASIO output** through the plugin host (Settings → Audio, with the ASIO control panel), and the **Hardware rack** look rebuilt with an LCD, rack keys and an effect rack.
 - Full history: [CHANGELOG.md](CHANGELOG.md).

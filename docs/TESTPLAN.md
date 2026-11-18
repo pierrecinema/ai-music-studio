@@ -267,7 +267,7 @@ Vorbereitung: VST3- oder VST2-Effekte auf dem PC, am besten ein 64-Bit- und ein 
 Nach dem Test: Datei mit den Einträgen an Claude geben („hier der Testplan mit Ergebnissen“). Fehler (❌) werden zuerst
 behoben, dann der nächste Bereich.
 
-## 11. Neu in 0.52.0: Instrumente, ASIO, Hardware-Rack
+## 11. Neu in 0.60.0: Instrumente, ASIO, Hardware-Rack
 
 | Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|

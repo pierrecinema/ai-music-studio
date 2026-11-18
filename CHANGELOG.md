@@ -3,7 +3,7 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
-## 0.52.0
+## 0.60.0
 
 - **VST instruments on MIDI tracks:** a MIDI track can now be played by an instrument plugin (VST3 / VST2, 64- and 32-bit) instead of the built-in synth: *Channel → Instrument*. The plugin plays the notes of the clips, the notes you play in the Piano Roll and on a MIDI keyboard (held keys sound until you let go), MIDI recordings, and the export. **Open** shows the plugin's window; its settings are saved with the project.
 - **Free instruments:** *Settings → Plugins → Free instruments* installs **Dexed** (FM synth like the DX7) and **Surge XT** (big all-round synth), both open source (GPL-3), with one click from their official releases.

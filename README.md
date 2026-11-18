@@ -2,9 +2,9 @@
 
 [![Downloads](https://img.shields.io/github/downloads/pierrecinema/ai-music-studio/total?label=downloads&color=7c3aed)](https://github.com/pierrecinema/ai-music-studio/releases) [![Latest release](https://img.shields.io/github/v/release/pierrecinema/ai-music-studio?label=latest&color=7c3aed)](https://github.com/pierrecinema/ai-music-studio/releases/latest) [![License](https://img.shields.io/github/license/pierrecinema/ai-music-studio)](LICENSE)
 
-[![AI Music Studio – watch the 2-minute tour on YouTube](https://img.youtube.com/vi/F1hakwjWwEc/hqdefault.jpg)](https://youtu.be/F1hakwjWwEc)
+[![AI Music Studio – watch the 0.60 tour on YouTube (2 minutes)](https://img.youtube.com/vi/FTNmsRxWuy4/hqdefault.jpg)](https://youtu.be/FTNmsRxWuy4)
 
-**🎬 [Watch the 2-minute tour on YouTube](https://youtu.be/F1hakwjWwEc)**
+**🎬 [Watch the 0.60 tour on YouTube (2 minutes)](https://youtu.be/FTNmsRxWuy4)**
 
 **Free, open-source AI music studio for Windows:** make songs, seamless loops and stems with AI on your own PC, and arrange them in a full studio (DAW) with mixer, piano roll and automation. No account, no subscription. The AI assistant works with Claude, ChatGPT, Grok or completely free and local with Ollama.
 

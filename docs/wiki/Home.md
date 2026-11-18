@@ -2,7 +2,7 @@
 
 **Free, open-source AI music studio and DAW for Windows.** Make songs, seamless loops and stems with AI on your own PC, and arrange them in a full studio with mixer, piano roll and automation. No account, no subscription.
 
-🎬 [2-minute tour on YouTube](https://youtu.be/F1hakwjWwEc) · ⬇ [Download the latest version](https://github.com/pierrecinema/ai-music-studio/releases/latest) · 🐞 [Report a problem](https://github.com/pierrecinema/ai-music-studio/issues)
+🎬 [2-minute tour on YouTube](https://youtu.be/FTNmsRxWuy4) · ⬇ [Download the latest version](https://github.com/pierrecinema/ai-music-studio/releases/latest) · 🐞 [Report a problem](https://github.com/pierrecinema/ai-music-studio/issues)
 
 ## What's new (0.50)
 

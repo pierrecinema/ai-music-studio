@@ -7,7 +7,7 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 - App releases: every version on GitHub Releases with `latest.yml` (in-app update). Changelog: `CHANGELOG.md`.
 - Promo material (not in `main`): branch `promo` – YouTube video (v3, 2:12), `YouTube-Text.txt` (title, description
   under 3000 characters, chapters, hashtags, tags), soundtrack mix and sources, scripts for screenshots / video / mix.
-- YouTube tour: https://youtu.be/F1hakwjWwEc (shown at the top of the README).
+- YouTube tour: https://youtu.be/FTNmsRxWuy4 (0.60, rack look, shown at the top of the README; older tour: https://youtu.be/F1hakwjWwEc). Video v4 and its YouTube text were made from scripts on the branch `promo` (adapted).
 - Donations: https://paypal.me/djpedroflores (Settings → About, README "Buy me a coffee", `.github/FUNDING.yml`); not in the
   release notes (owner's wish). No paid features yet;
   "Cloud Rendering (Pro)" is only a Coming soon page.
@@ -89,6 +89,7 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 ## Things learned about working with the owner
 
 - Talk German with the owner; code, docs and commits in English.
+- Texts for the owner (YouTube texts, posts, emails) always shown in the chat itself, not only as a file.
 - The owner does not want manual release steps: see the release procedure in CLAUDE.md, merge own PRs when green.
 - Do not name other commercial products in texts (no "alternative to ACE Studio", no "RipX"); describe our own features.
 - Do not use or download "free pro version" repositories of commercial software (cracks / malware risk, licence).

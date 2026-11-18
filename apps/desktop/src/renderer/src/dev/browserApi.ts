@@ -29,6 +29,7 @@ const real = {
   project: { autosaveRead: async () => null, autosaveWrite: async () => undefined, autosaveClear: async () => undefined },
   updater: { onChecking: () => undefined, onAvailable: () => undefined, onNotAvailable: () => undefined, onProgress: () => undefined, onDownloaded: () => undefined, onError: () => undefined },
   models: { onProgress: () => () => undefined },
+  plugins: { onFreeProgress: () => () => undefined, freeInstalled: async () => ({ dexed: true, surge: true }) },
   huggingface: { onProgress: () => () => undefined }
 } as Record<string, Record<string, unknown>>
 

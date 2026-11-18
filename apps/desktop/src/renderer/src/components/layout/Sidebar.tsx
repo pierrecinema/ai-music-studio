@@ -60,7 +60,7 @@ export function Sidebar(): React.ReactElement {
           opacity: soon && !active ? 0.4 : 1, filter: soon ? 'grayscale(0.8)' : undefined,
         }}
       >
-        {!bar && <span style={{ width: 24, textAlign: 'center', fontSize: size, flexShrink: 0 }}>{icon}</span>}
+        {!bar && <span className={`nav-icon nav-icon-${view}`} style={{ width: 24, textAlign: 'center', fontSize: size, flexShrink: 0 }}>{icon}</span>}
         {sidebarOpen && <span className="truncate">{text}</span>}
       </button>
     )

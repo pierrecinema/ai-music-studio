@@ -267,7 +267,7 @@ export function TopBar(): React.ReactElement {
       {!chatOpen && (
         <>
           <div className="tb-divider" />
-          <button onClick={() => setChatOpen(true)} title={tr('Open the AI assistant')}
+          <button className="tb-ai" onClick={() => setChatOpen(true)} title={tr('Open the AI assistant')}
             style={{ background: 'var(--accent)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 12, fontWeight: 700,
               padding: '6px 12px', borderRadius: 8, margin: '0 6px', display: 'inline-flex', alignItems: 'center', gap: 6,
               WebkitAppRegion: 'no-drag' } as React.CSSProperties}>

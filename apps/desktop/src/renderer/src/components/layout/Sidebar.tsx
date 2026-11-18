@@ -36,8 +36,8 @@ const EXPANDED = 214
 export function Sidebar(): React.ReactElement {
   const { t } = useTranslation()
   const { activeView, setActiveView, closeSettings, sidebarOpen: open, toggleSidebar, theme } = useUIStore()
-  // the Swiss layout has the menu as a bar along the bottom, the Hardware rack as a row of rack keys at the top
-  const bar = theme === 'swiss' || theme === 'rack'
+  // the Swiss layout has the menu as a bar along the bottom (the Hardware rack keeps it at the side: more room)
+  const bar = theme === 'swiss'
   const sidebarOpen = open || bar
 
   const button = (view: View, icon: string, text: string, size = 16) => {

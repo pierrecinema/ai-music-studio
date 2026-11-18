@@ -287,3 +287,4 @@ behoben, dann der nächste Bereich.
 | 11.14 | Einstellungen → Erscheinungsbild → **Hardware-Rack** | Großes grünes LCD oben, Menü als Rack-Tasten, rechts Effekt-Rack der gewählten Spur | | | |
 | 11.15 | Im Effekt-Rack einen Knopf drehen, ein Modul mit der Lampe aus/an, **+ Effekt…** | Klang ändert sich; Modul aus/an; neues Modul erscheint | | | |
 | 11.16 | Mastering: Song abspielen, auf die drei Anzeigen neben dem Master-Fader achten | Sie bleiben ruhig an ihrer Stelle | | | |
+| 11.14b | Erscheinungsbild **Hardware-Rack**: Menü und KI-Chat ansehen | Menü links an der Seite (Rack-Tasten); das Effekt-Rack rechts nur im Studio, Piano Roll und Mixer | | | |

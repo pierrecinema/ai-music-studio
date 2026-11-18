@@ -3,6 +3,11 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.60.5
+
+- **Light and Swiss looks:** clip names in the Studio are now dark and readable; before they were white on the light clip colours.
+- **New screenshots** on the GitHub page: Studio, Piano Roll, Mixer, Mastering and Settings in the Hardware rack look, and the same Studio project in all five looks.
+
 ## 0.60.4
 
 - **ASIO: no sound.** The app stopped the plugin host when no plugin was in use, and with it the opened ASIO device; the Studio then started a new host without the device and stayed silent while Settings still showed it open. The host now keeps running while ASIO is chosen, and if it has to start again the device is reopened and the sound reconnected by itself.

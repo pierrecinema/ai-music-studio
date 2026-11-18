@@ -291,7 +291,7 @@ behoben, dann der nächste Bereich.
 | 11.3b | Neue MIDI-Spur, Kanal → Instrument → Dexed; sofort im Piano Roll Noten anklicken | Gleich Dexed-Ton, ohne Aus/An | ⚠️ | Ton erst nach ca. 1 Minute (alle Plugins wurden geladen) → 0.60.3 | 0.60.2 |
 | 11.12b | ASIO: **Treiber-Einstellungen (ASIO-Bedienfeld)…**, etwas ändern, schließen | Keine Fehlermeldung; die grüne Zeile zeigt die neuen Werte; Ton läuft weiter | ❌ | kein ASIO-Treiber auf diesem PC; Meldung unklar → 0.60.3 | 0.60.2 |
 | 11.13b | Von ASIO zurück auf **Windows (Standard)**, Song abspielen | Ton kommt sofort über Windows, ohne Neustart | ⚠️ | Ton geht, Noten ca. 4 s verzögert (Plugins neu geladen) → 0.60.3 | 0.60.2 |
-| 11.3c | Projekt mit Surge XT auf einer Spur; neue MIDI-Spur → Instrument Dexed; sofort Noten im Piano Roll | Dexed klingt nach wenigen Sekunden (nicht erst nach einer Minute) | | | |
+| 11.3c | Projekt mit Surge XT auf einer Spur; neue MIDI-Spur → Instrument Dexed; sofort Noten im Piano Roll | Dexed klingt nach wenigen Sekunden (nicht erst nach einer Minute) | ✅ | | 0.60.4 |
 | 11.12c | PC ohne ASIO-Treiber: Treibertyp ASIO / andere Treiber, Treiber ASIO | Klare Meldung „Kein ASIO-Treiber installiert …“; mit Treiber „Windows Audio“ spielt es | ✅ | auf einem PC mit ASIO | 0.60.2 |
 | 11.13c | Von ASIO zurück auf Windows, dann Noten im Piano Roll anklicken | Noten nach kurzer Ladezeit ohne Verzögerung | ✅ |  | 0.60.2 |
-| 11.11b | PC mit ASIO: Treibertyp ASIO, Gerät wählen (grüne Zeile); Testton an; Song im Studio und im Mastering abspielen | Ton über ASIO; auch nach einigen Minuten und nach dem Öffnen/Schließen eines Plugins | | | |
+| 11.11b | PC mit ASIO: Treibertyp ASIO, Gerät wählen (grüne Zeile); Testton an; Song im Studio und im Mastering abspielen | Ton über ASIO; auch nach einigen Minuten und nach dem Öffnen/Schließen eines Plugins | ✅ | | 0.60.4 |

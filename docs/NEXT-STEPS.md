@@ -1,6 +1,6 @@
 # Next steps and working notes
 
-Kept for the next working session (also read by Claude: see CLAUDE.md). State: version 0.40.0, 2026-11-17 (almost 1000 downloads).
+Kept for the next working session (also read by Claude: see CLAUDE.md). State: version 0.60.5, 2026-11-18.
 
 ## Where things are
 
@@ -15,7 +15,7 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ## Tonight / next session
 
-0. Testing goes by `docs/TESTPLAN.md` (German checklist, the owner fills in results; fix ❌ first).
+0. Plan to 1.0: `docs/ROADMAP-1.0.md`. Testing goes by `docs/TESTPLAN.md` (German checklist, the owner fills in results; fix ❌ first).
 
 1. Go through feedback: Reddit and YouTube comments, GitHub issues and stars. Fix what is needed first.
 2. Write the posts (tone of each community, say openly that the owner is the developer, read each place's

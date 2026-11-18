@@ -2,7 +2,7 @@
 
 [![Downloads](https://img.shields.io/github/downloads/pierrecinema/ai-music-studio/total?label=downloads&color=7c3aed)](https://github.com/pierrecinema/ai-music-studio/releases) [![Latest release](https://img.shields.io/github/v/release/pierrecinema/ai-music-studio?label=latest&color=7c3aed)](https://github.com/pierrecinema/ai-music-studio/releases/latest) [![License](https://img.shields.io/github/license/pierrecinema/ai-music-studio)](LICENSE)
 
-[![AI Music Studio – watch the 2-minute tour on YouTube](https://img.youtube.com/vi/F1hakwjWwEc/hqdefault.jpg)](https://youtu.be/F1hakwjWwEc)
+<img src="docs/screenshots/layout-dark.png" alt="AI Music Studio: the Studio" width="49%"> <img src="docs/screenshots/studio.png" alt="The same Studio in the Hardware rack look" width="49%">
 
 **🎬 [Watch the 2-minute tour on YouTube](https://youtu.be/F1hakwjWwEc)**
 

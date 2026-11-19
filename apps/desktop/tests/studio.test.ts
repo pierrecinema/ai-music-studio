@@ -19,6 +19,7 @@ import { paramEvents, fxParamOf } from '../src/renderer/src/audio/automation'
 import { buildMap, comboTaken, eventToCombo } from '../src/renderer/src/shortcuts/registry'
 import { parseMidi, writeMidi } from '../src/renderer/src/lib/midiFile'
 import { keyOf, profileFor } from '../src/renderer/src/midi/devices'
+import { isInstrumentLike } from '../src/renderer/src/audio/vst/host'
 import { parseProject } from '../src/renderer/src/project/format'
 import { analyze, BiquadBank, CompressorCore, crossover, LimiterCore, MultibandCore, truePeakTaps } from '../src/renderer/src/audio/master/dsp'
 
@@ -422,6 +423,12 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   check('keys of messages', keyOf(0xb0, 70) === 'cc:1:70' && keyOf(0x99, 44) === 'note:10:44' && keyOf(0xe0, 0) === null)
   const k1 = profileFor('MPK mini 3')!.mappings.find((m) => m.key === 'cc:1:70')
   check('MPK K1 = volume, K3 = plugin knob 1', k1?.target.kind === 'selected' && JSON.stringify(profileFor('MPK mini 3')!.mappings.find((m) => m.key === 'cc:1:72')?.target) === JSON.stringify({ kind: 'plugin', slot: 0 }))
+}
+
+// ── instruments that do not say they are one (newer Dexed builds) ──
+{
+  const base = { isInstrument: false, category: 'Fx', name: 'X', inputs: 2, outputs: 2 }
+  check('instrument flags', isInstrumentLike({ ...base, name: 'Dexed' }) && isInstrumentLike({ ...base, category: 'Instrument|Synth' }) && isInstrumentLike({ ...base, inputs: 0 }) && !isInstrumentLike(base) && !isInstrumentLike({ ...base, name: 'ValhallaSupermassive' }))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

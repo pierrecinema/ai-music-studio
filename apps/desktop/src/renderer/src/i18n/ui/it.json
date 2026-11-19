@@ -1367,5 +1367,6 @@
  "Plugin knob 8": "Manopola plugin 8",
  "Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track": "Automatizza una manopola del plugin: sceglila, poi disegna la curva nella corsia che si apre sotto la traccia",
  "Automate…": "Automatizza…",
- "Switched off in Settings → Plugins (tick them there)": "Disattivati in Impostazioni → Plugin (spuntali lì)"
+ "Switched off in Settings → Plugins (tick them there)": "Disattivati in Impostazioni → Plugin (spuntali lì)",
+ "Other plugins (only if they can play notes)": "Altri plugin (solo se suonano note)"
 }

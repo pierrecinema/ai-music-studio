@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.73.1
+
+- **Dexed missing from the instrument selector:** some plugins (newer Dexed builds, for one) do not mark themselves as instruments, so the selector left them out although Settings → Plugins listed them. An instrument is now also recognised by its category, by having no audio input, or as a known synth. Any other plugin can be tried as an instrument too (*Other plugins* in the selector), and Settings → Plugins shows the type the app uses.
+
 ## 0.73.0
 
 - **Automation of the built-in effects:** *Automate…* next to EQ (low, mid, high), compressor (threshold, ratio, attack, release, gain), filter (frequency, resonance), delay and reverb (mix), in the effects lane and the effect rack. The lane opens under the track; playback and export follow it.

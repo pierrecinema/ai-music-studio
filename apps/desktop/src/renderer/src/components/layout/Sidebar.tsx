@@ -15,8 +15,8 @@ interface NavItem {
 export const COMING_SOON: View[] = ['vocal-editor', 'instruments', 'karaoke', 'video-composer', 'cloud']
 
 const NAV_ITEMS: NavItem[] = [
-  { view: 'create',         icon: '✨', labelKey: 'sidebar.create',        fallback: 'Create music' },
-  { view: 'library',        icon: '🎵', labelKey: 'sidebar.library',       fallback: 'Library' },
+  { view: 'create',         icon: '✦\uFE0E', labelKey: 'sidebar.create',        fallback: 'Create music' },
+  { view: 'library',        icon: '♫\uFE0E', labelKey: 'sidebar.library',       fallback: 'Library' },
   { view: 'timeline',       icon: '⊞',  labelKey: 'sidebar.timeline',      fallback: 'Studio' },
   { view: 'piano-roll',     icon: '♪',  labelKey: 'sidebar.pianoRoll',     fallback: 'Piano Roll' },
   { view: 'vocal-editor',   icon: '🎤', labelKey: 'sidebar.vocalEditor',   fallback: 'Vocal Editor' },

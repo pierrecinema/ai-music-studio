@@ -303,7 +303,12 @@ export function pluginLead(ctx: BaseAudioContext, project: Project): number {
     const parent = t.parentId && depth < 8 ? project.tracks.find((x) => x.id === t.parentId) : undefined
     return own(t) + (parent ? total(parent, depth + 1) : 0)
   }
-  return project.tracks.reduce((m, t) => Math.max(m, total(t)), 0)
+  return project.tracks.reduce((m, t) => Math.max(m, total(t)), 0) + masterDelay(ctx, project)
+}
+
+/** the delay of the VST plugins on the master: every track starts that much earlier */
+function masterDelay(ctx: BaseAudioContext, project: Project): number {
+  return (project.masterFx ?? []).filter((f) => f.type === 'vst' && f.on).reduce((a, f) => a + vstDelaySeconds(ctx, f), 0)
 }
 
 export function scheduleProject(
@@ -321,6 +326,10 @@ export function scheduleProject(
   const returnInputs = new Map<string, AudioNode>()
   const nodes: Array<AudioScheduledSourceNode> = []
   const until = opts.untilBeat ?? Infinity
+  // the master effects: every track and return goes through them before the master fader
+  const masterChain = (project.masterFx ?? []).length ? makeStrip(ctx, dest, project.masterFx, 60 / bpmAt(project, fromBeat)) : null
+  if (masterChain) dest = masterChain.bus
+  const mDelay = masterDelay(ctx, project)
 
   // return tracks (effects), then group tracks, then the tracks themselves
   for (const r of project.returns ?? []) {
@@ -341,7 +350,7 @@ export function scheduleProject(
     + (t.instrument?.vst && t.instrument.on ? vstDelaySeconds(ctx, t.instrument) : 0)
   const lookahead = (t: Track, depth = 0): number => {
     const parent = t.parentId && depth < 8 ? project.tracks.find((x) => x.id === t.parentId) : undefined
-    return ownDelay(t) + (parent ? lookahead(parent, depth + 1) : 0)
+    return ownDelay(t) + (parent ? lookahead(parent, depth + 1) : 0) + (depth === 0 ? mDelay : 0)
   }
 
   const ordered = [...project.tracks].sort((a, b) => (a.type === 'group' ? 0 : 1) - (b.type === 'group' ? 0 : 1))
@@ -460,7 +469,7 @@ export function scheduleProject(
     if (instrument) instrument.play(midi.sort((a, b) => a[0] - b[0] || ((a[1] & 0xf0) === 0x80 ? -1 : 1) - ((b[1] & 0xf0) === 0x80 ? -1 : 1)))
   }
 
-  const all = (): Strip[] => [...strips.values(), ...returns.values()]
+  const all = (): Strip[] => [...strips.values(), ...returns.values(), ...(masterChain ? [masterChain] : [])]
   return {
     strips,
     returns,
@@ -596,6 +605,7 @@ async function loadAllFiles(p: Project): Promise<void> {
 function structureSignature(p: Project): string {
   return JSON.stringify([
     p.bpm, p.tempoMap ?? [], p.returns?.map((r) => [r.id, r.effect, r.decay, r.delayBeats, r.feedback]) ?? [],
+    (p.masterFx ?? []).map((f) => (f.vst ? { ...f, vst: { ...f.vst, state: undefined } } : f)),
     p.tracks.map((t) => [
       t.id, t.type, t.name, t.parentId ?? '', t.automation ?? {}, Object.keys(t.sends ?? {}).filter((k) => (t.sends?.[k] ?? 0) > 0), (t.fx ?? []).map((f) => (f.vst ? { ...f, vst: { ...f.vst, state: undefined } } : f)),
       t.instrument ? [t.instrument.id, t.instrument.on] : 0,

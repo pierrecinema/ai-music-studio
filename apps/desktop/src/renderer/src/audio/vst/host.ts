@@ -288,6 +288,7 @@ function releaseIdle(): void {
 /** every plugin of a project: the effects (inserts) and the instruments of MIDI tracks */
 export function projectPlugins(project: Project): InsertFx[] {
   const list: InsertFx[] = []
+  for (const fx of project.masterFx ?? []) if (fx.type === 'vst' && fx.vst) list.push(fx)
   for (const t of project.tracks) {
     for (const fx of t.fx ?? []) if (fx.type === 'vst' && fx.vst) list.push(fx)
     if (t.instrument?.vst) list.push(t.instrument)
@@ -391,6 +392,7 @@ export async function collectVstStates(project: Project): Promise<Project> {
   const withState = (f: InsertFx): InsertFx => (states.has(f.id) && f.vst ? { ...f, vst: { ...f.vst, state: states.get(f.id) } } : f)
   return {
     ...project,
+    masterFx: project.masterFx?.map(withState),
     tracks: project.tracks.map((t) => {
       let n = t
       if (t.fx?.some((f) => states.has(f.id))) n = { ...n, fx: t.fx!.map(withState) }

@@ -295,3 +295,20 @@ behoben, dann der nächste Bereich.
 | 11.12c | PC ohne ASIO-Treiber: Treibertyp ASIO / andere Treiber, Treiber ASIO | Klare Meldung „Kein ASIO-Treiber installiert …“; mit Treiber „Windows Audio“ spielt es | ✅ | auf einem PC mit ASIO | 0.60.2 |
 | 11.13c | Von ASIO zurück auf Windows, dann Noten im Piano Roll anklicken | Noten nach kurzer Ladezeit ohne Verzögerung | ✅ |  | 0.60.2 |
 | 11.11b | PC mit ASIO: Treibertyp ASIO, Gerät wählen (grüne Zeile); Testton an; Song im Studio und im Mastering abspielen | Ton über ASIO; auch nach einigen Minuten und nach dem Öffnen/Schließen eines Plugins | ✅ | | 0.60.4 |
+
+## 12. Neu in 0.70.0: Master-Effekte, MIDI-Dateien, Anschlag, Fades, Looks
+
+| Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 12.1 | Studio: **Master FX** (Werkzeugleiste) → **+ Effekt…** → ein VST-Effekt (z. B. ein Hall); Song abspielen | Plugin-Fenster öffnet sich; die ganze Mischung klingt mit dem Effekt; ⏻ aus = ohne | | | 0.70.0 |
+| 12.2 | Mixer öffnen | Unten die Zeile **MASTER FX** mit denselben Effekten | | | 0.70.0 |
+| 12.3 | Projekt speichern, schließen, öffnen; dann Datei → Exportieren | Master-Effekt mit seinen Einstellungen wieder da; Export klingt mit dem Effekt, Anfang nicht verspätet | | | 0.70.0 |
+| 12.4 | Eine .mid-Datei (z. B. aus dem Internet) ins Studio ziehen | Für jede Spur der Datei eine MIDI-Spur mit Noten; im leeren Projekt stimmt das Tempo | | | 0.70.0 |
+| 12.5 | Rechtsklick auf einen MIDI-Clip → **Export as MIDI file (.mid)…**, in einem anderen Programm (z. B. Cubase, MuseScore) öffnen | Gleiche Noten, gleiche Längen und Anschläge | | | 0.70.0 |
+| 12.6 | Piano Roll: unten die Anschlag-Spur; einen Balken nach oben/unten ziehen; mehrere Noten auswählen und ziehen | Balken und Notenhelligkeit ändern sich; ausgewählte Noten zusammen; man hört lauter/leiser | | | 0.70.0 |
+| 12.7 | Piano Roll: Noten auswählen, oben **Velocity** 40 eingeben, **Length** 1/16 wählen | Alle ausgewählten Noten werden leiser und kurz | | | 0.70.0 |
+| 12.8 | Studio: Audio-Clip, oben links das weiße Quadrat nach rechts ziehen, oben rechts nach links | Schräge Linie zeigt das Ein-/Ausblenden; beim Abspielen hört man es; Doppelklick = weg | | | 0.70.0 |
+| 12.9 | Die Linie in der Mitte des Clips nach oben/unten ziehen | dB-Anzeige am Clip; Clip lauter/leiser; Doppelklick = 0 dB | | | 0.70.0 |
+| 12.10 | Erscheinungsbild **Analog-Konsole**, Studio, Song abspielen | Unten Mischpult: VU-Nadeln bewegen sich, Pan-Knopf, Fader, M/S wirken; Titel und Spurnamen in Serifenschrift | | | 0.70.0 |
+| 12.11 | Erscheinungsbild **Swiss** | Große Position und Tempo, Transport als große Blöcke, große Spurnamen, Marker lesbar | | | 0.70.0 |
+| 12.12 | Erscheinungsbild **Hardware-Rack**: Menü ansehen | Bibliothek-Symbol grau wie die anderen; Stern bei „Musik erstellen“ in der Farbe des KI-Assistent-Knopfs | | | 0.70.0 |

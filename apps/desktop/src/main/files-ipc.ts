@@ -132,8 +132,8 @@ export function registerFileHandlers(): void {
   ipcMain.handle('files:show-item', (_, path: string) => { shell.showItemInFolder(path) })
 
   // ── export ──────────────────────────────────────────────────────────────────
-  ipcMain.handle('export:save-dialog', async (e, defaultName: string, ext: 'wav' | 'mp3') => {
-    const options = { defaultPath: defaultName, filters: [{ name: ext.toUpperCase(), extensions: [ext] }] }
+  ipcMain.handle('export:save-dialog', async (e, defaultName: string, ext: 'wav' | 'mp3' | 'mid') => {
+    const options = { defaultPath: defaultName, filters: [{ name: ext === 'mid' ? 'MIDI' : ext.toUpperCase(), extensions: [ext] }] }
     const w = win(e)
     const r = w ? await dialog.showSaveDialog(w, options) : await dialog.showSaveDialog(options)
     if (!r.filePath) return null

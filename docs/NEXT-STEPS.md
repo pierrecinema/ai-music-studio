@@ -51,6 +51,11 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 - **Help in the app:** the manual / wiki inside the app, in the chosen language (owner's idea).
 - **New promo video** once VST is in (the owner plans it soon).
 
+## Pending list (owner)
+
+- **Album mastering** (Mastering step 6): several songs, the same loudness, gaps, one export. Put on the list on 2026-11-19.
+- **Plugin automation and presets:** explained to the owner on 2026-11-19, decision open.
+
 ## Open technical items
 
 - **Beat sync, ideas from the projects the owner linked (studied 12.11.2026):**

@@ -3,6 +3,16 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.70.0
+
+- **Effects on the master:** built-in effects and VST plugins on the master of the Studio, after all tracks and return tracks. *Master FX* in the Studio toolbar and at the bottom of the Mixer. Saved with the project and in the export; plugin delay is made up for.
+- **MIDI files (.mid):** drop a .mid file into the Studio, or use *Import audio…* / *Import .mid…* in the Piano Roll. Every track (and channel) of the file becomes a MIDI track; in an empty project the file's tempo is taken. Export a MIDI clip with right-click → *Export as MIDI file (.mid)…* or *Export .mid* in the Piano Roll.
+- **Piano Roll:** a velocity lane under the notes (drag a bar up or down; selected notes move together), and *Velocity* and *Length* fields for the selected notes.
+- **Fades and volume right on the clip:** audio clips have a square at each top corner for the fade in and out (drag inwards) and a line for the clip volume (drag up or down). Double-click resets.
+- **Analog console look:** a mixing desk along the bottom of the Studio and Piano Roll with VU needles, pan knobs, faders and mute / solo for every track and the master; serif type for titles and track names.
+- **Swiss look:** big title, position and tempo numbers, transport as big black blocks, track names large in capitals, marker labels readable.
+- **Menu icons:** Library in the same colour as the other menu icons; the Create music star in the colour of the AI assistant key.
+
 ## 0.60.5
 
 - **Light and Swiss looks:** clip names in the Studio are now dark and readable; before they were white on the light clip colours.

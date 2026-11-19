@@ -122,7 +122,7 @@ export function Ruler({ beatWidth, totalBeats, popover }: { beatWidth: number; t
         onDoubleClick={(e) => { if (e.target === e.currentTarget) addMarker(snapBeat(beatAt(e.clientX))) }}
         style={{ position: 'absolute', left: 0, right: 0, top: 0, height: MARKER_H, borderBottom: '1px solid var(--border)', background: 'var(--bg-primary)' }}>
         {markers.map((m) => (
-          <div key={m.id}
+          <div key={m.id} className="marker-label"
             onPointerDown={(e) => markerDown(e, m.id, m.beat)}
             onContextMenu={(e) => editMarker(e, m.id)}
             onDoubleClick={(e) => { e.stopPropagation(); if (m.end !== undefined) setLoop({ start: m.beat, end: m.end, enabled: true }); else editMarker(e, m.id) }}

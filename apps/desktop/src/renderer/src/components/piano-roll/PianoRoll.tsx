@@ -8,13 +8,15 @@ import type { Note } from '../../types'
 import { minLength, snapBeat, snapStep } from '../../edit/grid'
 import { GridControls } from '../../edit/GridControls'
 import { pianoFocus, PIANO_SELECT_ALL } from '../timeline/studioOps'
-import { tr } from '../../i18n/tr'
+import { tr, trf } from '../../i18n/tr'
+import { exportMidiClip, pickAndImport } from '../timeline/Timeline'
 
 const NOTE_HEIGHT = 14
 const PIANO_WIDTH = 56
 const BEAT_WIDTH = 80
 const TOTAL_PITCHES = 128
 const EDGE = 6
+const VEL_HEIGHT = 84          // the velocity lane below the notes
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const BLACK_NOTES = [1, 3, 6, 8, 10]
 
@@ -55,6 +57,8 @@ export function PianoRoll(): React.ReactElement {
   const select = (id: string | null): void => selectMany(id ? [id] : [])
   const [frame, setFrame] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
+  const [scrollX, setScrollX] = useState(0)
+  const velDrag = useRef<{ ids: string[]; orig: Map<string, number>; startY: number; abs: boolean } | null>(null)
 
   const track = project.tracks.find((t) => t.id === selectedTrackId)
   const clip = track?.clips.find((c) => c.id === selectedClipId && !c.audioFile) ?? track?.clips.find((c) => !c.audioFile)
@@ -152,6 +156,16 @@ export function PianoRoll(): React.ReactElement {
         frameRef.current = f; setFrame(f)
         return
       }
+      const v = velDrag.current
+      if (v && track && clip) {
+        // velocity: one note follows the mouse; several selected notes all move by the same amount
+        const dv = Math.round(((v.startY - e.clientY) / (VEL_HEIGHT - 8)) * 127)
+        for (const id of v.ids) {
+          const o = v.orig.get(id) ?? 100
+          updateNote(track.id, clip.id, id, { velocity: Math.max(1, Math.min(127, o + dv)) })
+        }
+        return
+      }
       const d = drag.current
       if (!d || !track || !clip) return
       if (!d.moved && Math.abs(e.clientX - d.startX) + Math.abs(e.clientY - d.startY) < 3) return
@@ -182,6 +196,7 @@ export function PianoRoll(): React.ReactElement {
     }
     const onUp = (e: PointerEvent): void => {
       drag.current = null
+      velDrag.current = null
       const f = frameRef.current
       if (!f) return
       frameRef.current = null; setFrame(null)
@@ -255,10 +270,41 @@ export function PianoRoll(): React.ReactElement {
           style={{ padding: '3px 10px', borderRadius: 4, border: `1px solid ${recording ? 'var(--red)' : 'var(--border)'}`, background: recording ? 'var(--red)' : 'var(--bg-primary)', color: recording ? 'white' : 'var(--red)', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
           ● {recording ? tr('Recording…') : tr('Rec')}
         </button>
+        <button title={tr('Save this clip as a MIDI file (.mid) for other programs')} disabled={!clip}
+          onClick={() => { if (clip) void exportMidiClip(track.id, clip.id) }}
+          style={{ padding: '3px 10px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11, whiteSpace: 'nowrap' }}>
+          {tr('Export .mid')}
+        </button>
+        <button title={tr('Open a MIDI file (.mid): its tracks become MIDI tracks in the Studio')}
+          onClick={() => { void pickAndImport({ startBeat: 0 }) }}
+          style={{ padding: '3px 10px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11, whiteSpace: 'nowrap' }}>
+          {tr('Import .mid…')}
+        </button>
         {midiInputs > 0 && <span style={{ fontSize: 10, color: 'var(--green)' }} title={tr('MIDI keyboards found')}>🎹 {midiInputs}</span>}
         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
           {clip ? `${track.name} · ${clip.name ?? 'clip'} · ${notes.length} notes${sel.size > 1 ? ` · ${sel.size} selected` : ''}` : tr('No clip yet: click in the grid to create one')}
         </span>
+        {clip && sel.size > 0 && (() => {
+          const chosen = notes.filter((n) => sel.has(n.id))
+          if (!chosen.length) return null
+          const vel = Math.round(chosen.reduce((a, n) => a + n.velocity, 0) / chosen.length)
+          const len = chosen.every((n) => n.duration === chosen[0].duration) ? String(chosen[0].duration) : ''
+          const setAll = (patch: Partial<Note>): void => { for (const n of chosen) updateNote(track.id, clip.id, n.id, patch) }
+          return (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)', marginLeft: 8 }}>
+              <label title={tr('Velocity (how hard the note is played) of the selected notes, 1 to 127')}>{tr('Velocity')}{' '}
+                <input key={`v${[...sel].join()}${vel}`} type="number" min={1} max={127} defaultValue={vel} style={{ width: 48 }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+                  onBlur={(e) => { const v = Math.round(Number(e.target.value)); if (v >= 1 && v <= 127) setAll({ velocity: v }) }} /></label>
+              <label title={tr('Length of the selected notes in beats (1 = a quarter note)')}>{tr('Length')}{' '}
+                <select value={['0.125', '0.25', '0.5', '1', '2', '4'].includes(len) ? len : ''} onChange={(e) => { if (e.target.value) setAll({ duration: Number(e.target.value) }) }} style={{ fontSize: 11 }}>
+                  <option value="">{len ? trf('{n} beats', { n: Number(len).toFixed(2) }) : '…'}</option>
+                  <option value="0.125">1/32</option><option value="0.25">1/16</option><option value="0.5">1/8</option>
+                  <option value="1">1/4</option><option value="2">1/2</option><option value="4">1/1</option>
+                </select></label>
+            </span>
+          )
+        })()}
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr('Zoom')}</span>
         <input type="range" min={0.25} max={4} step={0.25} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 80, accentColor: 'var(--accent)' }} />
@@ -266,7 +312,7 @@ export function PianoRoll(): React.ReactElement {
       </div>
 
       {/* one scroll area: the keys scroll together with the notes, so rows always line up */}
-      <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+      <div ref={scrollRef} onScroll={(e) => setScrollX((e.target as HTMLDivElement).scrollLeft)} style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
         <div style={{ display: 'flex', width: PIANO_WIDTH + gridWidth, height: TOTAL_PITCHES * NOTE_HEIGHT, position: 'relative' }}>
           <div style={{ width: PIANO_WIDTH, flexShrink: 0, position: 'sticky', left: 0, zIndex: 3, borderRight: '1px solid var(--border)' }}>
             {Array.from({ length: TOTAL_PITCHES }, (_, i) => {
@@ -327,6 +373,35 @@ export function PianoRoll(): React.ReactElement {
           </div>
         </div>
       </div>
+
+      {/* velocity lane: one bar per note, drag a bar up or down (selected notes move together) */}
+      {clip && (
+        <div style={{ height: VEL_HEIGHT, flexShrink: 0, display: 'flex', borderTop: '1px solid var(--border)', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+          <div style={{ width: PIANO_WIDTH, flexShrink: 0, fontSize: 9, color: 'var(--text-muted)', padding: '4px 4px', boxSizing: 'border-box', borderRight: '1px solid var(--border)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tr('Velocity')}</div>
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', left: -scrollX, top: 0, width: gridWidth, height: '100%' }}>
+              {[32, 64, 96].map((v) => <div key={v} style={{ position: 'absolute', left: 0, right: 0, bottom: 4 + (v / 127) * (VEL_HEIGHT - 8), height: 1, background: 'rgba(255,255,255,0.05)' }} />)}
+              {notes.map((n) => {
+                const h = (n.velocity / 127) * (VEL_HEIGHT - 8)
+                const on = sel.has(n.id)
+                return (
+                  <div key={n.id} title={trf('Velocity {v}', { v: n.velocity })}
+                    onPointerDown={(e) => {
+                      e.stopPropagation()
+                      const ids = on && sel.size > 1 ? [...sel] : [n.id]
+                      if (!on) select(n.id)
+                      velDrag.current = { ids, orig: new Map(notes.filter((x) => ids.includes(x.id)).map((x) => [x.id, x.velocity])), startY: e.clientY, abs: false }
+                    }}
+                    style={{ position: 'absolute', left: n.startTime * beatWidth - 3, bottom: 4, width: 9, height: Math.max(h, 3) + 4, cursor: 'ns-resize', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ width: 9, height: 4, borderRadius: 2, background: on ? '#fff' : track.color, flexShrink: 0 }} />
+                    <div style={{ width: 2, flex: 1, background: on ? '#fff' : track.color, opacity: 0.8 }} />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

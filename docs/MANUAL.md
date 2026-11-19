@@ -196,6 +196,15 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 Die Plugins laufen in einem eigenen kleinen Programm (Plugin-Host), das nur läuft, solange ein Plugin benutzt wird. Stürzt ein Plugin ab, läuft die App weiter; beim nächsten Abspielen werden die Plugins mit ihren zuletzt gespeicherten Einstellungen neu geladen. Spuren mit Plugins bleiben im Takt (die Verzögerung durch die Plugins wird ausgeglichen). 64- und 32-Bit-Plugins funktionieren. Plugins auf dem Master, im Mastering und Instrument-Plugins kommen in den nächsten Versionen.
 
+## Neu in 0.70: Master-Effekte, MIDI-Dateien, Anschlag, Fades am Clip, Looks
+
+- **Master-FX:** In der Studio-Werkzeugleiste **Master FX** (oder unten im Mixer): Effekte auf der ganzen Mischung, nach allen Spuren und Return-Spuren, eingebaut oder deine VST-Plugins. Sie werden mit dem Projekt gespeichert und sind im Export.
+- **MIDI-Dateien (.mid):** Eine .mid-Datei ins Studio ziehen, mit *Import audio…* öffnen oder im Piano Roll **Import .mid…**: jede Spur (und jeder Kanal) der Datei wird eine MIDI-Spur. Im leeren Projekt wird das Tempo der Datei übernommen. Speichern: Rechtsklick auf einen MIDI-Clip → **Export as MIDI file (.mid)…** oder im Piano Roll **Export .mid**.
+- **Anschlagstärke:** Im Piano Roll unter den Noten die Anschlag-Spur: den Balken einer Note nach oben oder unten ziehen (ausgewählte Noten ändern sich zusammen). Bei ausgewählten Noten oben **Velocity** (1 bis 127) und **Length** (1/32 bis 1/1).
+- **Fades und Lautstärke am Clip:** Audio-Clips haben oben an den Ecken weiße Quadrate für Ein- und Ausblenden (nach innen ziehen) und eine Linie für die Clip-Lautstärke (nach oben oder unten ziehen). Doppelklick setzt zurück.
+- **Analog-Konsole:** unten im Studio ein Mischpult mit VU-Nadeln, Pan-Knopf, Fader, M/S für jede Spur und den Master.
+- **Swiss:** große Zahlen für Position und Tempo, Transport als große schwarze Blöcke, große Spurnamen in Großbuchstaben.
+
 ## VST-Plugins im Mastering, Stems ins Studio (ab 0.51)
 
 **Mastering-Drehknöpfe:** Alle Regler der Kette und des Lautheit-Limiters sind runde Drehknöpfe mit Lichtkranz. Nach oben oder unten ziehen dreht sie (**Shift**: fein), auch Mausrad und Pfeiltasten gehen; **Doppelklick** setzt den Startwert zurück. Ein lila Name mit Punkt zeigt einen verstellten Knopf.

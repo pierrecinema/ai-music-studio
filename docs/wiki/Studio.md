@@ -5,7 +5,8 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 ## Toolbar
 | Button | What it does |
 |---|---|
-| **Import audio…** | wav, mp3, flac, ogg, m4a, aiff onto a track (dragging files from Explorer works too) |
+| **Import audio…** | wav, mp3, flac, ogg, m4a, aiff onto a track (dragging files from Explorer works too); MIDI files (.mid) become MIDI tracks |
+| **Master FX** | shows the effects on the master (built in or VST plugins, after all tracks); see [[Mixer]] |
 | **+ Audio track / + MIDI track** | adds a track |
 | **+ Return… (Reverb / Delay)** | a shared reverb or delay; every track sends to it with its send knob (effects for one track: **FX** on the track) |
 | **Sync all to … BPM** / **Sync N selected** | brings all audio (or the selected clips, together) in time with the master BPM: [[Beat Matching and Sync]] |
@@ -25,10 +26,11 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 - **Split at the playhead:** Ctrl+E (Cubase Alt+X). **Delete:** Del (Ctrl+Z brings it back).
 - **Track height:** drag the lower edge of a track up or down; double-click the edge for the normal height.
 - **Rename a track:** double-click its name. **Reorder:** drag the `⋮⋮` grip. **Zoom:** Ctrl+mouse wheel.
+- **On the clip** (audio): the white squares at the top corners set the fade in and out (drag inwards), the line across the clip is its volume (drag up or down); double-click resets.
 - **Clip bar** (selected audio clip): gain, fade in/out, **Song tempo** (the tempo the song itself was made at, not the project tempo; correct it only if the measurement is off), **SYNC**, **MASTER**.
 
 ## Right-click on a clip
-**SYNC to the master BPM** (or **SYNC the N selected clips together**), **Make this the MASTER tempo**, **Split at the playhead**, **Duplicate clip**, **Quantize**, **Consolidate selection (Ctrl+J)**, **Crossfade with the clip before (X)**, **Loop this clip (Ctrl+L)**, **Edit warp markers**, **Split into stems (Demucs)** (progress at the top right, the stems arrive as new tracks in a group), **Delete clip**.
+**SYNC to the master BPM** (or **SYNC the N selected clips together**), **Make this the MASTER tempo**, **Split at the playhead**, **Duplicate clip**, **Quantize**, **Consolidate selection (Ctrl+J)**, **Export as MIDI file (.mid)…** (MIDI clips), **Crossfade with the clip before (X)**, **Loop this clip (Ctrl+L)**, **Edit warp markers**, **Split into stems (Demucs)** (progress at the top right, the stems arrive as new tracks in a group), **Delete clip**.
 
 ## Right-click on a track header
 **Rename track**, **Duplicate track**, **Show automation**, **Put into a new group (Ctrl+G)** / **Take out of the group** / **Ungroup**, **Delete track**.

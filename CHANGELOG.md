@@ -3,6 +3,11 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.70.2
+
+- **Narrow windows:** the Studio no longer pushes the effect rack (Hardware rack look) and the AI panel out of the window; its toolbar wraps instead. The fold key › of the effect rack is now at its left, always in view.
+- **Piano Roll:** the *Velocity* field (German: *Anschlag*) is wider and sits next to its label.
+
 ## 0.70.1
 
 - **Projects:** effects on the master were lost when a project was opened again, and so were markers, the loop range, tempo and time-signature changes and return tracks. Everything in the project file is now opened again.

@@ -312,11 +312,14 @@ behoben, dann der nächste Bereich.
 | 12.10 | Erscheinungsbild **Analog-Konsole**, Studio, Song abspielen | Unten Mischpult: VU-Nadeln bewegen sich, Pan-Knopf, Fader, M/S wirken; Titel und Spurnamen in Serifenschrift | 🗑 | Analog-Konsole entfernt (0.70.1) | 0.70.0 |
 | 12.11 | Erscheinungsbild **Swiss** | Große Position und Tempo, Transport als große Blöcke, große Spurnamen, Marker lesbar | ⚠️ | BPM nicht ganz sichtbar → 0.70.1 | 0.70.0 |
 | 12.12 | Erscheinungsbild **Hardware-Rack**: Menü ansehen | Bibliothek-Symbol grau wie die anderen; Stern bei „Musik erstellen“ in der Farbe des KI-Assistent-Knopfs | ✅ |  | 0.70.0 |
-| 12.3b | Master-Effekt (mit eigener Einstellung), Marker und Loop setzen, speichern, schließen, öffnen | Master-Effekt mit Einstellung, Marker und Loop sind wieder da | | | 0.70.1 |
-| 12.4b | `Demo-Song-4-Spuren-96BPM.mid` (von Claude geschickt) in ein leeres Studio ziehen | 4 MIDI-Spuren: Piano, Melody, Bass, Drums; Tempo 96 | | | 0.70.1 |
-| 12.5b | Rechtsklick auf den Melody-Clip → **Export as MIDI file (.mid)…**, die Datei wieder ins Studio ziehen (oder in einem anderen Programm öffnen) | Gleiche Noten | | | 0.70.1 |
-| 12.6b | Piano Roll, Werkzeug **Draw** (Fadenkreuz): auf leerer Fläche einen Rahmen um mehrere Noten ziehen; danach einmal klicken | Rahmen wählt die Noten aus (weiß umrandet); ein Klick setzt eine neue Note | | | 0.70.1 |
-| 12.7b | Piano Roll oben: **Velocity** und **Length** (grau, solange nichts gewählt); Noten wählen, Velocity 40, Length 1/16 | Felder immer da; ausgewählte Noten werden leiser und kurz; unten „Velocity/Anschlag“ gut lesbar | | | 0.70.1 |
-| 12.7c | Hardware-Rack: oben am Effekt-Rack rechts **›** klicken, dann den schmalen Streifen anklicken | Rack klappt zu einem Streifen zusammen und wieder auf; bleibt nach Neustart so | | | 0.70.1 |
-| 12.11b | Erscheinungsbild **Swiss** | Tempo (BPM) ganz sichtbar | | | 0.70.1 |
-| 12.13 | Einstellungen → Erscheinungsbild | Nur noch Dunkel, Hell, Swiss, Hardware-Rack | | | 0.70.1 |
+| 12.3b | Master-Effekt (mit eigener Einstellung), Marker und Loop setzen, speichern, schließen, öffnen | Master-Effekt mit Einstellung, Marker und Loop sind wieder da | ⚠️ | Effekt klingt, Master-FX-Leiste zeigt nur „+ Effekt…“ (Datei vermutlich mit 0.70.0 gespeichert) → mit neuem Projekt nochmals | 0.70.1 |
+| 12.4b | `Demo-Song-4-Spuren-96BPM.mid` (von Claude geschickt) in ein leeres Studio ziehen | 4 MIDI-Spuren: Piano, Melody, Bass, Drums; Tempo 96 | ✅ |  | 0.70.1 |
+| 12.5b | Rechtsklick auf den Melody-Clip → **Export as MIDI file (.mid)…**, die Datei wieder ins Studio ziehen (oder in einem anderen Programm öffnen) | Gleiche Noten | ✅ |  | 0.70.1 |
+| 12.6b | Piano Roll, Werkzeug **Draw** (Fadenkreuz): auf leerer Fläche einen Rahmen um mehrere Noten ziehen; danach einmal klicken | Rahmen wählt die Noten aus (weiß umrandet); ein Klick setzt eine neue Note | ✅ |  | 0.70.1 |
+| 12.7b | Piano Roll oben: **Velocity** und **Length** (grau, solange nichts gewählt); Noten wählen, Velocity 40, Length 1/16 | Felder immer da; ausgewählte Noten werden leiser und kurz; unten „Velocity/Anschlag“ gut lesbar | ⚠️ | Velocity heißt auf Deutsch „Anschlag“, Feld zu schmal → 0.70.2 | 0.70.1 |
+| 12.7c | Hardware-Rack: oben am Effekt-Rack rechts **›** klicken, dann den schmalen Streifen anklicken | Rack klappt zu einem Streifen zusammen und wieder auf; bleibt nach Neustart so | ❌ | Rack rechts abgeschnitten, › nicht sichtbar → 0.70.2 | 0.70.1 |
+| 12.11b | Erscheinungsbild **Swiss** | Tempo (BPM) ganz sichtbar | ✅ |  | 0.70.1 |
+| 12.13 | Einstellungen → Erscheinungsbild | Nur noch Dunkel, Hell, Swiss, Hardware-Rack | ✅ |  | 0.70.1 |
+| 12.3c | **Neues** Projekt in 0.70.2: Master FX → VST-Effekt, etwas einstellen, speichern, App ganz schließen, App starten, Projekt öffnen, **Master FX** anklicken | In der Leiste steht der Effekt (Name, Open, ⏻), mit der Einstellung | | | 0.70.2 |
+| 12.7d | Piano Roll oben: Feld **Anschlag** (= Velocity); Noten wählen, 40 eingeben, Enter | Feld breit genug, Noten werden leiser | | | 0.70.2 |
+| 12.7e | Hardware-Rack, Fenster etwas schmaler ziehen: **›** links oben am Effekt-Rack klicken, dann den Streifen klicken | Rack bleibt im Fenster, klappt zu und wieder auf | | | 0.70.2 |

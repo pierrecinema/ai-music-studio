@@ -78,6 +78,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
   background: var(--bg-primary);
 }
 
@@ -112,6 +113,7 @@ html, body, #root {
 
 .app-main {
   flex: 1;
+  min-width: 0;                 /* a wide toolbar wraps instead of pushing the effect rack and the AI panel out of the window */
   overflow: hidden;
   display: flex;
   flex-direction: column;

@@ -15,7 +15,7 @@ exported song without help from outside the app. Linux comes after RC 1.0.
 | MIDI | Velocity lane and note length handles in the Piano Roll, MIDI file import / export (.mid) | A .mid from another program opens with the right notes |
 | Studio audio | Clip fades with handles, clip gain, reverse, time-stretch per clip | |
 | Mastering step 6 | Album: several songs, the same loudness, gaps, one export | **pending list** (owner, 19.11.2026) |
-| Looks | Analog console (#72) and Swiss (#73) rebuilt like the rack, with own panels | The owner likes them |
+| Looks | Swiss (#73) rebuilt; Analog console removed in 0.70.1 (owner) | done |
 
 ## 0.80: Vocal Editor (owner, 18.11.2026)
 
@@ -38,7 +38,7 @@ Karaoke Export, Video Composer and Cloud Rendering (Pro): **decide**: hidden in 
 
 ## RC 1.0: test and polish
 
-- Full pass of `docs/TESTPLAN.md` on the owner's PCs (AMD R9 290, a PC with NVIDIA, a PC without a GPU), both shortcut layouts, all five looks.
+- Full pass of `docs/TESTPLAN.md` on the owner's PCs (AMD R9 290, a PC with NVIDIA, a PC without a GPU), both shortcut layouts, all four looks.
 - Performance: 30+ tracks with plugins, CPU meter, no clicks at 256 buffer with ASIO.
 - Code signing: reapply at SignPath Foundation with stars, articles and videos as references (so Windows shows no SmartScreen warning).
 - Updated screenshots, wiki, manual and a new video.

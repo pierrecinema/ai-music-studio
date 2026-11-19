@@ -31,7 +31,9 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ### New in 0.70
 
-- **Effects and VST plugins on the master** (Studio → *Master FX*, Mixer), **MIDI files** in and out (.mid), a **velocity lane** in the Piano Roll, **fades and clip volume** dragged right on the clip, and the **Analog console** (mixing desk with VU needles) and **Swiss** looks rebuilt.
+- 0.70.1: master effects, markers and loop now open again with the project; select several notes with a frame in the Piano Roll; the effect rack folds away.
+
+- **Effects and VST plugins on the master** (Studio → *Master FX*, Mixer), **MIDI files** in and out (.mid), a **velocity lane** in the Piano Roll, **fades and clip volume** dragged right on the clip, and the **Swiss** look rebuilt.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
@@ -98,18 +100,15 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 
 ### Looks
 
-*Settings → Appearance* has five looks. Here is the same Studio project in each of them:
+*Settings → Appearance* has four looks. Here is the same Studio project in each of them:
 
-<img src="docs/screenshots/looks-all.png" alt="The Studio in all five looks" width="100%">
+<img src="docs/screenshots/looks-all.png" alt="The Studio in all four looks" width="100%">
 
 <img src="docs/screenshots/layout-dark.png" alt="Look: Dark" width="100%">
 **Dark** – the standard look.
 
 <img src="docs/screenshots/layout-light.png" alt="Look: Light" width="100%">
 **Light** – the same layout on a light background.
-
-<img src="docs/screenshots/layout-console.png" alt="Look: Analog console" width="100%">
-**Analog console** – warm wood at the sides, amber and brown, serif type, round transport keys, a glowing position display and a mixing desk with VU needles, pan knobs and faders along the bottom of the Studio.
 
 <img src="docs/screenshots/layout-swiss.png" alt="Look: Swiss" width="100%">
 **Swiss** – white and black, big heavy numbers for position and tempo, the transport as big black blocks, large capital track names, no rounded corners, orange as the only colour, the menu as a bar along the bottom.
@@ -127,7 +126,7 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 | <img src="docs/screenshots/settings-hardware.png" alt="Settings → Hardware" width="100%"><br>**Settings → Hardware** – what this PC can run, and how fast | <img src="docs/screenshots/settings-models.png" alt="Settings → Models" width="100%"><br>**Settings → Models** – downloaded models, sizes and the models folder |
 | <img src="docs/screenshots/settings-shortcuts.png" alt="Settings → Shortcuts" width="100%"><br>**Settings → Shortcuts** – Ableton Live 12 or Cubase key layout | <img src="docs/screenshots/settings-ai.png" alt="Settings → AI" width="100%"><br>**Settings → AI** – Claude, ChatGPT, Gemini, Grok, Ollama or a local server for the AI chat |
 | <img src="docs/screenshots/settings-general.png" alt="Settings → General" width="100%"><br>**Settings → General** – language (VST plugins: Settings → Plugins) | <img src="docs/screenshots/settings-audio.png" alt="Settings → Audio" width="100%"><br>**Settings → Audio** – export sample rate (44.1 kHz for platforms) and buffer size |
-| <img src="docs/screenshots/settings-appearance.png" alt="Settings → Appearance" width="100%"><br>**Settings → Appearance** – Dark, Light, Analog console, Swiss or Hardware rack | <img src="docs/screenshots/settings-updates.png" alt="Settings → Updates" width="100%"><br>**Settings → Updates** – automatic updates from GitHub releases |
+| <img src="docs/screenshots/settings-appearance.png" alt="Settings → Appearance" width="100%"><br>**Settings → Appearance** – Dark, Light, Swiss or Hardware rack | <img src="docs/screenshots/settings-updates.png" alt="Settings → Updates" width="100%"><br>**Settings → Updates** – automatic updates from GitHub releases |
 
 **Found a problem?** ([guide, German](docs/TESTING.md)) Reports are very welcome, especially from PCs with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 

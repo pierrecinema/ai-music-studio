@@ -3,6 +3,14 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.70.1
+
+- **Projects:** effects on the master were lost when a project was opened again, and so were markers, the loop range, tempo and time-signature changes and return tracks. Everything in the project file is now opened again.
+- **Piano Roll:** with the draw tool (crosshair) a drag on empty space draws a frame that selects several notes; a click still places a note. *Velocity* and *Length* are always in the toolbar (greyed out until notes are selected), and the toolbar wraps on narrow windows. The velocity lane is taller with a readable label.
+- **Hardware rack look:** the effect rack at the right can be folded to a narrow strip (› at its top, click the strip to open it again).
+- **Swiss look:** the tempo is fully visible.
+- **Looks:** the Analog console look was removed; who used it gets Dark. Four looks remain: Dark, Light, Swiss and Hardware rack.
+
 ## 0.70.0
 
 - **Effects on the master:** built-in effects and VST plugins on the master of the Studio, after all tracks and return tracks. *Master FX* in the Studio toolbar and at the bottom of the Mixer. Saved with the project and in the export; plugin delay is made up for.

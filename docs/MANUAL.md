@@ -202,7 +202,9 @@ Die Plugins laufen in einem eigenen kleinen Programm (Plugin-Host), das nur läu
 - **MIDI-Dateien (.mid):** Eine .mid-Datei ins Studio ziehen, mit *Import audio…* öffnen oder im Piano Roll **Import .mid…**: jede Spur (und jeder Kanal) der Datei wird eine MIDI-Spur. Im leeren Projekt wird das Tempo der Datei übernommen. Speichern: Rechtsklick auf einen MIDI-Clip → **Export as MIDI file (.mid)…** oder im Piano Roll **Export .mid**.
 - **Anschlagstärke:** Im Piano Roll unter den Noten die Anschlag-Spur: den Balken einer Note nach oben oder unten ziehen (ausgewählte Noten ändern sich zusammen). Bei ausgewählten Noten oben **Velocity** (1 bis 127) und **Length** (1/32 bis 1/1).
 - **Fades und Lautstärke am Clip:** Audio-Clips haben oben an den Ecken weiße Quadrate für Ein- und Ausblenden (nach innen ziehen) und eine Linie für die Clip-Lautstärke (nach oben oder unten ziehen). Doppelklick setzt zurück.
-- **Analog-Konsole:** unten im Studio ein Mischpult mit VU-Nadeln, Pan-Knopf, Fader, M/S für jede Spur und den Master.
+- **Mehrere Noten auswählen (ab 0.70.1):** auch mit dem Zeichenwerkzeug (Fadenkreuz) einen Rahmen auf leerer Fläche ziehen; ein Klick setzt weiterhin eine Note.
+- **Effekt-Rack einklappen (Hardware-Rack, ab 0.70.1):** › oben am Rack; ein Klick auf den schmalen Streifen öffnet es wieder.
+- Die Analog-Konsole wurde in 0.70.1 wieder entfernt.
 - **Swiss:** große Zahlen für Position und Tempo, Transport als große schwarze Blöcke, große Spurnamen in Großbuchstaben.
 
 ## VST-Plugins im Mastering, Stems ins Studio (ab 0.51)

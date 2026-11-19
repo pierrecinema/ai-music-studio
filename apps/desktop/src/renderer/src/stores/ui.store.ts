@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 /** look of the app: light / dark, or one of the layouts that change more than the colours (Settings → Appearance) */
-export type Theme = 'dark' | 'light' | 'console' | 'swiss' | 'rack'
+export type Theme = 'dark' | 'light' | 'swiss' | 'rack'
 import type { View } from '../types'
 
 interface UIState {
@@ -93,6 +93,14 @@ export const useUIStore = create<UIState>()(
       setZoom: (zoom) => set({ zoom }),
       setScroll: (scrollX, scrollY) => set({ scrollX, scrollY })
     }),
-    { name: 'ams-ui' }
+    {
+      name: 'ams-ui',
+      // the Analog console look was removed in 0.70.1: whoever had it gets Dark
+      merge: (saved, cur) => {
+        const s = { ...cur, ...(saved as Partial<UIState>) }
+        if (!['dark', 'light', 'swiss', 'rack'].includes(s.theme)) s.theme = 'dark'
+        return s
+      }
+    }
   )
 )

@@ -17,6 +17,7 @@ import { applyEdits, applyOp, copyPart, fadeShape } from '../src/renderer/src/au
 import { VstLink, packBlock, unpackBlock } from '../src/renderer/src/audio/vst/link'
 import { buildMap, comboTaken, eventToCombo } from '../src/renderer/src/shortcuts/registry'
 import { parseMidi, writeMidi } from '../src/renderer/src/lib/midiFile'
+import { parseProject } from '../src/renderer/src/project/format'
 import { analyze, BiquadBank, CompressorCore, crossover, LimiterCore, MultibandCore, truePeakTaps } from '../src/renderer/src/audio/master/dsp'
 
 let failed = 0
@@ -380,6 +381,16 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   new DataView(end.buffer).setUint32(18, 22)
   const p = parseMidi(end)
   check('mid: type 0, channels split, running status', p.tracks.length === 2 && p.tracks[0].notes.length === 2 && p.tracks[1].notes[0].pitch === 40 && near(p.tracks[1].notes[0].startTime, 1) && near(p.tracks[1].notes[0].duration, 0.5), JSON.stringify(p.tracks))
+}
+
+// ── a saved project opens with everything in it (0.70.0 lost master effects, markers, loop, returns) ──
+{
+  const proj = { id: 'p', name: 'P', bpm: 100, timeSignature: [4, 4], sampleRate: 44100, tracks: [], createdAt: '', updatedAt: '',
+    masterFx: [{ id: 'm', type: 'eq', on: true, p: { low: 2 } }], markers: [{ id: 'k', beat: 4, name: 'Verse' }], loop: { start: 0, end: 8, enabled: true },
+    returns: [{ id: 'r', name: 'Reverb', effect: 'reverb', volume: 0.7, muted: false, pan: 0 }], tempoMap: [{ beat: 16, bpm: 90 }] } as unknown as Project
+  const back = parseProject(JSON.stringify({ format: 'ams-project', version: 1, savedWith: 'test', project: proj }))
+  check('project file keeps master effects, markers, loop, returns, tempo changes',
+    back.masterFx?.[0]?.p.low === 2 && back.markers?.[0]?.name === 'Verse' && back.loop?.end === 8 && back.returns?.length === 1 && back.tempoMap?.[0]?.bpm === 90, JSON.stringify(back))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

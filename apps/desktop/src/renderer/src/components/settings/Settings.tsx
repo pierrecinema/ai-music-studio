@@ -10,6 +10,7 @@ import { useAIStore } from '../../stores/ai.store'
 import type { AIProvider } from '../../types'
 import { EnginesTab } from './EnginesTab'
 import { ShortcutsTab } from './ShortcutsTab'
+import { MidiTab } from './MidiTab'
 import { ModelsTab } from './ModelsTab'
 import { HardwareTab } from './HardwareTab'
 import { tr, trf } from '../../i18n/tr'
@@ -94,9 +95,9 @@ function ModelPicker({ models, value, onChange }: {
 }
 
 // tab names translated through the tables (the older locale files lack the newer tabs)
-const TAB_EN: Partial<Record<string, string>> = { plugins: 'Plugins', engines: 'AI Engines', hardware: 'Hardware', models: 'Models', shortcuts: 'Shortcuts', audio: 'Audio', updates: 'Updates', about: 'About' }
+const TAB_EN: Partial<Record<string, string>> = { midi: 'MIDI', plugins: 'Plugins', engines: 'AI Engines', hardware: 'Hardware', models: 'Models', shortcuts: 'Shortcuts', audio: 'Audio', updates: 'Updates', about: 'About' }
 
-type SettingsTab = 'general' | 'plugins' | 'ai' | 'engines' | 'hardware' | 'models' | 'shortcuts' | 'audio' | 'appearance' | 'updates' | 'about'
+type SettingsTab = 'general' | 'midi' | 'plugins' | 'ai' | 'engines' | 'hardware' | 'models' | 'shortcuts' | 'audio' | 'appearance' | 'updates' | 'about'
 
 type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
 
@@ -251,7 +252,7 @@ export function Settings(): React.ReactElement {
       {/* Tab nav */}
       <div style={{ width: 160, background: 'var(--bg-secondary)', borderRight: '1px solid var(--border)', padding: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10, padding: '0 6px' }}>{t('settings.title')}</div>
-        {(['general', 'plugins', 'ai', 'engines', 'hardware', 'models', 'shortcuts', 'audio', 'appearance', 'updates', 'about'] as SettingsTab[]).map(tab2 => (
+        {(['general', 'plugins', 'ai', 'engines', 'hardware', 'models', 'shortcuts', 'audio', 'midi', 'appearance', 'updates', 'about'] as SettingsTab[]).map(tab2 => (
           <button
             key={tab2}
             onClick={() => setTab(tab2)}
@@ -487,6 +488,7 @@ export function Settings(): React.ReactElement {
         {tab === 'hardware' && <HardwareTab />}
         {tab === 'models' && <ModelsTab />}
         {tab === 'shortcuts' && <ShortcutsTab />}
+        {tab === 'midi' && <MidiTab />}
       </div>
     </div>
   )

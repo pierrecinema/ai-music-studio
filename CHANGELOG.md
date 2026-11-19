@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.72.0
+
+- **Settings → MIDI:** every connected MIDI device (keyboards, pad controllers, Launchpads) is listed as soon as it is plugged in. Per device, like in Ableton: **Notes** (keys and pads play the selected track and are recorded) and **Control** (knobs, faders and buttons drive the app).
+- **Known devices with a ready mapping:** Akai MPK Mini (MK3, Play, Plus, MK2), Arturia MiniLab 3 / MK II, KeyStep, Novation Launchkey and Launchkey Mini. On the MPK Mini, K1 is the volume and K2 the pan of the selected track, K3–K8 turn the first knobs of its effect or instrument (built-in or VST).
+- **MIDI Learn:** *Learn* next to a function (play, stop, record, loop, metronome, markers, volume, pan, mute, solo, send, plugin knobs 1–8, previous / next track, master volume, tempo), then move a control on the device. Saved per device; *Reset mapping* goes back to the known one.
+- **Launchpad (X, Mini MK3, Pro MK3):** the grid drives the Studio and lights up: top row jumps to markers 1–8, the rows below are tracks 1–7 with mute, solo, select and volume in five steps.
+
 ## 0.71.0
 
 - **Automation of plugin parameters:** in an automation lane of a track (**A**), the selector now offers *Plugin parameter → <plugin>: choose a parameter…*: pick any parameter of a VST effect or instrument on the track (search box), then draw its curve like volume or pan. Playback and export follow it to the sample (the plugin host cuts its blocks at each change).

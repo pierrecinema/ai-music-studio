@@ -252,6 +252,16 @@ juce::var PluginHost::handle (std::shared_ptr<WsConnection>, const juce::var& ms
         }
         auto r = okay(); r.getDynamicObject()->setProperty ("params", list); return r;
     }
+    if (cmd == "setParam")
+    {
+        // a parameter set by hand (a knob of a MIDI controller): {index, value 0..1}
+        std::lock_guard<std::mutex> l (inst->lock);
+        auto& ps = inst->plugin->getParameters();
+        int i = (int) msg.getProperty ("index", -1);
+        if (i < 0 || i >= ps.size()) return fail ("no such parameter");
+        ps[i]->setValueNotifyingHost (juce::jlimit (0.0f, 1.0f, (float) (double) msg.getProperty ("value", 0.0)));
+        return okay();
+    }
     if (cmd == "paramText")
     {
         // how a value of a parameter reads (for the automation lane): {index, value} -> text

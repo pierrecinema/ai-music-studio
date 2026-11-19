@@ -437,6 +437,12 @@ export async function vstParams(fx: InsertFx, sampleRate: number): Promise<VstPa
   return (await l.client.call<{ params: VstParam[] }>('params', { instance: l.instance })).params ?? []
 }
 
+/** sets one parameter of the running plugin (a knob of a MIDI controller); value 0..1 */
+export async function vstSetParam(fx: InsertFx, sampleRate: number, index: number, value: number): Promise<void> {
+  const l = await liveFor(fx, sampleRate)
+  await l.client.call('setParam', { instance: l.instance, index, value })
+}
+
 /** the plugin's settings as they are now (base64), loading it if needed: for saving a preset */
 export async function vstStateNow(fx: InsertFx, sampleRate: number): Promise<string> {
   const l = await liveFor(fx, sampleRate)

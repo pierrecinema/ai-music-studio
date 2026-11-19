@@ -87,6 +87,9 @@ assert.equal(new DataView(autoOut).getUint16(14, true) & 2, 0, 'the reply has no
 const oa = new Float32Array(autoOut, 24, n)
 assert.ok(Math.abs(oa[255] - 0.4) < 1e-6 && Math.abs(oa[256] - 0.8) < 1e-6 && Math.abs(oa[399] - 0.8) < 1e-6 && Math.abs(oa[400] - 0.4) < 1e-6, `automation: ${oa[255]} ${oa[256]} ${oa[399]} ${oa[400]}`)
 console.log('automation inside a block: ok')
+assert.equal((await call('setParam', { instance: ld.instance, index: 0, value: 0.25 })).ok, true)
+{ const o = new Float32Array(await block(ld.instance, [L, R]), 24, n); assert.ok(Math.abs(o[10] - 0.2) < 1e-6, `setParam 0.25: ${o[10]}`) }
+await call('setParam', { instance: ld.instance, index: 0, value: 0.5 })
 // a long block (larger than the block size) is processed in parts
 const big = new Float32Array(3000).fill(1)
 const out3 = new Float32Array(await block(ld.instance, [big, big]), 24, 3000)

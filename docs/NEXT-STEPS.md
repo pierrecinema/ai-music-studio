@@ -56,6 +56,11 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 - **Album mastering** (Mastering step 6): several songs, the same loudness, gaps, one export. Put on the list on 2026-11-19.
 - **Plugin automation and presets:** explained to the owner on 2026-11-19, decision open.
 
+## Ideas from the owner (19.11.2026)
+
+- **MIDI hardware:** 0.72 has Settings → MIDI. Later: Launchpad as a clip grid (needs a session / clip view), more device profiles (the owner tests with an Akai MPK Mini and a few others).
+- **External hardware synths:** midi.guide (github.com/pencilresearch/midi, CSV per device, CC BY-SA 4.0, attribution needed) lists the CC/NRPN numbers of many synthesizers: could give named CC automation lanes for a MIDI track that plays an external synth. cc.mxrlkn.com could not be reached from the cloud session.
+
 ## Open technical items
 
 - **Beat sync, ideas from the projects the owner linked (studied 12.11.2026):**

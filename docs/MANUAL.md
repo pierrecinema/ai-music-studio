@@ -196,6 +196,13 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 Die Plugins laufen in einem eigenen kleinen Programm (Plugin-Host), das nur läuft, solange ein Plugin benutzt wird. Stürzt ein Plugin ab, läuft die App weiter; beim nächsten Abspielen werden die Plugins mit ihren zuletzt gespeicherten Einstellungen neu geladen. Spuren mit Plugins bleiben im Takt (die Verzögerung durch die Plugins wird ausgeglichen). 64- und 32-Bit-Plugins funktionieren. Plugins auf dem Master, im Mastering und Instrument-Plugins kommen in den nächsten Versionen.
 
+## Neu in 0.72: MIDI-Controller (Einstellungen → MIDI)
+
+- Alle MIDI-Geräte erscheinen von selbst, sobald sie eingesteckt sind. Pro Gerät **Noten** (Tasten und Pads spielen die gewählte Spur und werden aufgenommen) und **Steuerung** (Regler, Fader, Knöpfe bedienen die App).
+- **Bekannte Geräte** haben gleich eine Zuordnung, z. B. **Akai MPK Mini**: K1 Lautstärke, K2 Pan der gewählten Spur, K3–K8 die ersten Regler ihres Effekts oder Instruments.
+- **Lernen:** neben einer Funktion (Abspielen, Stopp, Aufnahme, Loop, Metronom, Marker, Lautstärke, Pan, Stumm, Solo, Send, Plugin-Regler 1–8, Spur wechseln, Master, Tempo) auf **Learn** klicken, dann am Gerät einen Regler bewegen. Wird pro Gerät gespeichert.
+- **Launchpad (X, Mini MK3, Pro MK3):** oberste Reihe springt zu den Markern 1–8; die Reihen darunter sind die Spuren 1–7: Stumm, Solo, Auswählen, Lautstärke in fünf Stufen. Die Pads leuchten passend.
+
 ## Neu in 0.71: Automation von Plugin-Reglern, Presets
 
 - **Plugin-Regler automatisieren:** **A** an der Spur öffnet die Automation; im Auswahlfeld der Spur *Plugin parameter → <Plugin>: choose a parameter…* zeigt alle Regler des Plugins (mit Suche). Regler wählen, dann die Kurve wie bei der Lautstärke zeichnen. Abspielen und Export folgen ihr genau.

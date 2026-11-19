@@ -337,3 +337,18 @@ behoben, dann der nächste Bereich.
 | 13.7 | Bei einem Plugin **Presets… → Save current settings…**, Namen eingeben; im Plugin etwas ändern; **Presets… → <Name>** | Die gespeicherten Einstellungen sind wieder da | | | 0.71.0 |
 | 13.8 | Neues Projekt, dasselbe Plugin einfügen, **Presets…** | Das Preset steht in der Liste und lädt | | | 0.71.0 |
 | 13.9 | Zwei oder mehr Plugin-Fenster offen, eines minimieren, dann bei diesem Plugin **Open** | Das Fenster kommt wieder | | | 0.71.0 |
+
+## 14. Neu in 0.72.0: MIDI-Controller (Einstellungen → MIDI)
+
+| Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 14.1 | MPK Mini einstecken, **Einstellungen → MIDI** | Das MPK Mini steht da, „Erkannt: Akai MPK Mini …“, Noten und Steuerung an, Zuordnung mit CC 70–77 | | | 0.72.0 |
+| 14.2 | Studio: eine MIDI-Spur wählen, Tasten und Pads spielen | Man hört die Spur (auch mit Dexed / Surge) | | | 0.72.0 |
+| 14.3 | K1 und K2 drehen | Lautstärke und Pan der gewählten Spur bewegen sich | | | 0.72.0 |
+| 14.4 | Spur mit einem Effekt (z. B. EQ oder ein VST): K3–K5 drehen, dabei das Plugin-Fenster offen | Die ersten Regler des Effekts bewegen sich | | | 0.72.0 |
+| 14.5 | **Learn** bei „Abspielen / Pause“, dann ein Pad drücken; danach das Pad nochmal drücken | Die Zeile zeigt „Note …“; das Pad startet und stoppt den Song (spielt dann keine Note mehr) | | | 0.72.0 |
+| 14.6 | **Learn** bei „Nächste Spur“ mit einem anderen Pad; **Zuordnung zurücksetzen** | Pad wählt die nächste Spur; nach Zurücksetzen wieder die Standard-Zuordnung | | | 0.72.0 |
+| 14.7 | Haken **Noten** aus | Tasten spielen nichts mehr; Regler wirken weiter | | | 0.72.0 |
+| 14.8 | App neu starten | Zuordnungen und Haken sind gespeichert | | | 0.72.0 |
+| 14.9 | Ein anderes Gerät (Keyboard, Launchkey …) einstecken | Erscheint sofort; bekannt: mit Zuordnung; unbekannt: Hinweis „Learn“ | | | 0.72.0 |
+| 14.10 | Launchpad (X / Mini MK3 / Pro MK3) einstecken, Projekt mit Spuren und Markern | Pads leuchten: oben Marker (orange), je Spur Stumm/Solo/Auswahl/Lautstärke; Drücken wirkt | | | 0.72.0 |

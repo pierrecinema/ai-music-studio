@@ -4,6 +4,7 @@ import { usePluginsStore } from '../../stores/plugins.store'
 import { onVstChange, showVstEditor, vstFailure, vstParams, vstApplyState, vstStateNow, type VstParam } from '../../audio/vst/host'
 import { liveSampleRate, warmInstrument } from '../../audio/engine'
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useProjectStore } from '../../stores/project.store'
 import { snapBeat } from '../../edit/grid'
 import { rangeOf, sortedPoints, valueAt, AUTO_LABEL } from '../../audio/automation'
@@ -37,6 +38,11 @@ export function AutomationHeader({ track, param, min }: { track: Track; param: A
   for (const f of plugins) for (const i of Object.keys(f.paramNames ?? {})) options.push(`fx:${f.id}:${i}` as AutoParam)
   for (const k of Object.keys(track.automation ?? {})) if (k.startsWith('fx:') && !options.includes(k as AutoParam)) options.push(k as AutoParam)
   const [picking, setPicking] = useState<{ fx: InsertFx; list: VstParam[] | null; error?: string; q: string } | null>(null)
+  const selRef = useRef<HTMLSelectElement>(null)
+  const anchor = (): { left: number; top: number } => {
+    const r = selRef.current?.getBoundingClientRect()
+    return r ? { left: Math.max(8, Math.min(window.innerWidth - 268, r.left)), top: Math.min(r.bottom + 4, window.innerHeight - 320) } : { left: 100, top: 100 }
+  }
   const startPick = (fxId: string): void => {
     const fx = plugins.find((f) => f.id === fxId)
     if (!fx) return
@@ -60,7 +66,7 @@ export function AutomationHeader({ track, param, min }: { track: Track; param: A
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: min ? '2px 8px 2px 18px' : '4px 8px 4px 18px', fontSize: 10, color: 'var(--text-muted)' }}>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <button className="btn btn-ghost" style={{ ...small, padding: '0 4px' }} title={min ? tr('Show this lane in full') : tr('Make this lane small')} onClick={toggleMin}>{min ? '▸' : '▾'}</button>
-        <select value={param} style={{ fontSize: 10, flex: 1, minWidth: 0, ...(min ? { height: 20, padding: '0 4px' } : {}) }} title={tr('Which value this lane automates')}
+        <select ref={selRef} value={param} style={{ fontSize: 10, flex: 1, minWidth: 0, ...(min ? { height: 20, padding: '0 4px' } : {}) }} title={tr('Which value this lane automates')}
           onChange={(e) => { const v = e.target.value; e.target.blur(); if (v.startsWith('pick:')) { startPick(v.slice(5)); return } setLanes(lanes.map((x) => (x === param ? v as AutoParam : x))) }}>
           {[param, ...free].map((o) => <option key={o} value={o}>{AUTO_LABEL(o, nameOf, track)}{track.automation?.[o]?.length ? ' •' : ''}</option>)}
           {plugins.length > 0 && (
@@ -72,8 +78,8 @@ export function AutomationHeader({ track, param, min }: { track: Track; param: A
         {!min && free.length > 0 && <button className="btn btn-ghost" style={small} title={tr('Add a lane for another value (pan, a send…)')} onClick={() => setLanes([...lanes, free[0]])}>+</button>}
         <button className="btn btn-ghost" style={small} title={tr('Close this lane (its points stay)')} onClick={() => setLanes(lanes.filter((x) => x !== param))}>×</button>
       </div>
-      {picking && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', padding: 4, position: 'relative', zIndex: 20 }}>
+      {picking && createPortal(
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', boxShadow: '0 6px 18px rgba(0,0,0,0.5)', padding: 6, position: 'fixed', ...anchor(), width: 260, zIndex: 1000, fontSize: 10, color: 'var(--text-secondary)' }}>
           {!picking.list && <span>{tr('Loading the plugin…')}</span>}
           {picking.error && <span style={{ color: 'var(--red)' }}>{picking.error}</span>}
           {picking.list && (
@@ -92,7 +98,7 @@ export function AutomationHeader({ track, param, min }: { track: Track; param: A
               <button className="btn btn-ghost" style={small} onClick={() => setPicking(null)}>{tr('Cancel')}</button>
             </>
           )}
-        </div>
+        </div>, document.body
       )}
       {!min && (
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -275,9 +281,13 @@ const paramNamesFor = (fx: InsertFx, p: VstParam): Record<string, string> =>
 // "Automate…" next to a plugin: pick one of its parameters, and a lane for it opens under the track in the Studio
 export function AutomateButton({ track, fx }: { track: Track; fx: InsertFx }): React.ReactElement | null {
   const [pick, setPick] = useState<{ list: VstParam[] | null; error?: string; q: string } | null>(null)
+  const [at, setAt] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   if ((!fx.vst && !AUTOMATABLE[fx.type]) || track.id === '__master__') return null
-  const start = (): void => {
+  const start = (e: React.MouseEvent): void => {
     if (pick) { setPick(null); return }
+    // the list floats over everything (the effects lane and the rack are too small to hold it)
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setAt({ x: Math.max(8, Math.min(window.innerWidth - 268, r.right - 260)), y: Math.min(r.bottom + 4, window.innerHeight - 320) })
     if (fx.type !== 'vst') { setPick({ list: builtinParams(fx), q: '' }); return }
     setPick({ list: null, q: '' })
     vstParams(fx, liveSampleRate()).then((list) => setPick({ list, q: '' })).catch((e: Error) => setPick({ list: [], error: e.message, q: '' }))
@@ -297,10 +307,10 @@ export function AutomateButton({ track, fx }: { track: Track; fx: InsertFx }): R
   }
   return (
     <span style={{ position: 'relative', display: 'inline-flex' }}>
-      <button className="btn btn-ghost" style={{ ...small, padding: '0 6px' }} onClick={start}
+      <button className="btn btn-ghost" style={{ ...small, padding: '0 6px' }} onClick={(e) => start(e)}
         title={tr('Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track')}>{tr('Automate…')}</button>
-      {pick && (
-        <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 60, width: 240, display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', boxShadow: '0 6px 18px rgba(0,0,0,0.5)', padding: 6, fontSize: 10, color: 'var(--text-secondary)' }}
+      {pick && createPortal(
+        <div style={{ position: 'fixed', left: at.x, top: at.y, zIndex: 1000, width: 260, display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', boxShadow: '0 6px 18px rgba(0,0,0,0.5)', padding: 6, fontSize: 10, color: 'var(--text-secondary)' }}
           onPointerDown={(e) => e.stopPropagation()}>
           {!pick.list && <span>{tr('Loading the plugin…')}</span>}
           {pick.error && <span style={{ color: 'var(--red)' }}>{pick.error}</span>}
@@ -320,7 +330,7 @@ export function AutomateButton({ track, fx }: { track: Track; fx: InsertFx }): R
               <button className="btn btn-ghost" style={small} onClick={() => setPick(null)}>{tr('Cancel')}</button>
             </>
           )}
-        </div>
+        </div>, document.body
       )}
     </span>
   )

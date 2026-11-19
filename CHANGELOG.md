@@ -3,6 +3,10 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.73.3
+
+- **Automated effect knobs move:** when a built-in effect (EQ, compressor, filter, delay, reverb) has an automation lane, its knobs in the effect rack and its sliders in the effects lane now follow the lane while the song plays (and show the lane's value at the playhead). Before, only the sound followed it.
+
 ## 0.73.2
 
 - **VST instruments in *+ Effect…* on MIDI tracks:** the effect list of a MIDI track (effects lane, Channel panel, effect rack) now lists the VST instruments (Dexed, Surge XT …) at the top. Picking one makes it the instrument that plays the track's notes, as in *Channel → Instrument*.

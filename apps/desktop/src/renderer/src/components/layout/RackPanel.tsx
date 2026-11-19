@@ -4,8 +4,8 @@ import React from 'react'
 import { useProjectStore } from '../../stores/project.store'
 import { INSERT_LABEL, INSERT_PARAMS } from '../../audio/fx'
 import { Knob } from '../mastering/MasterRack'
-import { AutomateButton, FxAddSelect, InstrumentSelect, openPlugin, PresetSelect } from '../timeline/StudioLanes'
-import type { InsertFx } from '../../types'
+import { AutomateButton, FxAddSelect, InstrumentSelect, openPlugin, PresetSelect, useAutomatedP } from '../timeline/StudioLanes'
+import type { InsertFx, Track } from '../../types'
 import { tr } from '../../i18n/tr'
 
 const screw: React.CSSProperties = { width: 9, height: 9, borderRadius: '50%', background: 'radial-gradient(circle at 40% 35%, #bbb, #555)', flexShrink: 0 }
@@ -23,6 +23,19 @@ function Module({ title, on, onToggle, children, extra }: { title: string; on: b
       </div>
       {children && <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>{children}</div>}
     </div>
+  )
+}
+
+// the knobs of a built-in effect; an automated knob turns with its lane while the song plays
+function RackKnobs({ track, fx, set }: { track: Track; fx: InsertFx; set: (patch: Partial<InsertFx>) => void }): React.ReactElement {
+  const shown = useAutomatedP(track, fx)
+  return (
+    <>
+      {INSERT_PARAMS[fx.type].map((d) => (
+        <Knob key={d.key} name={tr(d.label)} value={shown[d.key] ?? d.def} refv={d.def} min={d.min} max={d.max} step={d.step} unit={d.unit}
+          onChange={(v) => set({ p: { ...fx.p, [d.key]: v } })} />
+      ))}
+    </>
   )
 }
 
@@ -73,10 +86,7 @@ export function RackPanel(): React.ReactElement {
         }
         return (
           <Module key={f.id} title={tr(INSERT_LABEL[f.type])} on={f.on} onToggle={() => set({ on: !f.on })} extra={<><AutomateButton track={t} fx={f} />{remove}</>}>
-            {INSERT_PARAMS[f.type].map((d) => (
-              <Knob key={d.key} name={tr(d.label)} value={f.p[d.key] ?? d.def} refv={d.def} min={d.min} max={d.max} step={d.step} unit={d.unit}
-                onChange={(v) => set({ p: { ...f.p, [d.key]: v } })} />
-            ))}
+            <RackKnobs track={t} fx={f} set={set} />
           </Module>
         )
       })}

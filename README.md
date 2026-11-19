@@ -31,7 +31,7 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ### New in 0.73
 
-- **VST instruments** such as Dexed can also be picked in *+ Effect…* of a MIDI track, and the new **CH** button next to FX opens the track's channel with its instrument (0.73.2).
+- **VST instruments** such as Dexed can also be picked in *+ Effect…* of a MIDI track, and the new **CH** button next to FX opens the track's channel with its instrument (0.73.2). Automated effect knobs turn with their lane while the song plays (0.73.3).
 - **Automation of the built-in effects** (EQ, compressor, filter, delay and reverb mix) with *Automate…*, like the VST plugins.
 
 ### New in 0.72

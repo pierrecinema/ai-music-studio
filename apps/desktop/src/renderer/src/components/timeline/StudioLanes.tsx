@@ -12,7 +12,8 @@ import { tempoPoints } from '../../audio/timemap'
 import { trackLevel } from '../../audio/engine'
 import type { AutoParam, InsertFx, InsertType, ReturnTrack, TakeLane, Track } from '../../types'
 import { AUTO_HEIGHT, AUTO_MIN_HEIGHT, FX_HEIGHT, HEADER_WIDTH, openLanes, RETURN_HEIGHT, TAKE_HEIGHT, TEMPO_HEIGHT, trackPointer } from './studioLayout'
-import { AUTOMATABLE, INSERT_LABEL, INSERT_PARAMS, insertDefaults, toUnit } from '../../audio/fx'
+import { AUTOMATABLE, fromUnit, INSERT_LABEL, INSERT_PARAMS, insertDefaults, toUnit } from '../../audio/fx'
+import { useAudioStore } from '../../stores/audio.store'
 import { nanoid } from 'nanoid'
 import type { PopoverSpec } from './Popover'
 import { tr, trf } from '../../i18n/tr'
@@ -226,6 +227,48 @@ export function FxHeader({ track }: { track: Track }): React.ReactElement {
   )
 }
 
+/** the settings of a built-in effect as they sound now: an automated setting follows its lane at the playhead */
+export function useAutomatedP(track: Track, fx: InsertFx): Record<string, number> {
+  const keys = fx.type === 'vst' ? [] : (AUTOMATABLE[fx.type] ?? []).filter((k) => (track.automation?.[`fx:${fx.id}:${k}` as AutoParam]?.length ?? 0) > 0)
+  const beat = useAudioStore((s) => (keys.length ? s.currentBeat : 0))
+  if (!keys.length) return fx.p
+  const p = { ...fx.p }
+  for (const k of keys) {
+    const d = INSERT_PARAMS[fx.type].find((x) => x.key === k)
+    if (!d) continue
+    const v = fromUnit(fx.type, k, valueAt(track.automation?.[`fx:${fx.id}:${k}` as AutoParam], beat, toUnit(fx.type, k, fx.p[k] ?? d.def)))
+    p[k] = d.step ? Math.round(v / d.step) * d.step : v
+  }
+  return p
+}
+
+function FxParams({ track, fx, set }: { track: Track; fx: InsertFx; set: (patch: Partial<InsertFx>) => void }): React.ReactElement {
+  const shown = useAutomatedP(track, fx)
+  return (
+    <>
+      {INSERT_PARAMS[fx.type].map((d) => {
+        const v = shown[d.key] ?? d.def
+        const label = d.step && d.step < 1 ? Number(v.toFixed(Math.min(3, String(d.step).split('.')[1]?.length ?? 0))) : v
+        return d.key === 'mode' ? (
+          <label key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <select value={v >= 0.5 ? '1' : '0'} style={{ fontSize: 10 }} onChange={(e) => set({ p: { ...fx.p, mode: Number(e.target.value) } })}>
+              <option value="0">{tr('Low-pass')}</option><option value="1">{tr('High-pass')}</option>
+            </select>
+          </label>
+        ) : (
+          <label key={d.key} title={`${d.label}: ${label}${d.unit ? ' ' + d.unit : ''} (double-click: default)`} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {tr(d.label)}
+            <input type="range" min={d.min} max={d.max} step={d.step} value={v} style={{ width: 56 }}
+              onChange={(e) => set({ p: { ...fx.p, [d.key]: Number(e.target.value) } })}
+              onDoubleClick={() => set({ p: { ...fx.p, [d.key]: d.def } })} />
+            <span style={{ minWidth: 30 }}>{d.key === 'mix' || d.key === 'feedback' ? `${Math.round(v * 100)}%` : `${label}${d.unit && d.unit !== 'beats' ? d.unit : ''}`}</span>
+          </label>
+        )
+      })}
+    </>
+  )
+}
+
 // the effects of the track, left to right in the order the sound goes through them
 export function FxLane({ track, onSet, sticky = true }: { track: Track; onSet?: (fx: InsertFx[]) => void; sticky?: boolean }): React.ReactElement {
   const updateTrack = onSet ? (_: string, patch: { fx: InsertFx[] }): void => onSet(patch.fx) : useProjectStore.getState().updateTrack
@@ -247,24 +290,7 @@ export function FxLane({ track, onSet, sticky = true }: { track: Track; onSet?: 
           <button className="btn btn-ghost" style={{ ...small, padding: '0 4px', color: f.on ? 'var(--green)' : 'var(--text-muted)' }} title={f.on ? tr('On: click to bypass') : tr('Bypassed: click to switch on')} onClick={() => set(f.id, { on: !f.on })}>⏻</button>
           <b style={{ color: 'var(--text-primary)' }}>{f.type === 'vst' ? f.vst?.name ?? tr('VST plugin') : tr(INSERT_LABEL[f.type])}</b>
           {f.type === 'vst' && <VstControls fx={f} track={track} />}
-          {INSERT_PARAMS[f.type].map((d) => {
-            const v = f.p[d.key] ?? d.def
-            return d.key === 'mode' ? (
-              <label key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <select value={v >= 0.5 ? '1' : '0'} style={{ fontSize: 10 }} onChange={(e) => set(f.id, { p: { ...f.p, mode: Number(e.target.value) } })}>
-                  <option value="0">{tr('Low-pass')}</option><option value="1">{tr('High-pass')}</option>
-                </select>
-              </label>
-            ) : (
-              <label key={d.key} title={`${d.label}: ${v}${d.unit ? ' ' + d.unit : ''} (double-click: default)`} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                {tr(d.label)}
-                <input type="range" min={d.min} max={d.max} step={d.step} value={v} style={{ width: 56 }}
-                  onChange={(e) => set(f.id, { p: { ...f.p, [d.key]: Number(e.target.value) } })}
-                  onDoubleClick={() => set(f.id, { p: { ...f.p, [d.key]: d.def } })} />
-                <span style={{ minWidth: 30 }}>{d.key === 'mix' || d.key === 'feedback' ? `${Math.round(v * 100)}%` : `${v}${d.unit && d.unit !== 'beats' ? d.unit : ''}`}</span>
-              </label>
-            )
-          })}
+          <FxParams track={track} fx={f} set={(patch) => set(f.id, patch)} />
           {f.type !== 'vst' && <AutomateButton track={track} fx={f} />}
           <button className="btn btn-ghost" style={{ ...small, padding: '0 3px' }} title={tr('Earlier in the chain')} disabled={i === 0} onClick={() => move(i, -1)}>◀</button>
           <button className="btn btn-ghost" style={{ ...small, padding: '0 3px' }} title={tr('Later in the chain')} disabled={i === list.length - 1} onClick={() => move(i, 1)}>▶</button>

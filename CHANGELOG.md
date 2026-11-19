@@ -6,6 +6,7 @@ on its GitHub release page, so every version needs a `## <version>` section here
 ## 0.73.2
 
 - **VST instruments in *+ Effect…* on MIDI tracks:** the effect list of a MIDI track (effects lane, Channel panel, effect rack) now lists the VST instruments (Dexed, Surge XT …) at the top. Picking one makes it the instrument that plays the track's notes, as in *Channel → Instrument*.
+- **CH button on every track** (next to FX): opens the Channel panel of that track, with the instrument (VST instruments such as Dexed), the effects and the sends. It turns green when the track plays a VST instrument.
 
 ## 0.73.1
 

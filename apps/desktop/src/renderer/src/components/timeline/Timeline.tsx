@@ -550,6 +550,11 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { soloed: !track.soloed }) }} style={{ ...tinyBtn, color: track.soloed ? 'var(--accent-light)' : 'var(--text-muted)' }} title={tr('Solo')}>S</button>
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showFx: !track.showFx }) }} title={tr('Effects of this track (EQ, compressor, delay, reverb, filter)')}
               style={{ ...tinyBtn, color: track.showFx ? 'var(--accent-light)' : track.fx?.length ? '#22c55e' : 'var(--text-muted)' }}>FX</button>
+            {!isGroup && (
+              <button onClick={(e) => { e.stopPropagation(); selectTrack(track.id); setShowChannel(true); remember('ams-show-channel', true) }}
+                style={{ ...tinyBtn, color: showChannel && selectedTrackId === track.id ? 'var(--accent-light)' : track.instrument?.vst ? '#22c55e' : 'var(--text-muted)' }}
+                title={track.type === 'midi' ? tr('Channel of this track: instrument (VST instruments such as Dexed), effects, sends') : tr('Channel of this track: effects, sends')}>{tr('CH')}</button>
+            )}
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, toggleAutomationLanes(track)) }}
               style={{ ...tinyBtn, color: openLanes(track).length ? 'var(--accent-light)' : Object.values(track.automation ?? {}).some((l) => l?.length) ? '#eab308' : 'var(--text-muted)' }}
               title={tr('Show / hide the automation lane (volume, pan, sends)')}>A</button>

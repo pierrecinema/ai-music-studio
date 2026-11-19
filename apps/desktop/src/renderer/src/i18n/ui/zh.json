@@ -1369,5 +1369,8 @@
  "Automate…": "自动化…",
  "Switched off in Settings → Plugins (tick them there)": "已在“设置 → 插件”中关闭（在那里勾选）",
  "Other plugins (only if they can play notes)": "其他插件（仅当能演奏音符时）",
- "VST instruments (play the notes of this track)": "VST 乐器（演奏此轨道的音符）"
+ "VST instruments (play the notes of this track)": "VST 乐器（演奏此轨道的音符）",
+ "CH": "通道",
+ "Channel of this track: instrument (VST instruments such as Dexed), effects, sends": "此轨道的通道：乐器（如 Dexed 等 VST 乐器）、效果、发送",
+ "Channel of this track: effects, sends": "此轨道的通道：效果、发送"
 }

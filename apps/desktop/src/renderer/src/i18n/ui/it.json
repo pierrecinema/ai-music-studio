@@ -1369,5 +1369,8 @@
  "Automate…": "Automatizza…",
  "Switched off in Settings → Plugins (tick them there)": "Disattivati in Impostazioni → Plugin (spuntali lì)",
  "Other plugins (only if they can play notes)": "Altri plugin (solo se suonano note)",
- "VST instruments (play the notes of this track)": "Strumenti VST (suonano le note di questa traccia)"
+ "VST instruments (play the notes of this track)": "Strumenti VST (suonano le note di questa traccia)",
+ "CH": "CA",
+ "Channel of this track: instrument (VST instruments such as Dexed), effects, sends": "Canale di questa traccia: strumento (strumenti VST come Dexed), effetti, mandate",
+ "Channel of this track: effects, sends": "Canale di questa traccia: effetti, mandate"
 }

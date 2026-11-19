@@ -1,3 +1,4 @@
+import { isInstrumentLike } from '../../audio/vst/host'
 import React, { useEffect, useState } from 'react'
 import { usePluginsStore, DEFAULT_FOLDERS } from '../../stores/plugins.store'
 import { tr, trf } from '../../i18n/tr'
@@ -137,7 +138,7 @@ export function PluginsTab(): React.ReactElement {
                   <td><input type="checkbox" checked={!s.off.includes(p.id)} onChange={(e) => s.setOn(p.id, e.target.checked)} /></td>
                   <td style={{ padding: '4px 0', color: 'var(--text-primary)' }}>{p.name}</td>
                   <td>{p.vendor || '–'}</td>
-                  <td>{p.isInstrument ? tr('Instrument (later)') : tr('Effect')}</td>
+                  <td>{isInstrumentLike(p) ? tr('Instrument') : tr('Effect')}</td>
                   <td>{p.format}</td>
                   <td>{p.arch === 'x86' ? '32' : '64'}</td>
                 </tr>

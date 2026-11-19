@@ -1,7 +1,7 @@
 // Extra lanes of the Studio: automation (Ableton automation lanes / Cubase automation tracks), the tempo
 // track, take lanes for comping, and the return tracks with their effects.
 import { usePluginsStore } from '../../stores/plugins.store'
-import { onVstChange, showVstEditor, vstFailure, vstParams, vstApplyState, vstStateNow, type VstParam } from '../../audio/vst/host'
+import { isInstrumentLike, onVstChange, showVstEditor, vstFailure, vstParams, vstApplyState, vstStateNow, type VstParam } from '../../audio/vst/host'
 import { liveSampleRate, warmInstrument } from '../../audio/engine'
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -176,7 +176,7 @@ const FX_TYPES: InsertType[] = ['eq', 'compressor', 'delay', 'reverb', 'filter',
 // "+ Effect…": a built-in effect or one of the ticked VST plugins (effects lane and channel tab)
 export function FxAddSelect({ track, style, onSet }: { track: Track; style?: React.CSSProperties; onSet?: (fx: InsertFx[]) => void }): React.ReactElement {
   const updateTrack = onSet ? (_: string, patch: { fx: InsertFx[] }): void => onSet(patch.fx) : useProjectStore.getState().updateTrack
-  const plugins = usePluginsStore((s) => s.plugins.filter((p) => !p.isInstrument && !s.off.includes(p.id)))
+  const plugins = usePluginsStore((s) => s.plugins.filter((p) => !isInstrumentLike(p) && !s.off.includes(p.id)))
   const loadedList = usePluginsStore((s) => s.loaded)
   useEffect(() => { if (!loadedList) void usePluginsStore.getState().load() }, [loadedList])
   const add = (type: InsertType): void =>
@@ -399,13 +399,17 @@ function VstControls({ fx, track }: { fx: InsertFx; track: Track }): React.React
 
 // the instrument of a MIDI track: the built-in synth, or one of the VST instruments found in Settings → Plugins
 export function InstrumentSelect({ track, style }: { track: Track; style?: React.CSSProperties }): React.ReactElement {
-  const plugins = usePluginsStore((s) => s.plugins.filter((p) => p.isInstrument && !s.off.includes(p.id)))
-  const switchedOff = usePluginsStore((s) => s.plugins.filter((p) => p.isInstrument && s.off.includes(p.id)))
+  const all = usePluginsStore((s) => s.plugins)
+  const off = usePluginsStore((s) => s.off)
+  const plugins = all.filter((p) => isInstrumentLike(p) && !off.includes(p.id))
+  const switchedOff = all.filter((p) => isInstrumentLike(p) && off.includes(p.id))
+  // any other plugin can be tried as an instrument too (in case it does not say what it is)
+  const others = all.filter((p) => !isInstrumentLike(p) && !off.includes(p.id))
   const updateTrack = useProjectStore((s) => s.updateTrack)
   const cur = track.instrument?.vst?.pluginId ?? ''
   return (
     <select value={cur} style={style} title={tr('What plays the notes of this track')} onChange={(e) => {
-      const p = plugins.find((x) => x.id === e.target.value)
+      const p = [...plugins, ...others].find((x) => x.id === e.target.value)
       e.target.blur()
       if (!p) { updateTrack(track.id, { instrument: undefined }); return }
       const fx: InsertFx = { id: nanoid(), type: 'vst', on: true, p: {}, vst: { pluginId: p.id, name: p.name, vendor: p.vendor, format: p.format, xml: p.xml, arch: p.arch } }
@@ -419,8 +423,11 @@ export function InstrumentSelect({ track, style }: { track: Track; style?: React
       {plugins.length > 0 && <optgroup label={tr('VST instruments')}>
         {plugins.map((p) => <option key={p.id} value={p.id}>{p.name}{p.vendor ? ` (${p.vendor})` : ''} · {p.format}{p.arch === 'x86' ? ' · 32-bit' : ''}</option>)}
       </optgroup>}
-      {cur && !plugins.some((p) => p.id === cur) && <option value={cur}>{track.instrument?.vst?.name} ({tr('not found')})</option>}
+      {cur && ![...plugins, ...others].some((p) => p.id === cur) && <option value={cur}>{track.instrument?.vst?.name} ({tr('not found')})</option>}
       {!plugins.length && <option value="" disabled>{tr('No VST instruments yet: Settings → Plugins')}</option>}
+      {others.length > 0 && <optgroup label={tr('Other plugins (only if they can play notes)')}>
+        {others.map((p) => <option key={p.id} value={p.id}>{p.name}{p.vendor ? ` (${p.vendor})` : ''} · {p.format}</option>)}
+      </optgroup>}
       {switchedOff.length > 0 && <optgroup label={tr('Switched off in Settings → Plugins (tick them there)')}>
         {switchedOff.map((p) => <option key={p.id} value="" disabled>{p.name}</option>)}
       </optgroup>}

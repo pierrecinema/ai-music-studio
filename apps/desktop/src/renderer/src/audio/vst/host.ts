@@ -15,6 +15,12 @@ export interface PluginInfo {
   file: string; version: string; inputs: number; outputs: number; xml: string
   arch?: 'x64' | 'x86'        // a 32-bit plugin runs in the 32-bit host
 }
+/** an instrument (plays notes): what the plugin says, its category, no audio input, or a known synth. Some plugins
+ *  (newer Dexed builds, for one) do not mark themselves as instruments. */
+export function isInstrumentLike(p: Pick<PluginInfo, 'isInstrument' | 'category' | 'name' | 'inputs' | 'outputs'>): boolean {
+  return p.isInstrument || /instrument|synth|generator|sampler|drum/i.test(p.category ?? '') || (p.inputs === 0 && p.outputs > 0)
+    || /\b(dexed|surge|vital|helm|odin|obxd|tal-?noisemaker|dragonfly synth|zebralette|tyrell|synth1)\b/i.test(p.name ?? '')
+}
 export interface FailedPlugin { file: string; format: string; reason: string }
 
 type Pending = { res: (v: any) => void; rej: (e: Error) => void }   // eslint-disable-line @typescript-eslint/no-explicit-any

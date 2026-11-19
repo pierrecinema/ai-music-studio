@@ -2,6 +2,7 @@ import { usePluginsStore } from '../../stores/plugins.store'
 import { onVstChange, showVstEditor, vstFailure } from '../../audio/vst/host'
 import { masterPlayer } from '../../audio/master/player'
 import type { VstRef } from '../../types'
+import { isInstrumentLike } from '../../audio/vst/host'
 import React, { useState } from 'react'
 import { SLOT_LABEL, TARGETS, defaultChain, slotDefaults, type BandParams, type Chain, type Slot, type SlotType } from '../../audio/master/chain'
 import { useMasteringStore } from '../../stores/mastering.store'
@@ -279,7 +280,7 @@ export function MasterRack({ chain, onChange, target, onTarget, onReachTarget, r
     onChange({ ...chain, slots: [...chain.slots, slotDefaults(type, id)] })
     setOpen((o) => ({ ...o, [id]: true }))
   }
-  const plugins = usePluginsStore((st) => st.plugins.filter((p) => !p.isInstrument && !st.off.includes(p.id)))
+  const plugins = usePluginsStore((st) => st.plugins.filter((p) => !isInstrumentLike(p) && !st.off.includes(p.id)))
   const pluginsLoaded = usePluginsStore((st) => st.loaded)
   React.useEffect(() => { if (!pluginsLoaded) void usePluginsStore.getState().load() }, [pluginsLoaded])
   const addPlugin = (pid: string): void => {

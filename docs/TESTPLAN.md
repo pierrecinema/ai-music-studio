@@ -366,3 +366,4 @@ behoben, dann der nächste Bereich.
 | 15.4 | MIDI-Spur → Kanal → Instrument: ist **Dexed** in der Liste? Wenn nein: Einstellungen → Plugins → **Nach Plugins suchen**, dann nochmal | Dexed erscheint (oder ist unter „In Einstellungen → Plugins ausgeschaltet“ zu sehen) | ❌ | Dexed fehlt weiter in der Instrument-Auswahl → Bild von Einstellungen → Plugins angefragt | 0.73.0 |
 | 13.1c | VST-Effekt oder Surge: **Automatisieren…** | Liste aller Regler unter dem Suchfeld, schwebend über allem | ✅ |  | 0.73.0 |
 | 13.2c | Einen Regler anklicken, Punkte setzen, abspielen | Spur „<Plugin>: <Regler>“ erscheint; der Regler im Plugin bewegt sich mit | ✅ |  | 0.73.0 |
+| 15.4b | MIDI-Spur → Kanal → Instrument | **Dexed** steht unter „VST-Instrumente“ und spielt; in Einstellungen → Plugins steht bei Dexed „Instrument“ | | | 0.73.1 |

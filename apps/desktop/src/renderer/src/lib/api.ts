@@ -19,6 +19,11 @@ export interface Lora {
   family?: 'v1' | '1.5' | 'xl' | 'unknown'      // the model it is made for (ACE-Step v1, 1.5 2B, 1.5 XL)
 }
 export interface MusicResult { audio_file: string; seed: number; duration: number; library_id?: string | null; title?: string; bpm?: number | null; first_beat?: number | null; loop_bars?: number | null }
+export interface AiInstrument { id: string; name: string; category: string; low: number; high: number }
+export interface InstrumentJob {
+  id: string; status: 'queued' | 'running' | 'done' | 'error' | 'cancelled'; progress: number; text: string; elapsed: number
+  audio_file?: string; library_id?: string | null; duration?: number; voices?: number; error?: string
+}
 export interface MusicJob {
   id: string; status: 'queued' | 'running' | 'done' | 'error' | 'cancelled'
   audio_file?: string; error?: string; warnings: string[]; engine?: string
@@ -133,13 +138,18 @@ export const api = {
     voices: () => get<Array<{ id: string; name: string; language: string; gender: string; category: string }>>('/vocal/voices'),
   },
 
+  // AI Instruments: MIDI-DDSP plays notes like a real violin, flute, trumpet ... (times in seconds)
   instruments: {
-    generate: (body: {
-      instrumentId: string
-      notes: Array<{ pitch: number; startTime: number; duration: number; velocity: number }>
-    }) => post<{ audioFile: string; duration: number }>('/instruments/generate', body),
-
-    list: () => get<Array<{ id: string; name: string; category: string }>>('/instruments/list'),
+    list: () => get<AiInstrument[]>('/instruments/list'),
+    status: () => get<{ ddsp: boolean; ace: boolean; cuda: boolean }>('/instruments/status'),
+    play: (body: {
+      instrument: string
+      notes: Array<{ pitch: number; start: number; end: number; velocity: number }>
+      expression?: { vibrato: number; dynamics: number; brightness: number; attack: number; velocity: number }
+      transpose?: number; voices?: number; title?: string; save?: boolean
+    }) => post<{ jobId: string }>('/instruments/play', body),
+    job: (id: string) => get<InstrumentJob>(`/instruments/jobs/${id}`),
+    cancel: (id: string) => post<{ ok: boolean }>(`/instruments/jobs/${id}/cancel`, {}),
   },
 
   stems: {

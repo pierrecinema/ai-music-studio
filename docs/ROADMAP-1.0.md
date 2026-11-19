@@ -17,9 +17,12 @@ exported song without help from outside the app. Linux comes after RC 1.0.
 | Mastering step 6 | Album: several songs, the same loudness, gaps, one export | **pending list** (owner, 19.11.2026) |
 | Looks | Swiss (#73) rebuilt; Analog console removed in 0.70.1 (owner) | done |
 
-## 0.80: AI Instruments (owner, 19.11.2026: first, all instruments in one version)
+## 0.80: AI Instruments (owner, 19.11.2026: first, all instruments in one version) — built in 0.80.0
 
-- A MIDI track rendered to audio by AI in a chosen instrument or style, placed back in the Studio as an audio clip.
+- Virtual band: drummer, bass player, guitarist that follow the song's chords (MIDI, every PC). Singer: 0.90.
+- AI orchestra: MIDI-DDSP (13 orchestral instruments, processor) renders a MIDI track to audio.
+- Any instrument by text: ACE-Step cover of the MIDI track (NVIDIA).
+- Later ideas: more drum kits as samples, a keyboard player (piano comping), guitar and bass sounds from samples or AI.
 
 ## 0.90: Vocal Editor (owner, 18.11.2026; moved after AI Instruments on 19.11.2026)
 

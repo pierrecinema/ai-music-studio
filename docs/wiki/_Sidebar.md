@@ -13,6 +13,7 @@
 - [[Mixer]]
 - [[Stem Splitter]]
 - [[Mastering]]
+- [[AI Instruments]]
 - [[AI Chat]]
 - [[Coming Soon]]
 - [[Settings]]

@@ -32,7 +32,7 @@ The menu on the left of the app, from top to bottom:
 | ⊞ [[Studio]] | The arrangement (DAW): audio and MIDI tracks, clips, loop, markers, tempo, recording, automation |
 | ♪ [[Piano Roll]] | Draw, select, move and quantize MIDI notes |
 | 🎤 Vocal Editor | [[Coming Soon]] |
-| 🎻 AI Instruments | [[Coming Soon]] |
+| 🎻 AI Instruments | [[AI Instruments]] |
 | 🎚 [[Mixer]] | Faders, pan, mute, solo, level meters, returns and groups |
 | ✂ [[Stem Splitter]] | Vocals, drums, bass and more; stem mixer, karaoke remix, Audio → MIDI |
 | ◎ [[Mastering]] | Master a song: assistant with suggestions per genre, EQ, dynamic EQ, compressor, multiband, saturation, stereo, limiter to a loudness target, master gain fader, cutting and fades, every meter, export in all formats |

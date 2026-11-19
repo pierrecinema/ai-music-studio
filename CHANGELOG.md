@@ -3,6 +3,16 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.80.0
+
+**AI Instruments** (menu 🎻 AI Instruments, until now "coming soon"):
+
+- **Virtual band:** a **drummer** (rock, pop, hip-hop, trap, house, tech house, afro house, funk, reggaeton, drum & bass, ballad, jazz, bossa nova, metal, disco; intensity, feel, swing, fills), a **bass player** (10 styles: long notes, rock eighths, root and fifth, octaves, walking bass, funk, house, 808, reggae, afro) and a **guitarist** (strumming, ballad, fingerpicking, power chords, funk, reggae, afro, jazz; clean or distorted). They follow the chords of your song, read from its MIDI tracks bar by bar or typed in (`Am F C G`, `C | G Am | F -`), and each becomes a MIDI track you can edit. *Take* plays the part a little differently; *Add the whole band* adds all three. Works on every PC, nothing to install.
+- **AI orchestra (MIDI-DDSP by Google Magenta):** a MIDI track played like a real musician on violin, viola, cello, double bass, flute, oboe, clarinet, saxophone, bassoon, trumpet, French horn, trombone or tuba, with vibrato, dynamics, brightness and attack controls; chords are spread over several players. Runs on the processor. Install once in Settings → AI Engines → *AI Instruments (MIDI-DDSP)* (about 1.5 GB, Python 3.10 or 3.11). The result is an audio track in the Studio and in the Library.
+- **Any instrument by text (ACE-Step cover):** describe an instrument or style and ACE-Step plays your MIDI track in it, with *Follow the notes* from free to close. Needs ACE-Step; fast with an NVIDIA card.
+- **New built-in sounds** for MIDI tracks (Channel → Instrument): General MIDI drum kit, clean and distorted guitar, electric piano, 808 bass, besides the synths.
+- **Channel → 🎻 AI instrument…** opens the AI Instruments page with the track chosen.
+
 ## 0.73.3
 
 - **Automated effect knobs move:** when a built-in effect (EQ, compressor, filter, delay, reverb) has an automation lane, its knobs in the effect rack and its sliders in the effects lane now follow the lane while the song plays (and show the lane's value at the playhead). Before, only the sound followed it.

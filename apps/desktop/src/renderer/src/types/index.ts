@@ -29,6 +29,7 @@ export interface Track {
   autoLanes?: AutoParam[]                 // the automation lanes shown below the track (volume and pan, sends)
   autoMin?: AutoParam[]                   // lanes made small (minimized)
   fx?: InsertFx[]                         // effects in the track (inserts), before the fader
+  sound?: 'soft' | 'bass' | 'lead' | 'drums' | 'guitar' | 'eguitar' | 'keys' | '808'   // MIDI tracks: the built-in sound (see audio/synth.ts)
   instrument?: InsertFx                   // MIDI tracks: a VST instrument (type 'vst') plays the notes instead of the built-in synth
   showFx?: boolean                        // the effects lane below the track is open
   takes?: TakeLane[]          // loop recording: one lane per pass (comping)

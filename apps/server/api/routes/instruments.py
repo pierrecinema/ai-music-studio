@@ -1,38 +1,75 @@
-"""AI Instrument synthesis — DDSP / FluidSynth fallback."""
+"""AI Instruments: MIDI notes played by an AI instrument.
+
+MIDI-DDSP (Google Magenta) plays 13 orchestral instruments on the processor, in its own Python environment
+(services/midi_ddsp_worker.py). The other engine, ACE-Step "cover" for any instrument by text, runs through
+/music/generate with the rendered MIDI track as its source.
+"""
+import json
+import os
+import subprocess
+import tempfile
+import threading
+import time
+import uuid
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-import os, uuid, tempfile
+from pydantic import BaseModel, Field
 
 router = APIRouter()
 
-
-class NoteIn(BaseModel):
-    pitch: int
-    startTime: float
-    duration: float
-    velocity: int
-
-
-class GenerateInstrumentRequest(BaseModel):
-    instrumentId: str
-    notes: list[NoteIn]
-    ensemble: bool = False
-
+WORKER = Path(__file__).resolve().parents[2] / "services" / "midi_ddsp_worker.py"
 
 INSTRUMENTS = [
-    {"id": "strings-violin", "name": "Violin", "category": "Strings"},
-    {"id": "strings-viola", "name": "Viola", "category": "Strings"},
-    {"id": "strings-cello", "name": "Cello", "category": "Strings"},
-    {"id": "strings-section", "name": "String Section", "category": "Strings"},
-    {"id": "brass-trumpet", "name": "Trumpet", "category": "Brass"},
-    {"id": "brass-trombone", "name": "Trombone", "category": "Brass"},
-    {"id": "brass-horn", "name": "French Horn", "category": "Brass"},
-    {"id": "woodwind-sax-alto", "name": "Alto Saxophone", "category": "Woodwind"},
-    {"id": "woodwind-clarinet", "name": "Clarinet", "category": "Woodwind"},
-    {"id": "woodwind-flute", "name": "Flute", "category": "Woodwind"},
-    {"id": "ethnic-duduk", "name": "Duduk", "category": "Ethnic"},
-    {"id": "ethnic-dizi", "name": "Dizi", "category": "Ethnic"},
+    {"id": "violin", "name": "Violin", "category": "Strings", "low": 55, "high": 103},
+    {"id": "viola", "name": "Viola", "category": "Strings", "low": 48, "high": 91},
+    {"id": "cello", "name": "Cello", "category": "Strings", "low": 36, "high": 76},
+    {"id": "double-bass", "name": "Double bass", "category": "Strings", "low": 28, "high": 67},
+    {"id": "flute", "name": "Flute", "category": "Woodwinds", "low": 60, "high": 98},
+    {"id": "oboe", "name": "Oboe", "category": "Woodwinds", "low": 58, "high": 91},
+    {"id": "clarinet", "name": "Clarinet", "category": "Woodwinds", "low": 50, "high": 94},
+    {"id": "saxophone", "name": "Saxophone", "category": "Woodwinds", "low": 49, "high": 81},
+    {"id": "bassoon", "name": "Bassoon", "category": "Woodwinds", "low": 34, "high": 75},
+    {"id": "trumpet", "name": "Trumpet", "category": "Brass", "low": 54, "high": 86},
+    {"id": "horn", "name": "French horn", "category": "Brass", "low": 34, "high": 77},
+    {"id": "trombone", "name": "Trombone", "category": "Brass", "low": 34, "high": 72},
+    {"id": "tuba", "name": "Tuba", "category": "Brass", "low": 26, "high": 65},
 ]
+_IDS = {i["id"] for i in INSTRUMENTS}
+
+_jobs: dict[str, dict] = {}
+_procs: dict[str, subprocess.Popen] = {}
+_lock = threading.Lock()                     # one AI instrument at a time: TensorFlow takes the whole processor
+
+
+def ddsp_python() -> str | None:
+    p = os.environ.get("AMS_DDSP_PYTHON")
+    return p if p and os.path.exists(p) else None
+
+
+class NoteIn(BaseModel):
+    pitch: int = Field(ge=0, le=127)
+    start: float = Field(ge=0)                # seconds from the start of the part
+    end: float = Field(ge=0)
+    velocity: int = Field(100, ge=1, le=127)
+
+
+class Expression(BaseModel):
+    vibrato: float = Field(1.0, ge=0, le=3)
+    dynamics: float = Field(1.0, ge=0, le=3)
+    brightness: float = Field(1.0, ge=0, le=3)
+    attack: float = Field(1.0, ge=0, le=3)
+    velocity: float = Field(0.5, ge=0, le=1)  # how much the note velocities count (0: not at all)
+
+
+class PlayRequest(BaseModel):
+    instrument: str
+    notes: list[NoteIn]
+    expression: Expression = Expression()
+    transpose: int = Field(0, ge=-24, le=24)
+    voices: int = Field(4, ge=1, le=8)        # players for chords (a section)
+    title: str = ""
+    save: bool = True                         # also keep it in the Library
 
 
 @router.get("/list")
@@ -40,99 +77,128 @@ async def list_instruments():
     return INSTRUMENTS
 
 
-@router.post("/generate")
-async def generate_instrument(req: GenerateInstrumentRequest):
-    if not req.notes:
-        raise HTTPException(400, "No notes provided")
-
-    out_dir = tempfile.gettempdir()
-    out_file = os.path.join(out_dir, f"inst_{uuid.uuid4().hex[:8]}.wav")
-
+@router.get("/status")
+async def status():
+    """What can play here: MIDI-DDSP (installed?) and ACE-Step cover (installed? graphics card?)."""
+    import importlib.util
+    ace = importlib.util.find_spec("acestep") is not None
     try:
-        from services.ddsp_service import synthesize_instrument
-        duration = await synthesize_instrument(
-            instrument_id=req.instrumentId,
-            notes=[(n.pitch, n.startTime, n.duration, n.velocity) for n in req.notes],
-            out_path=out_file
-        )
-    except ImportError:
-        duration = _fluidsynth_fallback(req.instrumentId, req.notes, out_file)
-
-    return {"audioFile": out_file, "duration": duration}
+        import torch  # noqa: F401
+        cuda = bool(torch.cuda.is_available())
+    except Exception:  # noqa: BLE001 - no PyTorch: no CUDA
+        cuda = False
+    return {"ddsp": ddsp_python() is not None, "ace": ace, "cuda": cuda}
 
 
-def _fluidsynth_fallback(instrument_id: str, notes, out_path: str) -> float:
-    """MIDI → WAV via FluidSynth as fallback."""
-    import struct
-
-    # Map instrument to GM program number
-    GM_MAP = {
-        "strings-violin": 40, "strings-viola": 41, "strings-cello": 42,
-        "strings-section": 48, "brass-trumpet": 56, "brass-trombone": 57,
-        "brass-horn": 60, "woodwind-sax-alto": 65, "woodwind-clarinet": 71,
-        "woodwind-flute": 73, "ethnic-duduk": 111, "ethnic-dizi": 84,
-    }
-    program = GM_MAP.get(instrument_id, 40)
-
-    try:
-        import mido
-        mid = mido.MidiFile(type=0, ticks_per_beat=480)
-        track = mido.MidiTrack()
-        mid.tracks.append(track)
-        track.append(mido.Message("program_change", program=program, time=0))
-
-        events: list[tuple[float, str, int]] = []
-        for n in notes:
-            events.append((n.startTime, "note_on", n.pitch))
-            events.append((n.startTime + n.duration, "note_off", n.pitch))
-        events.sort()
-
-        last_tick = 0
-        for t, kind, pitch in events:
-            tick = int(t * 480)
-            delta = tick - last_tick
-            last_tick = tick
-            vel = 100 if kind == "note_on" else 0
-            track.append(mido.Message(kind, note=pitch, velocity=vel, time=delta))
-
-        midi_path = out_path.replace(".wav", ".mid")
-        mid.save(midi_path)
-
-        # Try FluidSynth
-        import subprocess
-        sf2 = _find_sf2()
-        if sf2:
-            subprocess.run(["fluidsynth", "-ni", sf2, midi_path, "-F", out_path, "-r", "44100"], capture_output=True)
-        else:
-            _write_silence(out_path, max(n.startTime + n.duration for n in notes))
-
-    except Exception:
-        total = max(n.startTime + n.duration for n in notes)
-        _write_silence(out_path, total)
-        total_duration = total
-
-    return max(n.startTime + n.duration for n in notes)
+def _say(job: dict, **kw) -> None:
+    job.update(kw)
 
 
-def _find_sf2():
-    candidates = [
-        r"C:\Windows\System32\drivers\gm.dls",
-        r"C:\Program Files\Common Files\SoundFonts\default.sf2",
-        "/usr/share/sounds/sf2/FluidR3_GM.sf2",
-        "/usr/share/soundfonts/GeneralUser_GS.sf2"
-    ]
-    return next((p for p in candidates if os.path.exists(p)), None)
+def _run(job_id: str, req: PlayRequest) -> None:
+    job = _jobs[job_id]
+    py = ddsp_python()
+    work = Path(tempfile.gettempdir()) / "ams_instruments"
+    work.mkdir(exist_ok=True)
+    out = work / f"{req.instrument}-{job_id}.wav"
+    req_file = work / f"{job_id}.json"
+    req_file.write_text(json.dumps({
+        "instrument": req.instrument, "notes": [n.model_dump() for n in req.notes], "out": str(out),
+        "transpose": req.transpose, "voices": req.voices, "expression": req.expression.model_dump(),
+    }), encoding="utf-8")
+    with _lock:
+        if job.get("cancel"):
+            _say(job, status="cancelled", text="Cancelled")
+            return
+        _say(job, status="running", started=time.time(), text="Starting the AI instrument")
+        env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8", "TF_CPP_MIN_LOG_LEVEL": "2"}
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        proc = subprocess.Popen([py, str(WORKER), str(req_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                text=True, encoding="utf-8", errors="replace", env=env, creationflags=flags)
+        _procs[job_id] = proc
+        err_tail: list[str] = []
+
+        def read_err() -> None:
+            for line in proc.stderr:  # type: ignore[union-attr]
+                err_tail.append(line.rstrip())
+                del err_tail[:-30]
+        threading.Thread(target=read_err, daemon=True).start()
+        result: dict = {}
+        for line in proc.stdout:  # type: ignore[union-attr]
+            try:
+                msg = json.loads(line)
+            except ValueError:
+                continue
+            if "error" in msg:
+                result = msg
+            elif msg.get("done"):
+                result = msg
+            else:
+                total = msg.get("total") or 0
+                _say(job, stage=msg.get("stage"), text=msg.get("text", ""),
+                     progress=(msg.get("step", 0) / total) if total else job.get("progress", 0))
+        proc.wait()
+        _procs.pop(job_id, None)
+    req_file.unlink(missing_ok=True)
+    if job.get("cancel"):
+        _say(job, status="cancelled", text="Cancelled")
+        return
+    if not result.get("done") or not out.exists():
+        msg = result.get("error") or (err_tail[-1] if err_tail else "The AI instrument stopped without a result.")
+        print("[instruments] " + "\n".join(err_tail[-15:]), flush=True)
+        _say(job, status="error", error=msg, text="Failed")
+        return
+    path, library_id = str(out), None
+    if req.save:
+        try:
+            from services import library
+            name = next((i["name"] for i in INSTRUMENTS if i["id"] == req.instrument), req.instrument)
+            entry = library.add_track(str(out), {
+                "title": req.title or f"{name} (AI)", "engine": "midi-ddsp", "source": "generated",
+                "folder": "AI Instruments", "tags": ["ai instrument", name.lower()], "duration": result.get("seconds")})
+            path, library_id = entry["path"], entry["id"]
+        except Exception as e:  # noqa: BLE001 - the file is still usable from the temporary folder
+            print(f"[instruments] could not save to the library: {e}", flush=True)
+    _say(job, status="done", progress=1, text="Done", audio_file=path, library_id=library_id,
+         duration=result.get("seconds"), voices=result.get("voices"), finished=time.time())
 
 
-def _write_silence(path: str, duration: float):
-    import struct
-    sample_rate, num_samples = 44100, int(duration * 44100)
-    data_size = num_samples * 2
-    with open(path, "wb") as f:
-        f.write(b"RIFF")
-        f.write(struct.pack("<I", 36 + data_size))
-        f.write(b"WAVEfmt ")
-        f.write(struct.pack("<IHHIIHH", 16, 1, 1, sample_rate, sample_rate * 2, 2, 16))
-        f.write(b"data")
-        f.write(struct.pack("<I", data_size))
-        f.write(b"\x00" * data_size)
+@router.post("/play")
+async def play(req: PlayRequest):
+    if req.instrument not in _IDS:
+        raise HTTPException(400, f"Unknown instrument: {req.instrument}")
+    notes = [n for n in req.notes if n.end > n.start]
+    if not notes:
+        raise HTTPException(400, "The part has no notes.")
+    if ddsp_python() is None:
+        raise HTTPException(409, "The AI Instruments are not installed: Settings → AI Engines → AI Instruments (MIDI-DDSP).")
+    req.notes = notes
+    job_id = uuid.uuid4().hex[:10]
+    _jobs[job_id] = {"id": job_id, "status": "queued", "progress": 0, "text": "Waiting", "created": time.time()}
+    threading.Thread(target=_run, args=(job_id, req), daemon=True).start()
+    return {"jobId": job_id}
+
+
+@router.get("/jobs/{job_id}")
+async def job(job_id: str):
+    j = _jobs.get(job_id)
+    if not j:
+        raise HTTPException(404, "Unknown job")
+    return {**j, "elapsed": round(time.time() - (j.get("started") or j["created"]), 1)}
+
+
+@router.post("/jobs/{job_id}/cancel")
+async def cancel(job_id: str):
+    j = _jobs.get(job_id)
+    if not j:
+        raise HTTPException(404, "Unknown job")
+    j["cancel"] = True
+    if j["status"] == "queued":
+        j.update(status="cancelled", text="Cancelled")
+    p = _procs.get(job_id)
+    if p is not None:
+        try:
+            p.kill()
+        except Exception:  # noqa: BLE001 - already gone
+            pass
+    return {"ok": True}
+

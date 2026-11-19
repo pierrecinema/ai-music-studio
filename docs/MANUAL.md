@@ -196,6 +196,20 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 Die Plugins laufen in einem eigenen kleinen Programm (Plugin-Host), das nur läuft, solange ein Plugin benutzt wird. Stürzt ein Plugin ab, läuft die App weiter; beim nächsten Abspielen werden die Plugins mit ihren zuletzt gespeicherten Einstellungen neu geladen. Spuren mit Plugins bleiben im Takt (die Verzögerung durch die Plugins wird ausgeglichen). 64- und 32-Bit-Plugins funktionieren. Plugins auf dem Master, im Mastering und Instrument-Plugins kommen in den nächsten Versionen.
 
+## Neu in 0.80: KI-Instrumente (Menü 🎻 KI-Instrumente)
+
+**Virtuelle Band** (jeder PC, nichts zu installieren): Ein **Schlagzeuger**, ein **Bassist** und ein **Gitarrist** spielen zu deinem Song.
+- *Akkorde*: **Aus dem Song** liest die Akkorde deiner MIDI-Spuren Takt für Takt (Drum-Spuren zählen nicht), oder **Eingegeben**: `Am F C G` oder `C | G Am | F -` („|“ trennt Takte, „-“ hält den Akkord). Die Zeile darunter zeigt, was gespielt wird.
+- *Wo*: ab Takt, für wie viele Takte. **🎲 Take** spielt den Teil etwas anders.
+- Schlagzeuger: 15 Stile (Rock, Pop, Hip-Hop, Trap, House, Tech House, Afro House, Funk, Reggaeton, Drum & Bass, Ballade, Jazz, Bossa Nova, Metal, Disco), Intensität, Feeling, Swing, Fills alle 4 / 8 Takte. Bassist: 10 Stile. Gitarrist: 8 Stile, clean oder verzerrt.
+- **Ins Studio** oder **Ganze Band einfügen**: Jeder Musiker wird eine neue MIDI-Spur, im Piano Roll bearbeitbar. Den Klang änderst du unter Kanal → Instrument (eingebaute Klänge oder jedes VST-Instrument).
+
+**KI-Orchester (MIDI-DDSP)**: Eine MIDI-Spur, von der KI gespielt wie von einem echten Musiker, auf Violine, Viola, Cello, Kontrabass, Flöte, Oboe, Klarinette, Saxophon, Fagott, Trompete, Horn, Posaune oder Tuba. Läuft auf dem Prozessor. Einmal installieren: Einstellungen → KI-Engines → „AI Instruments (MIDI-DDSP)“ (etwa 1,5 GB, Python 3.10 oder 3.11). Regler für Vibrato, Dynamik, Helligkeit, Attack und Anschlag; Akkorde werden auf mehrere Musiker verteilt. Das Ergebnis ist eine Audiospur ab dem Takt der ersten Note, auch in der Bibliothek (Ordner „AI Instruments“).
+
+**Jedes Instrument per Text (ACE-Step Cover)**: Instrument oder Stil beschreiben („electric guitar, overdrive“, „jazz piano“ …), ACE-Step spielt die MIDI-Spur damit. „Den Noten folgen“: wenig = frei im Stil, viel = nah an den Noten. Braucht ACE-Step; schnell mit NVIDIA, auf dem Prozessor sehr langsam.
+
+**Neue eingebaute Klänge** (Kanal → Instrument): Schlagzeug (General MIDI), Gitarre clean und verzerrt, E-Piano, 808-Bass. **Kanal → 🎻 KI-Instrument…** öffnet die Seite mit der Spur.
+
 ## Neu in 0.72: MIDI-Controller (Einstellungen → MIDI)
 
 - Alle MIDI-Geräte erscheinen von selbst, sobald sie eingesteckt sind. Pro Gerät **Noten** (Tasten und Pads spielen die gewählte Spur und werden aufgenommen) und **Steuerung** (Regler, Fader, Knöpfe bedienen die App).

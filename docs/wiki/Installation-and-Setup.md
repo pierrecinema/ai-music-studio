@@ -29,6 +29,7 @@ The AI features (songs, loops, stems, mastering, Audio → MIDI) run in a Python
 | Light music generators (MusicGen, AudioLDM 2, MusicLDM) | instrumental clips and loops; run on old PCs (model weights: non-commercial use) |
 | Graphics card support (AMD / Intel, DirectX 12) | MusicGen small on AMD and Intel graphics cards |
 | ACE-Step 1.5: songs with vocals, also without a graphics card | songs with vocals from your lyrics, the turbo model also on the processor (experimental) |
+| AI Instruments (MIDI-DDSP) | [[AI Instruments]]: 13 orchestral instruments play your MIDI tracks, on the processor (needs Python 3.10 or 3.11, about 1.5 GB) |
 | DiffRhythm: full songs in one go | songs with vocals, NVIDIA only (experimental) |
 | LoRA training (ACE-Step) | train your own style (NVIDIA), or build a bundle for another PC |
 | Audio → MIDI (MuScriptor) | more accurate transcription (non-commercial only) |

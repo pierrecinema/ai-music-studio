@@ -207,6 +207,7 @@ export function projectEndBeat(p: Project): number {
 }
 
 function timbreOf(t: Track): Timbre {
+  if (t.sound) return t.sound
   const hint = `${t.name} ${t.instrumentId ?? ''}`
   if (/bass/i.test(hint)) return 'bass'
   if (/lead|synth|arp/i.test(hint)) return 'lead'
@@ -1144,6 +1145,19 @@ export async function renderClips(project: Project, clips: Clip[], fromBeat: num
   await loadAllFiles(p)
   const sr = 44100
   const seconds = beatToSec(p, toBeat) - beatToSec(p, fromBeat)
+  const off = new OfflineAudioContext(2, Math.max(1, Math.ceil(seconds * sr)), sr)
+  await loadWorklets(off)
+  scheduleProject(off, off.destination, p, fromBeat, 0, { untilBeat: toBeat })
+  return off.startRendering()
+}
+
+// The notes of one MIDI track played by the built-in sound into a file (a guide for the AI cover): no plugins,
+// effects, sends or automation, at full volume. Returns the sound from `fromBeat` to `toBeat`.
+export async function renderMidiGuide(project: Project, track: Track, fromBeat: number, toBeat: number): Promise<AudioBuffer> {
+  const solo: Track = { ...track, instrument: undefined, fx: [], sends: {}, automation: {}, volume: 1, pan: 0, muted: false, soloed: false, parentId: undefined }
+  const p: Project = { ...project, tracks: [solo], returns: [], masterFx: [] }
+  const sr = 44100
+  const seconds = beatToSec(p, toBeat) - beatToSec(p, fromBeat) + 1
   const off = new OfflineAudioContext(2, Math.max(1, Math.ceil(seconds * sr)), sr)
   await loadWorklets(off)
   scheduleProject(off, off.destination, p, fromBeat, 0, { untilBeat: toBeat })

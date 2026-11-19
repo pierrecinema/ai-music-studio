@@ -12,6 +12,9 @@ Edit the notes of a MIDI clip. Open it with a double-click on a MIDI clip (or Sh
 | **Hear a pitch** | click the keyboard on the left |
 | **Record** | **● Rec** or Ctrl+R: the song plays, and what you play on the keyboard on the left or on a MIDI keyboard becomes notes |
 | **Grid** | from 1 bar to 1/64, triplets, free (Alt while dragging) |
+| **Velocity** | the lane under the notes: drag a note's bar up or down (selected notes move together); or type it into *Velocity* in the toolbar while notes are selected |
+| **Length** | drag the right edge of a note, or pick *Length* (1/32 to 1/1) in the toolbar for the selected notes |
+| **MIDI files** | *Export .mid* saves the clip as a MIDI file for other programs; *Import .mid…* opens a MIDI file (each of its tracks becomes a MIDI track) |
 
 Tools: Ableton **B** toggles draw mode; Cubase **1** select, **5** erase, **8** draw.
 

@@ -126,7 +126,7 @@ declare global {
         showItem: (path: string) => Promise<void>
       }
       exporter: {
-        saveDialog: (name: string, ext: 'wav' | 'mp3') => Promise<string | null>
+        saveDialog: (name: string, ext: 'wav' | 'mp3' | 'mid') => Promise<string | null>
         write: (path: string, bytes: Uint8Array) => Promise<void>
         mp3: (bytes: Uint8Array, outPath: string, kbps: number) => Promise<{ ok: boolean; error?: string }>
       }

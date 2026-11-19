@@ -113,7 +113,7 @@ const api = {
     showItem: (path: string) => ipcRenderer.invoke('files:show-item', path)
   },
   exporter: {
-    saveDialog: (name: string, ext: 'wav' | 'mp3') => ipcRenderer.invoke('export:save-dialog', name, ext),
+    saveDialog: (name: string, ext: 'wav' | 'mp3' | 'mid') => ipcRenderer.invoke('export:save-dialog', name, ext),
     write: (path: string, bytes: Uint8Array) => ipcRenderer.invoke('export:write', path, bytes),
     mp3: (bytes: Uint8Array, outPath: string, kbps: number) => ipcRenderer.invoke('export:mp3', bytes, outPath, kbps)
   },

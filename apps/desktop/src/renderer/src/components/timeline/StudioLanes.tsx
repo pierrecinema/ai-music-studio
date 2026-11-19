@@ -118,8 +118,8 @@ export { valueAt }
 const FX_TYPES: InsertType[] = ['eq', 'compressor', 'delay', 'reverb', 'filter', 'dyneq', 'saturation', 'stereo', 'limiter']
 
 // "+ Effect…": a built-in effect or one of the ticked VST plugins (effects lane and channel tab)
-export function FxAddSelect({ track, style }: { track: Track; style?: React.CSSProperties }): React.ReactElement {
-  const { updateTrack } = useProjectStore.getState()
+export function FxAddSelect({ track, style, onSet }: { track: Track; style?: React.CSSProperties; onSet?: (fx: InsertFx[]) => void }): React.ReactElement {
+  const updateTrack = onSet ? (_: string, patch: { fx: InsertFx[] }): void => onSet(patch.fx) : useProjectStore.getState().updateTrack
   const plugins = usePluginsStore((s) => s.plugins.filter((p) => !p.isInstrument && !s.off.includes(p.id)))
   const loadedList = usePluginsStore((s) => s.loaded)
   useEffect(() => { if (!loadedList) void usePluginsStore.getState().load() }, [loadedList])
@@ -163,8 +163,8 @@ export function FxHeader({ track }: { track: Track }): React.ReactElement {
 }
 
 // the effects of the track, left to right in the order the sound goes through them
-export function FxLane({ track }: { track: Track }): React.ReactElement {
-  const { updateTrack } = useProjectStore.getState()
+export function FxLane({ track, onSet, sticky = true }: { track: Track; onSet?: (fx: InsertFx[]) => void; sticky?: boolean }): React.ReactElement {
+  const updateTrack = onSet ? (_: string, patch: { fx: InsertFx[] }): void => onSet(patch.fx) : useProjectStore.getState().updateTrack
   const list = track.fx ?? []
   const set = (id: string, patch: Partial<NonNullable<Track['fx']>[number]>): void =>
     updateTrack(track.id, { fx: list.map((f) => (f.id === id ? { ...f, ...patch } : f)) })
@@ -175,9 +175,9 @@ export function FxLane({ track }: { track: Track }): React.ReactElement {
     updateTrack(track.id, { fx: next })
   }
   return (
-    <div style={{ position: 'sticky', left: HEADER_WIDTH, display: 'flex', gap: 6, alignItems: 'center', height: FX_HEIGHT, padding: '0 8px', overflowX: 'auto', width: 'max-content', maxWidth: '100%' }}
+    <div style={{ position: sticky ? 'sticky' : 'relative', left: sticky ? HEADER_WIDTH : undefined, display: 'flex', gap: 6, alignItems: 'center', height: FX_HEIGHT, padding: '0 8px', overflowX: 'auto', width: 'max-content', maxWidth: '100%' }}
       onPointerDown={(e) => e.stopPropagation()}>
-      {!list.length && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{tr('No effects yet: add one with “+ Effect…” on the left (EQ, compressor, delay, reverb, filter).')}</span>}
+      {!list.length && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{onSet ? tr('No effects on the master yet: add one with “+ Effect…” (built in or one of your VST plugins).') : tr('No effects yet: add one with “+ Effect…” on the left (EQ, compressor, delay, reverb, filter).')}</span>}
       {list.map((f, i) => (
         <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 6px', borderRadius: 6, border: `1px solid ${f.on ? track.color : 'var(--border-mid)'}`, background: 'var(--bg-secondary)', opacity: f.on ? 1 : 0.55, fontSize: 10, color: 'var(--text-secondary)', flexShrink: 0 }}>
           <button className="btn btn-ghost" style={{ ...small, padding: '0 4px', color: f.on ? 'var(--green)' : 'var(--text-muted)' }} title={f.on ? tr('On: click to bypass') : tr('Bypassed: click to switch on')} onClick={() => set(f.id, { on: !f.on })}>⏻</button>
@@ -388,4 +388,20 @@ export function MiniMeter({ id }: { id: string }): React.ReactElement {
     return () => cancelAnimationFrame(raf)
   }, [id])
   return <div style={{ height: 3, background: 'var(--bg-primary)', borderRadius: 2, overflow: 'hidden' }}><div ref={fill} style={{ height: '100%', width: 0, background: '#22c55e' }} /></div>
+}
+
+// The effects on the master of the Studio (Studio "Master FX" and the Mixer): after all tracks and returns,
+// before the master fader. Built-in effects and VST plugins, saved with the project and in the export.
+export const MASTER_TRACK_ID = '__master__'
+export function MasterFxBar(): React.ReactElement {
+  const list = useProjectStore((s) => s.project.masterFx ?? [])
+  const set = (fx: InsertFx[]): void => useProjectStore.getState().updateProject({ masterFx: fx })
+  const pseudo: Track = { id: MASTER_TRACK_ID, name: 'Master', type: 'audio', color: '#f5a623', volume: 1, pan: 0, muted: false, soloed: false, clips: [], fx: list }
+  return (
+    <div className="master-fx" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', borderTop: '1px solid var(--border)', background: 'var(--bg-panel)', minHeight: FX_HEIGHT, flexShrink: 0 }}>
+      <b style={{ fontSize: 10, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>{tr('Master FX')}</b>
+      <FxAddSelect track={pseudo} onSet={set} />
+      <div style={{ flex: 1, minWidth: 0, overflowX: 'auto' }}><FxLane track={pseudo} onSet={set} sticky={false} /></div>
+    </div>
+  )
 }

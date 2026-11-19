@@ -120,7 +120,7 @@ export function TopBar(): React.ReactElement {
             height={34}
             style={{ display: 'block', filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.85))' }}
           />
-          <span style={{ fontWeight: 800, fontSize: 12, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+          <span className="app-title" style={{ fontWeight: 800, fontSize: 12, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
             {tr('AI Music Studio')}
           </span>
         </div>
@@ -152,6 +152,7 @@ export function TopBar(): React.ReactElement {
           title={loading ? tr('Reading audio files…') : undefined}
           onClick={() => (isPlaying ? pause() : void play())}
           data-tooltip={isPlaying ? t('toolbar.pause') : t('toolbar.play')}
+          data-play="1"
           style={{ width: 36, height: 36, borderRadius: 8 }}
         >
           {isPlaying

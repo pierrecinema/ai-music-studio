@@ -18,9 +18,10 @@ import { beatOfSrc, srcOfBeat, validMarkers } from '../../audio/warp'
 import { hasTempoChanges } from '../../audio/timemap'
 import { Ruler } from './Ruler'
 import { Popover, type PopoverSpec } from './Popover'
-import { AutomationHeader, AutomationLane, FxHeader, FxLane, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
+import { AutomationHeader, AutomationLane, FxHeader, FxLane, MasterFxBar, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
 import { ChannelTab } from './ChannelTab'
 import { tr, trf } from '../../i18n/tr'
+import { parseMidi, writeMidi } from '../../lib/midiFile'
 import {
   AUTO_HEIGHT, BEAT_WIDTH, buildRows, TRACK_HEIGHT, groupBigHeight, GROUP_MAX_HEIGHT, HANDLE, HEADER_WIDTH, RULER_HEIGHT, rowHeight, rowTops, TAKE_HEIGHT, TEMPO_HEIGHT, TRACK_MAX_HEIGHT, TRACK_MIN_HEIGHT, trackHeight, trackPointer, openLanes, toggleAutomationLanes, type Row
 } from './studioLayout'
@@ -43,6 +44,7 @@ export async function importAudioFiles(
   const problems: string[] = []
   const startBeat = at?.startBeat ?? useAudioStore.getState().currentBeat
   for (const [i, path] of paths.entries()) {
+    if (/\.midi?$/i.test(path)) { const p = await importMidiFile(path, startBeat); if (p) problems.push(p); continue }
     const buf = await loadBuffer(path)
     const name = (path.split(/[\\/]/).pop() ?? 'Audio').replace(/\.[^.]+$/, '')
     if (!buf) { problems.push(`${name}: this file cannot be read as audio.`); continue }
@@ -76,6 +78,46 @@ export async function importAudioFiles(
     }
   }
   return problems
+}
+
+// A MIDI file (.mid): one MIDI track per track (and channel) of the file, the notes in a clip at `startBeat`.
+// In an empty project the file's tempo becomes the project tempo. Returns a problem text, or null.
+export async function importMidiFile(path: string, startBeat: number): Promise<string | null> {
+  const name = (path.split(/[\\/]/).pop() ?? 'MIDI').replace(/\.[^.]+$/, '')
+  let data
+  try { data = parseMidi(await window.api.fs.readFile(path)) } catch (e) { return trf('{name}: this MIDI file cannot be read ({error}).', { name, error: (e as Error).message }) }
+  if (!data.tracks.length) return trf('{name}: the MIDI file has no notes.', { name })
+  const store = useProjectStore.getState()
+  if (!store.project.tracks.length && data.bpm && data.bpm >= 20 && data.bpm <= 400) store.setBpm(Math.round(data.bpm * 100) / 100)
+  const bar = store.project.timeSignature?.[0] ?? 4
+  const id = (): string => Math.random().toString(36).slice(2, 10)
+  let firstTrack: string | null = null
+  for (const t of data.tracks) {
+    useProjectStore.getState().addTrack('midi')
+    const tracks = useProjectStore.getState().project.tracks
+    const trackId = tracks[tracks.length - 1].id
+    firstTrack ??= trackId
+    useProjectStore.getState().updateTrack(trackId, { name: data.tracks.length > 1 ? t.name : name })
+    const end = Math.max(...t.notes.map((n) => n.startTime + n.duration))
+    useProjectStore.getState().addClip(trackId, {
+      startTime: startBeat, duration: Math.max(bar, Math.ceil(end / bar) * bar), name: data.tracks.length > 1 ? t.name : name,
+      notes: t.notes.map((n) => ({ ...n, id: id() }))
+    })
+  }
+  if (firstTrack) useProjectStore.getState().selectTrack(firstTrack)
+  return null
+}
+
+// A MIDI clip saved as a .mid file (with the project tempo)
+export async function exportMidiClip(trackId: string, clipId: string): Promise<string | null> {
+  const p = useProjectStore.getState().project
+  const track = p.tracks.find((t) => t.id === trackId)
+  const clip = track?.clips.find((c) => c.id === clipId)
+  if (!track || !clip?.notes) return tr('Choose a MIDI clip first.')
+  const file = await window.api.exporter.saveDialog(`${(clip.name || track.name).replace(/[\\/:*?"<>|]/g, '_')}.mid`, 'mid')
+  if (!file) return null
+  await window.api.exporter.write(file, writeMidi([{ name: track.name, notes: clip.notes.filter((n) => n.startTime < clip.duration), channel: 0 }], p.bpm))
+  return trf('Saved: {file}', { file })
 }
 
 export async function pickAndImport(at?: { trackId?: string; startBeat?: number; warpBpm?: number }): Promise<string[]> {
@@ -173,7 +215,7 @@ const Waveform = React.memo(function Waveform({ clip, color, height, width, warp
 
 // ── the Studio ───────────────────────────────────────────────────────────────
 
-interface ClipDrag { kind: 'move' | 'trimL' | 'trimR'; trackId: string; clipId: string; startX: number; startY: number; orig: Clip; moved: boolean; group?: Map<string, number>; toNew?: boolean }
+interface ClipDrag { kind: 'move' | 'trimL' | 'trimR' | 'fadeIn' | 'fadeOut' | 'gain'; trackId: string; clipId: string; startX: number; startY: number; orig: Clip; moved: boolean; group?: Map<string, number>; toNew?: boolean; h?: number }
 
 export function Timeline({ fill = false }: { fill?: boolean }): React.ReactElement {
   const project = useProjectStore((s) => s.project)
@@ -198,6 +240,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const [warpClip, setWarpClip] = useState<string | null>(null)
   const [showTempo, setShowTempo] = useState(() => { try { return localStorage.getItem('ams-show-tempo') === '1' } catch { return false } })
   const [showChannel, setShowChannel] = useState(() => { try { return localStorage.getItem('ams-show-channel') === '1' } catch { return false } })
+  const [showMasterFx, setShowMasterFx] = useState(() => { try { return localStorage.getItem('ams-show-master-fx') === '1' } catch { return false } })
   const remember = (k: string, v: boolean): void => { try { localStorage.setItem(k, v ? '1' : '0') } catch { /* storage unavailable */ } }
   const notice = useBeatMatch((s) => s.notice)
   const [menu, setMenu] = useState<{ x: number; y: number; kind: 'track' | 'clip' | 'take'; trackId: string; clipId?: string; laneId?: string } | null>(null)
@@ -264,6 +307,16 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         setNewTrackHint(d.toNew ? (o.audioFile ? 'audio' : 'midi') : null)
         moveClip(from?.id ?? d.trackId, d.clipId, toId, Math.max(0, start))
         d.trackId = toId
+      } else if (d.kind === 'fadeIn' || d.kind === 'fadeOut') {
+        // the fade handles at the top corners of an audio clip: drag inwards for a longer fade (no grid)
+        const other = d.kind === 'fadeIn' ? (o.fadeOut ?? 0) : (o.fadeIn ?? 0)
+        const was = d.kind === 'fadeIn' ? (o.fadeIn ?? 0) : (o.fadeOut ?? 0)
+        const v = Math.max(0, Math.min(o.duration - other, was + (d.kind === 'fadeIn' ? dBeats : -dBeats)))
+        updateClip(d.trackId, d.clipId, { [d.kind]: v })
+      } else if (d.kind === 'gain') {
+        // the gain line: up is louder (0..2, 1 = as recorded, in the middle of the clip)
+        const g = Math.max(0, Math.min(2, (o.gain ?? 1) + ((d.startY - e.clientY) / Math.max(20, d.h ?? 60)) * 2))
+        updateClip(d.trackId, d.clipId, { gain: Math.abs(g - 1) < 0.02 ? 1 : g })
       } else if (d.kind === 'trimR') {
         let dur = Math.max(minLength(), snap(o.startTime + o.duration + dBeats, free) - o.startTime)
         if (o.audioFile) dur = Math.min(dur, beatsLeft(o, p))
@@ -399,9 +452,9 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
     if (!e.dataTransfer.types.includes('Files')) return
     e.preventDefault()
     setDropping(false)
-    const files = [...e.dataTransfer.files].filter((f) => /\.(wav|mp3|flac|ogg|opus|m4a|aif|aiff)$/i.test(f.name))
+    const files = [...e.dataTransfer.files].filter((f) => /\.(wav|mp3|flac|ogg|opus|m4a|aif|aiff|mid|midi)$/i.test(f.name))
     const paths = files.map((f) => (f as File & { path?: string }).path).filter((p): p is string => !!p)
-    if (!paths.length) { setMessage(tr('Drop audio files (wav, mp3, flac, ogg, m4a, aiff).')); return }
+    if (!paths.length) { setMessage(tr('Drop audio files (wav, mp3, flac, ogg, m4a, aiff) or MIDI files (.mid).')); return }
     const lanes = lanesRef.current
     const beat = lanes ? snap(beatAt(e.clientX), false) : 0
     const row = lanes ? rowAt(e.clientY) : undefined
@@ -484,7 +537,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                   onBlur={(e) => { updateTrack(track.id, { name: e.target.value.trim() || track.name }); setRenaming(null) }}
                   onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setRenaming(null); e.stopPropagation() }} />
               ) : (
-                <div onDoubleClick={() => setRenaming(track.id)} title={tr('Double-click to rename')}
+                <div className="track-title" onDoubleClick={() => setRenaming(track.id)} title={tr('Double-click to rename')}
                   style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{track.name}</div>
               )}
               <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{isGroup ? `group · ${childCount(track)} tracks` : track.instrument?.vst ? `${track.type} · ${track.instrument.vst.name}` : track.type}{track.takes?.length ? ` · ${track.takes.length} takes` : ''}</div>
@@ -608,11 +661,15 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
               }}>
               {clip.audioFile && !missing && <Waveform clip={clip} color={track.color} height={th - 14} width={width} warpEdit={warpEdit} trackId={track.id} />}
               {clip.notes && <MiniNotes clip={clip} color={track.color} height={th - 14} />}
-              <span className={missing ? undefined : 'clip-title'} style={{ position: 'relative', fontSize: 11, color: missing ? 'var(--red)' : '#fff', fontWeight: 600, padding: '2px 8px', whiteSpace: 'nowrap', textShadow: '0 1px 2px #000a', pointerEvents: 'none' }}>
+              <span className={missing ? undefined : 'clip-title'} style={{ position: 'relative', fontSize: 11, color: missing ? 'var(--red)' : '#fff', fontWeight: 600, padding: clip.audioFile && !missing ? '2px 8px 2px 14px' : '2px 8px', whiteSpace: 'nowrap', textShadow: '0 1px 2px #000a', pointerEvents: 'none' }}>
                 {missing ? `Missing: ${clip.name ?? clip.audioFile}` : `${clip.name ?? (clip.notes ? `${clip.notes.length} notes` : 'Clip')}${clip.warpBpm ? ` · synced from ${Math.round(clip.warpBpm)} BPM` : ''}${clip.warpMarkers?.length ? ` · ${clip.warpMarkers.length} warp markers` : ''}`}
               </span>
               <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: HANDLE, cursor: 'ew-resize' }} />
               <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: HANDLE, cursor: 'ew-resize' }} />
+              {clip.audioFile && !missing && width >= 40 && th >= 40 && <ClipHandles clip={clip} width={width} height={th - 14} beatWidth={beatWidth} bpm={bpm}
+                onGrab={(e, kind) => { e.stopPropagation(); if (e.button !== 0) return; selectTrack(track.id); selectClip(clip.id)
+                  drag.current = { kind, trackId: track.id, clipId: clip.id, startX: e.clientX, startY: e.clientY, orig: { ...clip }, moved: false, h: th - 14 } }}
+                onReset={(kind) => updateClip(track.id, clip.id, kind === 'gain' ? { gain: 1 } : { [kind]: 0 })} />}
             </div>
           )
         })}
@@ -675,6 +732,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         {toolbarBtn('+ Marker', 'Add a marker at the playhead (Cubase: Insert). Right-click the ruler for time signatures.', addMarkerAtPlayhead)}
         {toolbarBtn('Tempo', 'Show / hide the tempo track (tempo changes during the song)', () => { setShowTempo(!showTempo); remember('ams-show-tempo', !showTempo) }, showTempo || hasTempoChanges(project))}
         {toolbarBtn('Channel', 'Show / hide the channel tab of the selected track (Cubase 15)', () => { setShowChannel(!showChannel); remember('ams-show-channel', !showChannel) }, showChannel)}
+        {toolbarBtn('Master FX', 'Show / hide the effects on the master (built in or VST plugins, after all tracks)', () => { setShowMasterFx(!showMasterFx); remember('ams-show-master-fx', !showMasterFx) }, showMasterFx || !!project.masterFx?.length)}
         {toolbarBtn('Export', 'Quick export: the whole song as WAV or MP3', () => window.dispatchEvent(new CustomEvent(EXPORT_EVENT)))}
         <span style={{ flex: 1 }} />
         {busy && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>{busy}…</span>}
@@ -684,6 +742,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         <input type="range" min={0.25} max={4} step={0.05} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 70, accentColor: 'var(--accent)' }} />
       </div>
 
+      {showMasterFx && <MasterFxBar />}
       {selectedAudioClip && <ClipInspector trackId={selectedAudioClip.trackId} clip={selectedAudioClip.clip} bpm={bpm} warpEdit={warpClip === selectedAudioClip.clip.id}
         onWarpEdit={(on) => setWarpClip(on ? selectedAudioClip.clip.id : null)} />}
       {selectedClipIds.length > 1 && (
@@ -807,6 +866,9 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                 { label: 'Duplicate clip', run: () => runAction('edit.duplicate') },
                 { label: 'Quantize', run: () => runAction('edit.quantize') },
                 { label: 'Consolidate selection (Ctrl+J)', run: () => void run('Consolidating', consolidate) },
+                ...(project.tracks.find((t) => t.id === menu.trackId)?.clips.find((c) => c.id === menu.clipId)?.notes
+                  ? [{ label: 'Export as MIDI file (.mid)…', run: () => { void exportMidiClip(menu.trackId, menu.clipId!).then((m) => { if (m) setMessage(m) }) } }]
+                  : []),
                 { label: 'Crossfade with the clip before (X)', run: () => setMessage(crossfade()) },
                 { label: 'Loop this clip (Ctrl+L)', run: () => loopToSelection() },
                 { label: 'Edit warp markers', run: () => { setWarpClip(menu.clipId!); setMessage(tr('Warp: double-click the waveform to set a marker, drag a marker onto another beat, Alt+click deletes it.')) } },
@@ -879,6 +941,42 @@ function Playhead({ scrollRef, beatWidth }: { scrollRef: React.RefObject<HTMLDiv
       <div style={{ position: 'absolute', left: 0, top: 0, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '9px solid var(--accent)', pointerEvents: 'none' }} />
       {drag !== null && <div style={{ position: 'absolute', left: 5, top: 0, width: 2, height: '100%', background: 'var(--accent-light)', opacity: 0.6, pointerEvents: 'none' }} />}
     </div>
+  )
+}
+
+// Fades and gain right on an audio clip: a square at each top corner sets the fade (drag inwards), the line across
+// the clip is its volume (drag up or down, double-click: back to 0 dB). The shaded corners show the fades.
+function ClipHandles({ clip, width, height, beatWidth, bpm, onGrab, onReset }: {
+  clip: Clip; width: number; height: number; beatWidth: number; bpm: number
+  onGrab: (e: React.PointerEvent, kind: 'fadeIn' | 'fadeOut' | 'gain') => void; onReset: (kind: 'fadeIn' | 'fadeOut' | 'gain') => void
+}): React.ReactElement {
+  const fi = Math.min(width, (clip.fadeIn ?? 0) * beatWidth)
+  const fo = Math.min(width, (clip.fadeOut ?? 0) * beatWidth)
+  const gain = clip.gain ?? 1
+  const y = 2 + (1 - gain / 2) * (height - 4)
+  const db = gain <= 0.001 ? '-inf' : `${gain >= 1 ? '+' : ''}${(20 * Math.log10(gain)).toFixed(1)}`
+  const sec = (b: number | undefined): string => (((b ?? 0) * 60) / bpm).toFixed(2)
+  const box: React.CSSProperties = { position: 'absolute', top: 1, width: 9, height: 9, background: '#fff', border: '1px solid #000', boxSizing: 'border-box', cursor: 'ew-resize', zIndex: 3 }
+  return (
+    <>
+      <svg style={{ position: 'absolute', left: 0, top: 0, width, height, pointerEvents: 'none', zIndex: 2 }}>
+        {fi > 0 && <path d={`M0,0 L${fi},0 L0,${height} Z`} fill="rgba(0,0,0,0.45)" />}
+        {fi > 0 && <line x1={0} y1={height} x2={fi} y2={0} stroke="#fff" strokeWidth={1} opacity={0.8} />}
+        {fo > 0 && <path d={`M${width},0 L${width - fo},0 L${width},${height} Z`} fill="rgba(0,0,0,0.45)" />}
+        {fo > 0 && <line x1={width - fo} y1={0} x2={width} y2={height} stroke="#fff" strokeWidth={1} opacity={0.8} />}
+        <line x1={0} y1={y} x2={width} y2={y} stroke="#fff" strokeWidth={1} strokeDasharray={gain === 1 ? '3 4' : undefined} opacity={gain === 1 ? 0.35 : 0.85} />
+      </svg>
+      <div title={trf('Fade in: {s} s. Drag to the right for a longer fade, double-click: no fade.', { s: sec(clip.fadeIn) })}
+        onPointerDown={(e) => onGrab(e, 'fadeIn')} onDoubleClick={(e) => { e.stopPropagation(); onReset('fadeIn') }} style={{ ...box, left: Math.max(1, Math.min(width - 20, fi - 4)) }} />
+      <div title={trf('Fade out: {s} s. Drag to the left for a longer fade, double-click: no fade.', { s: sec(clip.fadeOut) })}
+        onPointerDown={(e) => onGrab(e, 'fadeOut')} onDoubleClick={(e) => { e.stopPropagation(); onReset('fadeOut') }} style={{ ...box, left: Math.max(11, Math.min(width - 10, width - fo - 5)) }} />
+      <div title={trf('Clip volume: {db} dB. Drag up or down, double-click: 0 dB.', { db })}
+        onPointerDown={(e) => onGrab(e, 'gain')} onDoubleClick={(e) => { e.stopPropagation(); onReset('gain') }}
+        style={{ position: 'absolute', left: width / 2 - 16, top: y - 5, width: 32, height: 10, cursor: 'ns-resize', zIndex: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 22, height: 6, borderRadius: 3, background: gain === 1 ? 'rgba(255,255,255,0.5)' : '#fff', border: '1px solid #000' }} />
+      </div>
+      {gain !== 1 && <span style={{ position: 'absolute', left: width / 2 + 18, top: Math.max(0, Math.min(height - 12, y - 6)), fontSize: 9, color: '#fff', textShadow: '0 0 3px #000', pointerEvents: 'none', zIndex: 3 }}>{db} dB</span>}
+    </>
   )
 }
 

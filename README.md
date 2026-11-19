@@ -29,9 +29,9 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.60
+### New in 0.70
 
-- **VST instruments on MIDI tracks** (Channel → Instrument; Piano Roll, MIDI keyboard, recording and export), two **free open-source instruments** to install with one click (**Dexed**, **Surge XT**), **ASIO output** through the plugin host (Settings → Audio, with the ASIO control panel), and the **Hardware rack** look rebuilt with an LCD, rack keys and an effect rack.
+- **Effects and VST plugins on the master** (Studio → *Master FX*, Mixer), **MIDI files** in and out (.mid), a **velocity lane** in the Piano Roll, **fades and clip volume** dragged right on the clip, and the **Analog console** (mixing desk with VU needles) and **Swiss** looks rebuilt.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
@@ -109,10 +109,10 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 **Light** – the same layout on a light background.
 
 <img src="docs/screenshots/layout-console.png" alt="Look: Analog console" width="100%">
-**Analog console** – warm wood at the sides, amber and brown, round transport keys and a glowing position display.
+**Analog console** – warm wood at the sides, amber and brown, serif type, round transport keys, a glowing position display and a mixing desk with VU needles, pan knobs and faders along the bottom of the Studio.
 
 <img src="docs/screenshots/layout-swiss.png" alt="Look: Swiss" width="100%">
-**Swiss** – white and black, heavy type, no rounded corners, orange as the only colour, the menu as a bar along the bottom.
+**Swiss** – white and black, big heavy numbers for position and tempo, the transport as big black blocks, large capital track names, no rounded corners, orange as the only colour, the menu as a bar along the bottom.
 
 <img src="docs/screenshots/layout-rack.png" alt="Look: Hardware rack" width="100%">
 **Hardware rack** – grey device fronts with screws, a wide green LCD for position and tempo, the menu at the side as rack keys, the selected track's effects as rack modules with knobs at the right.

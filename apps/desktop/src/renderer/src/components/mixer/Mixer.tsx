@@ -3,6 +3,7 @@ import { useProjectStore } from '../../stores/project.store'
 import { useAudioStore } from '../../stores/audio.store'
 import { masterLevel, trackLevel } from '../../audio/engine'
 import { tr } from '../../i18n/tr'
+import { MasterFxBar } from '../timeline/StudioLanes'
 
 const toDb = (v: number): string => (v <= 0.0005 ? '-∞' : `${(20 * Math.log10(v)).toFixed(1)}`)
 
@@ -44,7 +45,8 @@ export function Mixer(): React.ReactElement {
   const setMasterVolume = useAudioStore((s) => s.setMasterVolume)
 
   return (
-    <div style={{ display: 'flex', height: '100%', background: 'var(--bg-primary)', overflow: 'auto', padding: 12, gap: 8, alignItems: 'flex-start' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-primary)' }}>
+    <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'auto', padding: 12, gap: 8, alignItems: 'flex-start' }}>
       {tracks.length === 0 && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--text-muted)' }}>
           {tr('No tracks yet. Add tracks in the Studio.')}
@@ -101,6 +103,8 @@ export function Mixer(): React.ReactElement {
         />
         <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{toDb(masterVolume)} dB</span>
       </div>
+    </div>
+    <MasterFxBar />
     </div>
   )
 }

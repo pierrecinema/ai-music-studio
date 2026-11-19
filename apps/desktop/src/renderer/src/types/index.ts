@@ -113,6 +113,7 @@ export interface Project {
   tempoMap?: TempoPoint[]          // tempo changes after beat 0 (beat 0 uses `bpm`)
   signatures?: SignaturePoint[]    // time signature changes after bar 0 (bar 0 uses `timeSignature`)
   returns?: ReturnTrack[]
+  masterFx?: InsertFx[]            // effects on the master of the Studio (built-in or VST), after all tracks and returns
   countIn?: number                 // bars of clicks before recording starts
   punchIn?: boolean                // recording only keeps what lies inside the loop range
   punchOut?: boolean

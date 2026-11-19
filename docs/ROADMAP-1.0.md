@@ -5,7 +5,7 @@ Plan written on 2026-11-18 (state: 0.60.5). The owner decides the order; items m
 1.0 means: everything shown in the app works, nothing loses work, a new user gets from install to a finished,
 exported song without help from outside the app. Linux comes after RC 1.0.
 
-## 0.70: finish what is half there
+## 0.70: finish what is half there (released 2026-11-19, except plugin automation / presets and album mastering)
 
 | Item | What | Done when |
 |---|---|---|
@@ -14,7 +14,7 @@ exported song without help from outside the app. Linux comes after RC 1.0.
 | Plugin presets | Save / load a plugin state as a preset, per plugin | Presets survive a restart |
 | MIDI | Velocity lane and note length handles in the Piano Roll, MIDI file import / export (.mid) | A .mid from another program opens with the right notes |
 | Studio audio | Clip fades with handles, clip gain, reverse, time-stretch per clip | |
-| Mastering step 6 | Album: several songs, the same loudness, gaps, one export | |
+| Mastering step 6 | Album: several songs, the same loudness, gaps, one export | **pending list** (owner, 19.11.2026) |
 | Looks | Analog console (#72) and Swiss (#73) rebuilt like the rack, with own panels | The owner likes them |
 
 ## 0.80: Vocal Editor (owner, 18.11.2026)

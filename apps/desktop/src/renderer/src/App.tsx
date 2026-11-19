@@ -33,6 +33,7 @@ import { Mastering } from './components/mastering/Mastering'
 import { KaraokeExport } from './components/karaoke/KaraokeExport'
 import { watchHostDevice } from './audio/output'
 import { RackPanel } from './components/layout/RackPanel'
+import { ConsoleStrips } from './components/layout/ConsoleStrips'
 import { tr, trf } from './i18n/tr'
 
 // Hardware info fetched from backend
@@ -225,6 +226,8 @@ export default function App(): React.ReactElement {
               {panel}
             </div>
           )}
+          {/* Analog console look: the mixing desk along the bottom of the Studio */}
+          {theme === 'console' && ['timeline', 'piano-roll'].includes(activeView) && <ConsoleStrips />}
         </main>
 
         {/* Hardware rack look: the effects of the selected track as rack modules */}

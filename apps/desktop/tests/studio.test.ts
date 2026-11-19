@@ -16,6 +16,7 @@ import { defaultChain } from '../src/renderer/src/audio/master/chain'
 import { applyEdits, applyOp, copyPart, fadeShape } from '../src/renderer/src/audio/master/edit'
 import { VstLink, packBlock, unpackBlock } from '../src/renderer/src/audio/vst/link'
 import { buildMap, comboTaken, eventToCombo } from '../src/renderer/src/shortcuts/registry'
+import { parseMidi, writeMidi } from '../src/renderer/src/lib/midiFile'
 import { analyze, BiquadBank, CompressorCore, crossover, LimiterCore, MultibandCore, truePeakTaps } from '../src/renderer/src/audio/master/dsp'
 
 let failed = 0
@@ -358,6 +359,27 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   const f = packBlock(3, 9, [new Float32Array([0.5, 0.25])], false, [[1, 0x90, 60, 100]])
   const v = new DataView(f)
   check('midi frame: count, offset, bytes, audio after the events', v.getUint32(20, true) === 1 && v.getUint32(24, true) === 1 && v.getUint8(28) === 0x90 && v.getUint8(29) === 60 && v.getUint8(30) === 100 && new Float32Array(f, 32, 2)[1] === 0.25)
+}
+
+// ── MIDI files: what is written is read back (notes in beats, velocity, tempo, names) ──
+{
+  const notes = [{ pitch: 60, startTime: 0, duration: 1, velocity: 100 }, { pitch: 64, startTime: 0.5, duration: 0.25, velocity: 40 }, { pitch: 60, startTime: 1, duration: 1, velocity: 90 }]
+  const bytes = writeMidi([{ name: 'Keys', notes, channel: 0 }, { name: 'Bass', notes: [{ pitch: 36, startTime: 2, duration: 2, velocity: 127 }], channel: 1 }], 124)
+  const back = parseMidi(bytes)
+  check('mid: tempo', near(back.bpm ?? 0, 124, 0.01), String(back.bpm))
+  check('mid: two tracks with names', back.tracks.length === 2 && back.tracks[0].name === 'Keys' && back.tracks[1].name === 'Bass', JSON.stringify(back.tracks.map((t) => t.name)))
+  const k = back.tracks[0].notes
+  check('mid: repeated note keeps both (off before on)', k.length === 3 && near(k[2].startTime, 1) && near(k[0].duration, 1), JSON.stringify(k))
+  check('mid: velocity and length', k[1].velocity === 40 && near(k[1].duration, 0.25) && k[1].pitch === 64)
+  check('mid: bass at beat 2', near(back.tracks[1].notes[0].startTime, 2) && back.tracks[1].notes[0].pitch === 36)
+  // a type-0 file with two channels and running status gives one track per channel
+  const t0 = new Uint8Array([0x4d, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, 0, 96,
+    0x4d, 0x54, 0x72, 0x6b, 0, 0, 0, 20,
+    0x00, 0x90, 60, 100, 0x00, 62, 80, 0x60, 0x80, 60, 0, 0x00, 0x91, 40, 70, 0x30, 0x81, 40, 0, 0x00]).slice(0, 14 + 8 + 20)
+  const end = new Uint8Array([...t0.subarray(0, 14 + 8 + 19), 0xff, 0x2f, 0x00])
+  new DataView(end.buffer).setUint32(18, 22)
+  const p = parseMidi(end)
+  check('mid: type 0, channels split, running status', p.tracks.length === 2 && p.tracks[0].notes.length === 2 && p.tracks[1].notes[0].pitch === 40 && near(p.tracks[1].notes[0].startTime, 1) && near(p.tracks[1].notes[0].duration, 0.5), JSON.stringify(p.tracks))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

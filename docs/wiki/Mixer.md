@@ -12,4 +12,8 @@ One channel strip per track, plus **MASTER**. Changes are heard at once while pl
 | **Return tracks** | shared reverb (*Decay*) or delay (time in song tempo, *FB* feedback): add them with **+ Return…** in the [[Studio]] |
 | **Group tracks** | tracks routed through a group track with its own volume, mute and solo (Ctrl+G) |
 
+**Master FX** (bottom of the Mixer, and *Master FX* in the Studio toolbar): effects on the whole mix, after all tracks and return tracks: built-in effects or your VST plugins (*Open* shows the plugin window). They are saved with the project and are in the export.
+
+In the **Analog console** look (Settings → Appearance) a mixing desk with VU meters, pan knobs and faders also sits along the bottom of the Studio.
+
 The master has a limiter so the mix does not clip hard. The mixer also opens below the [[Studio]]; drag the divider to change the height (double-click resets). Shortcut: Ctrl+Alt+M (Ableton) / F3 (Cubase).

@@ -320,6 +320,6 @@ behoben, dann der nächste Bereich.
 | 12.7c | Hardware-Rack: oben am Effekt-Rack rechts **›** klicken, dann den schmalen Streifen anklicken | Rack klappt zu einem Streifen zusammen und wieder auf; bleibt nach Neustart so | ❌ | Rack rechts abgeschnitten, › nicht sichtbar → 0.70.2 | 0.70.1 |
 | 12.11b | Erscheinungsbild **Swiss** | Tempo (BPM) ganz sichtbar | ✅ |  | 0.70.1 |
 | 12.13 | Einstellungen → Erscheinungsbild | Nur noch Dunkel, Hell, Swiss, Hardware-Rack | ✅ |  | 0.70.1 |
-| 12.3c | **Neues** Projekt in 0.70.2: Master FX → VST-Effekt, etwas einstellen, speichern, App ganz schließen, App starten, Projekt öffnen, **Master FX** anklicken | In der Leiste steht der Effekt (Name, Open, ⏻), mit der Einstellung | | | 0.70.2 |
-| 12.7d | Piano Roll oben: Feld **Anschlag** (= Velocity); Noten wählen, 40 eingeben, Enter | Feld breit genug, Noten werden leiser | | | 0.70.2 |
-| 12.7e | Hardware-Rack, Fenster etwas schmaler ziehen: **›** links oben am Effekt-Rack klicken, dann den Streifen klicken | Rack bleibt im Fenster, klappt zu und wieder auf | | | 0.70.2 |
+| 12.3c | **Neues** Projekt in 0.70.2: Master FX → VST-Effekt, etwas einstellen, speichern, App ganz schließen, App starten, Projekt öffnen, **Master FX** anklicken | In der Leiste steht der Effekt (Name, Open, ⏻), mit der Einstellung | ✅ |  | 0.70.2 |
+| 12.7d | Piano Roll oben: Feld **Anschlag** (= Velocity); Noten wählen, 40 eingeben, Enter | Feld breit genug, Noten werden leiser | ✅ |  | 0.70.2 |
+| 12.7e | Hardware-Rack, Fenster etwas schmaler ziehen: **›** links oben am Effekt-Rack klicken, dann den Streifen klicken | Rack bleibt im Fenster, klappt zu und wieder auf | ✅ |  | 0.70.2 |

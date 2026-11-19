@@ -1366,5 +1366,6 @@
  "Plugin knob 7": "Bouton du plugin 7",
  "Plugin knob 8": "Bouton du plugin 8",
  "Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track": "Automatiser un bouton de ce plugin : choisissez-le, puis dessinez sa courbe dans la ligne qui s’ouvre sous la piste",
- "Automate…": "Automatiser…"
+ "Automate…": "Automatiser…",
+ "Switched off in Settings → Plugins (tick them there)": "Désactivés dans Réglages → Plugins (cochez-les là)"
 }

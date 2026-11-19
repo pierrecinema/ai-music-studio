@@ -355,3 +355,12 @@ behoben, dann der nächste Bereich.
 | 13.1b | Spur mit einem VST-Effekt oder VST-Instrument: neben **Open** auf **Automatisieren…** klicken | Liste der Regler des Plugins mit Suchfeld | | | 0.72.1 |
 | 13.2b | Einen Regler anklicken (z. B. „Cutoff“) | Unter der Spur öffnet sich eine Automationsspur „<Plugin>: <Regler>“ mit einem Punkt am Anfang | | | 0.72.1 |
 | 13.7b | Neben **Open** das Feld **★ Presets…** | Liste: Laden / Aktuelle Einstellungen speichern… / Löschen | | | 0.72.1 |
+
+## 15. Neu in 0.73.0: Automation der eingebauten Effekte, Dexed
+
+| Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 15.1 | Spur mit einem **eingebauten** Effekt (z. B. **Filter** über + Effekt… → Eingebaut): beim Effekt **Automatisieren…** → **Frequenz** | Unter der Spur öffnet sich „Filter: Frequenz“ | | | 0.73.0 |
+| 15.2 | In der neuen Spur Punkte setzen: links unten, rechts oben; abspielen | Der Klang geht von dumpf nach hell | | | 0.73.0 |
+| 15.3 | Dasselbe mit **EQ → Bässe** oder **Hall → Mix** | Man hört die Änderung; Export klingt genauso | | | 0.73.0 |
+| 15.4 | MIDI-Spur → Kanal → Instrument: ist **Dexed** in der Liste? Wenn nein: Einstellungen → Plugins → **Nach Plugins suchen**, dann nochmal | Dexed erscheint (oder ist unter „In Einstellungen → Plugins ausgeschaltet“ zu sehen) | | | 0.73.0 |

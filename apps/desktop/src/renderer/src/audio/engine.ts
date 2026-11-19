@@ -240,7 +240,7 @@ interface Strip {
   analyser: AnalyserNode
   sends: Map<string, GainNode>
   dispose: Array<() => void>  // plugin inserts: tell them to stop when the track is freed
-  automate: Map<string, { send: (events: number[][]) => void; before: number }>   // VST inserts: automation in, and the plugin delay before them
+  automate: Map<string, { send: (events: Array<[number, number, number | string, number]>) => void; before: number }>   // VST inserts: automation in, and the plugin delay before them
 }
 
 function makeStrip(ctx: BaseAudioContext, dest: AudioNode, inserts: InsertFx[] = [], secPerBeat = 0.5): Strip {
@@ -256,7 +256,7 @@ function makeStrip(ctx: BaseAudioContext, dest: AudioNode, inserts: InsertFx[] =
   const automate: Strip['automate'] = new Map()
   let before = 0
   for (const fx of inserts) {
-    const ins = makeInsert(ctx, fx, secPerBeat) as ReturnType<typeof makeInsert> & { automate?: (events: number[][]) => void }
+    const ins = makeInsert(ctx, fx, secPerBeat)
     head.connect(ins.input)
     head = ins.output
     if (ins.dispose) dispose.push(ins.dispose)
@@ -477,11 +477,12 @@ export function scheduleProject(
       const last = Math.max(...points.map((p) => p.beat))
       const toBeat = Math.min(until, Math.max(fromBeat, last))
       if (instrument && track.instrument?.id === fp.fxId) {
-        midi.push(...paramEvents(points, fp.index, fromBeat, toBeat, (b) => Math.max(when + earliest, TT(b))))
+        midi.push(...paramEvents(points, fp.index, fromBeat, toBeat, (b) => Math.max(when + earliest, TT(b))) as number[][])
         continue
       }
       const ins = strip.automate.get(fp.fxId)
-      if (ins) ins.send(paramEvents(points, fp.index, fromBeat, toBeat, (b) => Math.max(when + earliest, TT(b)) + ins.before))
+      const isVst = (track.fx ?? []).find((f) => f.id === fp.fxId)?.type === 'vst'
+      if (ins) ins.send(paramEvents(points, isVst ? fp.index : fp.key, fromBeat, toBeat, (b) => Math.max(when + earliest, TT(b)) + ins.before))
     }
     // note-offs before note-ons at the same moment: a repeated note is not cut by the end of the one before
     if (instrument) instrument.play(midi.sort((a, b) => a[0] - b[0] || ((a[1] & 0xf0) === 0x80 ? -1 : 1) - ((b[1] & 0xf0) === 0x80 ? -1 : 1)))

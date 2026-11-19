@@ -397,7 +397,7 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
 
 // ── automation of plugin parameters ──
 {
-  check('fx lane key', JSON.stringify(fxParamOf('fx:abc:12' as never)) === JSON.stringify({ fxId: 'abc', index: 12 }) && fxParamOf('volume') === null)
+  check('fx lane key', JSON.stringify(fxParamOf('fx:abc:12' as never)) === JSON.stringify({ fxId: 'abc', index: 12, key: '12' }) && fxParamOf('fx:e1:freq' as never)?.key === 'freq' && fxParamOf('volume') === null)
   // a ramp from 0 at beat 0 to 1 at beat 4 (120 BPM: 2 s), events every 10 ms, then flat
   const ev = paramEvents([{ beat: 0, value: 0 }, { beat: 4, value: 1 }], 7, 0, 4, (b) => b * 0.5)
   check('param events: start, end, ramp, index', ev.length > 150 && ev[0][0] === 0 && ev[0][3] === 0 && Math.abs(ev[ev.length - 1][0] - 2) < 1e-9 && ev[ev.length - 1][3] === 1 && ev.every((e) => e[1] === 0xf4 && e[2] === 7), String(ev.length))

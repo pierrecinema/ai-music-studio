@@ -62,10 +62,17 @@ export const usePluginsStore = create<PluginsState>()((set, get) => ({
     const off = host.onEvent((m) => { if (m.event === 'scan') set({ scanning: { done: m.done, total: m.total, file: m.file } }) })
     try {
       await host.ensure()
-      const paths = [...DEFAULT_FOLDERS, ...get().folders]
+      // the folder of the free instruments (Dexed, Surge XT) is always searched, also if it was taken out of the list
+      let free = ''
+      try { free = (await window.api?.plugins?.freeDir?.()) ?? '' } catch { /* not in the app */ }
+      const paths = [...new Set([...DEFAULT_FOLDERS, ...get().folders, ...(free ? [free] : [])])]
+      const before = get().plugins
       const r = await host.call<{ plugins: PluginInfo[]; failed: FailedPlugin[] }>('scan', { paths, known: [] }, 3600000)
-      const plugins = r.plugins.sort((a, b) => a.name.localeCompare(b.name))
-      set({ plugins, failed: r.failed, scannedAt: Date.now() })
+      // a plugin that worked before but failed this time (busy, slow to answer) keeps its place: it is not dropped
+      const failedFiles = new Set(r.failed.map((f) => f.file))
+      const kept = before.filter((p) => failedFiles.has(p.file) && !r.plugins.some((q) => q.id === p.id))
+      const plugins = [...r.plugins, ...kept].sort((a, b) => a.name.localeCompare(b.name))
+      set({ plugins, failed: r.failed.filter((f) => !kept.some((p) => p.file === f.file)), scannedAt: Date.now() })
       persist(get())
     } catch (e) {
       set({ error: (e as Error).message })

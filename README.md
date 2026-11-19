@@ -29,6 +29,10 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
+### New in 0.73
+
+- **Automation of the built-in effects** (EQ, compressor, filter, delay and reverb mix) with *Automate…*, like the VST plugins.
+
 ### New in 0.72
 
 - **MIDI controllers** (Settings → MIDI): keyboards, pad controllers and Launchpads are found by themselves; ready mappings for known devices such as the Akai MPK Mini, **MIDI Learn** for any control, and a **Launchpad** grid for mute, solo, select, volume and markers.

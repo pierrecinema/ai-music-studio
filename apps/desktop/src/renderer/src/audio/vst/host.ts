@@ -513,7 +513,7 @@ function instanceFor(ctx: BaseAudioContext, fx: InsertFx): { instance: number; l
   return live.get(fx.id)
 }
 
-export function makeVstInsert(ctx: BaseAudioContext, fx: InsertFx): { input: AudioNode; output: AudioNode; dispose: () => void; automate: (events: number[][]) => void } {
+export function makeVstInsert(ctx: BaseAudioContext, fx: InsertFx): { input: AudioNode; output: AudioNode; dispose: () => void; automate: (events: Array<[number, number, number | string, number]>) => void } {
   const inst = instanceFor(ctx, fx)
   const node = new AudioWorkletNode(ctx, 'ams-vst', {
     numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit',
@@ -525,7 +525,7 @@ export function makeVstInsert(ctx: BaseAudioContext, fx: InsertFx): { input: Aud
   return {
     input: node, output: node,
     // automation: [context time in seconds, 0xF4, parameter index, value 0..1]
-    automate: (events: number[][]) => { if (events.length) node.port.postMessage({ events }) },
+    automate: (events: Array<[number, number, number | string, number]>) => { if (events.length) node.port.postMessage({ events }) },
     dispose: () => { node.port.postMessage({ dispose: true }); inst?.client.detach(key) },
   }
 }

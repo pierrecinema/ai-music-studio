@@ -1,7 +1,7 @@
 // Extra lanes of the Studio: automation (Ableton automation lanes / Cubase automation tracks), the tempo
 // track, take lanes for comping, and the return tracks with their effects.
 import { usePluginsStore } from '../../stores/plugins.store'
-import { isInstrumentLike, onVstChange, showVstEditor, vstFailure, vstParams, vstApplyState, vstStateNow, type VstParam } from '../../audio/vst/host'
+import { isInstrumentLike, onVstChange, type PluginInfo, showVstEditor, vstFailure, vstParams, vstApplyState, vstStateNow, type VstParam } from '../../audio/vst/host'
 import { liveSampleRate, warmInstrument } from '../../audio/engine'
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -176,7 +176,11 @@ const FX_TYPES: InsertType[] = ['eq', 'compressor', 'delay', 'reverb', 'filter',
 // "+ Effect…": a built-in effect or one of the ticked VST plugins (effects lane and channel tab)
 export function FxAddSelect({ track, style, onSet }: { track: Track; style?: React.CSSProperties; onSet?: (fx: InsertFx[]) => void }): React.ReactElement {
   const updateTrack = onSet ? (_: string, patch: { fx: InsertFx[] }): void => onSet(patch.fx) : useProjectStore.getState().updateTrack
-  const plugins = usePluginsStore((s) => s.plugins.filter((p) => !isInstrumentLike(p) && !s.off.includes(p.id)))
+  const all = usePluginsStore((s) => s.plugins)
+  const off = usePluginsStore((s) => s.off)
+  const plugins = all.filter((p) => !isInstrumentLike(p) && !off.includes(p.id))
+  // on a MIDI track the VST instruments are offered here too: picking one makes it the track's instrument
+  const instruments = track.type === 'midi' && !onSet ? all.filter((p) => isInstrumentLike(p) && !off.includes(p.id)) : []
   const loadedList = usePluginsStore((s) => s.loaded)
   useEffect(() => { if (!loadedList) void usePluginsStore.getState().load() }, [loadedList])
   const add = (type: InsertType): void =>
@@ -192,10 +196,14 @@ export function FxAddSelect({ track, style, onSet }: { track: Track; style?: Rea
     <select value="" style={{ fontSize: 10, ...style }} title={tr('Add an effect to this track: a built-in effect or one of your VST plugins')}
       onChange={(e) => {
         const v = e.target.value
-        if (v.startsWith('vst:')) addPlugin(v.slice(4)); else if (v) add(v as InsertType)
+        if (v.startsWith('inst:')) { const p = instruments.find((x) => x.id === v.slice(5)); if (p) setInstrument(track, p) }
+        else if (v.startsWith('vst:')) addPlugin(v.slice(4)); else if (v) add(v as InsertType)
         e.target.value = ''; e.target.blur()
       }}>
       <option value="">{tr('+ Effect…')}</option>
+      {instruments.length > 0 && <optgroup label={tr('VST instruments (play the notes of this track)')}>
+        {instruments.map((p) => <option key={p.id} value={`inst:${p.id}`}>{p.name}{p.vendor ? ` (${p.vendor})` : ''} · {p.format}{p.arch === 'x86' ? ' · 32-bit' : ''}</option>)}
+      </optgroup>}
       <optgroup label={tr('Built in')}>
         {FX_TYPES.map((t) => <option key={t} value={t}>{tr(INSERT_LABEL[t])}</option>)}
       </optgroup>
@@ -412,12 +420,7 @@ export function InstrumentSelect({ track, style }: { track: Track; style?: React
       const p = [...plugins, ...others].find((x) => x.id === e.target.value)
       e.target.blur()
       if (!p) { updateTrack(track.id, { instrument: undefined }); return }
-      const fx: InsertFx = { id: nanoid(), type: 'vst', on: true, p: {}, vst: { pluginId: p.id, name: p.name, vendor: p.vendor, format: p.format, xml: p.xml, arch: p.arch } }
-      updateTrack(track.id, { instrument: fx })
-      void openPlugin(fx, track.name).then(() => {
-        const t = useProjectStore.getState().project.tracks.find((x) => x.id === track.id)
-        if (t) warmInstrument(t)
-      })
+      setInstrument(track, p)
     }}>
       <option value="">{tr('Built-in synth')}</option>
       {plugins.length > 0 && <optgroup label={tr('VST instruments')}>
@@ -433,6 +436,16 @@ export function InstrumentSelect({ track, style }: { track: Track; style?: React
       </optgroup>}
     </select>
   )
+}
+
+/** make a VST plugin the instrument of a MIDI track and open its window */
+export function setInstrument(track: Track, p: PluginInfo): void {
+  const fx: InsertFx = { id: nanoid(), type: 'vst', on: true, p: {}, vst: { pluginId: p.id, name: p.name, vendor: p.vendor, format: p.format, xml: p.xml, arch: p.arch } }
+  useProjectStore.getState().updateTrack(track.id, { instrument: fx })
+  void openPlugin(fx, track.name).then(() => {
+    const t = useProjectStore.getState().project.tracks.find((x) => x.id === track.id)
+    if (t) warmInstrument(t)
+  })
 }
 
 export async function openPlugin(fx: InsertFx, trackName: string): Promise<void> {

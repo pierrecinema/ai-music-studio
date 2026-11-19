@@ -3,6 +3,11 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.73.2
+
+- **VST instruments in *+ Effect…* on MIDI tracks:** the effect list of a MIDI track (effects lane, Channel panel, effect rack) now lists the VST instruments (Dexed, Surge XT …) at the top. Picking one makes it the instrument that plays the track's notes, as in *Channel → Instrument*.
+- **CH button on every track** (next to FX): opens the Channel panel of that track, with the instrument (VST instruments such as Dexed), the effects and the sends. It turns green when the track plays a VST instrument.
+
 ## 0.73.1
 
 - **Dexed missing from the instrument selector:** some plugins (newer Dexed builds, for one) do not mark themselves as instruments, so the selector left them out although Settings → Plugins listed them. An instrument is now also recognised by its category, by having no audio input, or as a known synth. Any other plugin can be tried as an instrument too (*Other plugins* in the selector), and Settings → Plugins shows the type the app uses.

@@ -1368,5 +1368,9 @@
  "Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track": "Automatiza un mando de este plugin: elígelo y dibuja su curva en el carril que se abre bajo la pista",
  "Automate…": "Automatizar…",
  "Switched off in Settings → Plugins (tick them there)": "Desactivados en Ajustes → Plugins (márcalos allí)",
- "Other plugins (only if they can play notes)": "Otros plugins (solo si pueden tocar notas)"
+ "Other plugins (only if they can play notes)": "Otros plugins (solo si pueden tocar notas)",
+ "VST instruments (play the notes of this track)": "Instrumentos VST (tocan las notas de esta pista)",
+ "CH": "CA",
+ "Channel of this track: instrument (VST instruments such as Dexed), effects, sends": "Canal de esta pista: instrumento (instrumentos VST como Dexed), efectos, envíos",
+ "Channel of this track: effects, sends": "Canal de esta pista: efectos, envíos"
 }

@@ -42,10 +42,11 @@ export function scheduleLane(
 }
 
 /** a lane of a plugin parameter: `fx:<insert id>:<parameter index>` */
-export function fxParamOf(param: AutoParam): { fxId: string; index: number } | null {
+export function fxParamOf(param: AutoParam): { fxId: string; index: number; key: string } | null {
   if (!param.startsWith('fx:')) return null
   const k = param.lastIndexOf(':')
-  return { fxId: param.slice(3, k), index: Number(param.slice(k + 1)) }
+  const key = param.slice(k + 1)
+  return { fxId: param.slice(3, k), index: Number(key), key }    // index: a VST parameter; key: a built-in effect's setting
 }
 
 export const AUTO_LABEL = (param: AutoParam, returnName?: (id: string) => string, track?: Track): string => {
@@ -54,18 +55,18 @@ export const AUTO_LABEL = (param: AutoParam, returnName?: (id: string) => string
   const fp = fxParamOf(param)
   if (fp) {
     const fx = [...(track?.fx ?? []), ...(track?.instrument ? [track.instrument] : [])].find((f) => f.id === fp.fxId)
-    return `${fx?.vst?.name ?? 'Plugin'}: ${fx?.paramNames?.[fp.index] ?? `#${fp.index}`}`
+    return `${fx?.vst?.name ?? fx?.paramNames?.$ ?? 'Effect'}: ${fx?.paramNames?.[fp.key] ?? `#${fp.key}`}`
   }
   return `Send ${returnName?.(param.slice(5)) ?? ''}`.trim()
 }
 
 /** automation of a plugin parameter as events for the plugin host: [context time, 0xF4, index, value], a point every
  *  `step` seconds along ramps (and one at each breakpoint), from `fromBeat` to `toBeat` */
-export function paramEvents(points: AutoPoint[] | undefined, index: number, fromBeat: number, toBeat: number,
-  toTime: (beat: number) => number, step = 0.01): number[][] {
+export function paramEvents(points: AutoPoint[] | undefined, index: number | string, fromBeat: number, toBeat: number,
+  toTime: (beat: number) => number, step = 0.01): Array<[number, number, number | string, number]> {
   const pts = sortedPoints(points)
   if (!pts.length) return []
-  const out: number[][] = []
+  const out: Array<[number, number, number | string, number]> = []
   const put = (beat: number): void => { out.push([toTime(beat), 0xf4, index, Math.max(0, Math.min(1, valueAt(pts, beat, 0)))]) }
   put(fromBeat)
   let prev = fromBeat

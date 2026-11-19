@@ -72,7 +72,7 @@ export function RackPanel(): React.ReactElement {
           </Module>
         }
         return (
-          <Module key={f.id} title={tr(INSERT_LABEL[f.type])} on={f.on} onToggle={() => set({ on: !f.on })} extra={remove}>
+          <Module key={f.id} title={tr(INSERT_LABEL[f.type])} on={f.on} onToggle={() => set({ on: !f.on })} extra={<><AutomateButton track={t} fx={f} />{remove}</>}>
             {INSERT_PARAMS[f.type].map((d) => (
               <Knob key={d.key} name={tr(d.label)} value={f.p[d.key] ?? d.def} refv={d.def} min={d.min} max={d.max} step={d.step} unit={d.unit}
                 onChange={(v) => set({ p: { ...f.p, [d.key]: v } })} />

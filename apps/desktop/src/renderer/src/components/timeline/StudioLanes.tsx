@@ -4,6 +4,7 @@ import { usePluginsStore } from '../../stores/plugins.store'
 import { onVstChange, showVstEditor, vstFailure, vstParams, vstApplyState, vstStateNow, type VstParam } from '../../audio/vst/host'
 import { liveSampleRate, warmInstrument } from '../../audio/engine'
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useProjectStore } from '../../stores/project.store'
 import { snapBeat } from '../../edit/grid'
 import { rangeOf, sortedPoints, valueAt, AUTO_LABEL } from '../../audio/automation'
@@ -11,7 +12,7 @@ import { tempoPoints } from '../../audio/timemap'
 import { trackLevel } from '../../audio/engine'
 import type { AutoParam, InsertFx, InsertType, ReturnTrack, TakeLane, Track } from '../../types'
 import { AUTO_HEIGHT, AUTO_MIN_HEIGHT, FX_HEIGHT, HEADER_WIDTH, openLanes, RETURN_HEIGHT, TAKE_HEIGHT, TEMPO_HEIGHT, trackPointer } from './studioLayout'
-import { INSERT_LABEL, INSERT_PARAMS, insertDefaults } from '../../audio/fx'
+import { AUTOMATABLE, INSERT_LABEL, INSERT_PARAMS, insertDefaults, toUnit } from '../../audio/fx'
 import { nanoid } from 'nanoid'
 import type { PopoverSpec } from './Popover'
 import { tr, trf } from '../../i18n/tr'
@@ -33,19 +34,25 @@ export function AutomationHeader({ track, param, min }: { track: Track; param: A
     updateTrack(track.id, { autoMin: cur.includes(param) ? cur.filter((x) => x !== param) : [...cur, param] })
   }
   // plugin parameters: the ones already used on this track, and a picker for any parameter of each plugin
-  const plugins = [...(track.fx ?? []).filter((f) => f.type === 'vst' && f.vst), ...(track.instrument?.vst ? [track.instrument] : [])]
+  const plugins = [...(track.fx ?? []).filter((f) => (f.type === 'vst' && f.vst) || AUTOMATABLE[f.type]), ...(track.instrument?.vst ? [track.instrument] : [])]
   for (const f of plugins) for (const i of Object.keys(f.paramNames ?? {})) options.push(`fx:${f.id}:${i}` as AutoParam)
   for (const k of Object.keys(track.automation ?? {})) if (k.startsWith('fx:') && !options.includes(k as AutoParam)) options.push(k as AutoParam)
   const [picking, setPicking] = useState<{ fx: InsertFx; list: VstParam[] | null; error?: string; q: string } | null>(null)
+  const selRef = useRef<HTMLSelectElement>(null)
+  const anchor = (): { left: number; top: number } => {
+    const r = selRef.current?.getBoundingClientRect()
+    return r ? { left: Math.max(8, Math.min(window.innerWidth - 268, r.left)), top: Math.min(r.bottom + 4, window.innerHeight - 320) } : { left: 100, top: 100 }
+  }
   const startPick = (fxId: string): void => {
     const fx = plugins.find((f) => f.id === fxId)
     if (!fx) return
+    if (fx.type !== 'vst') { setPicking({ fx, list: builtinParams(fx), q: '' }); return }
     setPicking({ fx, list: null, q: '' })
     vstParams(fx, liveSampleRate()).then((list) => setPicking({ fx, list, q: '' })).catch((e: Error) => setPicking({ fx, list: [], error: e.message, q: '' }))
   }
   const choose = (fx: InsertFx, p: VstParam): void => {
     const key = `fx:${fx.id}:${p.i}` as AutoParam
-    const names = { ...(fx.paramNames ?? {}), [p.i]: p.name }
+    const names = paramNamesFor(fx, p)
     if (track.instrument?.id === fx.id) updateTrack(track.id, { instrument: { ...track.instrument, paramNames: names } })
     else updateTrack(track.id, { fx: (track.fx ?? []).map((f) => (f.id === fx.id ? { ...f, paramNames: names } : f)) })
     // a new lane starts at the plugin's current value
@@ -59,20 +66,20 @@ export function AutomationHeader({ track, param, min }: { track: Track; param: A
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: min ? '2px 8px 2px 18px' : '4px 8px 4px 18px', fontSize: 10, color: 'var(--text-muted)' }}>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <button className="btn btn-ghost" style={{ ...small, padding: '0 4px' }} title={min ? tr('Show this lane in full') : tr('Make this lane small')} onClick={toggleMin}>{min ? '▸' : '▾'}</button>
-        <select value={param} style={{ fontSize: 10, flex: 1, minWidth: 0, ...(min ? { height: 20, padding: '0 4px' } : {}) }} title={tr('Which value this lane automates')}
+        <select ref={selRef} value={param} style={{ fontSize: 10, flex: 1, minWidth: 0, ...(min ? { height: 20, padding: '0 4px' } : {}) }} title={tr('Which value this lane automates')}
           onChange={(e) => { const v = e.target.value; e.target.blur(); if (v.startsWith('pick:')) { startPick(v.slice(5)); return } setLanes(lanes.map((x) => (x === param ? v as AutoParam : x))) }}>
           {[param, ...free].map((o) => <option key={o} value={o}>{AUTO_LABEL(o, nameOf, track)}{track.automation?.[o]?.length ? ' •' : ''}</option>)}
           {plugins.length > 0 && (
             <optgroup label={tr('Plugin parameter')}>
-              {plugins.map((f) => <option key={f.id} value={`pick:${f.id}`}>{trf('{name}: choose a parameter…', { name: f.vst?.name ?? 'Plugin' })}</option>)}
+              {plugins.map((f) => <option key={f.id} value={`pick:${f.id}`}>{trf('{name}: choose a parameter…', { name: f.vst?.name ?? tr(INSERT_LABEL[f.type]) })}</option>)}
             </optgroup>
           )}
         </select>
         {!min && free.length > 0 && <button className="btn btn-ghost" style={small} title={tr('Add a lane for another value (pan, a send…)')} onClick={() => setLanes([...lanes, free[0]])}>+</button>}
         <button className="btn btn-ghost" style={small} title={tr('Close this lane (its points stay)')} onClick={() => setLanes(lanes.filter((x) => x !== param))}>×</button>
       </div>
-      {picking && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', padding: 4, position: 'relative', zIndex: 20 }}>
+      {picking && createPortal(
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', boxShadow: '0 6px 18px rgba(0,0,0,0.5)', padding: 6, position: 'fixed', ...anchor(), width: 260, zIndex: 1000, fontSize: 10, color: 'var(--text-secondary)' }}>
           {!picking.list && <span>{tr('Loading the plugin…')}</span>}
           {picking.error && <span style={{ color: 'var(--red)' }}>{picking.error}</span>}
           {picking.list && (
@@ -91,7 +98,7 @@ export function AutomationHeader({ track, param, min }: { track: Track; param: A
               <button className="btn btn-ghost" style={small} onClick={() => setPicking(null)}>{tr('Cancel')}</button>
             </>
           )}
-        </div>
+        </div>, document.body
       )}
       {!min && (
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -250,6 +257,7 @@ export function FxLane({ track, onSet, sticky = true }: { track: Track; onSet?: 
               </label>
             )
           })}
+          {f.type !== 'vst' && <AutomateButton track={track} fx={f} />}
           <button className="btn btn-ghost" style={{ ...small, padding: '0 3px' }} title={tr('Earlier in the chain')} disabled={i === 0} onClick={() => move(i, -1)}>◀</button>
           <button className="btn btn-ghost" style={{ ...small, padding: '0 3px' }} title={tr('Later in the chain')} disabled={i === list.length - 1} onClick={() => move(i, 1)}>▶</button>
           <button className="btn btn-ghost" style={{ ...small, padding: '0 3px', color: 'var(--red)' }} title={tr('Remove this effect')} onClick={() => updateTrack(track.id, { fx: list.filter((x) => x.id !== f.id) })}>×</button>
@@ -259,12 +267,28 @@ export function FxLane({ track, onSet, sticky = true }: { track: Track; onSet?: 
   )
 }
 
+// the settings of a built-in effect that can be automated, as entries of the parameter picker (value 0..1)
+export function builtinParams(fx: InsertFx): VstParam[] {
+  return (AUTOMATABLE[fx.type] ?? []).map((key) => {
+    const d = INSERT_PARAMS[fx.type].find((x) => x.key === key)!
+    const v = fx.p[key] ?? d.def
+    return { i: key as unknown as number, name: tr(d.label), value: Math.max(0, Math.min(1, toUnit(fx.type, key, v))), text: `${v}`, label: d.unit ?? '', steps: 0 }
+  })
+}
+const paramNamesFor = (fx: InsertFx, p: VstParam): Record<string, string> =>
+  ({ ...(fx.paramNames ?? {}), [String(p.i)]: p.name, ...(fx.type !== 'vst' ? { $: tr(INSERT_LABEL[fx.type]) } : {}) })
+
 // "Automate…" next to a plugin: pick one of its parameters, and a lane for it opens under the track in the Studio
 export function AutomateButton({ track, fx }: { track: Track; fx: InsertFx }): React.ReactElement | null {
   const [pick, setPick] = useState<{ list: VstParam[] | null; error?: string; q: string } | null>(null)
-  if (!fx.vst || track.id === '__master__') return null
-  const start = (): void => {
+  const [at, setAt] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  if ((!fx.vst && !AUTOMATABLE[fx.type]) || track.id === '__master__') return null
+  const start = (e: React.MouseEvent): void => {
     if (pick) { setPick(null); return }
+    // the list floats over everything (the effects lane and the rack are too small to hold it)
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setAt({ x: Math.max(8, Math.min(window.innerWidth - 268, r.right - 260)), y: Math.min(r.bottom + 4, window.innerHeight - 320) })
+    if (fx.type !== 'vst') { setPick({ list: builtinParams(fx), q: '' }); return }
     setPick({ list: null, q: '' })
     vstParams(fx, liveSampleRate()).then((list) => setPick({ list, q: '' })).catch((e: Error) => setPick({ list: [], error: e.message, q: '' }))
   }
@@ -273,7 +297,7 @@ export function AutomateButton({ track, fx }: { track: Track; fx: InsertFx }): R
     const t = st.project.tracks.find((x) => x.id === track.id)
     if (!t) return
     const key = `fx:${fx.id}:${p.i}` as AutoParam
-    const names = { ...(fx.paramNames ?? {}), [p.i]: p.name }
+    const names = paramNamesFor(fx, p)
     if (t.instrument?.id === fx.id) st.updateTrack(t.id, { instrument: { ...t.instrument, paramNames: names } })
     else st.updateTrack(t.id, { fx: (t.fx ?? []).map((f) => (f.id === fx.id ? { ...f, paramNames: names } : f)) })
     if (!t.automation?.[key]?.length) st.setAutomation(t.id, key, [{ beat: 0, value: p.value }])
@@ -283,10 +307,10 @@ export function AutomateButton({ track, fx }: { track: Track; fx: InsertFx }): R
   }
   return (
     <span style={{ position: 'relative', display: 'inline-flex' }}>
-      <button className="btn btn-ghost" style={{ ...small, padding: '0 6px' }} onClick={start}
+      <button className="btn btn-ghost" style={{ ...small, padding: '0 6px' }} onClick={(e) => start(e)}
         title={tr('Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track')}>{tr('Automate…')}</button>
-      {pick && (
-        <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 60, width: 240, display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', boxShadow: '0 6px 18px rgba(0,0,0,0.5)', padding: 6, fontSize: 10, color: 'var(--text-secondary)' }}
+      {pick && createPortal(
+        <div style={{ position: 'fixed', left: at.x, top: at.y, zIndex: 1000, width: 260, display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', boxShadow: '0 6px 18px rgba(0,0,0,0.5)', padding: 6, fontSize: 10, color: 'var(--text-secondary)' }}
           onPointerDown={(e) => e.stopPropagation()}>
           {!pick.list && <span>{tr('Loading the plugin…')}</span>}
           {pick.error && <span style={{ color: 'var(--red)' }}>{pick.error}</span>}
@@ -306,7 +330,7 @@ export function AutomateButton({ track, fx }: { track: Track; fx: InsertFx }): R
               <button className="btn btn-ghost" style={small} onClick={() => setPick(null)}>{tr('Cancel')}</button>
             </>
           )}
-        </div>
+        </div>, document.body
       )}
     </span>
   )
@@ -376,6 +400,7 @@ function VstControls({ fx, track }: { fx: InsertFx; track: Track }): React.React
 // the instrument of a MIDI track: the built-in synth, or one of the VST instruments found in Settings → Plugins
 export function InstrumentSelect({ track, style }: { track: Track; style?: React.CSSProperties }): React.ReactElement {
   const plugins = usePluginsStore((s) => s.plugins.filter((p) => p.isInstrument && !s.off.includes(p.id)))
+  const switchedOff = usePluginsStore((s) => s.plugins.filter((p) => p.isInstrument && s.off.includes(p.id)))
   const updateTrack = useProjectStore((s) => s.updateTrack)
   const cur = track.instrument?.vst?.pluginId ?? ''
   return (
@@ -396,6 +421,9 @@ export function InstrumentSelect({ track, style }: { track: Track; style?: React
       </optgroup>}
       {cur && !plugins.some((p) => p.id === cur) && <option value={cur}>{track.instrument?.vst?.name} ({tr('not found')})</option>}
       {!plugins.length && <option value="" disabled>{tr('No VST instruments yet: Settings → Plugins')}</option>}
+      {switchedOff.length > 0 && <optgroup label={tr('Switched off in Settings → Plugins (tick them there)')}>
+        {switchedOff.map((p) => <option key={p.id} value="" disabled>{p.name}</option>)}
+      </optgroup>}
     </select>
   )
 }

@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.73.0
+
+- **Automation of the built-in effects:** *Automate…* next to EQ (low, mid, high), compressor (threshold, ratio, attack, release, gain), filter (frequency, resonance), delay and reverb (mix), in the effects lane and the effect rack. The lane opens under the track; playback and export follow it.
+- **Automate… showed only the search box:** the list of parameters was cut off by the effects lane and the effect rack; it now floats over everything (also in the selector of an automation lane).
+- **VST instruments that disappeared:** a new plugin search no longer drops a plugin that worked before but did not answer this time (it stays in the list), and the folder of the free instruments (Dexed, Surge XT) is always searched. The instrument selector also shows instruments that are switched off in Settings → Plugins.
+
 ## 0.72.1
 
 - **Automate… next to every plugin** (effects lane, effect rack, Channel → Instrument): choose a knob of the plugin and its automation lane opens under the track, ready to draw. Before, the parameter was only in the selector of an automation lane.

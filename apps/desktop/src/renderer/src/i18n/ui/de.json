@@ -1420,5 +1420,6 @@
  "Keys play the selected track. Knobs 1–8 (CC 21–28): volume, pan, plugin knobs. Transport buttons: use Learn.": "Tasten spielen die gewählte Spur. Regler 1–8 (CC 21–28): Lautstärke, Pan, Plugin-Regler. Transport-Tasten: Lernen benutzen.",
  "The grid controls the Studio (see below).": "Das Raster steuert das Studio (siehe unten).",
  "Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track": "Einen Regler dieses Plugins automatisieren: wählen, dann seine Kurve in der Spur zeichnen, die sich unter der Spur öffnet",
- "Automate…": "Automatisieren…"
+ "Automate…": "Automatisieren…",
+ "Switched off in Settings → Plugins (tick them there)": "In Einstellungen → Plugins ausgeschaltet (dort Haken setzen)"
 }

@@ -128,8 +128,33 @@ export function insertDefaults(type: InsertType): Record<string, number> {
 
 const dbToGain = (db: number): number => Math.pow(10, db / 20)
 
+/** the settings of built-in effects that automation lanes can move */
+export const AUTOMATABLE: Partial<Record<InsertType, string[]>> = {
+  eq: ['low', 'mid', 'high'], compressor: ['threshold', 'ratio', 'attack', 'release', 'makeup'],
+  filter: ['freq', 'q'], delay: ['mix'], reverb: ['mix'],
+}
+/** a lane value 0..1 as the setting's own value (frequencies on a log scale) and back */
+export function fromUnit(type: InsertType, key: string, v: number): number {
+  const d = INSERT_PARAMS[type].find((x) => x.key === key)
+  if (!d) return v
+  if (key === 'freq' && d.min > 0) return d.min * Math.pow(d.max / d.min, v)
+  return d.min + v * (d.max - d.min)
+}
+export function toUnit(type: InsertType, key: string, value: number): number {
+  const d = INSERT_PARAMS[type].find((x) => x.key === key)
+  if (!d) return value
+  if (key === 'freq' && d.min > 0) return Math.log(value / d.min) / Math.log(d.max / d.min)
+  return (value - d.min) / (d.max - d.min)
+}
+
+type Setter = (value: number, time: number) => void
+// automation events [context time, 0xF4, key, value 0..1] into the setters of an effect
+const automator = (type: InsertType, set: Record<string, Setter>) => (events: Array<[number, number, number | string, number]>): void => {
+  for (const [t, , key, v] of events) set[String(key)]?.(fromUnit(type, String(key), v), t)
+}
+
 // one insert: input -> effect -> output. Delay and reverb mix their wet sound with the dry one (Mix).
-export function makeInsert(ctx: BaseAudioContext, fx: InsertFx, secPerBeat: number): { input: AudioNode; output: AudioNode; dispose?: () => void } {
+export function makeInsert(ctx: BaseAudioContext, fx: InsertFx, secPerBeat: number): { input: AudioNode; output: AudioNode; dispose?: () => void; automate?: (events: Array<[number, number, number | string, number]>) => void } {
   // a VST plugin: through the plugin host; switched off it still keeps its delay, so the track stays in time
   if (fx.type === 'vst') {
     try { return makeVstInsert(ctx, fx) } catch { const g = ctx.createGain(); return { input: g, output: g } }
@@ -143,12 +168,16 @@ export function makeInsert(ctx: BaseAudioContext, fx: InsertFx, secPerBeat: numb
     const mid = ctx.createBiquadFilter(); mid.type = 'peaking'; mid.frequency.value = 1000; mid.Q.value = 0.8; mid.gain.value = p.mid
     const hi = ctx.createBiquadFilter(); hi.type = 'highshelf'; hi.frequency.value = 8000; hi.gain.value = p.high
     input.connect(lo).connect(mid).connect(hi).connect(output)
+    const at = (prm: AudioParam): Setter => (v, t) => prm.setValueAtTime(v, Math.max(0, t))
+    return { input, output, automate: automator('eq', { low: at(lo.gain), mid: at(mid.gain), high: at(hi.gain) }) }
   } else if (fx.type === 'compressor') {
     const c = ctx.createDynamicsCompressor()
     c.threshold.value = p.threshold; c.ratio.value = p.ratio; c.knee.value = 6
     c.attack.value = p.attack / 1000; c.release.value = p.release / 1000
     const makeup = ctx.createGain(); makeup.gain.value = dbToGain(p.makeup)
     input.connect(c).connect(makeup).connect(output)
+    const at = (prm: AudioParam, f = (v: number): number => v): Setter => (v, t) => prm.setValueAtTime(f(v), Math.max(0, t))
+    return { input, output, automate: automator('compressor', { threshold: at(c.threshold), ratio: at(c.ratio), attack: at(c.attack, (v) => v / 1000), release: at(c.release, (v) => v / 1000), makeup: at(makeup.gain, dbToGain) }) }
   } else if (fx.type === 'limiter' || fx.type === 'saturation' || fx.type === 'stereo' || fx.type === 'dyneq') {
     // AudioWorklet processors of the Mastering page; loadWorklets(ctx) runs before the project is scheduled
     try {
@@ -165,6 +194,7 @@ export function makeInsert(ctx: BaseAudioContext, fx: InsertFx, secPerBeat: numb
     const f = ctx.createBiquadFilter()
     f.type = p.mode >= 0.5 ? 'highpass' : 'lowpass'; f.frequency.value = p.freq; f.Q.value = p.q
     input.connect(f).connect(output)
+    return { input, output, automate: automator('filter', { freq: (v, t) => f.frequency.setValueAtTime(v, Math.max(0, t)), q: (v, t) => f.Q.setValueAtTime(v, Math.max(0, t)) }) }
   } else {
     const dry = ctx.createGain(); dry.gain.value = 1 - p.mix * 0.5
     const wet = ctx.createGain(); wet.gain.value = p.mix
@@ -173,6 +203,7 @@ export function makeInsert(ctx: BaseAudioContext, fx: InsertFx, secPerBeat: numb
       ? { id: fx.id, name: '', effect: 'delay', volume: 1, muted: false, pan: 0, delayBeats: p.beats, feedback: p.feedback }
       : { id: fx.id, name: '', effect: 'reverb', volume: 1, muted: false, pan: 0, decay: p.decay }, secPerBeat)
     input.connect(send.input); send.output.connect(wet).connect(output)
+    return { input, output, automate: automator(fx.type, { mix: (v, t) => { wet.gain.setValueAtTime(v, Math.max(0, t)); dry.gain.setValueAtTime(1 - v * 0.5, Math.max(0, t)) } }) }
   }
   return { input, output }
 }

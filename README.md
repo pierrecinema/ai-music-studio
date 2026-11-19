@@ -29,24 +29,11 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.73
+### New in 0.80: AI Instruments
 
-- **VST instruments** such as Dexed can also be picked in *+ Effect…* of a MIDI track, and the new **CH** button next to FX opens the track's channel with its instrument (0.73.2). Automated effect knobs turn with their lane while the song plays (0.73.3).
-- **Automation of the built-in effects** (EQ, compressor, filter, delay and reverb mix) with *Automate…*, like the VST plugins.
-
-### New in 0.72
-
-- **MIDI controllers** (Settings → MIDI): keyboards, pad controllers and Launchpads are found by themselves; ready mappings for known devices such as the Akai MPK Mini, **MIDI Learn** for any control, and a **Launchpad** grid for mute, solo, select, volume and markers.
-
-### New in 0.71
-
-- **Automation of VST plugin parameters** (any knob of an effect or instrument, drawn in the track's automation lane, in playback and export) and **presets** for plugins (save the settings under a name, load them in any project).
-
-### New in 0.70
-
-- 0.70.1: master effects, markers and loop now open again with the project; select several notes with a frame in the Piano Roll; the effect rack folds away.
-
-- **Effects and VST plugins on the master** (Studio → *Master FX*, Mixer), **MIDI files** in and out (.mid), a **velocity lane** in the Piano Roll, **fades and clip volume** dragged right on the clip, and the **Swiss** look rebuilt.
+- **Virtual band:** a drummer (15 styles from rock to afro house and trap), a bass player and a guitarist play along with your song. They follow its chords (read from your MIDI tracks or typed in, like `Am F C G`) and become MIDI tracks you can edit, with new built-in sounds: drum kit, guitars, electric piano, 808.
+- **AI orchestra (MIDI-DDSP):** violin, cello, flute, trumpet and 9 more instruments play your MIDI track like real musicians, with vibrato, bow and breath, on the processor (no graphics card needed).
+- **Any instrument by text (ACE-Step cover):** describe an instrument or style and ACE-Step plays your MIDI track in it (best with an NVIDIA card).
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features

@@ -4,8 +4,7 @@ These menu items are dimmed and open a *Coming soon* page. They are in developme
 
 | Menu | What it will do |
 |---|---|
-| 🎤 **Vocal Editor** | AI singing from notes and lyrics, voice cloning |
-| 🎻 **AI Instruments** | AI-played instruments for your MIDI tracks |
+| 🎤 **Vocal Editor** (0.90) | AI singing from notes and lyrics: short vocals and one-shots first, then whole lines from a MIDI track |
 | 🎙 **Karaoke Export** | word timing, `.lrc` files and lyric videos |
 | 🎬 **Video Composer** | music that follows the cuts of your video |
 | ☁ **Cloud Rendering (Pro)** | optional: render on fast NVIDIA cards in the cloud. Everything else stays free and local |

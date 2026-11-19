@@ -58,6 +58,8 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ## Ideas from the owner (19.11.2026)
 
+- **AI Instruments (0.80.0):** virtual drummer, bass player, guitarist (owner's wish), MIDI-DDSP orchestra, ACE-Step cover. The singer is the Vocal Editor (0.90). MIDI-DDSP could only be tested here with untrained models (the model download from GitHub was blocked in the cloud session): the owner's first real run is test 16.8. ACE-Step cover cannot be tested by the owner without NVIDIA.
+
 - **MIDI hardware:** 0.72 has Settings → MIDI. Later: Launchpad as a clip grid (needs a session / clip view), more device profiles (the owner tests with an Akai MPK Mini and a few others).
 - **External hardware synths:** midi.guide (github.com/pencilresearch/midi, CSV per device, CC BY-SA 4.0, attribution needed) lists the CC/NRPN numbers of many synthesizers: could give named CC automation lanes for a MIDI track that plays an external synth. cc.mxrlkn.com could not be reached from the cloud session.
 

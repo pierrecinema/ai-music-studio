@@ -17,14 +17,14 @@ exported song without help from outside the app. Linux comes after RC 1.0.
 | Mastering step 6 | Album: several songs, the same loudness, gaps, one export | **pending list** (owner, 19.11.2026) |
 | Looks | Swiss (#73) rebuilt; Analog console removed in 0.70.1 (owner) | done |
 
-## 0.80: Vocal Editor (owner, 18.11.2026)
+## 0.80: AI Instruments (owner, 19.11.2026: first, all instruments in one version)
+
+- A MIDI track rendered to audio by AI in a chosen instrument or style, placed back in the Studio as an audio clip.
+
+## 0.90: Vocal Editor (owner, 18.11.2026; moved after AI Instruments on 19.11.2026)
 
 - Short vocals first: a word, a phrase, one-shots and short vocal loops (owner's wish of 12.11.), voice (male / female / style), language, tempo and key; trimmed to the sung part and saved to the Library with tags.
 - Then longer vocals from notes and lyrics on a MIDI track, placed in the Studio.
-
-## 0.90: AI Instruments (owner, 18.11.2026)
-
-- A MIDI track rendered to audio by AI in a chosen instrument or style, placed back in the Studio as an audio clip.
 
 Karaoke Export, Video Composer and Cloud Rendering (Pro): **decide**: hidden in 1.0 (no "coming soon" pages) or built later.
 

@@ -1368,5 +1368,6 @@
  "Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track": "Automatize um botão do plugin: escolha-o e desenhe a curva na faixa que abre abaixo da trilha",
  "Automate…": "Automatizar…",
  "Switched off in Settings → Plugins (tick them there)": "Desativados em Configurações → Plugins (marque-os lá)",
- "Other plugins (only if they can play notes)": "Outros plugins (só se tocarem notas)"
+ "Other plugins (only if they can play notes)": "Outros plugins (só se tocarem notas)",
+ "VST instruments (play the notes of this track)": "Instrumentos VST (tocam as notas desta faixa)"
 }

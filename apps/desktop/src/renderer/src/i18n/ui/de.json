@@ -1422,5 +1422,6 @@
  "Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track": "Einen Regler dieses Plugins automatisieren: wählen, dann seine Kurve in der Spur zeichnen, die sich unter der Spur öffnet",
  "Automate…": "Automatisieren…",
  "Switched off in Settings → Plugins (tick them there)": "In Einstellungen → Plugins ausgeschaltet (dort Haken setzen)",
- "Other plugins (only if they can play notes)": "Andere Plugins (nur wenn sie Noten spielen können)"
+ "Other plugins (only if they can play notes)": "Andere Plugins (nur wenn sie Noten spielen können)",
+ "VST instruments (play the notes of this track)": "VST-Instrumente (spielen die Noten dieser Spur)"
 }

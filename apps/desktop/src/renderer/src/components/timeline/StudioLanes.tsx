@@ -259,6 +259,59 @@ export function FxLane({ track, onSet, sticky = true }: { track: Track; onSet?: 
   )
 }
 
+// "Automate…" next to a plugin: pick one of its parameters, and a lane for it opens under the track in the Studio
+export function AutomateButton({ track, fx }: { track: Track; fx: InsertFx }): React.ReactElement | null {
+  const [pick, setPick] = useState<{ list: VstParam[] | null; error?: string; q: string } | null>(null)
+  if (!fx.vst || track.id === '__master__') return null
+  const start = (): void => {
+    if (pick) { setPick(null); return }
+    setPick({ list: null, q: '' })
+    vstParams(fx, liveSampleRate()).then((list) => setPick({ list, q: '' })).catch((e: Error) => setPick({ list: [], error: e.message, q: '' }))
+  }
+  const choose = (p: VstParam): void => {
+    const st = useProjectStore.getState()
+    const t = st.project.tracks.find((x) => x.id === track.id)
+    if (!t) return
+    const key = `fx:${fx.id}:${p.i}` as AutoParam
+    const names = { ...(fx.paramNames ?? {}), [p.i]: p.name }
+    if (t.instrument?.id === fx.id) st.updateTrack(t.id, { instrument: { ...t.instrument, paramNames: names } })
+    else st.updateTrack(t.id, { fx: (t.fx ?? []).map((f) => (f.id === fx.id ? { ...f, paramNames: names } : f)) })
+    if (!t.automation?.[key]?.length) st.setAutomation(t.id, key, [{ beat: 0, value: p.value }])
+    const lanes = openLanes(useProjectStore.getState().project.tracks.find((x) => x.id === t.id)!)
+    st.updateTrack(t.id, { autoLanes: lanes.includes(key) ? lanes : [...lanes, key], showAutomation: null })
+    setPick(null)
+  }
+  return (
+    <span style={{ position: 'relative', display: 'inline-flex' }}>
+      <button className="btn btn-ghost" style={{ ...small, padding: '0 6px' }} onClick={start}
+        title={tr('Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track')}>{tr('Automate…')}</button>
+      {pick && (
+        <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 60, width: 240, display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', boxShadow: '0 6px 18px rgba(0,0,0,0.5)', padding: 6, fontSize: 10, color: 'var(--text-secondary)' }}
+          onPointerDown={(e) => e.stopPropagation()}>
+          {!pick.list && <span>{tr('Loading the plugin…')}</span>}
+          {pick.error && <span style={{ color: 'var(--red)' }}>{pick.error}</span>}
+          {pick.list && (
+            <>
+              <input autoFocus placeholder={tr('Search a parameter…')} value={pick.q} style={{ fontSize: 10 }}
+                onChange={(e) => setPick({ ...pick, q: e.target.value })} onKeyDown={(e) => { if (e.key === 'Escape') setPick(null); e.stopPropagation() }} />
+              <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+                {pick.list.filter((p) => p.name.toLowerCase().includes(pick.q.toLowerCase())).slice(0, 300).map((p) => (
+                  <div key={p.i} onClick={() => choose(p)} style={{ padding: '2px 4px', cursor: 'pointer' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-hover)' }} onMouseLeave={(e) => { e.currentTarget.style.background = '' }}>
+                    {p.name} <span style={{ color: 'var(--text-muted)' }}>{p.text}{p.label ? ` ${p.label}` : ''}</span>
+                  </div>
+                ))}
+                {!pick.list.length && !pick.error && <span>{tr('This plugin has no automatable parameters.')}</span>}
+              </div>
+              <button className="btn btn-ghost" style={small} onClick={() => setPick(null)}>{tr('Cancel')}</button>
+            </>
+          )}
+        </div>
+      )}
+    </span>
+  )
+}
+
 // Presets of a plugin: its settings saved under a name (for every project), loaded with one click
 export function PresetSelect({ fx, style }: { fx: InsertFx; style?: React.CSSProperties }): React.ReactElement | null {
   const api = window.api?.plugins
@@ -288,9 +341,9 @@ export function PresetSelect({ fx, style }: { fx: InsertFx; style?: React.CSSPro
   }
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-      <select value="" title={tr('Presets: save the settings of this plugin under a name, load them in any project')} style={{ fontSize: 10, maxWidth: 110, ...style }}
+      <select value="" title={tr('Presets: save the settings of this plugin under a name, load them in any project')} style={{ fontSize: 10, maxWidth: 120, fontWeight: 700, color: 'var(--accent-light)', ...style }}
         onMouseDown={refresh} onChange={(e) => { const v = e.target.value; e.target.value = ''; e.target.blur(); void run(v) }}>
-        <option value="">{tr('Presets…')}</option>
+        <option value="">★ {tr('Presets…')}</option>
         {list.length > 0 && <optgroup label={tr('Load')}>{list.map((p) => <option key={p.name} value={`load:${p.name}`}>{p.name}</option>)}</optgroup>}
         <option value="save">{tr('Save current settings…')}</option>
         {list.length > 0 && <optgroup label={tr('Delete')}>{list.map((p) => <option key={p.name} value={`del:${p.name}`}>× {p.name}</option>)}</optgroup>}
@@ -314,6 +367,7 @@ function VstControls({ fx, track }: { fx: InsertFx; track: Track }): React.React
         {busy ? tr('Loading…') : tr('Open')}
       </button>
       <PresetSelect fx={fx} />
+      <AutomateButton track={track} fx={fx} />
       {failure && <span style={{ color: 'var(--red)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={failure}>⚠ {tr('not loaded: plays without it')}</span>}
     </>
   )

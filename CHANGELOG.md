@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.72.1
+
+- **Automate… next to every plugin** (effects lane, effect rack, Channel → Instrument): choose a knob of the plugin and its automation lane opens under the track, ready to draw. Before, the parameter was only in the selector of an automation lane.
+- **Presets** stand out more (★ Presets…).
+- **Launchpads:** recognised by their short Windows port names (LPX MIDI, LPMiniMK3 MIDI, LPProMK3 MIDI); older models now work too: Launchpad MK2, Launchpad Pro (MK2), and the original Launchpad, S and Mini MK1/MK2.
+
 ## 0.72.0
 
 - **Settings → MIDI:** every connected MIDI device (keyboards, pad controllers, Launchpads) is listed as soon as it is plugged in. Per device, like in Ableton: **Notes** (keys and pads play the selected track and are recorded) and **Control** (knobs, faders and buttons drive the app).

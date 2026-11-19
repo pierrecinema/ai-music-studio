@@ -1364,5 +1364,7 @@
  "Plugin knob 5": "Mando del plugin 5",
  "Plugin knob 6": "Mando del plugin 6",
  "Plugin knob 7": "Mando del plugin 7",
- "Plugin knob 8": "Mando del plugin 8"
+ "Plugin knob 8": "Mando del plugin 8",
+ "Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track": "Automatiza un mando de este plugin: elígelo y dibuja su curva en el carril que se abre bajo la pista",
+ "Automate…": "Automatizar…"
 }

@@ -417,6 +417,8 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   check('MPK Mini MK2 before the general MPK Mini', profileFor('MPK Mini Mk II')?.id === 'mpk-mini-2', profileFor('MPK Mini Mk II')?.id)
   check('Launchpad X and Mini, Launchkey Mini', profileFor('Launchpad X')?.launchpad === 'x' && profileFor('Launchpad Mini MK3')?.launchpad === 'mini3' && profileFor('Launchkey Mini MK3 MIDI')?.id === 'launchkey-mini-3')
   check('unknown device', profileFor('USB MIDI Interface') === null)
+  check('Launchpads by their Windows port names and older models', profileFor('LPX MIDI')?.launchpad === 'x' && profileFor('LPMiniMK3 MIDI')?.launchpad === 'mini3' && profileFor('LPProMK3 MIDI')?.launchpad === 'pro3'
+    && profileFor('Launchpad MK2')?.launchpad === 'mk2' && profileFor('Launchpad Pro')?.launchpad === 'pro2' && profileFor('Launchpad Mini')?.launchpad === 'classic' && profileFor('Launchpad S')?.launchpad === 'classic')
   check('keys of messages', keyOf(0xb0, 70) === 'cc:1:70' && keyOf(0x99, 44) === 'note:10:44' && keyOf(0xe0, 0) === null)
   const k1 = profileFor('MPK mini 3')!.mappings.find((m) => m.key === 'cc:1:70')
   check('MPK K1 = volume, K3 = plugin knob 1', k1?.target.kind === 'selected' && JSON.stringify(profileFor('MPK mini 3')!.mappings.find((m) => m.key === 'cc:1:72')?.target) === JSON.stringify({ kind: 'plugin', slot: 0 }))

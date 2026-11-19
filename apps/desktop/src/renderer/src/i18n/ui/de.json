@@ -1350,5 +1350,20 @@
  "Velocity {v}": "Anschlag {v}",
  "{name}: the MIDI file has no notes.": "{name}: die MIDI-Datei enthält keine Noten.",
  "{name}: this MIDI file cannot be read ({error}).": "{name}: diese MIDI-Datei kann nicht gelesen werden ({error}).",
- "{n} beats": "{n} Schläge"
+ "{n} beats": "{n} Schläge",
+ "Delete the preset “{name}”?": "Preset „{name}“ löschen?",
+ "Fold the effect rack away (click the strip to show it again)": "Effekt-Rack einklappen (Klick auf den Streifen öffnet es wieder)",
+ "Load": "Laden",
+ "Loaded: {name}": "Geladen: {name}",
+ "Loading the plugin…": "Plugin wird geladen…",
+ "Name for these settings of {name}": "Name für diese Einstellungen von {name}",
+ "Plugin parameter": "Plugin-Regler",
+ "Presets: save the settings of this plugin under a name, load them in any project": "Presets: Einstellungen dieses Plugins unter einem Namen speichern und in jedem Projekt laden",
+ "Presets…": "Presets…",
+ "Save current settings…": "Aktuelle Einstellungen speichern…",
+ "Save preset": "Preset speichern",
+ "Search a parameter…": "Regler suchen…",
+ "Show the effect rack": "Effekt-Rack zeigen",
+ "This plugin has no automatable parameters.": "Dieses Plugin hat keine automatisierbaren Regler.",
+ "{name}: choose a parameter…": "{name}: Regler wählen…"
 }

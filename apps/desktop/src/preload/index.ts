@@ -86,6 +86,10 @@ const api = {
     freeInstalled: () => ipcRenderer.invoke('plugins:free-installed'),
     freeInstall: (id: string) => ipcRenderer.invoke('plugins:free-install', id),
     freePage: (id: string) => ipcRenderer.invoke('plugins:free-page', id),
+    presetList: (pluginId: string) => ipcRenderer.invoke('presets:list', pluginId),
+    presetGet: (pluginId: string, name: string) => ipcRenderer.invoke('presets:get', pluginId, name),
+    presetSave: (pluginId: string, name: string, state: string) => ipcRenderer.invoke('presets:save', pluginId, name, state),
+    presetDelete: (pluginId: string, name: string) => ipcRenderer.invoke('presets:delete', pluginId, name),
     onFreeProgress: (cb: (p: { id: string; done: number; total: number; text: string }) => void) => {
       const h = (_: unknown, p: { id: string; done: number; total: number; text: string }): void => cb(p)
       ipcRenderer.on('plugins:free-progress', h)

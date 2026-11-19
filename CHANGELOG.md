@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.71.0
+
+- **Automation of plugin parameters:** in an automation lane of a track (**A**), the selector now offers *Plugin parameter → <plugin>: choose a parameter…*: pick any parameter of a VST effect or instrument on the track (search box), then draw its curve like volume or pan. Playback and export follow it to the sample (the plugin host cuts its blocks at each change).
+- **Presets for plugins:** *Presets…* next to *Open* (effects lane, effect rack, Channel → Instrument): *Save current settings…* under a name, load them again in any project, delete them. They are kept per plugin in the app's data folder.
+- **Plugin windows:** a minimised plugin window comes back when you press *Open* again.
+
 ## 0.70.2
 
 - **Narrow windows:** the Studio no longer pushes the effect rack (Hardware rack look) and the AI panel out of the window; its toolbar wraps instead. The fold key › of the effect rack is now at its left, always in view.

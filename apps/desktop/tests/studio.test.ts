@@ -15,6 +15,7 @@ import { measureBalance, PROFILES, suggest, bassWidth } from '../src/renderer/sr
 import { defaultChain } from '../src/renderer/src/audio/master/chain'
 import { applyEdits, applyOp, copyPart, fadeShape } from '../src/renderer/src/audio/master/edit'
 import { VstLink, packBlock, unpackBlock } from '../src/renderer/src/audio/vst/link'
+import { paramEvents, fxParamOf } from '../src/renderer/src/audio/automation'
 import { buildMap, comboTaken, eventToCombo } from '../src/renderer/src/shortcuts/registry'
 import { parseMidi, writeMidi } from '../src/renderer/src/lib/midiFile'
 import { parseProject } from '../src/renderer/src/project/format'
@@ -391,6 +392,22 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   const back = parseProject(JSON.stringify({ format: 'ams-project', version: 1, savedWith: 'test', project: proj }))
   check('project file keeps master effects, markers, loop, returns, tempo changes',
     back.masterFx?.[0]?.p.low === 2 && back.markers?.[0]?.name === 'Verse' && back.loop?.end === 8 && back.returns?.length === 1 && back.tempoMap?.[0]?.bpm === 90, JSON.stringify(back))
+}
+
+// ── automation of plugin parameters ──
+{
+  check('fx lane key', JSON.stringify(fxParamOf('fx:abc:12' as never)) === JSON.stringify({ fxId: 'abc', index: 12 }) && fxParamOf('volume') === null)
+  // a ramp from 0 at beat 0 to 1 at beat 4 (120 BPM: 2 s), events every 10 ms, then flat
+  const ev = paramEvents([{ beat: 0, value: 0 }, { beat: 4, value: 1 }], 7, 0, 4, (b) => b * 0.5)
+  check('param events: start, end, ramp, index', ev.length > 150 && ev[0][0] === 0 && ev[0][3] === 0 && Math.abs(ev[ev.length - 1][0] - 2) < 1e-9 && ev[ev.length - 1][3] === 1 && ev.every((e) => e[1] === 0xf4 && e[2] === 7), String(ev.length))
+  const mid = ev.find((e) => Math.abs(e[0] - 1) < 0.006)
+  check('param events: half way is 0.5', !!mid && Math.abs(mid[3] - 0.5) < 0.01)
+  const late = paramEvents([{ beat: 0, value: 0.2 }, { beat: 2, value: 0.8 }], 1, 3, 3, (b) => b)
+  check('param events: playing after the last point sends the last value once', late.length === 1 && Math.abs(late[0][3] - 0.8) < 1e-9, JSON.stringify(late))
+  // the frame: parameter changes go after the MIDI with flag 2
+  const f = packBlock(1, 0, [new Float32Array(4)], false, [[0, 0x90, 60, 100], [2, 0xf4, 5, 0.25]])
+  const v = new DataView(f)
+  check('frame with parameters: flag, MIDI count, param count, index, value', (v.getUint16(14, true) & 2) === 2 && v.getUint32(20, true) === 1 && v.getUint32(32, true) === 1 && v.getUint32(36, true) === 2 && v.getUint32(40, true) === 5 && Math.abs(v.getFloat32(44, true) - 0.25) < 1e-7 && f.byteLength === 48 + 16)
 }
 
 console.log(`${passed} passed, ${failed} failed`)

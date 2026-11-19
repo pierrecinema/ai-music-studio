@@ -27,12 +27,15 @@ let ws = null, ready = false, gseq = 1
 const links = new Map()          // key -> { port, instance }
 const out = new Map()            // global seq -> { key, seq }
 let flushing = null
-function pack(instance, seq, block, reset, midi) {
-  midi = midi || []
-  const frames = block[0].length, head = 24 + midi.length * 8, buf = new ArrayBuffer(head + block.length * frames * 4), v = new DataView(buf)
+function pack(instance, seq, block, reset, events) {
+  // events: MIDI [offset, status, d1, d2]; parameter changes (automation) [offset, 0xF4, index, value 0..1]
+  const midi = (events || []).filter((e) => e[1] !== 0xF4), params = (events || []).filter((e) => e[1] === 0xF4)
+  const frames = block[0].length, pAt = 24 + midi.length * 8, head = pAt + (params.length ? 4 + params.length * 12 : 0)
+  const buf = new ArrayBuffer(head + block.length * frames * 4), v = new DataView(buf)
   v.setUint32(0, MAGIC, true); v.setUint32(4, instance, true); v.setUint32(8, seq >>> 0, true)
-  v.setUint16(12, block.length, true); v.setUint16(14, reset ? 1 : 0, true); v.setUint32(16, frames, true); v.setUint32(20, midi.length, true)
+  v.setUint16(12, block.length, true); v.setUint16(14, (reset ? 1 : 0) | (params.length ? 2 : 0), true); v.setUint32(16, frames, true); v.setUint32(20, midi.length, true)
   midi.forEach((e, i) => { const o = 24 + i * 8; v.setUint32(o, e[0], true); v.setUint8(o + 4, e[1]); v.setUint8(o + 5, e[2]); v.setUint8(o + 6, e[3]) })
+  if (params.length) { v.setUint32(pAt, params.length, true); params.forEach((e, i) => { const o = pAt + 4 + i * 12; v.setUint32(o, e[0], true); v.setUint32(o + 4, e[2], true); v.setFloat32(o + 8, e[3], true) }) }
   block.forEach((c, i) => new Float32Array(buf, head + i * frames * 4, frames).set(c))
   return buf
 }
@@ -402,9 +405,9 @@ export async function collectVstStates(project: Project): Promise<Project> {
   }
 }
 
-/** opens (or brings to the front) the plugin's own window */
-export async function showVstEditor(fx: InsertFx, sampleRate: number, trackName: string): Promise<void> {
-  if (!fx.vst) return
+/** the running copy of a plugin of the Studio (loaded now if it is not yet) */
+async function liveFor(fx: InsertFx, sampleRate: number): Promise<Live> {
+  if (!fx.vst) throw new Error('not a plugin')
   // the plugin may still be loading (the project was just opened, or Play was pressed): use that one
   if (!live.get(fx.id) && loading.has(fx.id)) await loading.get(fx.id)
   let l = live.get(fx.id)
@@ -417,7 +420,35 @@ export async function showVstEditor(fx: InsertFx, sampleRate: number, trackName:
     loading.set(fx.id, p.catch(() => null))
     l = await p
   }
+  return l
+}
+
+/** opens (or brings to the front) the plugin's own window */
+export async function showVstEditor(fx: InsertFx, sampleRate: number, trackName: string): Promise<void> {
+  if (!fx.vst) return
+  const l = await liveFor(fx, sampleRate)
   await l.client.call('editor', { instance: l.instance, show: true, title: `${fx.vst.name} – ${trackName}`, parent: l.client.windowHandle })
+}
+
+export interface VstParam { i: number; name: string; value: number; text: string; label: string; steps: number }
+/** the automatable parameters of a plugin (it is loaded if needed) */
+export async function vstParams(fx: InsertFx, sampleRate: number): Promise<VstParam[]> {
+  const l = await liveFor(fx, sampleRate)
+  return (await l.client.call<{ params: VstParam[] }>('params', { instance: l.instance })).params ?? []
+}
+
+/** the plugin's settings as they are now (base64), loading it if needed: for saving a preset */
+export async function vstStateNow(fx: InsertFx, sampleRate: number): Promise<string> {
+  const l = await liveFor(fx, sampleRate)
+  return (await l.client.call<{ state: string }>('getState', { instance: l.instance })).state
+}
+
+/** puts saved settings (a preset) into the running plugin */
+export async function vstApplyState(fx: InsertFx, sampleRate: number, state: string): Promise<void> {
+  const l = await liveFor(fx, sampleRate)
+  const r = await l.client.call<{ latency?: number }>('setState', { instance: l.instance, state })
+  if (typeof r.latency === 'number') l.latency = r.latency
+  changed()
 }
 
 // ── offline rendering (export): separate instances with the saved settings ──────
@@ -476,7 +507,7 @@ function instanceFor(ctx: BaseAudioContext, fx: InsertFx): { instance: number; l
   return live.get(fx.id)
 }
 
-export function makeVstInsert(ctx: BaseAudioContext, fx: InsertFx): { input: AudioNode; output: AudioNode; dispose: () => void } {
+export function makeVstInsert(ctx: BaseAudioContext, fx: InsertFx): { input: AudioNode; output: AudioNode; dispose: () => void; automate: (events: number[][]) => void } {
   const inst = instanceFor(ctx, fx)
   const node = new AudioWorkletNode(ctx, 'ams-vst', {
     numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit',
@@ -487,6 +518,8 @@ export function makeVstInsert(ctx: BaseAudioContext, fx: InsertFx): { input: Aud
   if (inst) inst.client.attach(node, key, inst.instance)
   return {
     input: node, output: node,
+    // automation: [context time in seconds, 0xF4, parameter index, value 0..1]
+    automate: (events: number[][]) => { if (events.length) node.port.postMessage({ events }) },
     dispose: () => { node.port.postMessage({ dispose: true }); inst?.client.detach(key) },
   }
 }

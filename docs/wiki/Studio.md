@@ -46,6 +46,10 @@ The blue line shows where the song plays. **Click or double-click** any empty pl
 ## Automation
 **A** on the track (Ableton: A; or right-click → *Show automation*) opens **volume and pan** as two lanes below the track. In each lane: click adds a point, drag moves it (Shift: only in time, Alt: off the grid), double-click deletes it, **Clear** removes all. **▾ / ▸** makes a lane small, the selector switches it to another value (pan, a send), **+** adds a lane, **×** closes it (the points stay). Playback and export follow the curves.
 
+**Plugin parameters:** in the selector of a lane, *Plugin parameter → <plugin>: choose a parameter…* lists every automatable parameter of a VST effect or instrument on the track (with a search box). The lane starts at the plugin's current value; draw it like volume. Playback and export follow it exactly.
+
+**Presets:** *Presets…* next to a plugin's *Open* saves its current settings under a name (*Save current settings…*) and loads them again in any project.
+
 ## Effects (FX)
 **FX** on the track opens its effects lane: **+ Effect…** adds an **EQ** (low / mid / high), **compressor**, **delay** (in beats), **reverb**, **filter** (low-pass / high-pass), and the processors of [[Mastering]]: **dynamic EQ**, **saturation / exciter**, **stereo / mono bass** and the **true-peak limiter**. Every effect has its settings as sliders (double-click: default), ⏻ on / bypass, ◀ ▶ for the order and × to remove it. The sound goes through them in order, before the fader.
 

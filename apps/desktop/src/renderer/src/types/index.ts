@@ -37,7 +37,7 @@ export interface Track {
 }
 
 // automated parameters: volume and pan of the track, and the send level to each return track ("send:<id>")
-export type AutoParam = 'volume' | 'pan' | `send:${string}`
+export type AutoParam = 'volume' | 'pan' | `send:${string}` | `fx:${string}:${number}`   // fx: a parameter of a VST plugin on the track (value 0..1)
 export interface AutoPoint { beat: number; value: number }     // value: volume/send 0..1, pan -1..1
 
 // an effect in a track (insert): a built-in effect, or a VST plugin ('vst', see audio/vst/host.ts)
@@ -48,6 +48,7 @@ export interface InsertFx {
   on: boolean
   p: Record<string, number>               // the settings, see INSERT_PARAMS in audio/fx.ts (empty for a plugin)
   vst?: VstRef
+  paramNames?: Record<string, string>     // VST: names of its automated parameters (index -> name), for the lanes
 }
 
 // a VST plugin in a project: which plugin (the host's description, so it can be loaded again) and its settings

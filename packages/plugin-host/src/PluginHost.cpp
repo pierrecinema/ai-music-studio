@@ -229,6 +229,38 @@ juce::var PluginHost::handle (std::shared_ptr<WsConnection>, const juce::var& ms
         { std::lock_guard<std::mutex> l (inst->lock); inst->plugin->releaseResources(); }
         return okay();
     }
+    if (cmd == "params")
+    {
+        // the automatable parameters: index (as in the audio frame), name, value 0..1, the value as text, steps
+        juce::Array<juce::var> list;
+        {
+            std::lock_guard<std::mutex> l (inst->lock);
+            auto& ps = inst->plugin->getParameters();
+            for (int i = 0; i < ps.size() && list.size() < 2048; ++i)
+            {
+                auto* q = ps[i];
+                if (! q->isAutomatable()) continue;
+                auto* o = new juce::DynamicObject();
+                o->setProperty ("i", i);
+                o->setProperty ("name", q->getName (64));
+                o->setProperty ("value", q->getValue());
+                o->setProperty ("text", q->getText (q->getValue(), 32));
+                o->setProperty ("label", q->getLabel());
+                o->setProperty ("steps", q->getNumSteps());
+                list.add (juce::var (o));
+            }
+        }
+        auto r = okay(); r.getDynamicObject()->setProperty ("params", list); return r;
+    }
+    if (cmd == "paramText")
+    {
+        // how a value of a parameter reads (for the automation lane): {index, value} -> text
+        std::lock_guard<std::mutex> l (inst->lock);
+        auto& ps = inst->plugin->getParameters();
+        int i = (int) msg.getProperty ("index", -1);
+        if (i < 0 || i >= ps.size()) return fail ("no such parameter");
+        auto r = okay(); r.getDynamicObject()->setProperty ("text", ps[i]->getText ((float) (double) msg.getProperty ("value", 0.0), 32)); return r;
+    }
     if (cmd == "getState")
     {
         juce::MemoryBlock mb;
@@ -278,6 +310,11 @@ juce::var PluginHost::handle (std::shared_ptr<WsConnection>, const juce::var& ms
        #else
         w->setAlwaysOnTop (true);
        #endif
+        // a minimised plugin window comes back (an owned window stays a small bar otherwise, and Open did nothing)
+        if (w->isMinimised()) w->setMinimised (false);
+       #if JUCE_WINDOWS
+        if (auto* hwnd = (HWND) w->getWindowHandle()) if (IsIconic (hwnd)) ShowWindow (hwnd, SW_RESTORE);
+       #endif
         w->toFront (true);
         return okay();
     }
@@ -295,7 +332,18 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
     auto u16 = [bytes] (size_t o) { uint16_t v; memcpy (&v, bytes + o, 2); return juce::ByteOrder::swapIfBigEndian (v); };
     if (u32 (0) != kAudioMagic) return;
     int iid = (int) u32 (4), channels = u16 (12), flags = u16 (14), frames = (int) u32 (16), midiCount = (int) u32 (20);
+    if (midiCount < 0 || midiCount > 65536) return;
     size_t audioOffset = 24 + (size_t) midiCount * 8;
+    // flag 2: parameter changes (automation) after the MIDI: u32 count, then count x (u32 offset, u32 index, f32 value)
+    size_t paramsAt = audioOffset;
+    int paramCount = 0;
+    if (flags & 2)
+    {
+        if (data.getSize() < paramsAt + 4) return;
+        paramCount = (int) u32 (paramsAt);
+        if (paramCount < 0 || paramCount > 65536) return;
+        audioOffset = paramsAt + 4 + (size_t) paramCount * 12;
+    }
     if (channels < 1 || channels > 8 || frames < 1 || frames > 65536 || data.getSize() < audioOffset + (size_t) channels * frames * 4) return;
     // the app's master mix for the sound card (Settings → Audio → ASIO): no reply
     if ((uint32_t) iid == kOutputInstance)
@@ -323,9 +371,21 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
         auto& p = *inst->plugin;
         if (flags & 1) p.reset();
         int bufCh = inst->buffer.getNumChannels();
-        for (int pos = 0; pos < frames; pos += inst->maxBlock)
+        auto& params = p.getParameters();
+        auto paramOffset = [&] (int k) { uint32_t at; memcpy (&at, bytes + paramsAt + 4 + (size_t) k * 12, 4); return (int) juce::ByteOrder::swapIfBigEndian (at); };
+        int nextParam = 0;
+        for (int pos = 0; pos < frames;)
         {
+            // parameter changes due at this point are applied first; the block is cut at the next one
+            while (nextParam < paramCount && paramOffset (nextParam) <= pos)
+            {
+                auto* e = bytes + paramsAt + 4 + (size_t) nextParam * 12;
+                uint32_t index; float value; memcpy (&index, e + 4, 4); memcpy (&value, e + 8, 4);
+                if ((int) index < params.size()) params[(int) index]->setValue (juce::jlimit (0.0f, 1.0f, value));
+                ++nextParam;
+            }
             int n = juce::jmin (inst->maxBlock, frames - pos);
+            if (nextParam < paramCount) n = juce::jmax (1, juce::jmin (n, paramOffset (nextParam) - pos));
             inst->buffer.setSize (bufCh, n, false, false, true);
             inst->buffer.clear();
             for (int c = 0; c < juce::jmin (bufCh, channels); ++c)
@@ -340,6 +400,7 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
             p.processBlock (inst->buffer, inst->midi);
             for (int c = 0; c < channels; ++c)
                 memcpy (res + (size_t) c * frames + pos, inst->buffer.getReadPointer (juce::jmin (c, bufCh - 1)), (size_t) n * 4);
+            pos += n;
         }
         latency = (uint32_t) juce::jmax (0, p.getLatencySamples());
         // CPU: time spent processing per second of real time
@@ -349,10 +410,12 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
     }
     uint32_t lat = juce::ByteOrder::swapIfBigEndian (latency);
     memcpy (outBytes + 20, &lat, 4);
-    // the reply carries no MIDI: drop the events, keep the header
-    if (midiCount > 0)
+    // the reply carries no MIDI and no parameter changes: drop them, keep the header
+    if (midiCount > 0 || (flags & 2))
     {
         juce::MemoryBlock compact (outBytes, 24);
+        uint16_t f = juce::ByteOrder::swapIfBigEndian ((uint16_t) (flags & 1));
+        memcpy (static_cast<uint8_t*> (compact.getData()) + 14, &f, 2);
         compact.append (res, (size_t) channels * frames * 4);
         conn->sendBinary (compact.getData(), compact.getSize());
         return;

@@ -7,6 +7,7 @@ import { setupUpdater } from './updater'
 import { registerFileHandlers, setupCrashLog } from './files-ipc'
 import { registerPluginHostHandlers } from './plugin-host'
 import { registerFreePluginHandlers } from './free-plugins'
+import { registerPluginPresetHandlers } from './plugin-presets'
 
 let mainWindow: BrowserWindow | null = null
 // Closing the window first asks the page whether the project has unsaved changes (Save / Don't save / Cancel).
@@ -109,6 +110,7 @@ app.whenReady().then(async () => {
   registerIpcHandlers(serverManager)
   registerPluginHostHandlers()
   registerFreePluginHandlers()
+  registerPluginPresetHandlers()
   ipcMain.handle('app:close-confirmed', () => { allowClose = true; mainWindow?.close() })
   app.on('before-quit', () => { allowClose = true })
 

@@ -323,3 +323,17 @@ behoben, dann der nächste Bereich.
 | 12.3c | **Neues** Projekt in 0.70.2: Master FX → VST-Effekt, etwas einstellen, speichern, App ganz schließen, App starten, Projekt öffnen, **Master FX** anklicken | In der Leiste steht der Effekt (Name, Open, ⏻), mit der Einstellung | ✅ |  | 0.70.2 |
 | 12.7d | Piano Roll oben: Feld **Anschlag** (= Velocity); Noten wählen, 40 eingeben, Enter | Feld breit genug, Noten werden leiser | ✅ |  | 0.70.2 |
 | 12.7e | Hardware-Rack, Fenster etwas schmaler ziehen: **›** links oben am Effekt-Rack klicken, dann den Streifen klicken | Rack bleibt im Fenster, klappt zu und wieder auf | ✅ |  | 0.70.2 |
+
+## 13. Neu in 0.71.0: Automation von Plugin-Reglern, Presets
+
+| Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 13.1 | Spur mit einem VST-Effekt (z. B. ein Filter oder Hall): **A** an der Spur, im Auswahlfeld der Spur **Plugin parameter → <Plugin>: choose a parameter…** | Liste der Regler des Plugins mit Suchfeld | | | 0.71.0 |
+| 13.2 | Einen Regler wählen (z. B. Cutoff oder Mix), Punkte setzen: unten links, oben rechts | Neue Spur „<Plugin>: <Regler>“ mit der Kurve | | | 0.71.0 |
+| 13.3 | Song abspielen, dabei das Plugin-Fenster offen (**Open**) | Der Regler im Plugin bewegt sich mit der Kurve, man hört es | | | 0.71.0 |
+| 13.4 | Exportieren | Der Export folgt der Kurve | | | 0.71.0 |
+| 13.5 | Dasselbe mit einem Regler von **Dexed** oder **Surge XT** auf einer MIDI-Spur | Klang ändert sich mit der Kurve | | | 0.71.0 |
+| 13.6 | Projekt speichern, schließen, öffnen | Die Plugin-Automation ist wieder da (Name der Spur, Punkte) | | | 0.71.0 |
+| 13.7 | Bei einem Plugin **Presets… → Save current settings…**, Namen eingeben; im Plugin etwas ändern; **Presets… → <Name>** | Die gespeicherten Einstellungen sind wieder da | | | 0.71.0 |
+| 13.8 | Neues Projekt, dasselbe Plugin einfügen, **Presets…** | Das Preset steht in der Liste und lädt | | | 0.71.0 |
+| 13.9 | Zwei oder mehr Plugin-Fenster offen, eines minimieren, dann bei diesem Plugin **Open** | Das Fenster kommt wieder | | | 0.71.0 |

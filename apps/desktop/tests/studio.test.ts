@@ -18,6 +18,7 @@ import { VstLink, packBlock, unpackBlock } from '../src/renderer/src/audio/vst/l
 import { paramEvents, fxParamOf } from '../src/renderer/src/audio/automation'
 import { buildMap, comboTaken, eventToCombo } from '../src/renderer/src/shortcuts/registry'
 import { parseMidi, writeMidi } from '../src/renderer/src/lib/midiFile'
+import { keyOf, profileFor } from '../src/renderer/src/midi/devices'
 import { parseProject } from '../src/renderer/src/project/format'
 import { analyze, BiquadBank, CompressorCore, crossover, LimiterCore, MultibandCore, truePeakTaps } from '../src/renderer/src/audio/master/dsp'
 
@@ -408,6 +409,17 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   const f = packBlock(1, 0, [new Float32Array(4)], false, [[0, 0x90, 60, 100], [2, 0xf4, 5, 0.25]])
   const v = new DataView(f)
   check('frame with parameters: flag, MIDI count, param count, index, value', (v.getUint16(14, true) & 2) === 2 && v.getUint32(20, true) === 1 && v.getUint32(32, true) === 1 && v.getUint32(36, true) === 2 && v.getUint32(40, true) === 5 && Math.abs(v.getFloat32(44, true) - 0.25) < 1e-7 && f.byteLength === 48 + 16)
+}
+
+// ── MIDI hardware: devices are recognised by their port name ──
+{
+  check('MPK Mini 3 recognised', profileFor('MPK mini 3')?.id === 'mpk-mini-3' && profileFor('MPK Mini Plus')?.id === 'mpk-mini-3')
+  check('MPK Mini MK2 before the general MPK Mini', profileFor('MPK Mini Mk II')?.id === 'mpk-mini-2', profileFor('MPK Mini Mk II')?.id)
+  check('Launchpad X and Mini, Launchkey Mini', profileFor('Launchpad X')?.launchpad === 'x' && profileFor('Launchpad Mini MK3')?.launchpad === 'mini3' && profileFor('Launchkey Mini MK3 MIDI')?.id === 'launchkey-mini-3')
+  check('unknown device', profileFor('USB MIDI Interface') === null)
+  check('keys of messages', keyOf(0xb0, 70) === 'cc:1:70' && keyOf(0x99, 44) === 'note:10:44' && keyOf(0xe0, 0) === null)
+  const k1 = profileFor('MPK mini 3')!.mappings.find((m) => m.key === 'cc:1:70')
+  check('MPK K1 = volume, K3 = plugin knob 1', k1?.target.kind === 'selected' && JSON.stringify(profileFor('MPK mini 3')!.mappings.find((m) => m.key === 'cc:1:72')?.target) === JSON.stringify({ kind: 'plugin', slot: 0 }))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

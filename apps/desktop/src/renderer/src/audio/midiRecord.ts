@@ -91,30 +91,9 @@ export function noteOff(pitch: number): void {
   if (need > clip.duration) st.updateClip(rec.trackId, rec.clipId, { duration: need })
 }
 
-// ── MIDI keyboards (Web MIDI) ────────────────────────────────────────────────
-
-let midiConnected = false
+// ── MIDI keyboards: see midi/hardware.ts (Settings → MIDI) ──────────────────────
 
 export async function connectMidiKeyboards(): Promise<number> {
-  const nav = navigator as Navigator & { requestMIDIAccess?: () => Promise<MIDIAccess> }
-  if (!nav.requestMIDIAccess) return 0
-  try {
-    const access = await nav.requestMIDIAccess()
-    const hook = (input: MIDIInput): void => {
-      input.onmidimessage = (e: MIDIMessageEvent) => {
-        const [status, data1, data2] = Array.from(e.data ?? [])
-        const kind = status & 0xf0
-        if (kind === 0x90 && data2 > 0) noteOn(data1, data2)
-        else if (kind === 0x80 || (kind === 0x90 && data2 === 0)) noteOff(data1)
-      }
-    }
-    access.inputs.forEach(hook)
-    if (!midiConnected) {
-      access.onstatechange = (e) => { const port = (e as MIDIConnectionEvent).port; if (port?.type === 'input' && port.state === 'connected') hook(port as MIDIInput) }
-      midiConnected = true
-    }
-    return access.inputs.size
-  } catch {
-    return 0
-  }
+  const { startMidiHardware } = await import('../midi/hardware')
+  return startMidiHardware()
 }

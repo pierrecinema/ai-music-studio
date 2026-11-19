@@ -154,6 +154,8 @@ export default function App(): React.ReactElement {
 
   // Settings → Audio → ASIO: the plugin host plays the sound on the chosen device
   useEffect(() => watchHostDevice(), [])
+  // MIDI keyboards and controllers (Settings → MIDI) work from the start, on every page
+  useEffect(() => { void import('./midi/hardware').then((m) => m.startMidiHardware()) }, [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)

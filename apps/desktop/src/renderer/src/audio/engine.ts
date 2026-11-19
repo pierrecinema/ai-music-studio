@@ -8,12 +8,12 @@ import { nanoid } from 'nanoid'
 import { api } from '../lib/api'
 import { useAudioStore } from '../stores/audio.store'
 import { useProjectStore } from '../stores/project.store'
-import type { Clip, InsertFx, Project, Track } from '../types'
+import type { AutoParam, Clip, InsertFx, Project, Track } from '../types'
 import { playClick, playSynthNote, type Timbre } from './synth'
 import { encodeWav, peakOf } from './wav'
 import { MAX_STRETCH_SECONDS, stretchBuffer } from './stretch'
 import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
-import { hasAutomation, scheduleLane } from './automation'
+import { fxParamOf, hasAutomation, paramEvents, scheduleLane } from './automation'
 import { makeEffect, makeInsert } from './fx'
 import { applyOutput, audioSettings, outputBus, contextOptions, inputConstraints, onAudioSettings, stopTests } from './output'
 import { liveInstance, makeVstInstrument, prepareOne, prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
@@ -240,6 +240,7 @@ interface Strip {
   analyser: AnalyserNode
   sends: Map<string, GainNode>
   dispose: Array<() => void>  // plugin inserts: tell them to stop when the track is freed
+  automate: Map<string, { send: (events: number[][]) => void; before: number }>   // VST inserts: automation in, and the plugin delay before them
 }
 
 function makeStrip(ctx: BaseAudioContext, dest: AudioNode, inserts: InsertFx[] = [], secPerBeat = 0.5): Strip {
@@ -252,14 +253,18 @@ function makeStrip(ctx: BaseAudioContext, dest: AudioNode, inserts: InsertFx[] =
   // the track's effects (inserts) sit between its sound and the fader
   let head: AudioNode = bus
   const dispose: Array<() => void> = []
+  const automate: Strip['automate'] = new Map()
+  let before = 0
   for (const fx of inserts) {
-    const ins = makeInsert(ctx, fx, secPerBeat)
+    const ins = makeInsert(ctx, fx, secPerBeat) as ReturnType<typeof makeInsert> & { automate?: (events: number[][]) => void }
     head.connect(ins.input)
     head = ins.output
     if (ins.dispose) dispose.push(ins.dispose)
+    if (ins.automate) automate.set(fx.id, { send: ins.automate, before })
+    if (fx.type === 'vst') before += vstDelaySeconds(ctx, fx)
   }
   head.connect(mute).connect(gain).connect(pan).connect(analyser).connect(dest)
-  return { bus, mute, gain, pan, analyser, sends: new Map(), dispose }
+  return { bus, mute, gain, pan, analyser, sends: new Map(), dispose, automate }
 }
 
 // the envelope of one audio clip: fade in, fade out (linear, or equal power for crossfades), starting
@@ -464,6 +469,19 @@ export function scheduleProject(
           } else nodes.push(...playSynthNote(ctx, strip.bus, n.pitch, n.velocity, at, dur, timbre))
         }
       }
+    }
+    // automation of plugin parameters (lanes "fx:<insert>:<index>"): events at the time the sound reaches the plugin
+    for (const [key, points] of Object.entries(track.automation ?? {})) {
+      const fp = fxParamOf(key as AutoParam)
+      if (!fp || !points?.length) continue
+      const last = Math.max(...points.map((p) => p.beat))
+      const toBeat = Math.min(until, Math.max(fromBeat, last))
+      if (instrument && track.instrument?.id === fp.fxId) {
+        midi.push(...paramEvents(points, fp.index, fromBeat, toBeat, (b) => Math.max(when + earliest, TT(b))))
+        continue
+      }
+      const ins = strip.automate.get(fp.fxId)
+      if (ins) ins.send(paramEvents(points, fp.index, fromBeat, toBeat, (b) => Math.max(when + earliest, TT(b)) + ins.before))
     }
     // note-offs before note-ons at the same moment: a repeated note is not cut by the end of the one before
     if (instrument) instrument.play(midi.sort((a, b) => a[0] - b[0] || ((a[1] & 0xf0) === 0x80 ? -1 : 1) - ((b[1] & 0xf0) === 0x80 ? -1 : 1)))

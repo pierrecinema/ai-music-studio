@@ -1,7 +1,7 @@
 // Extra lanes of the Studio: automation (Ableton automation lanes / Cubase automation tracks), the tempo
 // track, take lanes for comping, and the return tracks with their effects.
 import { usePluginsStore } from '../../stores/plugins.store'
-import { onVstChange, showVstEditor, vstFailure } from '../../audio/vst/host'
+import { onVstChange, showVstEditor, vstFailure, vstParams, vstApplyState, vstStateNow, type VstParam } from '../../audio/vst/host'
 import { liveSampleRate, warmInstrument } from '../../audio/engine'
 import React, { useEffect, useRef, useState } from 'react'
 import { useProjectStore } from '../../stores/project.store'
@@ -15,6 +15,7 @@ import { INSERT_LABEL, INSERT_PARAMS, insertDefaults } from '../../audio/fx'
 import { nanoid } from 'nanoid'
 import type { PopoverSpec } from './Popover'
 import { tr, trf } from '../../i18n/tr'
+import { askText } from '../common/AskText'
 
 const small: React.CSSProperties = { fontSize: 10, padding: '1px 6px' }
 
@@ -31,6 +32,27 @@ export function AutomationHeader({ track, param, min }: { track: Track; param: A
     const cur = track.autoMin ?? []
     updateTrack(track.id, { autoMin: cur.includes(param) ? cur.filter((x) => x !== param) : [...cur, param] })
   }
+  // plugin parameters: the ones already used on this track, and a picker for any parameter of each plugin
+  const plugins = [...(track.fx ?? []).filter((f) => f.type === 'vst' && f.vst), ...(track.instrument?.vst ? [track.instrument] : [])]
+  for (const f of plugins) for (const i of Object.keys(f.paramNames ?? {})) options.push(`fx:${f.id}:${i}` as AutoParam)
+  for (const k of Object.keys(track.automation ?? {})) if (k.startsWith('fx:') && !options.includes(k as AutoParam)) options.push(k as AutoParam)
+  const [picking, setPicking] = useState<{ fx: InsertFx; list: VstParam[] | null; error?: string; q: string } | null>(null)
+  const startPick = (fxId: string): void => {
+    const fx = plugins.find((f) => f.id === fxId)
+    if (!fx) return
+    setPicking({ fx, list: null, q: '' })
+    vstParams(fx, liveSampleRate()).then((list) => setPicking({ fx, list, q: '' })).catch((e: Error) => setPicking({ fx, list: [], error: e.message, q: '' }))
+  }
+  const choose = (fx: InsertFx, p: VstParam): void => {
+    const key = `fx:${fx.id}:${p.i}` as AutoParam
+    const names = { ...(fx.paramNames ?? {}), [p.i]: p.name }
+    if (track.instrument?.id === fx.id) updateTrack(track.id, { instrument: { ...track.instrument, paramNames: names } })
+    else updateTrack(track.id, { fx: (track.fx ?? []).map((f) => (f.id === fx.id ? { ...f, paramNames: names } : f)) })
+    // a new lane starts at the plugin's current value
+    if (!track.automation?.[key]?.length) setAutomation(track.id, key, [{ beat: 0, value: p.value }])
+    setLanes(lanes.map((x) => (x === param ? key : x)))
+    setPicking(null)
+  }
   const free = options.filter((o) => !lanes.includes(o))
   const count = track.automation?.[param]?.length ?? 0
   return (
@@ -38,12 +60,39 @@ export function AutomationHeader({ track, param, min }: { track: Track; param: A
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <button className="btn btn-ghost" style={{ ...small, padding: '0 4px' }} title={min ? tr('Show this lane in full') : tr('Make this lane small')} onClick={toggleMin}>{min ? '▸' : '▾'}</button>
         <select value={param} style={{ fontSize: 10, flex: 1, minWidth: 0, ...(min ? { height: 20, padding: '0 4px' } : {}) }} title={tr('Which value this lane automates')}
-          onChange={(e) => { setLanes(lanes.map((x) => (x === param ? e.target.value as AutoParam : x))); e.target.blur() }}>
-          {[param, ...free].map((o) => <option key={o} value={o}>{AUTO_LABEL(o, nameOf)}{track.automation?.[o]?.length ? ' •' : ''}</option>)}
+          onChange={(e) => { const v = e.target.value; e.target.blur(); if (v.startsWith('pick:')) { startPick(v.slice(5)); return } setLanes(lanes.map((x) => (x === param ? v as AutoParam : x))) }}>
+          {[param, ...free].map((o) => <option key={o} value={o}>{AUTO_LABEL(o, nameOf, track)}{track.automation?.[o]?.length ? ' •' : ''}</option>)}
+          {plugins.length > 0 && (
+            <optgroup label={tr('Plugin parameter')}>
+              {plugins.map((f) => <option key={f.id} value={`pick:${f.id}`}>{trf('{name}: choose a parameter…', { name: f.vst?.name ?? 'Plugin' })}</option>)}
+            </optgroup>
+          )}
         </select>
         {!min && free.length > 0 && <button className="btn btn-ghost" style={small} title={tr('Add a lane for another value (pan, a send…)')} onClick={() => setLanes([...lanes, free[0]])}>+</button>}
         <button className="btn btn-ghost" style={small} title={tr('Close this lane (its points stay)')} onClick={() => setLanes(lanes.filter((x) => x !== param))}>×</button>
       </div>
+      {picking && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border-mid)', padding: 4, position: 'relative', zIndex: 20 }}>
+          {!picking.list && <span>{tr('Loading the plugin…')}</span>}
+          {picking.error && <span style={{ color: 'var(--red)' }}>{picking.error}</span>}
+          {picking.list && (
+            <>
+              <input autoFocus placeholder={tr('Search a parameter…')} value={picking.q} style={{ fontSize: 10 }}
+                onChange={(e) => setPicking({ ...picking, q: e.target.value })} onKeyDown={(e) => { if (e.key === 'Escape') setPicking(null); e.stopPropagation() }} />
+              <div style={{ maxHeight: 160, overflowY: 'auto' }}>
+                {picking.list.filter((p) => p.name.toLowerCase().includes(picking.q.toLowerCase())).slice(0, 300).map((p) => (
+                  <div key={p.i} onClick={() => choose(picking.fx, p)} style={{ padding: '2px 4px', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-hover)' }} onMouseLeave={(e) => { e.currentTarget.style.background = '' }}>
+                    {p.name} <span style={{ color: 'var(--text-muted)' }}>{p.text}{p.label ? ` ${p.label}` : ''}</span>
+                  </div>
+                ))}
+                {!picking.list.length && !picking.error && <span>{tr('This plugin has no automatable parameters.')}</span>}
+              </div>
+              <button className="btn btn-ghost" style={small} onClick={() => setPicking(null)}>{tr('Cancel')}</button>
+            </>
+          )}
+        </div>
+      )}
       {!min && (
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <span style={{ flex: 1 }}>{count ? `${count} point${count > 1 ? 's' : ''}` : tr('no points yet')}</span>
@@ -58,7 +107,7 @@ export function AutomationLane({ track, param, beatWidth, min = false }: { track
   const setAutomation = useProjectStore((s) => s.setAutomation)
   const ref = useRef<HTMLDivElement>(null)
   const [lo, hi] = rangeOf(param)
-  const fallback = param === 'volume' ? track.volume : param === 'pan' ? track.pan : track.sends?.[param.slice(5)] ?? 0
+  const fallback = param === 'volume' ? track.volume : param === 'pan' ? track.pan : param.startsWith('fx:') ? 0.5 : track.sends?.[param.slice(5)] ?? 0
   const pts = sortedPoints(track.automation?.[param])
   const h = (min ? AUTO_MIN_HEIGHT : AUTO_HEIGHT) - 8
   const yOf = (v: number): number => 4 + (1 - (v - lo) / (hi - lo)) * h
@@ -210,6 +259,47 @@ export function FxLane({ track, onSet, sticky = true }: { track: Track; onSet?: 
   )
 }
 
+// Presets of a plugin: its settings saved under a name (for every project), loaded with one click
+export function PresetSelect({ fx, style }: { fx: InsertFx; style?: React.CSSProperties }): React.ReactElement | null {
+  const api = window.api?.plugins
+  const [list, setList] = useState<Array<{ name: string }>>([])
+  const [msg, setMsg] = useState<string | null>(null)
+  const pid = fx.vst?.pluginId ?? ''
+  const refresh = (): void => { void api?.presetList?.(pid).then((l) => setList(l ?? [])) }
+  useEffect(refresh, [pid])
+  if (!api?.presetList || !fx.vst) return null
+  const say = (m: string): void => { setMsg(m); setTimeout(() => setMsg(null), 2500) }
+  const run = async (v: string): Promise<void> => {
+    try {
+      if (v === 'save') {
+        const name = (await askText(tr('Save preset'), trf('Name for these settings of {name}', { name: fx.vst!.name })))?.trim()
+        if (!name) return
+        await api.presetSave!(pid, name, await vstStateNow(fx, liveSampleRate()))
+        refresh(); say(trf('Saved: {file}', { file: name }))
+      } else if (v.startsWith('del:')) {
+        const name = v.slice(4)
+        if (!window.confirm(trf('Delete the preset “{name}”?', { name }))) return
+        await api.presetDelete!(pid, name); refresh()
+      } else if (v.startsWith('load:')) {
+        const state = await api.presetGet!(pid, v.slice(5))
+        if (state) { await vstApplyState(fx, liveSampleRate(), state); say(trf('Loaded: {name}', { name: v.slice(5) })) }
+      }
+    } catch (e) { say((e as Error).message) }
+  }
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+      <select value="" title={tr('Presets: save the settings of this plugin under a name, load them in any project')} style={{ fontSize: 10, maxWidth: 110, ...style }}
+        onMouseDown={refresh} onChange={(e) => { const v = e.target.value; e.target.value = ''; e.target.blur(); void run(v) }}>
+        <option value="">{tr('Presets…')}</option>
+        {list.length > 0 && <optgroup label={tr('Load')}>{list.map((p) => <option key={p.name} value={`load:${p.name}`}>{p.name}</option>)}</optgroup>}
+        <option value="save">{tr('Save current settings…')}</option>
+        {list.length > 0 && <optgroup label={tr('Delete')}>{list.map((p) => <option key={p.name} value={`del:${p.name}`}>× {p.name}</option>)}</optgroup>}
+      </select>
+      {msg && <span style={{ fontSize: 10, color: 'var(--green)', whiteSpace: 'nowrap' }}>{msg}</span>}
+    </span>
+  )
+}
+
 // a plugin in the effects lane: its window, and why it does not play if it could not be loaded
 function VstControls({ fx, track }: { fx: InsertFx; track: Track }): React.ReactElement {
   const [, tick] = useState(0)
@@ -223,6 +313,7 @@ function VstControls({ fx, track }: { fx: InsertFx; track: Track }): React.React
       <button className="btn btn-ghost" style={{ ...small, padding: '0 6px' }} disabled={busy} title={tr('Open the plugin window')} onClick={() => void open()}>
         {busy ? tr('Loading…') : tr('Open')}
       </button>
+      <PresetSelect fx={fx} />
       {failure && <span style={{ color: 'var(--red)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={failure}>⚠ {tr('not loaded: plays without it')}</span>}
     </>
   )

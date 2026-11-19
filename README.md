@@ -29,6 +29,10 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
+### New in 0.71
+
+- **Automation of VST plugin parameters** (any knob of an effect or instrument, drawn in the track's automation lane, in playback and export) and **presets** for plugins (save the settings under a name, load them in any project).
+
 ### New in 0.70
 
 - 0.70.1: master effects, markers and loop now open again with the project; select several notes with a frame in the Piano Roll; the effect rack folds away.

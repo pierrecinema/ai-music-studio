@@ -30,11 +30,15 @@ const call = (cmd, args = {}, ms = 120000) => new Promise((res, rej) => {
   const id = next++; pending.set(id, res); ws.send(JSON.stringify({ id, cmd, ...args }))
   setTimeout(() => rej(new Error('timeout ' + cmd)), ms)
 })
-const block = (instance, chans, flags = 0, midi = []) => new Promise((res) => {
-  const frames = chans[0].length, head = 24 + midi.length * 8, buf = new ArrayBuffer(head + chans.length * frames * 4), v = new DataView(buf)
+// params: [offset, parameter index, value 0..1] (flag 2: after the MIDI, u32 count then 12 bytes each)
+const block = (instance, chans, flags = 0, midi = [], params = []) => new Promise((res) => {
+  if (params.length) flags |= 2
+  const frames = chans[0].length, pAt = 24 + midi.length * 8, head = pAt + (params.length ? 4 + params.length * 12 : 0)
+  const buf = new ArrayBuffer(head + chans.length * frames * 4), v = new DataView(buf)
   v.setUint32(0, 0x41534D41, true); v.setUint32(4, instance, true); v.setUint32(8, 1, true)
   v.setUint16(12, chans.length, true); v.setUint16(14, flags, true); v.setUint32(16, frames, true); v.setUint32(20, midi.length, true)
   midi.forEach((e, i) => { const o = 24 + i * 8; v.setUint32(o, e[0], true); v.setUint8(o + 4, e[1]); v.setUint8(o + 5, e[2]); v.setUint8(o + 6, e[3]) })
+  if (params.length) { v.setUint32(pAt, params.length, true); params.forEach((e, i) => { const o = pAt + 4 + i * 12; v.setUint32(o, e[0], true); v.setUint32(o + 4, e[1], true); v.setFloat32(o + 8, e[2], true) }) }
   chans.forEach((c, i) => new Float32Array(buf, head + i * frames * 4, frames).set(c))
   audio.push(res); ws.send(buf)
 })
@@ -73,6 +77,16 @@ assert.equal((await call('setState', { instance: ld2.instance, state: '%%%' })).
 const o2 = new Float32Array(await block(ld2.instance, [L, R]), 24, n)
 assert.ok(Math.abs(o2[10] - 0.4) < 1e-6)
 assert.equal((await call('unload', { instance: ld2.instance })).ok, true)
+// parameters: the list, and automation inside a block (gain 1.0 from sample 256 on, back to 0.5 at 400)
+const pl = await call('params', { instance: ld.instance })
+const gp = pl.params?.find((q) => q.name === 'Gain')
+assert.ok(pl.ok && gp && gp.i === 0 && Math.abs(gp.value - 0.5) < 1e-6, JSON.stringify(pl))
+const pt = await call('paramText', { instance: ld.instance, index: 0, value: 0.25 }); assert.ok(pt.ok && pt.text.length > 0, JSON.stringify(pt))
+const autoOut = await block(ld.instance, [L, R], 0, [], [[256, 0, 1.0], [400, 0, 0.5]])
+assert.equal(new DataView(autoOut).getUint16(14, true) & 2, 0, 'the reply has no parameter flag')
+const oa = new Float32Array(autoOut, 24, n)
+assert.ok(Math.abs(oa[255] - 0.4) < 1e-6 && Math.abs(oa[256] - 0.8) < 1e-6 && Math.abs(oa[399] - 0.8) < 1e-6 && Math.abs(oa[400] - 0.4) < 1e-6, `automation: ${oa[255]} ${oa[256]} ${oa[399]} ${oa[400]}`)
+console.log('automation inside a block: ok')
 // a long block (larger than the block size) is processed in parts
 const big = new Float32Array(3000).fill(1)
 const out3 = new Float32Array(await block(ld.instance, [big, big]), 24, 3000)

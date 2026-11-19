@@ -196,6 +196,12 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 Die Plugins laufen in einem eigenen kleinen Programm (Plugin-Host), das nur läuft, solange ein Plugin benutzt wird. Stürzt ein Plugin ab, läuft die App weiter; beim nächsten Abspielen werden die Plugins mit ihren zuletzt gespeicherten Einstellungen neu geladen. Spuren mit Plugins bleiben im Takt (die Verzögerung durch die Plugins wird ausgeglichen). 64- und 32-Bit-Plugins funktionieren. Plugins auf dem Master, im Mastering und Instrument-Plugins kommen in den nächsten Versionen.
 
+## Neu in 0.71: Automation von Plugin-Reglern, Presets
+
+- **Plugin-Regler automatisieren:** **A** an der Spur öffnet die Automation; im Auswahlfeld der Spur *Plugin parameter → <Plugin>: choose a parameter…* zeigt alle Regler des Plugins (mit Suche). Regler wählen, dann die Kurve wie bei der Lautstärke zeichnen. Abspielen und Export folgen ihr genau.
+- **Presets:** neben *Open* eines Plugins **Presets…** → *Save current settings…* speichert die Einstellungen unter einem Namen; in jedem Projekt wieder laden oder löschen.
+- Ein minimiertes Plugin-Fenster kommt mit *Open* wieder.
+
 ## Neu in 0.70: Master-Effekte, MIDI-Dateien, Anschlag, Fades am Clip, Looks
 
 - **Master-FX:** In der Studio-Werkzeugleiste **Master FX** (oder unten im Mixer): Effekte auf der ganzen Mischung, nach allen Spuren und Return-Spuren, eingebaut oder deine VST-Plugins. Sie werden mit dem Projekt gespeichert und sind im Export.

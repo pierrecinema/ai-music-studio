@@ -1304,5 +1304,20 @@
  "Velocity {v}": "力度 {v}",
  "{name}: the MIDI file has no notes.": "{name}：MIDI 文件中没有音符。",
  "{name}: this MIDI file cannot be read ({error}).": "{name}：无法读取此 MIDI 文件（{error}）。",
- "{n} beats": "{n} 拍"
+ "{n} beats": "{n} 拍",
+ "Delete the preset “{name}”?": "删除预设“{name}”？",
+ "Fold the effect rack away (click the strip to show it again)": "收起效果架（点击窄条可再次打开）",
+ "Load": "加载",
+ "Loaded: {name}": "已加载：{name}",
+ "Loading the plugin…": "正在加载插件…",
+ "Name for these settings of {name}": "{name} 这些设置的名称",
+ "Plugin parameter": "插件参数",
+ "Presets: save the settings of this plugin under a name, load them in any project": "预设：以名称保存此插件的设置，可在任何项目中加载",
+ "Presets…": "预设…",
+ "Save current settings…": "保存当前设置…",
+ "Save preset": "保存预设",
+ "Search a parameter…": "搜索参数…",
+ "Show the effect rack": "显示效果架",
+ "This plugin has no automatable parameters.": "此插件没有可自动化的参数。",
+ "{name}: choose a parameter…": "{name}：选择参数…"
 }

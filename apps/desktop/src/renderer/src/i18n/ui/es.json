@@ -1304,5 +1304,20 @@
  "Velocity {v}": "Velocidad {v}",
  "{name}: the MIDI file has no notes.": "{name}: el archivo MIDI no tiene notas.",
  "{name}: this MIDI file cannot be read ({error}).": "{name}: no se puede leer este archivo MIDI ({error}).",
- "{n} beats": "{n} tiempos"
+ "{n} beats": "{n} tiempos",
+ "Delete the preset “{name}”?": "¿Eliminar el preset «{name}»?",
+ "Fold the effect rack away (click the strip to show it again)": "Plegar el rack de efectos (clic en la franja para abrirlo)",
+ "Load": "Cargar",
+ "Loaded: {name}": "Cargado: {name}",
+ "Loading the plugin…": "Cargando el plugin…",
+ "Name for these settings of {name}": "Nombre para estos ajustes de {name}",
+ "Plugin parameter": "Parámetro del plugin",
+ "Presets: save the settings of this plugin under a name, load them in any project": "Presets: guarda los ajustes de este plugin con un nombre y cárgalos en cualquier proyecto",
+ "Presets…": "Presets…",
+ "Save current settings…": "Guardar los ajustes actuales…",
+ "Save preset": "Guardar preset",
+ "Search a parameter…": "Buscar un parámetro…",
+ "Show the effect rack": "Mostrar el rack de efectos",
+ "This plugin has no automatable parameters.": "Este plugin no tiene parámetros automatizables.",
+ "{name}: choose a parameter…": "{name}: elegir un parámetro…"
 }

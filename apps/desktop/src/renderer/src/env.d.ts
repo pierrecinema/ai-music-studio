@@ -112,6 +112,10 @@ declare global {
         freeInstalled?: () => Promise<Record<string, boolean>>
         freeInstall?: (id: string) => Promise<{ ok: boolean; dir?: string; tag?: string; asset?: string; reason?: string; page?: string }>
         freePage?: (id: string) => Promise<void>
+        presetList?: (pluginId: string) => Promise<Array<{ name: string; saved: string }>>
+        presetGet?: (pluginId: string, name: string) => Promise<string | null>
+        presetSave?: (pluginId: string, name: string, state: string) => Promise<void>
+        presetDelete?: (pluginId: string, name: string) => Promise<void>
         onFreeProgress?: (cb: (p: { id: string; done: number; total: number; text: string }) => void) => () => void
         onHostExit: (cb: (info: { code: number | null; signal: string | null; arch?: string }) => void) => () => void
       }

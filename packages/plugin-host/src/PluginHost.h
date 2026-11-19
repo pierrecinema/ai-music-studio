@@ -18,8 +18,10 @@
 //   the app's master mix: audio frames to instance 0xFFFFFFF0 (no reply), played on the opened device
 //
 // Audio (binary frames, little endian), header of 24 bytes then MIDI events (8 bytes each) then planar float32:
-//   u32 magic 'AMSA' | u32 instance | u32 seq | u16 channels | u16 flags (1: reset first) | u32 frames | u32 midiCount
+//   u32 magic 'AMSA' | u32 instance | u32 seq | u16 channels | u16 flags (1: reset first, 2: parameter changes follow the MIDI) | u32 frames | u32 midiCount
 //   reply: same header (midiCount field = the plugin's latency in samples) and the processed audio
+//   flag 2: after the MIDI events u32 count, then count x (u32 offset, u32 parameter index, f32 value 0..1); the
+//   block is cut at each change so automation is sample-accurate. Command "params" lists the parameters.
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "WebSocketServer.h"

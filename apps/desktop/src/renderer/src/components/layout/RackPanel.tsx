@@ -4,7 +4,7 @@ import React from 'react'
 import { useProjectStore } from '../../stores/project.store'
 import { INSERT_LABEL, INSERT_PARAMS } from '../../audio/fx'
 import { Knob } from '../mastering/MasterRack'
-import { FxAddSelect, InstrumentSelect, openPlugin } from '../timeline/StudioLanes'
+import { FxAddSelect, InstrumentSelect, openPlugin, PresetSelect } from '../timeline/StudioLanes'
 import type { InsertFx } from '../../types'
 import { tr } from '../../i18n/tr'
 
@@ -59,6 +59,7 @@ export function RackPanel(): React.ReactElement {
           onToggle={() => t.instrument && updateTrack(t.id, { instrument: { ...t.instrument, on: !t.instrument.on } })}
           extra={t.instrument ? <button className="btn btn-ghost" style={small} onClick={() => void openPlugin(t.instrument!, t.name)}>{tr('Open')}</button> : undefined}>
           <InstrumentSelect track={t} style={{ fontSize: 10, width: '100%', marginTop: 2 }} />
+          {t.instrument?.vst && <div style={{ marginTop: 4, width: '100%' }}><PresetSelect fx={t.instrument} style={{ maxWidth: '100%', width: '100%' }} /></div>}
         </Module>
       )}
       {t && (t.fx ?? []).map((f, i, list) => {
@@ -66,7 +67,9 @@ export function RackPanel(): React.ReactElement {
         const remove = <button className="btn btn-ghost" style={{ ...small, color: 'var(--red)' }} title={tr('Remove this effect')} onClick={() => updateTrack(t.id, { fx: list.filter((x) => x.id !== f.id) })}>×</button>
         if (f.type === 'vst') {
           return <Module key={f.id} title={f.vst?.name ?? tr('VST plugin')} on={f.on} onToggle={() => set({ on: !f.on })}
-            extra={<><button className="btn btn-ghost" style={small} onClick={() => void openPlugin(f, t.name)}>{tr('Open')}</button>{remove}</>} />
+            extra={<><button className="btn btn-ghost" style={small} onClick={() => void openPlugin(f, t.name)}>{tr('Open')}</button>{remove}</>}>
+            <div style={{ width: '100%' }}><PresetSelect fx={f} style={{ maxWidth: '100%', width: '100%' }} /></div>
+          </Module>
         }
         return (
           <Module key={f.id} title={tr(INSERT_LABEL[f.type])} on={f.on} onToggle={() => set({ on: !f.on })} extra={remove}>

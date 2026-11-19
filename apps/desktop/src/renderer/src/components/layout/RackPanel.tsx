@@ -4,7 +4,7 @@ import React from 'react'
 import { useProjectStore } from '../../stores/project.store'
 import { INSERT_LABEL, INSERT_PARAMS } from '../../audio/fx'
 import { Knob } from '../mastering/MasterRack'
-import { FxAddSelect, InstrumentSelect, openPlugin, PresetSelect } from '../timeline/StudioLanes'
+import { AutomateButton, FxAddSelect, InstrumentSelect, openPlugin, PresetSelect } from '../timeline/StudioLanes'
 import type { InsertFx } from '../../types'
 import { tr } from '../../i18n/tr'
 
@@ -59,7 +59,7 @@ export function RackPanel(): React.ReactElement {
           onToggle={() => t.instrument && updateTrack(t.id, { instrument: { ...t.instrument, on: !t.instrument.on } })}
           extra={t.instrument ? <button className="btn btn-ghost" style={small} onClick={() => void openPlugin(t.instrument!, t.name)}>{tr('Open')}</button> : undefined}>
           <InstrumentSelect track={t} style={{ fontSize: 10, width: '100%', marginTop: 2 }} />
-          {t.instrument?.vst && <div style={{ marginTop: 4, width: '100%' }}><PresetSelect fx={t.instrument} style={{ maxWidth: '100%', width: '100%' }} /></div>}
+          {t.instrument?.vst && <div style={{ marginTop: 4, width: '100%', display: 'flex', gap: 4, alignItems: 'center' }}><PresetSelect fx={t.instrument} style={{ maxWidth: '100%', width: '100%' }} /><AutomateButton track={t} fx={t.instrument} /></div>}
         </Module>
       )}
       {t && (t.fx ?? []).map((f, i, list) => {
@@ -68,7 +68,7 @@ export function RackPanel(): React.ReactElement {
         if (f.type === 'vst') {
           return <Module key={f.id} title={f.vst?.name ?? tr('VST plugin')} on={f.on} onToggle={() => set({ on: !f.on })}
             extra={<><button className="btn btn-ghost" style={small} onClick={() => void openPlugin(f, t.name)}>{tr('Open')}</button>{remove}</>}>
-            <div style={{ width: '100%' }}><PresetSelect fx={f} style={{ maxWidth: '100%', width: '100%' }} /></div>
+            <div style={{ width: '100%', display: 'flex', gap: 4, alignItems: 'center' }}><PresetSelect fx={f} style={{ maxWidth: '100%', width: '100%' }} /><AutomateButton track={t} fx={f} /></div>
           </Module>
         }
         return (

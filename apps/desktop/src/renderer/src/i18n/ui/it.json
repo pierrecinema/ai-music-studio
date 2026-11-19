@@ -1364,5 +1364,7 @@
  "Plugin knob 5": "Manopola plugin 5",
  "Plugin knob 6": "Manopola plugin 6",
  "Plugin knob 7": "Manopola plugin 7",
- "Plugin knob 8": "Manopola plugin 8"
+ "Plugin knob 8": "Manopola plugin 8",
+ "Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track": "Automatizza una manopola del plugin: sceglila, poi disegna la curva nella corsia che si apre sotto la traccia",
+ "Automate…": "Automatizza…"
 }

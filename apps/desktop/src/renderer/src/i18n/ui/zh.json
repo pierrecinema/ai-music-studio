@@ -1364,5 +1364,7 @@
  "Plugin knob 5": "插件旋钮 5",
  "Plugin knob 6": "插件旋钮 6",
  "Plugin knob 7": "插件旋钮 7",
- "Plugin knob 8": "插件旋钮 8"
+ "Plugin knob 8": "插件旋钮 8",
+ "Automate a knob of this plugin: choose it, then draw its curve in the lane that opens under the track": "自动化此插件的一个旋钮：选择后在轨道下方打开的通道中绘制曲线",
+ "Automate…": "自动化…"
 }

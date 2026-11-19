@@ -4,7 +4,7 @@ import React from 'react'
 import { useProjectStore } from '../../stores/project.store'
 import { AUTO_LABEL, hasAutomation } from '../../audio/automation'
 import type { AutoParam, InsertFx } from '../../types'
-import { FxAddSelect, InstrumentSelect, MiniMeter, openPlugin, PresetSelect } from './StudioLanes'
+import { AutomateButton, FxAddSelect, InstrumentSelect, MiniMeter, openPlugin, PresetSelect } from './StudioLanes'
 import { INSERT_LABEL } from '../../audio/fx'
 import { openLanes } from './studioLayout'
 import { tr } from '../../i18n/tr'
@@ -65,7 +65,7 @@ export function ChannelTab({ onClose }: { onClose: () => void }): React.ReactEle
                 <InstrumentSelect track={t} style={{ flex: 1, fontSize: 11, minWidth: 0 }} />
                 {t.instrument && <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 5px' }} title={tr('Open the plugin window')} onClick={() => void openPlugin(t.instrument!, t.name)}>{tr('Open')}</button>}
               </div>
-              {t.instrument?.vst && <PresetSelect fx={t.instrument} style={{ maxWidth: '100%', width: '100%' }} />}
+              {t.instrument?.vst && <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}><PresetSelect fx={t.instrument} style={{ maxWidth: '100%', flex: 1 }} /><AutomateButton track={t} fx={t.instrument} /></div>}
             </>
           )}
 

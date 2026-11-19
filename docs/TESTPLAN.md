@@ -328,21 +328,21 @@ behoben, dann der nächste Bereich.
 
 | Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 13.1 | Spur mit einem VST-Effekt (z. B. ein Filter oder Hall): **A** an der Spur, im Auswahlfeld der Spur **Plugin parameter → <Plugin>: choose a parameter…** | Liste der Regler des Plugins mit Suchfeld | | | 0.71.0 |
+| 13.1 | Spur mit einem VST-Effekt (z. B. ein Filter oder Hall): **A** an der Spur, im Auswahlfeld der Spur **Plugin parameter → <Plugin>: choose a parameter…** | Liste der Regler des Plugins mit Suchfeld | ⚠️ | „Plugin parameter“ nicht gefunden → 0.72.1: Knopf „Automatisieren…“ beim Plugin | 0.71.0 |
 | 13.2 | Einen Regler wählen (z. B. Cutoff oder Mix), Punkte setzen: unten links, oben rechts | Neue Spur „<Plugin>: <Regler>“ mit der Kurve | | | 0.71.0 |
 | 13.3 | Song abspielen, dabei das Plugin-Fenster offen (**Open**) | Der Regler im Plugin bewegt sich mit der Kurve, man hört es | | | 0.71.0 |
 | 13.4 | Exportieren | Der Export folgt der Kurve | | | 0.71.0 |
-| 13.5 | Dasselbe mit einem Regler von **Dexed** oder **Surge XT** auf einer MIDI-Spur | Klang ändert sich mit der Kurve | | | 0.71.0 |
+| 13.5 | Dasselbe mit einem Regler von **Dexed** oder **Surge XT** auf einer MIDI-Spur | Klang ändert sich mit der Kurve | ⚠️ | Dexed erscheint nicht mehr (Surge geht) → nachfragen | 0.71.0 |
 | 13.6 | Projekt speichern, schließen, öffnen | Die Plugin-Automation ist wieder da (Name der Spur, Punkte) | | | 0.71.0 |
-| 13.7 | Bei einem Plugin **Presets… → Save current settings…**, Namen eingeben; im Plugin etwas ändern; **Presets… → <Name>** | Die gespeicherten Einstellungen sind wieder da | | | 0.71.0 |
+| 13.7 | Bei einem Plugin **Presets… → Save current settings…**, Namen eingeben; im Plugin etwas ändern; **Presets… → <Name>** | Die gespeicherten Einstellungen sind wieder da | ⚠️ | Presets nicht gefunden → 0.72.1 sichtbarer (★ Presets…) | 0.71.0 |
 | 13.8 | Neues Projekt, dasselbe Plugin einfügen, **Presets…** | Das Preset steht in der Liste und lädt | | | 0.71.0 |
-| 13.9 | Zwei oder mehr Plugin-Fenster offen, eines minimieren, dann bei diesem Plugin **Open** | Das Fenster kommt wieder | | | 0.71.0 |
+| 13.9 | Zwei oder mehr Plugin-Fenster offen, eines minimieren, dann bei diesem Plugin **Open** | Das Fenster kommt wieder | ✅ |  | 0.71.0 |
 
 ## 14. Neu in 0.72.0: MIDI-Controller (Einstellungen → MIDI)
 
 | Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 14.1 | MPK Mini einstecken, **Einstellungen → MIDI** | Das MPK Mini steht da, „Erkannt: Akai MPK Mini …“, Noten und Steuerung an, Zuordnung mit CC 70–77 | | | 0.72.0 |
+| 14.1 | MPK Mini einstecken, **Einstellungen → MIDI** | Das MPK Mini steht da, „Erkannt: Akai MPK Mini …“, Noten und Steuerung an, Zuordnung mit CC 70–77 | ✅ | MPK Mini erkannt; Launchpad war nicht richtig eingesteckt, geht | 0.72.0 |
 | 14.2 | Studio: eine MIDI-Spur wählen, Tasten und Pads spielen | Man hört die Spur (auch mit Dexed / Surge) | | | 0.72.0 |
 | 14.3 | K1 und K2 drehen | Lautstärke und Pan der gewählten Spur bewegen sich | | | 0.72.0 |
 | 14.4 | Spur mit einem Effekt (z. B. EQ oder ein VST): K3–K5 drehen, dabei das Plugin-Fenster offen | Die ersten Regler des Effekts bewegen sich | | | 0.72.0 |
@@ -352,3 +352,6 @@ behoben, dann der nächste Bereich.
 | 14.8 | App neu starten | Zuordnungen und Haken sind gespeichert | | | 0.72.0 |
 | 14.9 | Ein anderes Gerät (Keyboard, Launchkey …) einstecken | Erscheint sofort; bekannt: mit Zuordnung; unbekannt: Hinweis „Learn“ | | | 0.72.0 |
 | 14.10 | Launchpad (X / Mini MK3 / Pro MK3) einstecken, Projekt mit Spuren und Markern | Pads leuchten: oben Marker (orange), je Spur Stumm/Solo/Auswahl/Lautstärke; Drücken wirkt | | | 0.72.0 |
+| 13.1b | Spur mit einem VST-Effekt oder VST-Instrument: neben **Open** auf **Automatisieren…** klicken | Liste der Regler des Plugins mit Suchfeld | | | 0.72.1 |
+| 13.2b | Einen Regler anklicken (z. B. „Cutoff“) | Unter der Spur öffnet sich eine Automationsspur „<Plugin>: <Regler>“ mit einem Punkt am Anfang | | | 0.72.1 |
+| 13.7b | Neben **Open** das Feld **★ Presets…** | Liste: Laden / Aktuelle Einstellungen speichern… / Löschen | | | 0.72.1 |

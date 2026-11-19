@@ -305,11 +305,11 @@ export function PianoRoll(): React.ReactElement {
           const setAll = (patch: Partial<Note>): void => { for (const n of chosen) updateNote(track.id, clip.id, n.id, patch) }
           return (
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)', marginLeft: 8 }}>
-              <label title={tr('Velocity (how hard the note is played) of the selected notes, 1 to 127')} style={{ opacity: none ? 0.5 : 1 }}>{tr('Velocity')}{' '}
-                <input key={`v${[...sel].join()}${vel}`} type="number" min={1} max={127} defaultValue={none ? '' : vel} disabled={none} placeholder="–" style={{ width: 48 }}
+              <label title={tr('Velocity (how hard the note is played) of the selected notes, 1 to 127')} style={{ opacity: none ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>{tr('Velocity')}{' '}
+                <input key={`v${[...sel].join()}${vel}`} type="number" min={1} max={127} defaultValue={none ? '' : vel} disabled={none} placeholder="–" style={{ width: 58 }}
                   onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
                   onBlur={(e) => { const v = Math.round(Number(e.target.value)); if (v >= 1 && v <= 127) setAll({ velocity: v }) }} /></label>
-              <label title={tr('Length of the selected notes in beats (1 = a quarter note)')} style={{ opacity: none ? 0.5 : 1 }}>{tr('Length')}{' '}
+              <label title={tr('Length of the selected notes in beats (1 = a quarter note)')} style={{ opacity: none ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>{tr('Length')}{' '}
                 <select disabled={none} value={['0.125', '0.25', '0.5', '1', '2', '4'].includes(len) ? len : ''} onChange={(e) => { if (e.target.value) setAll({ duration: Number(e.target.value) }) }} style={{ fontSize: 11 }}>
                   <option value="">{len ? trf('{n} beats', { n: Number(len).toFixed(2) }) : '–'}</option>
                   <option value="0.125">1/32</option><option value="0.25">1/16</option><option value="0.5">1/8</option>

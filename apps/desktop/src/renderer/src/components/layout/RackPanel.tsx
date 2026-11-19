@@ -49,10 +49,10 @@ export function RackPanel(): React.ReactElement {
   return (
     <aside className="rack-panel" style={{ width: 236, flexShrink: 0, overflowY: 'auto', background: '#17181b', borderLeft: '2px solid #000', padding: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', gap: 4 }}>
+        <button className="btn btn-ghost" onClick={() => fold(true)} title={tr('Fold the effect rack away (click the strip to show it again)')} style={{ padding: '0 7px', fontSize: 13 }}>›</button>
         <div style={{ flex: 1, minWidth: 0, background: '#9db48a', color: '#1e2a17', fontFamily: 'Consolas, monospace', fontSize: 12, padding: '6px 8px', boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.5)', border: '1px solid #000', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {t ? `FX · ${t.name.toUpperCase()}` : tr('Select a track').toUpperCase()}
         </div>
-        <button className="btn btn-ghost" onClick={() => fold(true)} title={tr('Fold the effect rack away (click the strip to show it again)')} style={{ padding: '0 7px', fontSize: 13 }}>›</button>
       </div>
       {t && (t.type === 'midi' || t.type === 'instrument') && (
         <Module title={t.instrument?.vst?.name ?? tr('Built-in synth')} on={t.instrument ? t.instrument.on : true}

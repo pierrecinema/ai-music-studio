@@ -124,6 +124,20 @@ export function hasSep(): boolean {
   return existsSync(join(sepDir(), 'Lib', 'site-packages', 'audio_separator'))
 }
 
+// AI Instruments (MIDI-DDSP, Google Magenta): notes played like a real violin, flute, trumpet ... Its own environment,
+// because it runs on TensorFlow 2.15 (Python 3.9 to 3.11), which must not meet the PyTorch of the other engines.
+export function ddspDir(): string {
+  return join(app.getPath('userData'), 'engines', 'venv-ddsp')
+}
+
+export function ddspPython(): string {
+  return join(ddspDir(), 'Scripts', 'python.exe')
+}
+
+export function hasDdsp(): boolean {
+  return existsSync(join(ddspDir(), 'Lib', 'site-packages', 'midi_ddsp'))
+}
+
 export function hasVenv(): boolean {
   return existsSync(venvPython())
 }
@@ -207,6 +221,7 @@ export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   installed.diffrhythm = hasDr()
   installed.ace15 = hasAce15()
   installed.separator = hasSep()
+  installed.aiinst = hasDdsp()
   return {
     pythonFound: py !== null,
     pythonVersion: py?.version ?? null,
@@ -433,6 +448,59 @@ async function installSep(py: PythonCmd | null, torchVariant: string, log: (l: s
   return { ok: true }
 }
 
+// The versions below were tried together (TensorFlow 2.15, MIDI-DDSP 0.2.6): MIDI-DDSP itself pins packages from
+// 2022 (numba < 0.50, Python 3.8), so it and DDSP are installed without their pins and get these instead.
+async function installDdsp(py: PythonCmd | null, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
+  if (!py) return { ok: false, error: 'Python 3.11 was not found.' }
+  const minor = Number(py.version.split('.')[1])
+  let cmd = py
+  if (minor < 9 || minor > 11) {
+    // TensorFlow 2.15 has no build for Python 3.12+: use an installed 3.11 or 3.10 if there is one
+    const other = await (async () => {
+      for (const v of ['-3.11', '-3.10']) {
+        const r = await capture('py', [v, '--version'], 8000)
+        const m = /Python (\d+\.\d+\.\d+)/.exec(r.out)
+        if (r.code === 0 && m) return { cmd: 'py', args: [v], version: m[1] }
+      }
+      return null
+    })()
+    if (!other) return { ok: false, error: `AI Instruments need Python 3.10 or 3.11 (found ${py.version}). Install Python 3.11 from python.org (it can stay next to your other Python) and try again.` }
+    cmd = other
+  }
+  if (!existsSync(ddspPython())) {
+    mkdirSync(join(ddspDir(), '..'), { recursive: true })
+    if (await run(cmd.cmd, [...cmd.args, '-m', 'venv', ddspDir()], log) !== 0) return { ok: false, error: 'Could not create the AI Instruments environment.' }
+    await run(ddspPython(), ['-m', 'pip', 'install', '--upgrade', 'pip'], log)
+  }
+  const pins = ['protobuf>=3.20.3,<4.22', 'numpy<2']
+  const tf = process.platform === 'win32' ? 'tensorflow==2.15.1' : 'tensorflow-cpu==2.15.1'
+  log('TensorFlow 2.15 (processor build, about 600 MB)')
+  if (await run(ddspPython(), ['-m', 'pip', 'install', tf, 'tensorflow-probability==0.23.0', ...pins], log) !== 0) {
+    return { ok: false, error: 'Installing TensorFlow for the AI Instruments failed (see log).' }
+  }
+  // only used for training: a stand-in is written below if there is no build for this Python
+  if (await run(ddspPython(), ['-m', 'pip', 'install', 'tensorflow-addons==0.23.0'], log) !== 0) log('tensorflow-addons is not available here: a stand-in is used (not needed to play notes).')
+  if (await run(ddspPython(), ['-m', 'pip', 'install', '--no-deps', 'ddsp==3.2.0', 'midi-ddsp==0.2.6', 'note-seq==0.0.3'], log) !== 0) {
+    return { ok: false, error: 'Installing MIDI-DDSP failed (see log).' }
+  }
+  const deps = ['gin-config', 'absl-py', 'librosa', 'pretty_midi', 'music21', 'pandas', 'mir_eval', 'pydub', 'scipy', 'six', 'future', 'tqdm',
+    'hypertune', 'cloudml-hypertune', 'google-cloud-storage<2.15', 'tensorflow-datasets==4.9.3', 'bokeh', 'IPython', 'intervaltree', 'hmmlearn', 'resampy']
+  if (await run(ddspPython(), ['-m', 'pip', 'install', ...deps, ...pins], log) !== 0) {
+    return { ok: false, error: 'Installing the packages of MIDI-DDSP failed (see log).' }
+  }
+  await run(ddspPython(), [join(serverDir(), 'services', 'ddsp_stubs.py')], log)
+  const check = await capture(ddspPython(), [join(serverDir(), 'services', 'midi_ddsp_worker.py'), '--check'], 300000)
+  if (!/"ok": true/.test(check.out)) {
+    log(check.out.split(/\r?\n/).slice(-15).join('\n'))
+    return { ok: false, error: 'The AI Instruments are installed but do not start (see the last lines of the log). Press "Install selected" again; if it stays, send the log.' }
+  }
+  log('Downloading the MIDI-DDSP models (about 80 MB) from GitHub ...')
+  const dl = await capture(ddspPython(), [join(serverDir(), 'services', 'midi_ddsp_worker.py'), '--download'], 900000)
+  if (!/"weights": true/.test(dl.out)) log('The models could not be downloaded now: they are fetched again on the first use.')
+  log('AI Instruments are installed (violin, viola, cello, double bass, flute, oboe, clarinet, saxophone, bassoon, trumpet, horn, trombone, tuba).')
+  return { ok: true }
+}
+
 async function installDml(py: PythonCmd | null, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
   if (!py) return { ok: false, error: 'Python 3.11 was not found.' }
   const minor = Number(py.version.split('.')[1])
@@ -513,6 +581,11 @@ export async function installGroups(
     log('=== ace15 (ACE-Step 1.5: songs with vocals, also on the processor) ===')
     const r = await installAce15(py, torchVariant, log)
     if (!r.ok) { failed.push('ace15'); log(r.error ?? 'failed') }
+  }
+  if (groups.includes('aiinst')) {
+    log('=== aiinst (AI Instruments: MIDI-DDSP, 13 orchestral instruments on the processor) ===')
+    const r = await installDdsp(py, log)
+    if (!r.ok) { failed.push('aiinst'); log(r.error ?? 'failed') }
   }
   if (groups.includes('separator')) {
     log('=== separator (fast vocal / instrumental separation, also on AMD / Intel graphics) ===')

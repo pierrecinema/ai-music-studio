@@ -300,15 +300,23 @@ behoben, dann der nächste Bereich.
 
 | Nr. | Test | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 12.1 | Studio: **Master FX** (Werkzeugleiste) → **+ Effekt…** → ein VST-Effekt (z. B. ein Hall); Song abspielen | Plugin-Fenster öffnet sich; die ganze Mischung klingt mit dem Effekt; ⏻ aus = ohne | | | 0.70.0 |
-| 12.2 | Mixer öffnen | Unten die Zeile **MASTER FX** mit denselben Effekten | | | 0.70.0 |
-| 12.3 | Projekt speichern, schließen, öffnen; dann Datei → Exportieren | Master-Effekt mit seinen Einstellungen wieder da; Export klingt mit dem Effekt, Anfang nicht verspätet | | | 0.70.0 |
-| 12.4 | Eine .mid-Datei (z. B. aus dem Internet) ins Studio ziehen | Für jede Spur der Datei eine MIDI-Spur mit Noten; im leeren Projekt stimmt das Tempo | | | 0.70.0 |
-| 12.5 | Rechtsklick auf einen MIDI-Clip → **Export as MIDI file (.mid)…**, in einem anderen Programm (z. B. Cubase, MuseScore) öffnen | Gleiche Noten, gleiche Längen und Anschläge | | | 0.70.0 |
-| 12.6 | Piano Roll: unten die Anschlag-Spur; einen Balken nach oben/unten ziehen; mehrere Noten auswählen und ziehen | Balken und Notenhelligkeit ändern sich; ausgewählte Noten zusammen; man hört lauter/leiser | | | 0.70.0 |
-| 12.7 | Piano Roll: Noten auswählen, oben **Velocity** 40 eingeben, **Length** 1/16 wählen | Alle ausgewählten Noten werden leiser und kurz | | | 0.70.0 |
-| 12.8 | Studio: Audio-Clip, oben links das weiße Quadrat nach rechts ziehen, oben rechts nach links | Schräge Linie zeigt das Ein-/Ausblenden; beim Abspielen hört man es; Doppelklick = weg | | | 0.70.0 |
-| 12.9 | Die Linie in der Mitte des Clips nach oben/unten ziehen | dB-Anzeige am Clip; Clip lauter/leiser; Doppelklick = 0 dB | | | 0.70.0 |
-| 12.10 | Erscheinungsbild **Analog-Konsole**, Studio, Song abspielen | Unten Mischpult: VU-Nadeln bewegen sich, Pan-Knopf, Fader, M/S wirken; Titel und Spurnamen in Serifenschrift | | | 0.70.0 |
-| 12.11 | Erscheinungsbild **Swiss** | Große Position und Tempo, Transport als große Blöcke, große Spurnamen, Marker lesbar | | | 0.70.0 |
-| 12.12 | Erscheinungsbild **Hardware-Rack**: Menü ansehen | Bibliothek-Symbol grau wie die anderen; Stern bei „Musik erstellen“ in der Farbe des KI-Assistent-Knopfs | | | 0.70.0 |
+| 12.1 | Studio: **Master FX** (Werkzeugleiste) → **+ Effekt…** → ein VST-Effekt (z. B. ein Hall); Song abspielen | Plugin-Fenster öffnet sich; die ganze Mischung klingt mit dem Effekt; ⏻ aus = ohne | ✅ |  | 0.70.0 |
+| 12.2 | Mixer öffnen | Unten die Zeile **MASTER FX** mit denselben Effekten | ✅ |  | 0.70.0 |
+| 12.3 | Projekt speichern, schließen, öffnen; dann Datei → Exportieren | Master-Effekt mit seinen Einstellungen wieder da; Export klingt mit dem Effekt, Anfang nicht verspätet | ❌ | Master-Effekt nach Öffnen weg (auch Marker, Loop, Returns) → 0.70.1 | 0.70.0 |
+| 12.4 | Eine .mid-Datei (z. B. aus dem Internet) ins Studio ziehen | Für jede Spur der Datei eine MIDI-Spur mit Noten; im leeren Projekt stimmt das Tempo | ⏳ | braucht MIDI-Datei (geschickt) | 0.70.0 |
+| 12.5 | Rechtsklick auf einen MIDI-Clip → **Export as MIDI file (.mid)…**, in einem anderen Programm (z. B. Cubase, MuseScore) öffnen | Gleiche Noten, gleiche Längen und Anschläge | ⏳ | braucht MIDI-Datei (geschickt) | 0.70.0 |
+| 12.6 | Piano Roll: unten die Anschlag-Spur; einen Balken nach oben/unten ziehen; mehrere Noten auswählen und ziehen | Balken und Notenhelligkeit ändern sich; ausgewählte Noten zusammen; man hört lauter/leiser | ✅ | Wunsch: mehrere Noten mit dem Fadenkreuz markieren → 0.70.1 | 0.70.0 |
+| 12.7 | Piano Roll: Noten auswählen, oben **Velocity** 40 eingeben, **Length** 1/16 wählen | Alle ausgewählten Noten werden leiser und kurz | ⚠️ | Velocity-Feld nicht gefunden, Anschlag schlecht lesbar, FX rechts einklappbar → 0.70.1 | 0.70.0 |
+| 12.8 | Studio: Audio-Clip, oben links das weiße Quadrat nach rechts ziehen, oben rechts nach links | Schräge Linie zeigt das Ein-/Ausblenden; beim Abspielen hört man es; Doppelklick = weg | ✅ |  | 0.70.0 |
+| 12.9 | Die Linie in der Mitte des Clips nach oben/unten ziehen | dB-Anzeige am Clip; Clip lauter/leiser; Doppelklick = 0 dB | ✅ |  | 0.70.0 |
+| 12.10 | Erscheinungsbild **Analog-Konsole**, Studio, Song abspielen | Unten Mischpult: VU-Nadeln bewegen sich, Pan-Knopf, Fader, M/S wirken; Titel und Spurnamen in Serifenschrift | 🗑 | Analog-Konsole entfernt (0.70.1) | 0.70.0 |
+| 12.11 | Erscheinungsbild **Swiss** | Große Position und Tempo, Transport als große Blöcke, große Spurnamen, Marker lesbar | ⚠️ | BPM nicht ganz sichtbar → 0.70.1 | 0.70.0 |
+| 12.12 | Erscheinungsbild **Hardware-Rack**: Menü ansehen | Bibliothek-Symbol grau wie die anderen; Stern bei „Musik erstellen“ in der Farbe des KI-Assistent-Knopfs | ✅ |  | 0.70.0 |
+| 12.3b | Master-Effekt (mit eigener Einstellung), Marker und Loop setzen, speichern, schließen, öffnen | Master-Effekt mit Einstellung, Marker und Loop sind wieder da | | | 0.70.1 |
+| 12.4b | `Demo-Song-4-Spuren-96BPM.mid` (von Claude geschickt) in ein leeres Studio ziehen | 4 MIDI-Spuren: Piano, Melody, Bass, Drums; Tempo 96 | | | 0.70.1 |
+| 12.5b | Rechtsklick auf den Melody-Clip → **Export as MIDI file (.mid)…**, die Datei wieder ins Studio ziehen (oder in einem anderen Programm öffnen) | Gleiche Noten | | | 0.70.1 |
+| 12.6b | Piano Roll, Werkzeug **Draw** (Fadenkreuz): auf leerer Fläche einen Rahmen um mehrere Noten ziehen; danach einmal klicken | Rahmen wählt die Noten aus (weiß umrandet); ein Klick setzt eine neue Note | | | 0.70.1 |
+| 12.7b | Piano Roll oben: **Velocity** und **Length** (grau, solange nichts gewählt); Noten wählen, Velocity 40, Length 1/16 | Felder immer da; ausgewählte Noten werden leiser und kurz; unten „Velocity/Anschlag“ gut lesbar | | | 0.70.1 |
+| 12.7c | Hardware-Rack: oben am Effekt-Rack rechts **›** klicken, dann den schmalen Streifen anklicken | Rack klappt zu einem Streifen zusammen und wieder auf; bleibt nach Neustart so | | | 0.70.1 |
+| 12.11b | Erscheinungsbild **Swiss** | Tempo (BPM) ganz sichtbar | | | 0.70.1 |
+| 12.13 | Einstellungen → Erscheinungsbild | Nur noch Dunkel, Hell, Swiss, Hardware-Rack | | | 0.70.1 |

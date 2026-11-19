@@ -16,7 +16,7 @@ const PIANO_WIDTH = 56
 const BEAT_WIDTH = 80
 const TOTAL_PITCHES = 128
 const EDGE = 6
-const VEL_HEIGHT = 84          // the velocity lane below the notes
+const VEL_HEIGHT = 96          // the velocity lane below the notes
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const BLACK_NOTES = [1, 3, 6, 8, 10]
 
@@ -113,6 +113,16 @@ export function PianoRoll(): React.ReactElement {
     }
     select(null)
     if (tool !== 'draw' || !track) return
+    // Draw tool: a click places a note; dragging on empty space draws a frame that selects notes (crosshair)
+    const rect = gridRef.current!.getBoundingClientRect()
+    const x = e.clientX - rect.left, y = e.clientY - rect.top
+    frameRef.current = { x0: x, y0: y, x1: x, y1: y }
+    pendingNote.current = { clientX: e.clientX, clientY: e.clientY, altKey: e.altKey }
+  }
+
+  // a note where the draw tool was clicked (without dragging)
+  const drawNoteAt = (e: { clientX: number; clientY: number; altKey: boolean }): void => {
+    if (!track) return
     const target = ensureClip()
     if (!target) return
     const p = pointer(e)
@@ -125,10 +135,7 @@ export function PianoRoll(): React.ReactElement {
     addNote(target.trackId, target.clipId, { pitch: p.pitch, startTime: start, duration: Math.max(snapStep() || 0, lastLength.current), velocity: 100 })
     void previewNote(p.pitch, 100, track)
     const added = useProjectStore.getState().project.tracks.find((t) => t.id === target.trackId)?.clips.find((c) => c.id === target.clipId)?.notes?.slice(-1)[0]
-    if (added) {
-      select(added.id)
-      drag.current = { noteId: added.id, kind: 'resize', startX: e.clientX, startY: e.clientY, orig: { ...added }, moved: false }
-    }
+    if (added) select(added.id)
   }
 
   const onNoteDown = (e: React.PointerEvent, note: Note): void => {
@@ -153,7 +160,9 @@ export function PianoRoll(): React.ReactElement {
       if (frameRef.current) {
         const rect = gridRef.current!.getBoundingClientRect()
         const f = { ...frameRef.current, x1: e.clientX - rect.left, y1: e.clientY - rect.top }
-        frameRef.current = f; setFrame(f)
+        frameRef.current = f
+        const pn = pendingNote.current
+        if (!pn || Math.abs(e.clientX - pn.clientX) + Math.abs(e.clientY - pn.clientY) > 5) { pendingNote.current = null; setFrame(f) }
         return
       }
       const v = velDrag.current
@@ -200,6 +209,9 @@ export function PianoRoll(): React.ReactElement {
       const f = frameRef.current
       if (!f) return
       frameRef.current = null; setFrame(null)
+      const pn = pendingNote.current
+      pendingNote.current = null
+      if (pn) { drawNoteAt(pn); return }                // a click with the draw tool: a note
       // notes inside the frame
       const bx0 = Math.min(f.x0, f.x1) / beatWidth, bx1 = Math.max(f.x0, f.x1) / beatWidth
       const py0 = TOTAL_PITCHES - 1 - Math.floor(Math.max(f.y0, f.y1) / NOTE_HEIGHT)
@@ -215,6 +227,7 @@ export function PianoRoll(): React.ReactElement {
 
   // the frame while it is drawn (a ref too: the move handler must see it without waiting for a render)
   const frameRef = useRef<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
+  const pendingNote = useRef<{ clientX: number; clientY: number; altKey: boolean } | null>(null)
 
   // Ctrl+A selects all notes while the Piano Roll was clicked last
   useEffect(() => {
@@ -257,7 +270,7 @@ export function PianoRoll(): React.ReactElement {
 
   return (
     <div ref={rootRef} style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-primary)', userSelect: 'none' }}>
-      <div style={{ height: 36, display: 'flex', alignItems: 'center', padding: '0 8px', gap: 6, borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 }}>
+      <div style={{ minHeight: 36, flexWrap: 'wrap', rowGap: 4, display: 'flex', alignItems: 'center', padding: '4px 8px', gap: 6, borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 }}>
         {(['draw', 'select', 'erase'] as const).map((t) => (
           <button key={t} onClick={() => setTool(t)}
             style={{ padding: '3px 10px', borderRadius: 4, border: '1px solid var(--border)', background: tool === t ? 'var(--accent)' : 'var(--bg-primary)', color: tool === t ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11 }}>
@@ -284,21 +297,21 @@ export function PianoRoll(): React.ReactElement {
         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
           {clip ? `${track.name} · ${clip.name ?? 'clip'} · ${notes.length} notes${sel.size > 1 ? ` · ${sel.size} selected` : ''}` : tr('No clip yet: click in the grid to create one')}
         </span>
-        {clip && sel.size > 0 && (() => {
+        {clip && (() => {
           const chosen = notes.filter((n) => sel.has(n.id))
-          if (!chosen.length) return null
-          const vel = Math.round(chosen.reduce((a, n) => a + n.velocity, 0) / chosen.length)
-          const len = chosen.every((n) => n.duration === chosen[0].duration) ? String(chosen[0].duration) : ''
+          const none = !chosen.length
+          const vel = none ? 100 : Math.round(chosen.reduce((a, n) => a + n.velocity, 0) / chosen.length)
+          const len = !none && chosen.every((n) => n.duration === chosen[0].duration) ? String(chosen[0].duration) : ''
           const setAll = (patch: Partial<Note>): void => { for (const n of chosen) updateNote(track.id, clip.id, n.id, patch) }
           return (
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)', marginLeft: 8 }}>
-              <label title={tr('Velocity (how hard the note is played) of the selected notes, 1 to 127')}>{tr('Velocity')}{' '}
-                <input key={`v${[...sel].join()}${vel}`} type="number" min={1} max={127} defaultValue={vel} style={{ width: 48 }}
+              <label title={tr('Velocity (how hard the note is played) of the selected notes, 1 to 127')} style={{ opacity: none ? 0.5 : 1 }}>{tr('Velocity')}{' '}
+                <input key={`v${[...sel].join()}${vel}`} type="number" min={1} max={127} defaultValue={none ? '' : vel} disabled={none} placeholder="–" style={{ width: 48 }}
                   onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
                   onBlur={(e) => { const v = Math.round(Number(e.target.value)); if (v >= 1 && v <= 127) setAll({ velocity: v }) }} /></label>
-              <label title={tr('Length of the selected notes in beats (1 = a quarter note)')}>{tr('Length')}{' '}
-                <select value={['0.125', '0.25', '0.5', '1', '2', '4'].includes(len) ? len : ''} onChange={(e) => { if (e.target.value) setAll({ duration: Number(e.target.value) }) }} style={{ fontSize: 11 }}>
-                  <option value="">{len ? trf('{n} beats', { n: Number(len).toFixed(2) }) : '…'}</option>
+              <label title={tr('Length of the selected notes in beats (1 = a quarter note)')} style={{ opacity: none ? 0.5 : 1 }}>{tr('Length')}{' '}
+                <select disabled={none} value={['0.125', '0.25', '0.5', '1', '2', '4'].includes(len) ? len : ''} onChange={(e) => { if (e.target.value) setAll({ duration: Number(e.target.value) }) }} style={{ fontSize: 11 }}>
+                  <option value="">{len ? trf('{n} beats', { n: Number(len).toFixed(2) }) : '–'}</option>
                   <option value="0.125">1/32</option><option value="0.25">1/16</option><option value="0.5">1/8</option>
                   <option value="1">1/4</option><option value="2">1/2</option><option value="4">1/1</option>
                 </select></label>
@@ -377,7 +390,10 @@ export function PianoRoll(): React.ReactElement {
       {/* velocity lane: one bar per note, drag a bar up or down (selected notes move together) */}
       {clip && (
         <div style={{ height: VEL_HEIGHT, flexShrink: 0, display: 'flex', borderTop: '1px solid var(--border)', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
-          <div style={{ width: PIANO_WIDTH, flexShrink: 0, fontSize: 9, color: 'var(--text-muted)', padding: '4px 4px', boxSizing: 'border-box', borderRight: '1px solid var(--border)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tr('Velocity')}</div>
+          <div style={{ width: PIANO_WIDTH, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--text-secondary)', padding: '4px 3px', boxSizing: 'border-box', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', wordBreak: 'break-word', lineHeight: 1.15 }}>
+            <span>{tr('Velocity')}</span>
+            <span style={{ fontSize: 9, fontWeight: 400, color: 'var(--text-muted)' }}>127 · 1</span>
+          </div>
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', left: -scrollX, top: 0, width: gridWidth, height: '100%' }}>
               {[32, 64, 96].map((v) => <div key={v} style={{ position: 'absolute', left: 0, right: 0, bottom: 4 + (v / 127) * (VEL_HEIGHT - 8), height: 1, background: 'rgba(255,255,255,0.05)' }} />)}

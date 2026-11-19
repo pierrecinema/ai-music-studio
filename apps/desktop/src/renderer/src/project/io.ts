@@ -7,6 +7,8 @@ import { useAudioStore } from '../stores/audio.store'
 import { resetHistory } from '../shortcuts/history'
 import { stop } from '../audio/engine'
 import type { Project } from '../types'
+import { parseProject } from './format'
+export { parseProject }
 
 const FORMAT = 'ams-project'
 const VERSION = 1
@@ -37,24 +39,6 @@ function remember(path: string): void {
 export function serialize(project: Project): string {
   const file: ProjectFile = { format: FORMAT, version: VERSION, savedWith: __APP_VERSION__, project }
   return JSON.stringify(file, null, 1)
-}
-
-export function parseProject(text: string): Project {
-  const data = JSON.parse(text) as Partial<ProjectFile>
-  if (data.format !== FORMAT || !data.project) throw new Error('This is not an AI Music Studio project file.')
-  if ((data.version ?? 1) > VERSION) throw new Error('This project was saved by a newer version of the app. Please update first.')
-  const p = data.project
-  // be forgiving with missing fields so that old or hand-edited files still open
-  return {
-    id: p.id ?? crypto.randomUUID(),
-    name: p.name ?? 'Untitled Project',
-    bpm: p.bpm || 120,
-    timeSignature: p.timeSignature ?? [4, 4],
-    sampleRate: p.sampleRate || 44100,
-    tracks: (p.tracks ?? []).map((t) => ({ ...t, clips: t.clips ?? [], volume: t.volume ?? 0.8, pan: t.pan ?? 0, muted: !!t.muted, soloed: !!t.soloed })),
-    createdAt: p.createdAt ?? new Date().toISOString(),
-    updatedAt: p.updatedAt ?? new Date().toISOString()
-  }
 }
 
 export async function missingFiles(project: Project): Promise<string[]> {

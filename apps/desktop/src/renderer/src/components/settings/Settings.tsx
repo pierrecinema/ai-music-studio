@@ -211,7 +211,6 @@ function UpdatesTab(): React.ReactElement {
 const THEME_LIST: Array<[Theme, string, string[]]> = [
   ['dark', 'Dark', ['#111214', '#1a1c20', '#7c3aed', '#333']],
   ['light', 'Light', ['#f0f1f3', '#ffffff', '#7c3aed', '#ccc']],
-  ['console', 'Analog console', ['#1d1813', '#2a231c', '#f0c674', '#6b4423']],
   ['swiss', 'Swiss', ['#ffffff', '#ffffff', '#ff4f00', '#000000']],
   ['rack', 'Hardware rack', ['#17181b', '#3b3e44', '#f5a623', '#9db48a']],
 ]

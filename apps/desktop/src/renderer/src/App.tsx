@@ -14,9 +14,9 @@ import { TopBar } from './components/layout/TopBar'
 import { Sidebar } from './components/layout/Sidebar'
 import { PianoRoll } from './components/piano-roll/PianoRoll'
 import { Timeline } from './components/timeline/Timeline'
+import { AiInstruments } from './components/instruments/AiInstruments'
 import { Mixer } from './components/mixer/Mixer'
 import { VocalEditor } from './components/vocal-editor/VocalEditor'
-import { InstrumentPanel } from './components/instruments/InstrumentPanel'
 import { AIChat } from './components/ai-chat/AIChat'
 import { ComingSoon } from './components/common/ComingSoon'
 import { StemSplitter } from './components/stem-splitter/StemSplitter'
@@ -177,7 +177,7 @@ export default function App(): React.ReactElement {
       case 'piano-roll':    return <PianoRoll />
       case 'mixer':         return <Mixer />
       case 'vocal-editor':  return <ComingSoon name={tr('Vocal Editor')} icon="🎤" />
-      case 'instruments':   return <ComingSoon name={tr('AI Instruments')} icon="🎻" />
+      case 'instruments':   return <AiInstruments />
       case 'ai-chat':       return <AIChat />
       case 'stem-splitter': return <StemSplitter />
       case 'video-composer':return <ComingSoon name={tr('Video Composer')} icon="🎬" />

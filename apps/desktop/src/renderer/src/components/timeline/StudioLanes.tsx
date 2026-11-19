@@ -3,6 +3,7 @@
 import { usePluginsStore } from '../../stores/plugins.store'
 import { isInstrumentLike, onVstChange, type PluginInfo, showVstEditor, vstFailure, vstParams, vstApplyState, vstStateNow, type VstParam } from '../../audio/vst/host'
 import { liveSampleRate, warmInstrument } from '../../audio/engine'
+import { TIMBRES } from '../../audio/synth'
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useProjectStore } from '../../stores/project.store'
@@ -442,13 +443,18 @@ export function InstrumentSelect({ track, style }: { track: Track; style?: React
   const updateTrack = useProjectStore((s) => s.updateTrack)
   const cur = track.instrument?.vst?.pluginId ?? ''
   return (
-    <select value={cur} style={style} title={tr('What plays the notes of this track')} onChange={(e) => {
-      const p = [...plugins, ...others].find((x) => x.id === e.target.value)
+    <select value={cur || `builtin:${track.sound ?? ''}`} style={style} title={tr('What plays the notes of this track')} onChange={(e) => {
+      const v = e.target.value
       e.target.blur()
+      if (v.startsWith('builtin:')) { updateTrack(track.id, { instrument: undefined, sound: (v.slice(8) || undefined) as Track['sound'] }); return }
+      const p = [...plugins, ...others].find((x) => x.id === v)
       if (!p) { updateTrack(track.id, { instrument: undefined }); return }
       setInstrument(track, p)
     }}>
-      <option value="">{tr('Built-in synth')}</option>
+      <optgroup label={tr('Built-in sounds')}>
+        <option value="builtin:">{tr('Built-in synth')}</option>
+        {TIMBRES.map((s) => <option key={s.id} value={`builtin:${s.id}`}>{tr(s.label)}</option>)}
+      </optgroup>
       {plugins.length > 0 && <optgroup label={tr('VST instruments')}>
         {plugins.map((p) => <option key={p.id} value={p.id}>{p.name}{p.vendor ? ` (${p.vendor})` : ''} · {p.format}{p.arch === 'x86' ? ' · 32-bit' : ''}</option>)}
       </optgroup>}

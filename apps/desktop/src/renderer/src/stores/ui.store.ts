@@ -25,6 +25,7 @@ interface UIState {
   libraryTab: 'tracks' | 'stems' | 'samples'   // open tab of the Library (other views can open it on a tab)
   panelHeight: number   // the panel under the Studio (mixer, piano roll, ...): drag its top edge
   chatOpen: boolean     // the AI assistant panel on the right
+  aiTrackId?: string    // AI Instruments: the MIDI track to start with (set by the Channel tab)
   setChatOpen: (open: boolean) => void
   setPanelHeight: (h: number) => void
 

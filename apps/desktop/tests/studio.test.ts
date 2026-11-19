@@ -21,6 +21,7 @@ import { parseMidi, writeMidi } from '../src/renderer/src/lib/midiFile'
 import { keyOf, profileFor } from '../src/renderer/src/midi/devices'
 import { isInstrumentLike } from '../src/renderer/src/audio/vst/host'
 import { parseProject } from '../src/renderer/src/project/format'
+import { bassist, bassRoot, chordName, detectChords, drummer, DRUM, DRUM_STYLES, fillChords, guitarist, guitarVoicing, parseChord, parseProgression, BASS_STYLES, GUITAR_STYLES } from '../src/renderer/src/lib/band'
 import { analyze, BiquadBank, CompressorCore, crossover, LimiterCore, MultibandCore, truePeakTaps } from '../src/renderer/src/audio/master/dsp'
 
 let failed = 0
@@ -429,6 +430,46 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
 {
   const base = { isInstrument: false, category: 'Fx', name: 'X', inputs: 2, outputs: 2 }
   check('instrument flags', isInstrumentLike({ ...base, name: 'Dexed' }) && isInstrumentLike({ ...base, category: 'Instrument|Synth' }) && isInstrumentLike({ ...base, inputs: 0 }) && !isInstrumentLike(base) && !isInstrumentLike({ ...base, name: 'ValhallaSupermassive' }))
+}
+
+// ── the virtual band ──
+{
+  check('chords parsed', chordName(parseChord('Am')!) === 'Am' && chordName(parseChord('C#m7')!) === 'C#m7' && chordName(parseChord('Bb')!) === 'A#' && chordName(parseChord('F/A')!) === 'F' && parseChord('H7') === null)
+  const prog = parseProgression('Am F C G')
+  check('progression: four chords of one bar', prog.chords.length === 4 && prog.chords[2].beat === 8 && prog.chords[3].length === 4 && !prog.bad.length)
+  const bars = parseProgression('C | G Am | F - ')
+  check('progression with bars: two chords share a bar, "-" holds', bars.chords.length === 4 && bars.chords[1].length === 2 && bars.chords[2].beat === 6 && bars.chords[3].length === 4, JSON.stringify(bars.chords))
+  check('progression: unknown chords are reported', parseProgression('C Xyz G').bad[0] === 'Xyz')
+  check('chords repeat to fill the part', fillChords(prog.chords, 40).length === 10 && fillChords(prog.chords, 40)[9].beat === 36)
+  // C major then A minor, then nothing (keeps A minor)
+  const notes = [{ pitch: 48, start: 0, duration: 4 }, { pitch: 64, start: 0, duration: 4 }, { pitch: 67, start: 0, duration: 4 },
+    { pitch: 45, start: 4, duration: 4 }, { pitch: 60, start: 4, duration: 4 }, { pitch: 64, start: 4, duration: 4 }]
+  const found = detectChords(notes, 0, 12)
+  check('chords detected from notes', found.length === 2 && chordName(found[0]) === 'C' && chordName(found[1]) === 'Am' && found[1].length === 8, JSON.stringify(found.map((c) => [chordName(c), c.beat, c.length])))
+  const g7 = detectChords([{ pitch: 43, start: 0, duration: 4 }, { pitch: 59, start: 0, duration: 4 }, { pitch: 62, start: 0, duration: 4 }, { pitch: 65, start: 0, duration: 4 }], 0, 4)
+  check('a seventh chord', chordName(g7[0]) === 'G7', chordName(g7[0]))
+  for (const st of DRUM_STYLES) {
+    const d = drummer({ style: st.id, bars: 8, intensity: 0.7, fills: 4, seed: 3 })
+    const inRange = d.every((n) => n.startTime >= 0 && n.startTime < 32.2 && n.velocity >= 1 && n.velocity <= 127)
+    check(`drummer ${st.id}: notes in the 8 bars`, d.length > 20 && inRange, String(d.length))
+  }
+  const rock = drummer({ style: 'rock', bars: 4, intensity: 0.5, fills: 4, seed: 1, humanize: 0 })
+  check('rock: kick on 1, snare on 2 and 4, crash on 1, a fill in bar 4', rock.some((n) => n.pitch === DRUM.kick && n.startTime === 0) && rock.some((n) => n.pitch === DRUM.snare && n.startTime === 1)
+    && rock.some((n) => n.pitch === DRUM.crash && n.startTime === 0) && rock.some((n) => n.pitch === DRUM.tomLow && n.startTime >= 14))
+  check('the same seed plays the same part', JSON.stringify(drummer({ style: 'funk', bars: 2, seed: 9 })) === JSON.stringify(drummer({ style: 'funk', bars: 2, seed: 9 })))
+  check('bass root in the bass range', bassRoot(4) === 28 && bassRoot(3) === 39 && bassRoot(9) === 33 && bassRoot(0, 2) === 48)
+  for (const st of BASS_STYLES) {
+    const b = bassist({ style: st.id, bars: 4, chords: prog.chords, seed: 2 })
+    check(`bass ${st.id}: notes, low, inside the part`, b.length >= 4 && b.every((n) => n.pitch >= 16 && n.pitch <= 60 && n.startTime < 16 && n.startTime + n.duration <= 16.3), String(b.length))
+  }
+  const root = bassist({ style: 'root', bars: 4, chords: prog.chords, humanize: 0 })
+  check('bass follows the chords: A, F, C, G', root.filter((n) => n.duration > 2).map((n) => n.pitch % 12).join(',') === '9,5,0,7', root.map((n) => n.pitch).join(','))
+  check('guitar voicings: E major open shape, power chord', guitarVoicing({ root: 4, quality: 'maj' }).join(',') === '40,47,52,56,59,64' && guitarVoicing({ root: 9, quality: 'min' }, true).join(',') === '45,52,57')
+  check('A minor voicing has a C', guitarVoicing({ root: 9, quality: 'min' }).some((p) => p % 12 === 0))
+  for (const st of GUITAR_STYLES) {
+    const g = guitarist({ style: st.id, bars: 4, chords: prog.chords, seed: 4 })
+    check(`guitar ${st.id}: notes inside the part`, g.length >= 8 && g.every((n) => n.startTime < 16 && n.pitch >= 40 && n.pitch <= 80), String(g.length))
+  }
 }
 
 console.log(`${passed} passed, ${failed} failed`)

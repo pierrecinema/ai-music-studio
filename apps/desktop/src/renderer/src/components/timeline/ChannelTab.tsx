@@ -8,6 +8,7 @@ import { AutomateButton, FxAddSelect, InstrumentSelect, MiniMeter, openPlugin, P
 import { INSERT_LABEL } from '../../audio/fx'
 import { openLanes } from './studioLayout'
 import { tr } from '../../i18n/tr'
+import { useUIStore } from '../../stores/ui.store'
 
 const row: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)' }
 const db = (v: number): string => (v <= 0.0005 ? '-inf' : (20 * Math.log10(v)).toFixed(1))
@@ -66,6 +67,8 @@ export function ChannelTab({ onClose }: { onClose: () => void }): React.ReactEle
                 {t.instrument && <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 5px' }} title={tr('Open the plugin window')} onClick={() => void openPlugin(t.instrument!, t.name)}>{tr('Open')}</button>}
               </div>
               {t.instrument?.vst && <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}><PresetSelect fx={t.instrument} style={{ maxWidth: '100%', flex: 1 }} /><AutomateButton track={t} fx={t.instrument} /></div>}
+              <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Play this track with an AI instrument (violin, trumpet …) or let a virtual band play along')}
+                onClick={() => { useUIStore.setState({ aiTrackId: t.id }); useUIStore.getState().setActiveView('instruments') }}>🎻 {tr('AI instrument…')}</button>
             </>
           )}
 

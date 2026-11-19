@@ -54,7 +54,7 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 ## Pending list (owner)
 
 - **Album mastering** (Mastering step 6): several songs, the same loudness, gaps, one export. Put on the list on 2026-11-19.
-- **Plugin automation and presets:** explained to the owner on 2026-11-19, decision open.
+- Plugin automation and presets: done in 0.71 / 0.73. Dexed in the instrument selector, VST instruments in + Effect… and the CH/KA button: 0.73.2, tested OK (15.4c/d).
 
 ## Ideas from the owner (19.11.2026)
 

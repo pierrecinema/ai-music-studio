@@ -14,6 +14,10 @@ const FREE: FreePlugin[] = [
   { id: 'dexed', repo: 'asb2m10/dexed', assets: [/win.*(x64|64).*\.zip$/i, /win.*\.zip$/i], page: 'https://github.com/asb2m10/dexed/releases/latest' },
   // hybrid synthesizer (wavetable, FM, virtual analog), GPL-3
   { id: 'surge', repo: 'surge-synthesizer/releases-xt', assets: [/win64.*plugins?only.*\.zip$/i, /win.*64.*\.zip$/i], page: 'https://github.com/surge-synthesizer/releases-xt/releases/latest' },
+  // probability step sequencer (MIDI), GPL-3
+  { id: 'stochas', repo: 'surge-synthesizer/stochas', assets: [/win.*64.*\.zip$/i, /win.*\.zip$/i], page: 'https://github.com/surge-synthesizer/stochas/releases/latest' },
+  // kick drum synthesizer, BSD-3
+  { id: 'chowkick', repo: 'Chowdhury-DSP/ChowKick', assets: [/win.*64.*\.zip$/i, /win.*\.zip$/i], page: 'https://github.com/Chowdhury-DSP/ChowKick/releases/latest' },
 ]
 
 export function freePluginsDir(): string { return join(app.getPath('userData'), 'plugins') }

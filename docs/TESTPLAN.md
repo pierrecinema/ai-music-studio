@@ -404,3 +404,14 @@ Vorbereitung: Ein Projekt mit einer MIDI-Spur, auf der eine Melodie mit Akkorden
 | 17.7 | KI-Orchester: Melodie-Spur des Songs, **Violine** → spielen | Audiospur „Violin (AI)“ (beim ersten Mal lädt es die Modelle) | | | 0.81.0 |
 | 17.8 | Text-Instrument: Feld **Instrument / Stil (hier eingeben)** oder einen Vorschlag anklicken | Text steht im Feld | | | 0.81.0 |
 | 17.9 | Musik erstellen: ACE-Step 1.5, 2 Songs × 2 Varianten (wie gestern) | Alle 4 entstehen; falls der Speicher ausgeht: Hinweis „ACE-Step was started again for the rest“ und trotzdem 4 Songs | | | 0.81.0 |
+
+## 18. Neu in 0.82.0: kostenlose Plugins, PyTorch für NVIDIA
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 18.1 | Einstellungen → Plugins → **Kostenlose Plugins** | 40 Einträge, Filter Alle / Effekte / Instrumente / MIDI; Dexed und Surge mit ✓ | | | 0.82.0 |
+| 18.2 | Bei **Valhalla Supermassive** auf **Download-Seite ↗** | Die Valhalla-Seite öffnet sich im Browser | | | 0.82.0 |
+| 18.3 | Supermassive dort herunterladen und installieren, dann **Nach Plugins suchen** | Supermassive bekommt ein ✓ und steht im Studio unter + Effekt… | | | 0.82.0 |
+| 18.4 | **CHOW Kick** → **Installieren** | Lädt und installiert sich (oder öffnet die Release-Seite, falls es dort kein ZIP gibt); danach ✓ und unter Kanal → Instrument wählbar | | | 0.82.0 |
+| 18.5 | (Wer eine NVIDIA-Karte hat, z. B. der YouTube-Nutzer mit GTX 1080) KI-Engines → PyTorch mit CUDA installieren | Das Log zeigt „compute capability 6.1: trying cu126 …“, die Installation läuft durch | | | 0.82.0 |
+

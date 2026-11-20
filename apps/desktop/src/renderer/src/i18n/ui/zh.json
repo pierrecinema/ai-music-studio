@@ -1508,5 +1508,17 @@
  "e.g. electric guitar, overdrive": "例如 electric guitar, overdrive",
  "{bars} bars, about {min}:{sec} min. Chords: {chords}": "{bars} 小节，约 {min}:{sec} 分钟。和弦：{chords}",
  "{what} is in the Studio: a new MIDI track at bar {bar}. Change its sound with KA → Instrument in its track (any VST instrument too).": "{what} 已在 Studio 中：从第 {bar} 小节开始的新 MIDI 轨。在轨道上用 通道 → 乐器 更换音色（也可用任何 VST）。",
- "½ bar": "半小节"
+ "½ bar": "半小节",
+ "All": "全部",
+ "Effects": "效果器",
+ "Instruments": "乐器",
+ "Free plugins": "免费插件",
+ "{n} of {total} installed": "已安装 {n} / {total}",
+ "The best free plugins (LANDR list 2026). Open-source ones install with one click. For the others the maker’s page opens: download and install the plugin there (some ask for a free account), then press Search for plugins below and it appears in the app.": "最佳免费插件（LANDR 2026 列表）。开源插件一键安装。其他插件会打开厂商页面：在那里下载并安装（有些需要免费账户），然后点击下方的“搜索插件”。",
+ "Installed (found by the plugin search)": "已安装（插件搜索已找到）",
+ "Not installed yet": "尚未安装",
+ "Needs a free account / the maker’s installer app": "需要免费账户 / 厂商的安装程序",
+ "MIDI plugin: it makes notes; the app will play them through an instrument in a later version (MIDI effects before the instrument).": "MIDI 插件：它生成音符；应用将在后续版本中通过乐器播放。",
+ "Download page": "下载页面",
+ "{name} {tag} is installed.": "{name} {tag} 已安装。"
 }

@@ -18,7 +18,7 @@ The AI features (songs, loops, stems, mastering, Audio → MIDI) run in a Python
 | Package (as named in the app) | What for |
 |---|---|
 | Core backend | the AI server, AI Chat, MIDI tools (always installed) |
-| PyTorch | base of most local models (CPU, or CUDA for NVIDIA cards) |
+| PyTorch | base of most local models (CPU, or CUDA for NVIDIA cards: the app picks the build that fits the card, CUDA 12.6 for GTX 9xx to RTX 40xx and 12.8 for RTX 50xx, and falls back to the processor build if none installs) |
 | Stem separation (Demucs) | [[Stem Splitter]]: vocals, drums, bass, piano, guitar |
 | Fast vocal separation (vocals + instrumental, 4 stems) | the fast Stem Splitter modes, on the graphics card (AMD, Intel, NVIDIA) |
 | Audio → MIDI (basic-pitch) | notes from a stem into the [[Piano Roll]] |

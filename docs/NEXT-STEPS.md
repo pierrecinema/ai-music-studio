@@ -89,6 +89,7 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ## Owner's wishes for coming features
 
+- **MIDI to singer (user wish, 20.11.2026):** a user asked for "MIDI to singer": sing a MIDI melody with lyrics. Planned as part of the Vocal Editor (0.90).
 - **Vocal Editor (12.11.2026):** very short vocals must be possible too, down to a single word or a short phrase,
   to make vocal samples (one-shots and short vocal loops for the Library / Samples). Think: word or phrase,
   voice (male / female / style), language, tempo and key; result trimmed to the sung part (no silence), saved to the

@@ -489,8 +489,8 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 26.1 | Einstellungen → Allgemein → Sprache: **Русский** | Die ganze App ist russisch (Menü, Studio, Einstellungen, KI-Instrumente, Mixer) | | | 0.86.0 |
-| 26.2 | Wieder **Deutsch** wählen | Alles wieder deutsch | | | 0.86.0 |
-| 26.3 | Song-Generator: Afro House → Studio | Die Namen „Melodie (Afro House, Am)“ usw. sind ganz lesbar; M S FX KA A × stehen in der Zeile darunter | | | 0.86.0 |
-| 26.4 | Im Studio nach rechts scrollen, einen MIDI- oder Audio-Clip anklicken | Der Clip beginnt rechts von der Spur-Leiste, nichts scheint durch die Leiste | | | 0.86.0 |
-| 26.5 | KA (Kanal) einer Spur öffnen, Pan nach links und rechts ziehen | Der Regler bewegt sich, die Spur wandert hörbar; hat die Spur eine Pan-Automation, steht ein gelber Hinweis da | | | 0.86.0 |
+| 26.1 | Einstellungen → Allgemein → Sprache: **Русский** | Die ganze App ist russisch (Menü, Studio, Einstellungen, KI-Instrumente, Mixer) | ✅ | | 0.86.0 |
+| 26.2 | Wieder **Deutsch** wählen | Alles wieder deutsch | ✅ | | 0.86.0 |
+| 26.3 | Song-Generator: Afro House → Studio | Die Namen „Melodie (Afro House, Am)“ usw. sind ganz lesbar; M S FX KA A × stehen in der Zeile darunter | ✅ | | 0.86.0 |
+| 26.4 | Im Studio nach rechts scrollen, einen MIDI- oder Audio-Clip anklicken | Der Clip beginnt rechts von der Spur-Leiste, nichts scheint durch die Leiste | ✅ | | 0.86.0 |
+| 26.5 | KA (Kanal) einer Spur öffnen, Pan nach links und rechts ziehen | Der Regler bewegt sich, die Spur wandert hörbar; hat die Spur eine Pan-Automation, steht ein gelber Hinweis da | ✅ | | 0.86.0 |

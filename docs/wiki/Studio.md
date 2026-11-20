@@ -66,6 +66,9 @@ Right-click a track header, or click the colour strip at its left: pick a colour
 ## Warp markers
 Right-click → *Edit warp markers*: double-click the waveform to set a marker, drag it onto another beat (the audio between is stretched without changing the pitch), Alt+click deletes it.
 
+## Track header
+The first row shows the whole track name (double-click to rename). The row below shows the type (audio, midi, group, or the VST instrument) and the buttons **M** (mute), **S** (solo), **FX** (effects lane), **CH** (channel), **A** (automation lanes), **T** (take lanes, after loop recording) and **×** (delete). The third row has the volume slider and one small send slider per return track.
+
 ## Studio and Mixer height
 Drag the divider between the Studio and the [[Mixer]] to any height; double-click resets it.
 

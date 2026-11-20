@@ -29,7 +29,10 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.85: a console-style Mixer, real instruments for MIDI tracks
+### New in 0.86: Russian, readable track names; 0.85: a console-style Mixer; 0.84: real instruments for MIDI tracks
+
+- **Русский**: the whole app in Russian (Settings → General → Language).
+- Long track names are readable in the Studio; clips no longer show through the track header.
 
 - **Mixer** like a studio console: white-cap faders with a dB scale, orange LED meters, lit mute / solo keys, pan knobs (0.85.1: narrower strips, pan by dragging sideways).
 
@@ -65,7 +68,7 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 | **Library** | Songs, loops, stems and samples with tempo and tags; search by name, tag or BPM; export as WAV, AIFF, FLAC or MP3 | |
 | **AI Chat** | Music assistant for chords, lyrics and ideas | Claude, ChatGPT, Grok, or free and local with Ollama |
 | **Hardware** | Runs on the CPU; faster on NVIDIA (CUDA) and AMD / Intel graphics cards (DirectML) | PyTorch |
-| **Languages** | The whole app in English, German, French, Spanish, Italian, Portuguese and Chinese; menus in Japanese and Korean | |
+| **Languages** | The whole app in English, German, French, Spanish, Italian, Portuguese, Russian and Chinese; menus in Japanese and Korean | |
 
 ### Coming soon
 
@@ -229,7 +232,7 @@ pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 ## Languages
 
 Switch language in **Settings → General → Language**:
-- Fully translated: English, Deutsch, Français, Español, Italiano, Português, 中文
+- Fully translated: English, Deutsch, Français, Español, Italiano, Português, Русский, 中文
 - Menus only so far: 日本語, 한국어
 - How to add or improve a translation: [docs/TRANSLATING.md](docs/TRANSLATING.md)
 

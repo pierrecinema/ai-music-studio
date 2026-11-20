@@ -49,6 +49,9 @@ export function ChannelTab({ onClose }: { onClose: () => void }): React.ReactEle
             <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>R</span>
             <span style={{ width: 52, textAlign: 'right' }}>{Math.abs(t.pan) < 0.005 ? tr('Center') : t.pan > 0 ? `${Math.round(t.pan * 100)} % R` : `${Math.round(-t.pan * 100)} % L`}</span>
           </label>
+          {(hasAutomation(t, 'pan') || hasAutomation(t, 'volume')) && (
+            <span style={{ fontSize: 10, color: '#eab308' }}>{tr('Volume or pan follows its automation lane (A on the track): change the points there, or delete the lane to use the slider.')}</span>
+          )}
           <div style={{ display: 'flex', gap: 6 }}>
             <button className="btn btn-ghost" style={{ fontSize: 11, color: t.muted ? '#f59e0b' : undefined }} onClick={() => updateTrack(t.id, { muted: !t.muted })}>{tr('Mute')}</button>
             <button className="btn btn-ghost" style={{ fontSize: 11, color: t.soloed ? 'var(--accent-light)' : undefined }} onClick={() => updateTrack(t.id, { soloed: !t.soloed })}>{tr('Solo')}</button>

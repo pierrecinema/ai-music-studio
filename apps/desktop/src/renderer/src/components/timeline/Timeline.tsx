@@ -537,11 +537,14 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                   onBlur={(e) => { updateTrack(track.id, { name: e.target.value.trim() || track.name }); setRenaming(null) }}
                   onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setRenaming(null); e.stopPropagation() }} />
               ) : (
-                <div className="track-title" onDoubleClick={() => setRenaming(track.id)} title={tr('Double-click to rename')}
+                <div className="track-title" onDoubleClick={() => setRenaming(track.id)} title={`${track.name} · ${tr('Double-click to rename')}`}
                   style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{track.name}</div>
               )}
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{isGroup ? `group · ${childCount(track)} tracks` : track.instrument?.vst ? `${track.type} · ${track.instrument.vst.name}` : track.type}{track.takes?.length ? ` · ${track.takes.length} takes` : ''}</div>
             </div>
+          </div>
+          {/* the name has the whole first row (owner: long names were cut to "Melodie ..."); type and buttons below */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+            <div style={{ flex: 1, minWidth: 0, fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isGroup ? `group · ${childCount(track)} tracks` : track.instrument?.vst ? `${track.type} · ${track.instrument.vst.name}` : track.type}{track.takes?.length ? ` · ${track.takes.length} takes` : ''}</div>
             {isGroup && (
               <button onClick={(e) => { e.stopPropagation(); openGroup(track) }} style={{ ...tinyBtn, color: track.height !== undefined ? 'var(--accent-light)' : 'var(--text-muted)' }}
                 title={tr('Show the stems large / normal (or double-click the group)')}>⇕</button>
@@ -624,7 +627,10 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             width: HEADER_WIDTH, flexShrink: 0, position: 'sticky', left: 0, zIndex: 4, boxSizing: 'border-box',
             borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', borderLeft: `3px solid ${track.color}`,
             padding: row.kind === 'track' ? `6px 8px 4px ${8 + (row.depth ?? 0) * 12}px` : 0, cursor: row.kind === 'track' ? 'pointer' : 'default',
-            background: isSel ? 'var(--bg-hover)' : row.kind === 'track' ? (track.type === 'group' ? 'var(--bg-panel)' : 'var(--bg-secondary)') : 'var(--bg-primary)'
+            // always opaque: the selected colour is see-through in some looks, and clips scrolled under the header showed
+            // through it (owner: a clicked clip covered the track header)
+            backgroundColor: row.kind === 'track' ? (track.type === 'group' ? 'var(--bg-panel)' : 'var(--bg-secondary)') : 'var(--bg-primary)',
+            backgroundImage: isSel ? 'linear-gradient(var(--bg-hover), var(--bg-hover))' : undefined
           }}>
           {row.kind === 'track' && (
             <div title={tr('Track colour: click to change')} onClick={(e) => { e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, kind: 'track', trackId: track.id }) }}

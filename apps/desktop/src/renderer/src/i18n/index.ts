@@ -10,6 +10,7 @@ import pt from './locales/pt.json'
 import zh from './locales/zh.json'
 import ja from './locales/ja.json'
 import ko from './locales/ko.json'
+import ru from './locales/ru.json'
 
 i18n
   .use(initReactI18next)
@@ -23,7 +24,8 @@ i18n
       pt: { translation: pt },
       zh: { translation: zh },
       ja: { translation: ja },
-      ko: { translation: ko }
+      ko: { translation: ko },
+      ru: { translation: ru }
     },
     lng: localStorage.getItem('ams-language') ?? 'en',
     fallbackLng: 'en',

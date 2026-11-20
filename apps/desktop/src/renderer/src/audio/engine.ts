@@ -332,6 +332,32 @@ export function scheduleProject(
   const returnInputs = new Map<string, AudioNode>()
   const nodes: Array<AudioScheduledSourceNode> = []
   const until = opts.untilBeat ?? Infinity
+  // Built-in sounds while playing live: the notes are made a few seconds ahead, not all at the start. A generated
+  // song has up to 5000 notes, each several audio nodes; making them all at once overloaded the audio thread of
+  // older processors and everything crackled (owner, i7 of 2011). Export (offline) still makes all of them at once.
+  // Export renders the same way: the offline render stops every 2 s, makes the next notes and goes on (all notes at
+  // once rendered 10 s of a generated song in 83 s; this way in about 1 s).
+  const live = typeof AudioContext !== 'undefined' && ctx instanceof AudioContext
+  // (not with plugins: their own pump suspends the render every block and a second suspend at the same time fails)
+  const offline = typeof OfflineAudioContext !== 'undefined' && ctx instanceof OfflineAudioContext && !projectHasVst(project)
+  const pending: Array<{ at: number; dur: number; pitch: number; vel: number; timbre: Timbre; bus: AudioNode }> = []
+  let pendingIx = 0
+  const sounding = new Set<AudioScheduledSourceNode>()
+  let pumpTimer = 0
+  let cutAt = Infinity
+  const AHEAD = 2.5
+  const pump = (): void => {
+    const horizon = (ctx as AudioContext).currentTime + AHEAD
+    while (pendingIx < pending.length && pending[pendingIx].at < horizon) {
+      const e = pending[pendingIx++]
+      if (e.at >= cutAt) continue
+      for (const n of playSynthNote(ctx, e.bus, e.pitch, e.vel, e.at, e.dur, e.timbre)) {
+        sounding.add(n)
+        n.onended = () => { sounding.delete(n) }       // ended notes are let go, the set does not grow with the song
+      }
+    }
+    if (pendingIx >= pending.length) { window.clearInterval(pumpTimer); pumpTimer = 0 }
+  }
   // the master effects: every track and return goes through them before the master fader
   const masterChain = (project.masterFx ?? []).length ? makeStrip(ctx, dest, project.masterFx, 60 / bpmAt(project, fromBeat)) : null
   if (masterChain) dest = masterChain.bus
@@ -467,7 +493,8 @@ export function scheduleProject(
           if (instrument) {
             const vel = Math.max(1, Math.min(127, Math.round(n.velocity)))
             midi.push([at, 0x90, n.pitch, vel], [at + dur, 0x80, n.pitch, 0])
-          } else nodes.push(...playSynthNote(ctx, strip.bus, n.pitch, n.velocity, at, dur, timbre))
+          } else if (live || offline) pending.push({ at, dur, pitch: n.pitch, vel: n.velocity, timbre, bus: strip.bus })
+          else nodes.push(...playSynthNote(ctx, strip.bus, n.pitch, n.velocity, at, dur, timbre))
         }
       }
     }
@@ -489,11 +516,26 @@ export function scheduleProject(
     if (instrument) instrument.play(midi.sort((a, b) => a[0] - b[0] || ((a[1] & 0xf0) === 0x80 ? -1 : 1) - ((b[1] & 0xf0) === 0x80 ? -1 : 1)))
   }
 
+  if (pending.length) {
+    pending.sort((a, b) => a.at - b.at)
+    pump()
+    if (pendingIx < pending.length && live) pumpTimer = window.setInterval(pump, 250)
+    if (pendingIx < pending.length && offline) {
+      const off = ctx as OfflineAudioContext
+      const quantum = 128 / off.sampleRate
+      for (let t = 2; t < off.length / off.sampleRate; t += 2) {
+        const at = Math.round(t / quantum) * quantum                // suspend works on whole render blocks
+        off.suspend(at).then(() => { pump(); return off.resume() }).catch(() => { /* render already past */ })
+      }
+    }
+  }
+
   const all = (): Strip[] => [...strips.values(), ...returns.values(), ...(masterChain ? [masterChain] : [])]
   return {
     strips,
     returns,
     stop: (fade = true) => {
+      window.clearInterval(pumpTimer); pumpTimer = 0; pendingIx = pending.length
       const t = (ctx as AudioContext).currentTime ?? 0
       for (const s of all()) {
         try {
@@ -501,14 +543,15 @@ export function scheduleProject(
         } catch { /* context closed */ }
       }
       const kill = (): void => {
-        for (const n of nodes) { try { n.stop() } catch { /* not started */ } }
+        for (const n of [...nodes, ...sounding]) { try { n.stop() } catch { /* not started */ } }
         for (const s of all()) { try { s.bus.disconnect() } catch { /* gone */ } for (const d of s.dispose) d() }
       }
       if (fade) window.setTimeout(kill, 40)
       else kill()
     },
     stopAt: (time: number) => {
-      for (const n of nodes) { try { n.stop(time) } catch { /* already stopped */ } }
+      cutAt = Math.min(cutAt, time)                      // notes not made yet after this moment are never made
+      for (const n of [...nodes, ...sounding]) { try { n.stop(time) } catch { /* already stopped */ } }
       // return tracks keep their tail (reverb, echoes) for a moment, then everything is freed
       const free = Math.max(0, time - ((ctx as AudioContext).currentTime ?? 0)) * 1000 + 6000
       window.setTimeout(() => { for (const s of all()) { try { s.bus.disconnect() } catch { /* gone */ } for (const d of s.dispose) d() } }, free)

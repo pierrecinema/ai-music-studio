@@ -509,3 +509,4 @@ Vorher: in Einstellungen → Plugins → Kostenlose Plugins → MIDI einen MIDI-
 | 27.6 | ⏻ beim MIDI-Effekt aus | Das Instrument spielt die Noten wieder direkt | | | 0.90.0 |
 | 27.7 | Song exportieren (WAV) | Im Export ist der Arpeggiator zu hören | | | 0.90.0 |
 | 27.8 | Projekt speichern, App schließen, Projekt öffnen | Der MIDI-Effekt ist mit seinen Einstellungen wieder da | | | 0.90.0 |
+| 27.9 | 15 oder mehr Spuren, Mixer öffnen; Mausrad über den Kanälen drehen | Die Kanäle scrollen nach rechts / links (unten eine sichtbare Leiste), MASTER bleibt rechts stehen | | | 0.90.0 |

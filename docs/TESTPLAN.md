@@ -501,12 +501,12 @@ Vorher: in Einstellungen → Plugins → Kostenlose Plugins → MIDI einen MIDI-
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 27.1 | Neue MIDI-Spur → **KA** → Instrument: **Surge XT** oder **Dexed** | Das Instrument spielt die Noten | | | 0.90.0 |
-| 27.2 | Darunter **MIDI-Effekte → + MIDI-Effekt…** → BlueArp (oder Stochas) | Das Plugin-Fenster öffnet sich; es steht in der Liste mit ⏻ ▲ ▼ × | | | 0.90.0 |
-| 27.3 | Einen Akkord (3 Noten, 4 Takte) in die Spur schreiben, abspielen | Der Arpeggiator spielt die Akkordtöne nacheinander, im Takt des Songs | | | 0.90.0 |
-| 27.4 | Tempo oben ändern (z. B. 90 → 140), wieder abspielen | Der Arpeggiator folgt dem neuen Tempo | | | 0.90.0 |
-| 27.5 | Im Piano Roll Noten anklicken / am MIDI-Keyboard spielen | Man hört die Noten durch den MIDI-Effekt | | | 0.90.0 |
-| 27.6 | ⏻ beim MIDI-Effekt aus | Das Instrument spielt die Noten wieder direkt | | | 0.90.0 |
-| 27.7 | Song exportieren (WAV) | Im Export ist der Arpeggiator zu hören | | | 0.90.0 |
-| 27.8 | Projekt speichern, App schließen, Projekt öffnen | Der MIDI-Effekt ist mit seinen Einstellungen wieder da | | | 0.90.0 |
-| 27.9 | 15 oder mehr Spuren, Mixer öffnen; Mausrad über den Kanälen drehen | Die Kanäle scrollen nach rechts / links (unten eine sichtbare Leiste), MASTER bleibt rechts stehen | | | 0.90.0 |
+| 27.1 | Neue MIDI-Spur → **KA** → Instrument: **Surge XT** oder **Dexed** | Das Instrument spielt die Noten | ✅ | | 0.90.0 |
+| 27.2 | Darunter **MIDI-Effekte → + MIDI-Effekt…** → BlueArp (oder Stochas) | Das Plugin-Fenster öffnet sich; es steht in der Liste mit ⏻ ▲ ▼ × | ❌ | MIDI-Plugins nicht gefunden | 0.90.0 |
+| 27.3 | Einen Akkord (3 Noten, 4 Takte) in die Spur schreiben, abspielen | Der Arpeggiator spielt die Akkordtöne nacheinander, im Takt des Songs | ❓ | Ohne MIDI-Effekt getestet | 0.90.0 |
+| 27.4 | Tempo oben ändern (z. B. 90 → 140), wieder abspielen | Der Arpeggiator folgt dem neuen Tempo | ❓ | Ohne MIDI-Effekt getestet | 0.90.0 |
+| 27.5 | Im Piano Roll Noten anklicken / am MIDI-Keyboard spielen | Man hört die Noten durch den MIDI-Effekt | ❓ | Ohne MIDI-Effekt getestet | 0.90.0 |
+| 27.6 | ⏻ beim MIDI-Effekt aus | Das Instrument spielt die Noten wieder direkt | ❓ | Ohne MIDI-Effekt getestet | 0.90.0 |
+| 27.7 | Song exportieren (WAV) | Im Export ist der Arpeggiator zu hören | ❌ | Export nur Synth, ohne Effekt (kein MIDI-Effekt geladen) | 0.90.0 |
+| 27.8 | Projekt speichern, App schließen, Projekt öffnen | Der MIDI-Effekt ist mit seinen Einstellungen wieder da | ❌ | Ohne Effekt | 0.90.0 |
+| 27.9 | 15 oder mehr Spuren, Mixer öffnen; Mausrad über den Kanälen drehen | Die Kanäle scrollen nach rechts / links (unten eine sichtbare Leiste), MASTER bleibt rechts stehen | ✅ | | 0.90.0 |

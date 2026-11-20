@@ -27,7 +27,8 @@ function MidiFxSection({ track: t }: { track: Track }): React.ReactElement {
   const off = usePluginsStore((s) => s.off)
   const usable = all.filter((p) => !off.includes(p.id))
   const midi = usable.filter(isMidiPlugin)
-  const others = usable.filter((p) => !isMidiPlugin(p) && !isInstrumentLike(p))
+  // many MIDI plugins (BlueArp and other VST2 ones) call themselves instruments: they are listed too
+  const others = usable.filter((p) => !isMidiPlugin(p)).sort((a, b) => Number(isInstrumentLike(b)) - Number(isInstrumentLike(a)))
   const list = t.midiFx ?? []
   const set = (next: InsertFx[]): void => updateTrack(t.id, { midiFx: next })
   const add = (id: string): void => {

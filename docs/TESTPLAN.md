@@ -517,3 +517,14 @@ Vorher: in Einstellungen → Plugins → Kostenlose Plugins → MIDI einen MIDI-
 |---|---|---|---|---|---|
 | 28.1 | Spur mit Dexed/Surge + BlueArp: lange Akkordnoten schreiben, **abspielen**, KA offen lassen | Unter den MIDI-Effekten steht „MIDI: X Ereignisse in die Effekte → Y ans Instrument · Song läuft bei … BPM“. Bitte X und Y notieren | ✅ | Geht mit Dexed als Instrument und BlueArp/Stochas als MIDI-Effekt | 0.90.1 |
 | 28.2 | Dasselbe mit Stochas: im Stochas-Fenster ein paar Felder im Raster anklicken (das Muster ist am Anfang leer), abspielen | Stochas spielt sein Muster; Y wird größer | ✅ | Geht mit Dexed als Instrument und BlueArp/Stochas als MIDI-Effekt | 0.90.1 |
+
+## 29. Neu in 0.91.0: MCP-Werkzeuge für das offene Projekt
+
+Nur in einer Claude-Sitzung **auf diesem PC** (Claude-Desktop-App → Code → Ordner `ai-music-studio`). Einmal einrichten: `claude mcp add --transport http --scope user ai-music-studio http://127.0.0.1:38765/mcp`. AI Music Studio muss laufen.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 29.1 | Claude fragen: „Welche Plugins hat AI Music Studio gefunden?“ | Claude listet Dexed, Surge XT, BlueArp, Stochas … | | | 0.91.0 |
+| 29.2 | „Mach eine MIDI-Spur mit Dexed, setz BlueArp davor und schreib einen A-Moll-Akkord über 4 Takte.“ | Die Spur erscheint im Studio mit Dexed und BlueArp, der Akkord liegt im Clip; Abspielen klingt arpeggiert | | | 0.91.0 |
+| 29.3 | „Stell das Tempo auf 100 und spiel ab.“ / „Stopp.“ | Tempo 100, die App spielt / stoppt | | | 0.91.0 |
+| 29.4 | Spur → KA: als Instrument BlueArp wählen | Gelber Hinweis: MIDI-Plugin, kein Ton | | | 0.91.0 |

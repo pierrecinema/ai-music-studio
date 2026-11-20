@@ -21,6 +21,7 @@ import { parseMidi, writeMidi } from '../src/renderer/src/lib/midiFile'
 import { keyOf, profileFor } from '../src/renderer/src/midi/devices'
 import { isInstrumentLike } from '../src/renderer/src/audio/vst/host'
 import { parseProject } from '../src/renderer/src/project/format'
+import { GENRES, generateSong, romanChord } from '../src/renderer/src/lib/songgen'
 import { bassist, bassRoot, chordName, detectChords, drummer, DRUM, DRUM_STYLES, fillChords, guitarist, guitarVoicing, parseChord, parseProgression, BASS_STYLES, GUITAR_STYLES } from '../src/renderer/src/lib/band'
 import { analyze, BiquadBank, CompressorCore, crossover, LimiterCore, MultibandCore, truePeakTaps } from '../src/renderer/src/audio/master/dsp'
 
@@ -470,6 +471,29 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
     const g = guitarist({ style: st.id, bars: 4, chords: prog.chords, seed: 4 })
     check(`guitar ${st.id}: notes inside the part`, g.length >= 8 && g.every((n) => n.startTime < 16 && n.pitch >= 40 && n.pitch <= 80), String(g.length))
   }
+}
+
+// ── MIDI song generator ──
+{
+  check('roman numerals in C major and A minor', chordName(romanChord('vi', 0, 'major')) === 'Am' && chordName(romanChord('bVII', 0, 'major')) === 'A#' && chordName(romanChord('VI', 9, 'minor')) === 'F'
+    && chordName(romanChord('V7', 7, 'major')) === 'D7' && chordName(romanChord('ii7', 0, 'major')) === 'Dm7' && chordName(romanChord('bII', 9, 'minor')) === 'A#')
+  for (const g of GENRES) {
+    const song = generateSong({ genre: g.id, key: 9, seed: 5 })
+    const beats = song.bars * 4
+    const okNotes = song.parts.every((p) => p.notes.length > 0 && p.notes.every((n) => n.startTime >= 0 && n.startTime < beats + 0.2 && n.pitch >= 0 && n.pitch <= 127 && n.duration > 0))
+    check(`song ${g.id}: parts, sections and chords`, song.parts.length >= 3 && okNotes && song.sections.length >= 5 && song.chords.length > 4 && song.chords[0].beat === 0, song.parts.map((p) => p.id + ':' + p.notes.length).join(' '))
+  }
+  const pop = generateSong({ genre: 'pop', key: 0, seed: 1 })
+  const choruses = pop.sections.filter((s) => s.kind === 'chorus')
+  const chordsIn = (bar: number): string => pop.chords.filter((c) => c.beat >= bar * 4 && c.beat < (bar + 4) * 4).map(chordName).join(' ')
+  check('a chorus has the same chords each time', chordsIn(choruses[0].bar) === chordsIn(choruses[1].bar) && chordsIn(choruses[0].bar).length > 0, chordsIn(choruses[0].bar) + ' / ' + chordsIn(choruses[1].bar))
+  const mel = pop.parts.find((p) => p.id === 'melody')!
+  const scale = [0, 2, 4, 5, 7, 9, 11]
+  check('the melody stays in C major', mel.notes.every((n) => scale.includes(n.pitch % 12)), mel.notes.filter((n) => !scale.includes(n.pitch % 12)).map((n) => n.pitch).join(','))
+  const avg = (k: string): number => { const s = pop.sections.find((x) => x.kind === k)!; const ns = mel.notes.filter((n) => n.startTime >= s.bar * 4 && n.startTime < (s.bar + s.bars) * 4); return ns.reduce((a, n) => a + n.pitch, 0) / ns.length }
+  check('the chorus melody sits higher than the verse', avg('chorus') > avg('verse'), `${avg('chorus')} vs ${avg('verse')}`)
+  check('parts can be left out', generateSong({ genre: 'rock', key: 4, parts: { guitar: false, melody: false } }).parts.map((p) => p.id).join(',') === 'bass,drums')
+  check('another take is different', JSON.stringify(generateSong({ genre: 'pop', key: 0, seed: 1 }).parts[0].notes) !== JSON.stringify(generateSong({ genre: 'pop', key: 0, seed: 2 }).parts[0].notes))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

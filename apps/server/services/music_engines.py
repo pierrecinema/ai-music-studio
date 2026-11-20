@@ -376,8 +376,47 @@ def ace15_repo() -> str | None:
     return p if p and os.path.exists(os.path.join(p, "acestep", "inference.py")) else None
 
 
+MEMORY_WORDS = ("not enough memory", "defaultcpuallocator", "out of memory", "1455", "paging file", "memoryerror")
+
+
 def generate_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_proc=None, log=print, on_warning=None,
                    more: list[dict] | None = None, on_done=None) -> float:
+    """ACE-Step 1.5 with several takes. If memory runs out part way (a PC with 12 GB RAM made 3 of 4 takes), the
+    finished takes are kept and the rest is made by a fresh worker process, which starts with all memory free."""
+    takes = [{"seed": song.get("seed"), "out": wav_path}] + list(more or [])
+    done: set[int] = set()
+    first: float | None = None
+    for attempt in range(3):
+        todo = [i for i in range(len(takes)) if i not in done]
+        if not todo:
+            break
+
+        def mark(k: int, secs: float, todo=todo) -> None:
+            nonlocal first
+            index = todo[k]
+            done.add(index)
+            if index == 0:
+                first = secs
+            if on_done:
+                on_done(index, secs)
+        try:
+            _run_ace15(dict(song, seed=takes[todo[0]]["seed"]), takes[todo[0]]["out"], on_stage, on_step, on_proc, log,
+                       on_warning, [takes[i] for i in todo[1:]], mark)
+        except RuntimeError as e:
+            left = [i for i in range(len(takes)) if i not in done]
+            if attempt < 2 and done and left and any(w in str(e).lower() for w in MEMORY_WORDS):
+                log(f"[ACE-Step 1.5] memory ran out after {len(done)} of {len(takes)} takes: starting again for the other {len(left)}")
+                if on_warning:
+                    on_warning(f"The memory ran out after {len(done)} of {len(takes)} takes; ACE-Step was started again for the rest.")
+                continue
+            raise
+    if first is None:
+        raise RuntimeError("ACE-Step 1.5 made no song.")
+    return first
+
+
+def _run_ace15(song: dict, wav_path: str, on_stage=None, on_step=None, on_proc=None, log=print, on_warning=None,
+               more: list[dict] | None = None, on_done=None) -> float:
     """Run ACE-Step 1.5 (services/ace15_worker.py) in its own environment. Returns the song length in seconds.
 
     `song`: caption, lyrics, instrumental, seconds, bpm, key, time_signature, language, seed.

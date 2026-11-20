@@ -173,14 +173,17 @@ export async function findPython(): Promise<PythonCmd | null> {
 }
 
 async function detectGpuNow(): Promise<'nvidia' | 'amd' | 'none'> {
-  // wmic is removed from recent Windows 11, so ask PowerShell first. Laptops often list
-  // an integrated and a discrete chip: NVIDIA wins, then AMD.
+  // The registry first: instant and it works where WMI does not answer (owner's PC: PowerShell's
+  // Get-CimInstance gave nothing, the registry named the "AMD Radeon R9 200 Series"). Then PowerShell; wmic is
+  // removed from recent Windows 11. Laptops often list an integrated and a discrete chip: NVIDIA wins, then AMD.
   const attempts: Array<[string, string[]]> = [
+    ['reg', ['query', 'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}', '/s', '/v', 'DriverDesc']],
     ['powershell', ['-NoProfile', '-NonInteractive', '-Command', '(Get-CimInstance Win32_VideoController).Name']],
     ['wmic', ['path', 'win32_VideoController', 'get', 'name']]
   ]
   for (const [cmd, args] of attempts) {
-    const out = (await capture(cmd, args, 20000)).out.toLowerCase()
+    let out = (await capture(cmd, args, 20000)).out.toLowerCase()
+    if (cmd === 'reg') out = out.split(/\r?\n/).filter((l) => l.includes('driverdesc')).join('\n')
     if (!out.trim()) continue
     if (/nvidia|geforce|rtx|gtx|quadro/.test(out)) return 'nvidia'
     if (/radeon|amd/.test(out)) return 'amd'

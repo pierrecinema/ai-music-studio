@@ -437,3 +437,9 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 | 20.4 | Song-Generator: Genre wechseln, Tempo-Knopf drehen, ERSTELLEN | Melodie-Vorschau und Akkorde ändern sich; Song im Studio | | | 0.83.0 |
 | 20.5 | Orchester: Instrument in der Liste wählen, RENDERN | Der Pegel-Balken zeigt den Fortschritt | | | 0.83.0 |
 
+## 21. Neu in 0.83.1: Grafikkarte in der Statusleiste
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 21.1 | App starten, ca. 10 Sekunden warten, unten in die Statusleiste schauen | „AMD Radeon R9 200 Series · CPU“ statt „none · CPU“ (Laptop: Intel-Grafik) | | | 0.83.1 |
+| 21.2 | Einstellungen → KI-Engines | Oben steht „GPU: amd“ statt „GPU: none“ | | | 0.83.1 |

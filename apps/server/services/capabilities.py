@@ -57,7 +57,7 @@ class Machine:
 
 def _run(cmd: list[str], timeout: int = 8) -> str:
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, errors="replace",
                            creationflags=CREATE_NO_WINDOW)
         return r.stdout or ""
     except Exception:

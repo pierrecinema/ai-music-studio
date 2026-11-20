@@ -116,7 +116,8 @@ app.include_router(samples.router, prefix="/samples", tags=["samples"])
 
 
 @app.get("/health")
-async def health():
+def health():
+    # not async: the hardware check may call PowerShell, which must not stop the other requests
     try:
         from services.hardware_detect import get_profile
         hw = get_profile()

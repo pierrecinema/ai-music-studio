@@ -162,13 +162,14 @@ function SongGenerator(): React.ReactElement {
   const chorus = song.sections.find((s) => s.kind === 'chorus' || s.kind === 'drop') ?? song.sections[0]
 
   const make = (): void => {
-    const st = useProjectStore.getState()
-    if (setTempo) st.setBpm(bpm)
-    const end = Math.max(0, ...st.project.tracks.flatMap((t) => t.clips.map((c) => c.startTime + c.duration)))
-    const start = Math.ceil(end / 4) * 4
+    if (setTempo) useProjectStore.getState().setBpm(bpm)
+    // from bar 1, under what is there (owner: a new song after the end of the project was out of sight and the new
+    // tracks looked empty); older tracks can be muted or hidden
+    const start = 0
     const keyName = `${KEY_NAMES[key]}${mode === 'minor' ? 'm' : ''}`
     for (const p of song.parts) addPartTrack(`${tr(p.name)} (${tr(g.label)}, ${keyName})`, p.sound, PART_COLORS[p.id], p.notes, start, song.bars * 4)
     if (markers) for (const s of song.sections) {
+      if ((useProjectStore.getState().project.markers ?? []).some((m) => m.end === undefined && Math.abs(m.beat - (start + s.bar * 4)) < 0.01)) continue
       const id = useProjectStore.getState().addMarker(start + s.bar * 4)
       useProjectStore.getState().updateMarker(id, { name: tr(SECTION_LABEL[s.kind]) })
     }

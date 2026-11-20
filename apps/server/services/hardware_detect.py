@@ -49,10 +49,48 @@ def _detect_cuda() -> bool:
         return False
 
 
+DISPLAY_CLASS = r"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}"
+
+
+def _gpu_names_registry() -> list[str]:
+    """The graphics drivers as Windows lists them in the registry: instant, no WMI. On the owner's PC WMI
+    (Get-CimInstance / wmic) gave nothing while the registry named the "AMD Radeon R9 200 Series"."""
+    try:
+        import winreg  # type: ignore
+    except ImportError:
+        return []
+    names: list[str] = []
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, DISPLAY_CLASS) as cls:
+            i = 0
+            while True:
+                try:
+                    sub = winreg.EnumKey(cls, i)
+                except OSError:
+                    break
+                i += 1
+                if not sub[:1].isdigit():
+                    continue
+                try:
+                    with winreg.OpenKey(cls, sub) as k:
+                        desc = str(winreg.QueryValueEx(k, "DriverDesc")[0]).strip()
+                except OSError:
+                    continue
+                if desc and desc not in names:
+                    names.append(desc)
+    except OSError:
+        return []
+    return names
+
+
 def _gpu_names() -> list[str]:
-    """All video controllers on Windows. wmic is gone from recent Windows 11, so PowerShell first."""
+    """All graphics cards on Windows: the registry first (fast, works without WMI), then PowerShell, then wmic
+    (gone from recent Windows 11)."""
     if platform.system() != "Windows":
         return []
+    names = _gpu_names_registry()
+    if names:
+        return names
     commands = [
         ["powershell", "-NoProfile", "-NonInteractive", "-Command",
          "(Get-CimInstance Win32_VideoController).Name"],
@@ -60,7 +98,7 @@ def _gpu_names() -> list[str]:
     ]
     for cmd in commands:
         try:
-            out = subprocess.run(cmd, capture_output=True, text=True, timeout=20,
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=20, errors="replace",
                                  creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
         except Exception:
             continue

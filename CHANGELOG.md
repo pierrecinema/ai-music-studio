@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.83.1
+
+### Fixed
+
+- **The graphics card shows in the status bar again** on PCs where Windows' hardware query (WMI) does not answer: the app now reads the card's name from the Windows registry first (instant), then asks PowerShell. Seen on an AMD Radeon R9 290, which showed as "none · CPU".
+- The backend's status check no longer holds up other requests while the hardware is being checked.
+
 ## 0.83.0
 
 - **AI Instruments redesigned after classic plugin front panels, each device in its own style:**

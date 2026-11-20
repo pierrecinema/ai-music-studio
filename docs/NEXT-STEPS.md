@@ -89,6 +89,7 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ## Owner's wishes for coming features
 
+- **Better sound packs (owner, 20.11.2026):** after 0.90: optional high-quality packs to install later, all free and redistributable, all reachable through the npm registry: Salamander Grand Piano V3 (CC-BY 3.0, `@audio-samples/piano-mp3-velocity*`), the VSCO-2 CE orchestra and VCSL (CC0, `@minicut/music-samples-1/2`), MuseScore General / FluidR3 Mono SF3 (MIT, `@librescore/sf3`, needs SF3 = Ogg samples). Needs a multisample loader next to the SF2 player.
 - **MIDI to singer (user wish, 20.11.2026):** a user asked for "MIDI to singer": sing a MIDI melody with lyrics. Planned as part of the Vocal Editor (0.90).
 - **Vocal Editor (12.11.2026):** very short vocals must be possible too, down to a single word or a short phrase,
   to make vocal samples (one-shots and short vocal loops for the Library / Samples). Think: word or phrase,

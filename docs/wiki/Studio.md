@@ -76,5 +76,7 @@ Drag the divider between the Studio and the [[Mixer]] to any height; double-clic
 
 ## Instruments (VST)
 
+**MIDI effects:** on a MIDI track with a VST instrument, *Channel → MIDI effects → + MIDI effect…* puts an arpeggiator, sequencer or chord / pattern generator (BlueArp, Stochas, CodeFN42, HY plugins …) in front of the instrument. The instrument plays what the MIDI effect makes, in the Studio, the Piano Roll, from a MIDI keyboard and in the export. Several can be chained (▲ ▼), ⏻ bypasses one, *Open* shows its window. Plugins get the song's tempo and position, so arpeggiators and sequencers play in time.
+
 A MIDI track plays its notes with the built-in synth, or with a **VST instrument**: *Channel → Instrument*, then pick one of your instrument plugins (Settings → Plugins; free ones: *Free instruments* there). Its window opens; **Open** opens it again, ⏻ switches back to the built-in synth. The instrument plays the clips, the notes you play in the Piano Roll and on a MIDI keyboard, MIDI recordings and the export. Its settings are saved with the project.
 

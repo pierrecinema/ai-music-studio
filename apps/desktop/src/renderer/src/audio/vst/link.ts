@@ -103,25 +103,32 @@ export class VstLink {
 export const AUDIO_MAGIC = 0x41534d41
 
 export const PARAM_EVENT = 0xf4                       // an automation event among the MIDI: [offset, 0xF4, parameter index, value 0..1]
+export const TRANSPORT_EVENT = 0xf5                   // the song's transport: [offset, 0xF5, bpm (0: stopped), position in quarter notes]
 
 export function packBlock(instance: number, seq: number, block: Float32Array[], reset: boolean, events: number[][] = []): ArrayBuffer {
-  const midi = events.filter((e) => e[1] !== PARAM_EVENT), params = events.filter((e) => e[1] === PARAM_EVENT)
+  const midi = events.filter((e) => e[1] !== PARAM_EVENT && e[1] !== TRANSPORT_EVENT)
+  const params = events.filter((e) => e[1] === PARAM_EVENT), tr = events.filter((e) => e[1] === TRANSPORT_EVENT)
   const frames = block[0].length
   const pAt = 24 + midi.length * 8                     // MIDI events (8 bytes each) between the header and the audio
-  const head = pAt + (params.length ? 4 + params.length * 12 : 0)   // then (flag 2) the parameter changes
+  const tAt = pAt + (params.length ? 4 + params.length * 12 : 0)   // then (flag 2) the parameter changes
+  const head = tAt + (tr.length ? 4 + tr.length * 16 : 0)            // then (flag 4) the transport
   const buf = new ArrayBuffer(head + block.length * frames * 4)
   const v = new DataView(buf)
   v.setUint32(0, AUDIO_MAGIC, true)
   v.setUint32(4, instance, true)
   v.setUint32(8, seq >>> 0, true)
   v.setUint16(12, block.length, true)
-  v.setUint16(14, (reset ? 1 : 0) | (params.length ? 2 : 0), true)
+  v.setUint16(14, (reset ? 1 : 0) | (params.length ? 2 : 0) | (tr.length ? 4 : 0), true)
   v.setUint32(16, frames, true)
   v.setUint32(20, midi.length, true)
   midi.forEach((e, i) => { const o = 24 + i * 8; v.setUint32(o, e[0], true); v.setUint8(o + 4, e[1]); v.setUint8(o + 5, e[2]); v.setUint8(o + 6, e[3]) })
   if (params.length) {
     v.setUint32(pAt, params.length, true)
     params.forEach((e, i) => { const o = pAt + 4 + i * 12; v.setUint32(o, e[0], true); v.setUint32(o + 4, e[2], true); v.setFloat32(o + 8, e[3], true) })
+  }
+  if (tr.length) {
+    v.setUint32(tAt, tr.length, true)
+    tr.forEach((e, i) => { const o = tAt + 4 + i * 16; v.setUint32(o, e[0], true); v.setFloat32(o + 4, e[2], true); v.setFloat64(o + 8, e[3], true) })
   }
   block.forEach((c, i) => new Float32Array(buf, head + i * frames * 4, frames).set(c))
   return buf

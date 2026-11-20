@@ -435,7 +435,7 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 | 20.2 | Schlagzeuger: Stil wechseln, Intensität drehen | Das Schritt-Raster ändert sich sofort | ✅ | Ton verzerrt → 0.83.2 | 0.83.0 |
 | 20.3 | Bassist / Gitarrist: Stil wechseln | Die Mini-Notenansicht ändert sich | ✅ | Ton verzerrt → 0.83.2 | 0.83.0 |
 | 20.4 | Song-Generator: Genre wechseln, Tempo-Knopf drehen, ERSTELLEN | Melodie-Vorschau und Akkorde ändern sich; Song im Studio | ⚠️ | Wegen Verzerrung nicht testbar → 0.83.2 | 0.83.0 |
-| 20.5 | Orchester: Instrument in der Liste wählen, RENDERN | Der Pegel-Balken zeigt den Fortschritt | ❌ | | 0.83.0 |
+| 20.5 | Orchester: Instrument in der Liste wählen, RENDERN | Der Pegel-Balken zeigt den Fortschritt | ✅ | Erstellt eine Violinen-Spur | 0.83.0 |
 
 ## 21. Neu in 0.83.1: Grafikkarte in der Statusleiste
 
@@ -494,3 +494,18 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 | 26.3 | Song-Generator: Afro House → Studio | Die Namen „Melodie (Afro House, Am)“ usw. sind ganz lesbar; M S FX KA A × stehen in der Zeile darunter | ✅ | | 0.86.0 |
 | 26.4 | Im Studio nach rechts scrollen, einen MIDI- oder Audio-Clip anklicken | Der Clip beginnt rechts von der Spur-Leiste, nichts scheint durch die Leiste | ✅ | | 0.86.0 |
 | 26.5 | KA (Kanal) einer Spur öffnen, Pan nach links und rechts ziehen | Der Regler bewegt sich, die Spur wandert hörbar; hat die Spur eine Pan-Automation, steht ein gelber Hinweis da | ✅ | | 0.86.0 |
+
+## 27. Neu in 0.90.0: MIDI-Effekte (Arpeggiator, Sequencer)
+
+Vorher: in Einstellungen → Plugins → Kostenlose Plugins → MIDI einen MIDI-Effekt installieren, z. B. **Stochas** (Installieren-Knopf) oder **BlueArp** (Download-Seite), dann **Nach Plugins suchen**.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 27.1 | Neue MIDI-Spur → **KA** → Instrument: **Surge XT** oder **Dexed** | Das Instrument spielt die Noten | | | 0.90.0 |
+| 27.2 | Darunter **MIDI-Effekte → + MIDI-Effekt…** → BlueArp (oder Stochas) | Das Plugin-Fenster öffnet sich; es steht in der Liste mit ⏻ ▲ ▼ × | | | 0.90.0 |
+| 27.3 | Einen Akkord (3 Noten, 4 Takte) in die Spur schreiben, abspielen | Der Arpeggiator spielt die Akkordtöne nacheinander, im Takt des Songs | | | 0.90.0 |
+| 27.4 | Tempo oben ändern (z. B. 90 → 140), wieder abspielen | Der Arpeggiator folgt dem neuen Tempo | | | 0.90.0 |
+| 27.5 | Im Piano Roll Noten anklicken / am MIDI-Keyboard spielen | Man hört die Noten durch den MIDI-Effekt | | | 0.90.0 |
+| 27.6 | ⏻ beim MIDI-Effekt aus | Das Instrument spielt die Noten wieder direkt | | | 0.90.0 |
+| 27.7 | Song exportieren (WAV) | Im Export ist der Arpeggiator zu hören | | | 0.90.0 |
+| 27.8 | Projekt speichern, App schließen, Projekt öffnen | Der MIDI-Effekt ist mit seinen Einstellungen wieder da | | | 0.90.0 |

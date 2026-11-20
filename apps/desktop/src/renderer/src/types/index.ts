@@ -32,6 +32,7 @@ export interface Track {
   sound?: 'soft' | 'bass' | 'lead' | 'drums' | 'guitar' | 'eguitar' | 'keys' | '808'   // MIDI tracks: the built-in sound (see audio/synth.ts)
   program?: number                        // MIDI tracks: a General MIDI instrument of the sound pack (0-127, 128+ drum kits)
   reverb?: number                         // MIDI tracks with the sound pack: room (0..1), unset = by instrument
+  midiFx?: InsertFx[]                     // MIDI tracks: MIDI effects (arpeggiators, chord tools …) before the VST instrument
   instrument?: InsertFx                   // MIDI tracks: a VST instrument (type 'vst') plays the notes instead of the built-in synth
   showFx?: boolean                        // the effects lane below the track is open
   takes?: TakeLane[]          // loop recording: one lane per pass (comping)

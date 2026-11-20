@@ -1,4 +1,6 @@
 #include "PluginHost.h"
+#include <algorithm>
+#include <cmath>
 #if JUCE_WINDOWS
  #include <windows.h>
 #endif
@@ -20,8 +22,28 @@ public:
     std::function<void()> closed;
 };
 
+// the song's transport as the plugins see it (tempo, position, playing), set by the app's frames (flag 4)
+struct HostPlayHead : public juce::AudioPlayHead
+{
+    bool playing = false;
+    double bpm = 120, ppq = 0;
+    int64_t samples = 0;
+    juce::Optional<PositionInfo> getPosition() const override
+    {
+        PositionInfo p;
+        p.setBpm (bpm);
+        p.setPpqPosition (ppq);
+        p.setPpqPositionOfLastBarStart (std::floor (ppq / 4.0) * 4.0);
+        p.setTimeSignature (TimeSignature { 4, 4 });
+        p.setTimeInSamples (samples);
+        p.setIsPlaying (playing);
+        return p;
+    }
+};
+
 struct PluginInstance : public juce::AudioProcessorListener
 {
+    HostPlayHead head;                    // before the plugin: it is destroyed after it
     std::atomic<bool> changed { false };
     void audioProcessorParameterChanged (juce::AudioProcessor*, int, float) override { changed = true; }
     void audioProcessorChanged (juce::AudioProcessor*, const ChangeDetails& d) override { if (d.parameterInfoChanged || d.programChanged || d.nonParameterStateChanged) changed = true; }
@@ -34,6 +56,7 @@ struct PluginInstance : public juce::AudioProcessorListener
     double sampleRate = 48000;
     int maxBlock = 2048;
     std::unique_ptr<EditorWindow> window; // message thread only
+    std::vector<std::shared_ptr<PluginInstance>> midiChain;   // MIDI effects before this instrument (under `lock`)
 };
 
 static juce::var obj() { return juce::var (new juce::DynamicObject()); }
@@ -194,6 +217,7 @@ juce::var PluginHost::handle (std::shared_ptr<WsConnection>, const juce::var& ms
         inst->buffer.setSize (juce::jmax (2, plugin->getTotalNumInputChannels(), plugin->getTotalNumOutputChannels()), block);
         inst->plugin = std::move (plugin);
         inst->plugin->addListener (inst.get());
+        inst->plugin->setPlayHead (&inst->head);
         int iid;
         { std::lock_guard<std::mutex> l (instancesLock); iid = nextInstance++; instances[iid] = inst; }
         auto o = okay(); auto* p = o.getDynamicObject();
@@ -226,8 +250,35 @@ juce::var PluginHost::handle (std::shared_ptr<WsConnection>, const juce::var& ms
     {
         inst->window.reset();
         { std::lock_guard<std::mutex> l (instancesLock); instances.erase ((int) msg.getProperty ("instance", 0)); }
+        // out of every MIDI chain it is in (an instrument would otherwise keep calling the unloaded plugin)
+        std::vector<std::shared_ptr<PluginInstance>> all;
+        { std::lock_guard<std::mutex> l (instancesLock); for (auto& [k, v] : instances) all.push_back (v); }
+        for (auto& o : all)
+        {
+            std::lock_guard<std::mutex> l (o->lock);
+            o->midiChain.erase (std::remove (o->midiChain.begin(), o->midiChain.end(), inst), o->midiChain.end());
+        }
+        { std::lock_guard<std::mutex> l (inst->lock); inst->midiChain.clear(); }
         { std::lock_guard<std::mutex> l (inst->lock); inst->plugin->releaseResources(); }
         return okay();
+    }
+    if (cmd == "midiChain")
+    {
+        // MIDI effects in front of this instrument, in order; they follow its transport
+        std::vector<std::shared_ptr<PluginInstance>> chain;
+        if (auto* a = msg.getProperty ("chain", {}).getArray())
+            for (auto& v : *a)
+            {
+                auto fx = find ((int) v);
+                if (fx == nullptr) return fail ("no such plugin instance in the MIDI chain");
+                if (fx == inst) return fail ("a plugin cannot be in its own MIDI chain");
+                chain.push_back (fx);
+            }
+        std::vector<std::shared_ptr<PluginInstance>> old;
+        { std::lock_guard<std::mutex> l (inst->lock); old = inst->midiChain; inst->midiChain = chain; }
+        for (auto& fx : old) { std::lock_guard<std::mutex> l (fx->lock); fx->plugin->setPlayHead (&fx->head); }
+        for (auto& fx : chain) { std::lock_guard<std::mutex> l (fx->lock); fx->plugin->setPlayHead (&inst->head); }
+        auto r = okay(); r.getDynamicObject()->setProperty ("chain", (int) chain.size()); return r;
     }
     if (cmd == "params")
     {
@@ -354,6 +405,16 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
         if (paramCount < 0 || paramCount > 65536) return;
         audioOffset = paramsAt + 4 + (size_t) paramCount * 12;
     }
+    // flag 4: the transport after that: u32 count, then count x (u32 offset, f32 bpm, f64 quarter notes)
+    size_t transportAt = audioOffset;
+    int transportCount = 0;
+    if (flags & 4)
+    {
+        if (data.getSize() < transportAt + 4) return;
+        transportCount = (int) u32 (transportAt);
+        if (transportCount < 0 || transportCount > 4096) return;
+        audioOffset = transportAt + 4 + (size_t) transportCount * 16;
+    }
     if (channels < 1 || channels > 8 || frames < 1 || frames > 65536 || data.getSize() < audioOffset + (size_t) channels * frames * 4) return;
     // the app's master mix for the sound card (Settings → Audio → ASIO): no reply
     if ((uint32_t) iid == kOutputInstance)
@@ -383,9 +444,20 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
         int bufCh = inst->buffer.getNumChannels();
         auto& params = p.getParameters();
         auto paramOffset = [&] (int k) { uint32_t at; memcpy (&at, bytes + paramsAt + 4 + (size_t) k * 12, 4); return (int) juce::ByteOrder::swapIfBigEndian (at); };
-        int nextParam = 0;
+        auto transportOffset = [&] (int k) { uint32_t at; memcpy (&at, bytes + transportAt + 4 + (size_t) k * 16, 4); return (int) juce::ByteOrder::swapIfBigEndian (at); };
+        int nextParam = 0, nextTransport = 0;
+        if (flags & 1) for (auto& fx : inst->midiChain) { std::lock_guard<std::mutex> fl (fx->lock); fx->plugin->reset(); }
         for (int pos = 0; pos < frames;)
         {
+            // the transport from this point on (the song starts, stops or jumps)
+            while (nextTransport < transportCount && transportOffset (nextTransport) <= pos)
+            {
+                auto* e = bytes + transportAt + 4 + (size_t) nextTransport * 16;
+                float bpm; double ppq; memcpy (&bpm, e + 4, 4); memcpy (&ppq, e + 8, 8);
+                inst->head.playing = bpm > 0;
+                if (bpm > 0) { inst->head.bpm = bpm; inst->head.ppq = ppq; }
+                ++nextTransport;
+            }
             // parameter changes due at this point are applied first; the block is cut at the next one
             while (nextParam < paramCount && paramOffset (nextParam) <= pos)
             {
@@ -396,6 +468,7 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
             }
             int n = juce::jmin (inst->maxBlock, frames - pos);
             if (nextParam < paramCount) n = juce::jmax (1, juce::jmin (n, paramOffset (nextParam) - pos));
+            if (nextTransport < transportCount) n = juce::jmax (1, juce::jmin (n, transportOffset (nextTransport) - pos));
             inst->buffer.setSize (bufCh, n, false, false, true);
             inst->buffer.clear();
             for (int c = 0; c < juce::jmin (bufCh, channels); ++c)
@@ -407,9 +480,20 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
                 uint32_t at; memcpy (&at, e, 4);
                 if ((int) at >= pos && (int) at < pos + n) inst->midi.addEvent (juce::MidiMessage (e[4], e[5], e[6]), (int) at - pos);
             }
+            // MIDI effects first: what they play is what the instrument gets
+            for (auto& fx : inst->midiChain)
+            {
+                std::lock_guard<std::mutex> fl (fx->lock);
+                int fxCh = juce::jmax (1, fx->buffer.getNumChannels());
+                fx->buffer.setSize (fxCh, n, false, false, true);
+                fx->buffer.clear();
+                fx->plugin->processBlock (fx->buffer, inst->midi);
+            }
             p.processBlock (inst->buffer, inst->midi);
             for (int c = 0; c < channels; ++c)
                 memcpy (res + (size_t) c * frames + pos, inst->buffer.getReadPointer (juce::jmin (c, bufCh - 1)), (size_t) n * 4);
+            inst->head.samples += n;
+            if (inst->head.playing) inst->head.ppq += n / inst->sampleRate * inst->head.bpm / 60.0;
             pos += n;
         }
         latency = (uint32_t) juce::jmax (0, p.getLatencySamples());
@@ -420,8 +504,8 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
     }
     uint32_t lat = juce::ByteOrder::swapIfBigEndian (latency);
     memcpy (outBytes + 20, &lat, 4);
-    // the reply carries no MIDI and no parameter changes: drop them, keep the header
-    if (midiCount > 0 || (flags & 2))
+    // the reply carries no MIDI, parameter changes or transport: drop them, keep the header
+    if (midiCount > 0 || (flags & 6))
     {
         juce::MemoryBlock compact (outBytes, 24);
         uint16_t f = juce::ByteOrder::swapIfBigEndian ((uint16_t) (flags & 1));

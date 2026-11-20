@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.90.0
+
+### New
+
+- **MIDI effects** (arpeggiators, sequencers, chord and pattern generators such as BlueArp, Stochas, CodeFN42 or HY plugins) work on MIDI tracks: *Channel → MIDI effects → + MIDI effect…*. They sit in front of the track's VST instrument: what they play is what the instrument plays, in the Studio, in the Piano Roll, from a MIDI keyboard and in the export. Several can be chained (▲ ▼ change the order), each can be bypassed (⏻) and opened in its own window; their settings are saved with the project.
+- **Plugins follow the song's tempo and position**: instruments, effects and MIDI effects now get the tempo, the position in the song and whether it is playing. Arpeggiators and sequencers play in time, tempo-synced delays and LFOs lock to the song, tempo changes included.
+
 ## 0.86.0
 
 ### New

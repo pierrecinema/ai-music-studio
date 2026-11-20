@@ -412,6 +412,11 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   const f = packBlock(1, 0, [new Float32Array(4)], false, [[0, 0x90, 60, 100], [2, 0xf4, 5, 0.25]])
   const v = new DataView(f)
   check('frame with parameters: flag, MIDI count, param count, index, value', (v.getUint16(14, true) & 2) === 2 && v.getUint32(20, true) === 1 && v.getUint32(32, true) === 1 && v.getUint32(36, true) === 2 && v.getUint32(40, true) === 5 && Math.abs(v.getFloat32(44, true) - 0.25) < 1e-7 && f.byteLength === 48 + 16)
+  // the transport goes after the parameters with flag 4: count, then (offset, f32 bpm, f64 quarter notes)
+  const t = packBlock(1, 0, [new Float32Array(4)], false, [[0, 0x90, 60, 100], [2, 0xf4, 5, 0.25], [1, 0xf5, 122, 8.5]])
+  const tv = new DataView(t)
+  check('frame with transport: flag 4, count, offset, bpm, position; MIDI and parameters unchanged', (tv.getUint16(14, true) & 6) === 6 && tv.getUint32(20, true) === 1
+    && tv.getUint32(48, true) === 1 && tv.getUint32(52, true) === 1 && Math.abs(tv.getFloat32(56, true) - 122) < 1e-6 && tv.getFloat64(60, true) === 8.5 && t.byteLength === 48 + 20 + 16)
 }
 
 // ── MIDI hardware: devices are recognised by their port name ──

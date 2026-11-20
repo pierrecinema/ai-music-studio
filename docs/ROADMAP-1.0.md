@@ -22,6 +22,7 @@ exported song without help from outside the app. Linux comes after RC 1.0.
 - Virtual band: drummer, bass player, guitarist that follow the song's chords (MIDI, every PC). Singer: 0.90.
 - AI orchestra: MIDI-DDSP (13 orchestral instruments, processor) renders a MIDI track to audio.
 - Any instrument by text: ACE-Step cover of the MIDI track (NVIDIA).
+- 0.81: MIDI song generator (owner's idea, 20.11.2026), studio-device look with rotary knobs.
 - Later ideas: more drum kits as samples, a keyboard player (piano comping), guitar and bass sounds from samples or AI.
 
 ## 0.90: Vocal Editor (owner, 18.11.2026; moved after AI Instruments on 19.11.2026)

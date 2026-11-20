@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.81.0
+
+- **MIDI song generator** (AI Instruments): a whole song as MIDI from a genre (pop, rock, ballad, house, tech house, afro house, trap / rap, funk, reggaeton, jazz, reggae, metal), a key, major or minor and a tempo. It writes the chords of each part (intro, verse, pre-chorus, chorus, bridge or drop, outro) from typical progressions of the genre, a melody that follows them (higher in the chorus), and lets the band play keys, bass, drums and guitar, louder in the chorus. Each part becomes a MIDI track; markers name the parts; *Take* makes another version.
+- **AI Instruments look like studio devices:** rotary knobs, LCD displays for styles, lit pads for the orchestra instruments, the page uses the whole width when the AI assistant is closed. The fields to type chords and the instrument for the text instrument are marked "type here".
+- **Fixed:** installing the AI Instruments (MIDI-DDSP) failed on Windows with "No module named 'resource'" (a Unix module that tensorflow-datasets loads); press *Install selected* again.
+- **Fixed:** ACE-Step 1.5 with several takes ran out of memory on a PC with 12 GB RAM after three of four takes ("not enough memory"). The memory is now given back after each take, and if it still runs out, the finished takes are kept and ACE-Step starts again for the rest.
+
 ## 0.80.0
 
 **AI Instruments** (menu 🎻 AI Instruments, until now "coming soon"):

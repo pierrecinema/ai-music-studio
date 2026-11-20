@@ -1,0 +1,130 @@
+{
+  "app": {
+    "name": "AI Music Studio",
+    "newProject": "Новый проект",
+    "openProject": "Открыть проект",
+    "saveProject": "Сохранить проект",
+    "settings": "Настройки",
+    "close": "Закрыть",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "loading": "Загрузка..."
+  },
+  "toolbar": {
+    "play": "Воспроизвести",
+    "pause": "Пауза",
+    "stop": "Стоп",
+    "record": "Запись",
+    "bpm": "BPM",
+    "metronome": "Метроном",
+    "undo": "Отменить",
+    "redo": "Повторить",
+    "volume": "Общая громкость"
+  },
+  "sidebar": {
+    "timeline": "Студия",
+    "pianoRoll": "Пиано-ролл",
+    "mixer": "Микшер",
+    "vocalEditor": "Редактор вокала",
+    "instruments": "ИИ-инструменты",
+    "aiChat": "ИИ-чат",
+    "stemSplitter": "Разделение на стемы",
+    "videoComposer": "Видеокомпозитор"
+  },
+  "track": {
+    "addVocal": "Добавить вокальную дорожку",
+    "addInstrument": "Добавить инструментальную дорожку",
+    "addAudio": "Добавить аудиодорожку",
+    "addMidi": "Добавить MIDI-дорожку",
+    "mute": "Заглушить",
+    "solo": "Соло",
+    "volume": "Громкость",
+    "pan": "Панорама",
+    "rename": "Переименовать",
+    "delete": "Удалить"
+  },
+  "vocal": {
+    "voice": "Голос",
+    "selectVoice": "Выбрать голос",
+    "language": "Язык",
+    "lyrics": "Текст песни",
+    "pitch": "Высота тона",
+    "power": "Сила",
+    "breathiness": "Придыхание",
+    "vibrato": "Вибрато",
+    "generate": "Создать вокал",
+    "generating": "Создание...",
+    "cloneVoice": "Клонировать голос",
+    "blendVoices": "Смешать голоса"
+  },
+  "instruments": {
+    "category": "Категория",
+    "strings": "Струнные",
+    "brass": "Медные духовые",
+    "woodwind": "Деревянные духовые",
+    "percussion": "Ударные",
+    "select": "Выбрать инструмент",
+    "generate": "Создать",
+    "ensemble": "Режим ансамбля"
+  },
+  "stemSplitter": {
+    "title": "Разделение на стемы",
+    "dropAudio": "Перетащите сюда аудиофайл",
+    "split": "Разделить на стемы",
+    "vocals": "Вокал",
+    "drums": "Ударные",
+    "bass": "Бас",
+    "piano": "Фортепиано",
+    "guitar": "Гитара",
+    "other": "Прочее",
+    "export": "Экспорт стемов",
+    "processing": "Обработка...",
+    "model": "Качество модели"
+  },
+  "videoComposer": {
+    "title": "Видеокомпозитор",
+    "dropVideo": "Перетащите сюда видеофайл",
+    "analyzeScene": "Анализ сцены",
+    "generateMusic": "Создать музыку",
+    "generateSFX": "Создать звуковые эффекты",
+    "prompt": "Опишите стиль музыки...",
+    "export": "Экспорт"
+  },
+  "aiChat": {
+    "title": "ИИ-ассистент",
+    "placeholder": "Спросите что угодно о вашей музыке...",
+    "send": "Отправить",
+    "clear": "Очистить",
+    "provider": "ИИ-провайдер",
+    "claude": "Claude (Anthropic)",
+    "openai": "ChatGPT (OpenAI)",
+    "model": "Модель",
+    "apiKey": "API-ключ",
+    "suggestions": {
+      "1": "Создай аккордовую последовательность в до мажоре",
+      "2": "Предложи текст для куплета",
+      "3": "Создай ритмический паттерн",
+      "4": "Проанализируй мою мелодию"
+    }
+  },
+  "settings": {
+    "title": "Настройки",
+    "general": "Общие",
+    "audio": "Аудио",
+    "ai": "ИИ",
+    "appearance": "Внешний вид",
+    "language": "Язык",
+    "theme": "Тема",
+    "dark": "Тёмная",
+    "light": "Светлая",
+    "sampleRate": "Частота дискретизации",
+    "bufferSize": "Размер буфера",
+    "aiProvider": "ИИ-провайдер по умолчанию",
+    "claudeKey": "API-ключ Claude",
+    "openaiKey": "API-ключ OpenAI",
+    "vstPaths": "Папки VST-плагинов",
+    "addVstPath": "Добавить папку VST",
+    "scanVst": "Искать плагины",
+    "about": "О программе"
+  }
+}

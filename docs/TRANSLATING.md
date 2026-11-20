@@ -18,6 +18,7 @@ the translation.
 |---|---|---|
 | Deutsch | `de.json` | complete |
 | Français, Español, Italiano, Português, 中文 | `fr.json`, `es.json`, `it.json`, `pt.json`, `zh.json` | complete |
+| Русский | `ru.json` | complete (0.86) |
 | 日本語, 한국어 | `ja.json`, `ko.json` | empty: only the menu is translated (older `i18n/locales/*.json`) |
 
 ## Rules

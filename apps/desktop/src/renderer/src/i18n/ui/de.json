@@ -1728,5 +1728,6 @@
  "Volume (double-click: 0 dB, Shift: fine)": "Lautstärke (Doppelklick: 0 dB, Shift: fein)",
  "Fader (dB)": "Fader (dB)",
  "Peak (dB)": "Spitzenwert (dB)",
- "Pan: drag sideways or up / down, mouse wheel (double-click: center)": "Panorama: seitlich oder nach oben/unten ziehen, Mausrad (Doppelklick: Mitte)"
+ "Pan: drag sideways or up / down, mouse wheel (double-click: center)": "Panorama: seitlich oder nach oben/unten ziehen, Mausrad (Doppelklick: Mitte)",
+ "Volume or pan follows its automation lane (A on the track): change the points there, or delete the lane to use the slider.": "Lautstärke oder Pan folgt der Automationsspur (A an der Spur): dort die Punkte ändern oder die Spur löschen, dann geht der Regler wieder."
 }

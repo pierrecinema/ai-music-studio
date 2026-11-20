@@ -3,6 +3,18 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.86.0
+
+### New
+
+- **Russian** (Русский) as a new language: the whole app, in *Settings → General → Language*.
+
+### Fixed
+
+- Studio: long track names are readable. The name has the whole first row of the track header; the type and the M, S, FX, CH, A buttons moved to the row below (a full name also shows when you point at it).
+- Studio: a clicked clip no longer shows through the track header. The header of the selected track was see-through, so clips scrolled under it looked as if they started on the header; now they always start right of it.
+- Channel tab: when volume or pan has an automation lane, the slider follows the lane and cannot be moved; a note now says so (change the points in the lane, or delete the lane).
+
 ## 0.85.1
 
 ### Fixed

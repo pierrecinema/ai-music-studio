@@ -13,11 +13,11 @@ import { playClick, playSynthNote, type Timbre } from './synth'
 import { playSampleNote, presetFor, programOf, roomReverb, reverbOf, type Choke, type Sf2Preset } from './soundbank'
 import { encodeWav, peakOf } from './wav'
 import { MAX_STRETCH_SECONDS, stretchBuffer } from './stretch'
-import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
+import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat, tempoPoints } from './timemap'
 import { fxParamOf, hasAutomation, paramEvents, scheduleLane } from './automation'
 import { makeEffect, makeInsert } from './fx'
 import { applyOutput, audioSettings, outputBus, contextOptions, inputConstraints, onAudioSettings, stopTests } from './output'
-import { liveInstance, makeVstInstrument, prepareOne, prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
+import { liveInstance, makeVstInstrument, prepareMidiFx, prepareOne, prepareVst, prepareVstOffline, projectHasVst, pumpOffline, releaseVstOffline, vstDelaySeconds } from './vst/host'
 import { loadWorklets } from './master/worklets'
 import { exportSampleRate } from '../lib/sampleRate'
 import { beatOfSrc, renderWarped } from './warp'
@@ -438,7 +438,14 @@ export function scheduleProject(
     // a VST instrument plays the notes of this track (instead of the built-in synth)
     const instrument = track.instrument?.vst ? makeVstInstrument(ctx, track.instrument) : null
     const midi: number[][] = []
-    if (instrument) { instrument.output.connect(strip.bus); strip.dispose.push(instrument.dispose) }
+    if (instrument) {
+      instrument.output.connect(strip.bus); strip.dispose.push(instrument.dispose)
+      // the song's tempo and position for the plugin and its MIDI effects (arpeggiators and sequencers play in time)
+      const at = when + earliest
+      const bpm0 = bpmAt(project, fromBeat)
+      midi.push([at, 0xf5, bpm0, fromBeat + (at - TT(fromBeat)) * bpm0 / 60])
+      for (const tp of tempoPoints(project)) if (tp.beat > fromBeat && tp.beat < until) midi.push([TT(tp.beat), 0xf5, tp.bpm, tp.beat])
+    }
 
     // crossfades: where two audio clips of the track overlap, both fade over the overlap (equal power)
     const audio = track.clips.filter((c) => c.audioFile).sort((a, b) => a.startTime - b.startTime)
@@ -1006,6 +1013,7 @@ async function makeMonitor(track: Track): Promise<NonNullable<ReturnType<typeof 
   const c = ensureContext()
   await loadWorklets(c)
   await prepareOne(fx, c.sampleRate)                 // only this instrument, not every plugin of the project
+  await prepareMidiFx(useProjectStore.getState().project, track.id, c.sampleRate)   // and its MIDI effects
   const node = makeVstInstrument(c, fx)
   if (!node) return null
   const gain = c.createGain()

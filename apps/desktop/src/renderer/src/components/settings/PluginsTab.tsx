@@ -61,7 +61,7 @@ function FreePlugins(): React.ReactElement {
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{f.name} <span style={{ ...muted, fontWeight: 400 }}>· {f.vendor} · {tr(f.what)}</span></div>
               {(f.note || f.account || f.kind === 'midi') && (
                 <div style={muted}>
-                  {[f.note ? tr(f.note) : '', f.account ? tr('Needs a free account / the maker’s installer app') : '', f.kind === 'midi' ? tr('MIDI plugin: it makes notes; the app will play them through an instrument in a later version (MIDI effects before the instrument).') : ''].filter(Boolean).join(' · ')}
+                  {[f.note ? tr(f.note) : '', f.account ? tr('Needs a free account / the maker’s installer app') : '', f.kind === 'midi' ? tr('MIDI plugin: use it on a MIDI track with a VST instrument, Channel → MIDI effects.') : ''].filter(Boolean).join(' · ')}
                 </div>
               )}
             </div>

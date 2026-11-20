@@ -115,7 +115,7 @@ jobs:
         run: |
           cmake -S packages/plugin-host -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DAMS_BUILD_TEST_PLUGIN=ON
           cmake --build build -j4
-          mkdir -p vst3 && cp -r "build/AMSTestGain_artefacts/Release/VST3/AMS Test Gain.vst3" "build/AMSTestSynth_artefacts/Release/VST3/AMS Test Synth.vst3" vst3/
+          mkdir -p vst3 && cp -r "build/AMSTestGain_artefacts/Release/VST3/AMS Test Gain.vst3" "build/AMSTestSynth_artefacts/Release/VST3/AMS Test Synth.vst3" "build/AMSTestArp_artefacts/Release/VST3/AMS Test Arp.vst3" vst3/
       - name: End-to-end test (scan, load, audio, state, editor)
         run: xvfb-run -a node packages/plugin-host/test/e2e.mjs build/AMSPluginHost_artefacts/Release/ams-plugin-host vst3
 

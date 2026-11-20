@@ -1,6 +1,6 @@
 # Mixer 🎚
 
-One channel strip per track, plus **MASTER**, built like the output section of a large studio console. Changes are heard at once while playing.
+One channel strip per track, plus **MASTER**, built like the output section of a large studio console. With many tracks the strips scroll sideways (scroll bar at the bottom, or the mouse wheel over the strips); MASTER always stays on the right. Changes are heard at once while playing.
 
 | Control | What it does |
 |---|---|

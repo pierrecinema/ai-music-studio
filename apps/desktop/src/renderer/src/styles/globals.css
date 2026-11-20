@@ -346,6 +346,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+/* the Mixer: a scroll bar you can see and grab (many tracks) */
+.mixer-scroll::-webkit-scrollbar { height: 12px; }
+.mixer-scroll::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.35); border-radius: 6px; }
+.mixer-scroll::-webkit-scrollbar-thumb { background: #6b7785; border-radius: 6px; border: 2px solid rgba(0, 0, 0, 0.35); }
+.mixer-scroll::-webkit-scrollbar-thumb:hover { background: #8d99a6; }
 
 /* ─── AI Chat sidebar ────────────────────────────────────────── */
 .ai-chat-sidebar {

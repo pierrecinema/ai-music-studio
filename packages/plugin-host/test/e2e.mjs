@@ -1,5 +1,5 @@
-// End-to-end test of the plugin host with the test VST3s: an effect (gain 0.5, latency 64) and an instrument:
-//   node test/e2e.mjs <path to ams-plugin-host> <folder with AMS Test Gain.vst3 and AMS Test Synth.vst3>
+// End-to-end test of the plugin host with the test VST3s: an effect (gain 0.5, latency 64), an instrument and a MIDI effect:
+//   node test/e2e.mjs <path to ams-plugin-host> <folder with AMS Test Gain.vst3, AMS Test Synth.vst3 and AMS Test Arp.vst3>
 // Linux needs a display for the editor part (xvfb-run).
 import { spawn } from 'node:child_process'
 import assert from 'node:assert/strict'
@@ -31,14 +31,18 @@ const call = (cmd, args = {}, ms = 120000) => new Promise((res, rej) => {
   setTimeout(() => rej(new Error('timeout ' + cmd)), ms)
 })
 // params: [offset, parameter index, value 0..1] (flag 2: after the MIDI, u32 count then 12 bytes each)
-const block = (instance, chans, flags = 0, midi = [], params = []) => new Promise((res) => {
+// transport: [offset, bpm, quarter notes] (flag 4: after that, u32 count then 16 bytes each)
+const block = (instance, chans, flags = 0, midi = [], params = [], transport = []) => new Promise((res) => {
   if (params.length) flags |= 2
-  const frames = chans[0].length, pAt = 24 + midi.length * 8, head = pAt + (params.length ? 4 + params.length * 12 : 0)
+  if (transport.length) flags |= 4
+  const frames = chans[0].length, pAt = 24 + midi.length * 8, tAt = pAt + (params.length ? 4 + params.length * 12 : 0)
+  const head = tAt + (transport.length ? 4 + transport.length * 16 : 0)
   const buf = new ArrayBuffer(head + chans.length * frames * 4), v = new DataView(buf)
   v.setUint32(0, 0x41534D41, true); v.setUint32(4, instance, true); v.setUint32(8, 1, true)
   v.setUint16(12, chans.length, true); v.setUint16(14, flags, true); v.setUint32(16, frames, true); v.setUint32(20, midi.length, true)
   midi.forEach((e, i) => { const o = 24 + i * 8; v.setUint32(o, e[0], true); v.setUint8(o + 4, e[1]); v.setUint8(o + 5, e[2]); v.setUint8(o + 6, e[3]) })
   if (params.length) { v.setUint32(pAt, params.length, true); params.forEach((e, i) => { const o = pAt + 4 + i * 12; v.setUint32(o, e[0], true); v.setUint32(o + 4, e[1], true); v.setFloat32(o + 8, e[2], true) }) }
+  if (transport.length) { v.setUint32(tAt, transport.length, true); transport.forEach((e, i) => { const o = tAt + 4 + i * 16; v.setUint32(o, e[0], true); v.setFloat32(o + 4, e[1], true); v.setFloat64(o + 8, e[2], true) }) }
   chans.forEach((c, i) => new Float32Array(buf, head + i * frames * 4, frames).set(c))
   audio.push(res); ws.send(buf)
 })
@@ -54,8 +58,10 @@ ws2.onmessage = ws.onmessage; Object.assign(ws, { send: (d) => ws2.send(d) })
 const fm = await call('formats'); console.log('formats', fm.formats)
 const sc = await call('scan', { paths: [folder] })
 console.log('scan', sc.plugins.map((p) => `${p.name} (${p.format}, ${p.vendor})`), 'failed', sc.failed.length, 'events', events.length)
-assert.equal(sc.plugins.length, 2)
+assert.equal(sc.plugins.length, 3)
 const gainP = sc.plugins.find((p) => p.name === 'AMS Test Gain'), synthP = sc.plugins.find((p) => p.name === 'AMS Test Synth')
+const arpP = sc.plugins.find((p) => p.name === 'AMS Test Arp')
+assert.ok(arpP, 'the MIDI effect is found')
 assert.ok(gainP && !gainP.isInstrument, 'the gain is an effect')
 assert.ok(synthP && synthP.isInstrument, 'the synth is an instrument')
 const ld = await call('load', { xml: gainP.xml, sampleRate: 48000, blockSize: 512 })
@@ -126,6 +132,32 @@ assert.equal((await call('unload', { instance: ld.instance })).ok, true)
   assert.ok(a3[1999] === 0 && a3[2000] > 0.2, `event at 2000 in a long block: ${a3[1999]} ${a3[2000]}`)
   assert.equal((await call('unload', { instance: sy.instance })).ok, true)
   console.log('instrument: MIDI OK')
+}
+// a MIDI effect in front of an instrument: its MIDI output is what the instrument plays, and it sees the transport
+{
+  const sy = await call('load', { xml: synthP.xml, sampleRate: 48000, blockSize: 512 })
+  const ar = await call('load', { xml: arpP.xml, sampleRate: 48000, blockSize: 512 })
+  assert.ok(sy.ok && ar.ok, JSON.stringify([sy, ar]))
+  assert.equal((await call('midiChain', { instance: sy.instance, chain: [ar.instance] })).chain, 1)
+  assert.equal((await call('midiChain', { instance: sy.instance, chain: [sy.instance] })).ok, false, 'not in its own chain')
+  const z = new Float32Array(512)
+  const c1 = new Float32Array(await block(sy.instance, [z, z], 0, [[100, 0x90, 60, 127]]), 24, 512)
+  assert.ok(c1[99] === 0 && Math.abs(c1[100] - 63 / 254) < 1e-6, `through the MIDI effect (velocity 63): ${c1[100]}`)
+  // the song plays at 120 BPM from quarter 0.99: the next beat is 0.01 quarters = 240 samples later
+  await block(sy.instance, [z, z], 0, [[0, 0x80, 60, 0]])
+  const c2 = new Float32Array(await block(sy.instance, [z, z], 0, [], [], [[0, 120, 0.99]]), 24, 512)
+  assert.ok(c2[239] === 0 && Math.abs(c2[240] - 100 / 254) < 1e-6, `beat note from the transport at 240: ${c2[239]} ${c2[240]}`)
+  // the position goes on by itself: 0.99 + 512 samples; the next beat (2) is far away: nothing new in the next block
+  const c3 = new Float32Array(await block(sy.instance, [z, z], 0, [[0, 0x80, 72, 0]]), 24, 512)
+  assert.ok(c3[10] === 0 && c3[511] === 0, 'no extra beat note')
+  // stopped (bpm 0): no beat notes
+  await block(sy.instance, [z, z], 0, [], [], [[0, 0, 0]])
+  // unloading the effect takes it out of the chain: the instrument plays the notes unchanged again
+  assert.equal((await call('unload', { instance: ar.instance })).ok, true)
+  const c4 = new Float32Array(await block(sy.instance, [z, z], 0, [[0, 0x90, 60, 127]]), 24, 512)
+  assert.ok(Math.abs(c4[0] - 0.5) < 1e-6, `after unloading the effect: ${c4[0]}`)
+  assert.equal((await call('unload', { instance: sy.instance })).ok, true)
+  console.log('MIDI chain and transport: OK')
 }
 // sound output (Settings → Audio, ASIO): the device list answers; master frames without an open device are dropped
 {

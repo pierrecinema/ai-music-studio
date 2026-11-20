@@ -22,6 +22,11 @@
 //   reply: same header (midiCount field = the plugin's latency in samples) and the processed audio
 //   flag 2: after the MIDI events u32 count, then count x (u32 offset, u32 parameter index, f32 value 0..1); the
 //   block is cut at each change so automation is sample-accurate. Command "params" lists the parameters.
+//   flag 4: then the transport: u32 count, then count x (u32 offset, f32 bpm, f64 position in quarter notes); from that
+//   sample on the plugins see the song playing at that tempo and position (bpm 0: stopped). Arpeggiators, sequencers
+//   and tempo-synced effects follow it.
+//   midiChain {instance, chain: [ids]}  MIDI effects before an instrument: every block, the instrument's MIDI goes
+//   through these plugins in order (their MIDI output is what the instrument plays); they share its transport.
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "WebSocketServer.h"

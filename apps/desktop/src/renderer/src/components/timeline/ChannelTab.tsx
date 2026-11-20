@@ -9,6 +9,62 @@ import { INSERT_LABEL } from '../../audio/fx'
 import { openLanes } from './studioLayout'
 import { tr } from '../../i18n/tr'
 import { useUIStore } from '../../stores/ui.store'
+import { usePluginsStore } from '../../stores/plugins.store'
+import { isInstrumentLike, vstFailure, type PluginInfo } from '../../audio/vst/host'
+import { FREE_PLUGINS } from '../../lib/freeCatalog'
+import type { Track } from '../../types'
+import { nanoid } from 'nanoid'
+
+/** a MIDI plugin (arpeggiator, sequencer, chord or pattern generator): the free list says so, or its name or category */
+export function isMidiPlugin(p: Pick<PluginInfo, 'name' | 'category'>): boolean {
+  return FREE_PLUGINS.some((f) => f.kind === 'midi' && f.match.test(p.name)) || /midi|arp|sequenc|chord|pattern|harmoni[sz]er/i.test(`${p.name} ${p.category ?? ''}`)
+}
+
+/** MIDI effects in front of the VST instrument: they change or make the notes the instrument plays */
+function MidiFxSection({ track: t }: { track: Track }): React.ReactElement {
+  const updateTrack = useProjectStore((s) => s.updateTrack)
+  const all = usePluginsStore((s) => s.plugins)
+  const off = usePluginsStore((s) => s.off)
+  const usable = all.filter((p) => !off.includes(p.id))
+  const midi = usable.filter(isMidiPlugin)
+  const others = usable.filter((p) => !isMidiPlugin(p) && !isInstrumentLike(p))
+  const list = t.midiFx ?? []
+  const set = (next: InsertFx[]): void => updateTrack(t.id, { midiFx: next })
+  const add = (id: string): void => {
+    const p = usable.find((x) => x.id === id)
+    if (!p) return
+    const fx: InsertFx = { id: nanoid(), type: 'vst', on: true, p: {}, vst: { pluginId: p.id, name: p.name, vendor: p.vendor, format: p.format, xml: p.xml, arch: p.arch } }
+    set([...list, fx])
+    void openPlugin(fx, t.name)
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <b style={{ fontSize: 11, color: 'var(--text-primary)' }} title={tr('MIDI effects change or make the notes before the instrument plays them: arpeggiators, sequencers, chord and pattern generators.')}>{tr('MIDI effects')}</b>
+      {!t.instrument?.vst && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{tr('MIDI effects play through a VST instrument: choose one under Instrument first (for example Surge XT or Dexed).')}</span>}
+      {list.map((f, i) => {
+        const patch = (x: Partial<InsertFx>): void => set(list.map((y) => (y.id === f.id ? { ...y, ...x } : y)))
+        const move = (d: number): void => { const j = i + d; if (j < 0 || j >= list.length) return; const nx = [...list]; [nx[i], nx[j]] = [nx[j], nx[i]]; set(nx) }
+        const err = vstFailure(f.id)
+        return (
+          <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, border: '1px solid var(--border-mid)', borderRadius: 6, padding: '3px 4px', opacity: f.on ? 1 : 0.55 }} title={err ?? ''}>
+            <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 4px', color: f.on ? 'var(--green)' : 'var(--text-muted)' }} title={f.on ? tr('On: click to bypass') : tr('Bypassed: click to switch on')} onClick={() => patch({ on: !f.on })}>⏻</button>
+            <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: err ? 'var(--red)' : 'var(--text-primary)' }}>{f.vst?.name ?? tr('VST plugin')}</span>
+            <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 5px' }} title={tr('Open the plugin window')} onClick={() => void openPlugin(f, t.name)}>{tr('Open')}</button>
+            <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 3px' }} disabled={i === 0} title={tr('Earlier in the chain')} onClick={() => move(-1)}>▲</button>
+            <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 3px' }} disabled={i === list.length - 1} title={tr('Later in the chain')} onClick={() => move(1)}>▼</button>
+            <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 3px', color: 'var(--red)' }} title={tr('Remove this MIDI effect')} onClick={() => set(list.filter((y) => y.id !== f.id))}>×</button>
+          </div>
+        )
+      })}
+      <select value="" style={{ fontSize: 11, width: '100%' }} title={tr('Add a MIDI effect in front of the instrument')} onChange={(e) => { const v = e.target.value; e.target.blur(); if (v) add(v) }}>
+        <option value="">{tr('+ MIDI effect…')}</option>
+        {midi.length > 0 && <optgroup label={tr('MIDI plugins')}>{midi.map((p) => <option key={p.id} value={p.id}>{p.name}{p.vendor ? ` (${p.vendor})` : ''} · {p.format}</option>)}</optgroup>}
+        {!midi.length && <option value="" disabled>{tr('No MIDI plugins found yet: Settings → Plugins → Free plugins → MIDI')}</option>}
+        {others.length > 0 && <optgroup label={tr('Other plugins (only if they make notes)')}>{others.map((p) => <option key={p.id} value={p.id}>{p.name}{p.vendor ? ` (${p.vendor})` : ''} · {p.format}</option>)}</optgroup>}
+      </select>
+    </div>
+  )
+}
 
 const row: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)' }
 const db = (v: number): string => (v <= 0.0005 ? '-inf' : (20 * Math.log10(v)).toFixed(1))
@@ -70,6 +126,7 @@ export function ChannelTab({ onClose }: { onClose: () => void }): React.ReactEle
                 {t.instrument && <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 5px' }} title={tr('Open the plugin window')} onClick={() => void openPlugin(t.instrument!, t.name)}>{tr('Open')}</button>}
               </div>
               {t.instrument?.vst && <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}><PresetSelect fx={t.instrument} style={{ maxWidth: '100%', flex: 1 }} /><AutomateButton track={t} fx={t.instrument} /></div>}
+              <MidiFxSection track={t} />
               <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Play this track with an AI instrument (violin, trumpet …) or let a virtual band play along')}
                 onClick={() => { useUIStore.setState({ aiTrackId: t.id }); useUIStore.getState().setActiveView('instruments') }}>🎻 {tr('AI instrument…')}</button>
             </>

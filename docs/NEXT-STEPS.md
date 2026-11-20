@@ -89,6 +89,9 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ## Owner's wishes for coming features
 
+- **Simple first install for RC 1.0 (owner, 20.11.2026):** a first-start wizard that installs everything a user needs in one go (Python check, AI engines, sound pack, free plugins as chosen). Before installing it shows how much disk space each part and the whole will use, checks the free space on the drive (and lets the user pick another drive for the models), and only then starts.
+- **Better sound packs (owner, 20.11.2026):** after 0.90: optional high-quality packs to install later, all free and redistributable, all reachable through the npm registry: Salamander Grand Piano V3 (CC-BY 3.0, `@audio-samples/piano-mp3-velocity*`), the VSCO-2 CE orchestra and VCSL (CC0, `@minicut/music-samples-1/2`), MuseScore General / FluidR3 Mono SF3 (MIT, `@librescore/sf3`, needs SF3 = Ogg samples). Needs a multisample loader next to the SF2 player.
+- **MIDI to singer (user wish, 20.11.2026):** a user asked for "MIDI to singer": sing a MIDI melody with lyrics. Planned as part of the Vocal Editor (0.90).
 - **Vocal Editor (12.11.2026):** very short vocals must be possible too, down to a single word or a short phrase,
   to make vocal samples (one-shots and short vocal loops for the Library / Samples). Think: word or phrase,
   voice (male / female / style), language, tempo and key; result trimmed to the sung part (no silence), saved to the

@@ -83,7 +83,7 @@ function Fader({ value, onChange, height = 220 }: { value: number; onChange: (v:
         ))}
       </div>
       <div ref={ref} onPointerDown={drag} onDoubleClick={() => onChange(1)} title={tr('Volume (double-click: 0 dB, Shift: fine)')}
-        onWheel={(e) => onChange(posToGain(Math.max(0, Math.min(1, pos - Math.sign(e.deltaY) * 0.02))))}
+        onWheel={(e) => { e.stopPropagation(); onChange(posToGain(Math.max(0, Math.min(1, pos - Math.sign(e.deltaY) * 0.02)))) }}
         style={{ position: 'relative', width: 30, height, cursor: 'ns-resize', touchAction: 'none' }}>
         {/* slot */}
         <div style={{ position: 'absolute', left: 13, top: CAP / 2, width: 4, height: travel, background: '#0b0f13', borderRadius: 2, boxShadow: 'inset 0 1px 2px #000, 0 0 0 1px #3c4753' }} />
@@ -188,7 +188,7 @@ function PanKnob({ value, onChange }: { value: number; onChange: (v: number) => 
         <span style={{ position: 'absolute', left: 23, top: -2, fontSize: 8, color: C.label, fontWeight: 700 }}>C</span>
         <span style={{ position: 'absolute', right: 0, bottom: 0, fontSize: 8, color: C.label, fontWeight: 700 }}>R</span>
         <div ref={ref} onPointerDown={drag} onDoubleClick={() => onChange(0)} title={tr('Pan: drag sideways or up / down, mouse wheel (double-click: center)')}
-          onWheel={(e) => onChange(Math.max(-1, Math.min(1, Math.round((value - Math.sign(e.deltaY) * 0.05) * 100) / 100)))}
+          onWheel={(e) => { e.stopPropagation(); onChange(Math.max(-1, Math.min(1, Math.round((value - Math.sign(e.deltaY) * 0.05) * 100) / 100))) }}
           style={{ position: 'absolute', left: 10, top: 8, width: 32, height: 32, borderRadius: '50%', cursor: 'grab', touchAction: 'none',
             background: 'radial-gradient(circle at 35% 30%, #4a4f55 0%, #1c1f23 55%, #0b0d0f 100%)',
             boxShadow: '0 3px 6px rgba(0,0,0,0.7), 0 0 0 2px #0e1114, inset 0 1px 1px rgba(255,255,255,0.15)', transform: `rotate(${angle}deg)` }}>
@@ -244,14 +244,18 @@ export function Mixer(): React.ReactElement {
   useEffect(() => {
     const el = box.current
     if (!el) return
-    const ro = new ResizeObserver(() => setH(Math.max(90, Math.min(360, el.clientHeight - 28 - 190))))
+    const ro = new ResizeObserver(() => setH(Math.max(90, Math.min(360, el.clientHeight - 32 - 190))))
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'radial-gradient(ellipse at 40% 0%, #20262d 0%, #121519 70%)' }}>
-      <div ref={box} style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'auto', padding: 14, gap: 6, alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+      {/* the tracks scroll sideways (scroll bar, or the mouse wheel over the strips); the master stays on the right
+          (owner: with many tracks the mixer was cut off and could not be scrolled to the right) */}
+      <div ref={box} className="mixer-scroll" onWheel={(e) => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) e.currentTarget.scrollLeft += e.deltaY }}
+        style={{ display: 'flex', flex: 1, minWidth: 0, minHeight: 0, overflowX: 'auto', overflowY: 'hidden', padding: '14px 14px 6px', gap: 6, alignItems: 'flex-start' }}>
         {tracks.length === 0 && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--text-muted)' }}>
             {tr('No tracks yet. Add tracks in the Studio.')}
@@ -264,8 +268,10 @@ export function Mixer(): React.ReactElement {
             muted={track.muted} soloed={track.soloed}
             onMute={() => updateTrack(track.id, { muted: !track.muted })} onSolo={() => updateTrack(track.id, { soloed: !track.soloed })} />
         ))}
-        <div style={{ width: 10, flexShrink: 0 }} />
+      </div>
+      <div style={{ flexShrink: 0, padding: '14px 14px 6px 10px', borderLeft: '1px solid rgba(0,0,0,0.5)', boxShadow: '-8px 0 14px rgba(0,0,0,0.35)' }}>
         <Strip master height={h} name={tr('MASTER')} color="#c9d2db" volume={masterVolume} setVolume={(v) => setMasterVolume(Math.min(1, v))} read={masterLevel} />
+      </div>
       </div>
       <MasterFxBar />
     </div>

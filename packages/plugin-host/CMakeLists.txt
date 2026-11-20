@@ -109,4 +109,19 @@ if(AMS_BUILD_TEST_PLUGIN)
   target_sources(AMSTestSynth PRIVATE test/TestSynth.cpp)
   target_compile_definitions(AMSTestSynth PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0 JUCE_DISPLAY_SPLASH_SCREEN=0)
   target_link_libraries(AMSTestSynth PRIVATE juce::juce_audio_utils juce::juce_recommended_config_flags)
+
+  # a test MIDI effect: halves note velocities and adds a note on every beat while the song plays (MIDI chains, transport)
+  juce_add_plugin(AMSTestArp
+    PRODUCT_NAME "AMS Test Arp"
+    COMPANY_NAME "AI Music Studio"
+    PLUGIN_MANUFACTURER_CODE AiMs
+    PLUGIN_CODE AtAr
+    FORMATS VST3
+    IS_SYNTH FALSE
+    IS_MIDI_EFFECT TRUE
+    NEEDS_MIDI_INPUT TRUE
+    NEEDS_MIDI_OUTPUT TRUE)
+  target_sources(AMSTestArp PRIVATE test/TestArp.cpp)
+  target_compile_definitions(AMSTestArp PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0 JUCE_DISPLAY_SPLASH_SCREEN=0)
+  target_link_libraries(AMSTestArp PRIVATE juce::juce_audio_utils juce::juce_recommended_config_flags)
 endif()

@@ -1729,5 +1729,15 @@
  "Fader (dB)": "Fader (dB)",
  "Peak (dB)": "Spitzenwert (dB)",
  "Pan: drag sideways or up / down, mouse wheel (double-click: center)": "Panorama: seitlich oder nach oben/unten ziehen, Mausrad (Doppelklick: Mitte)",
- "Volume or pan follows its automation lane (A on the track): change the points there, or delete the lane to use the slider.": "Lautstärke oder Pan folgt der Automationsspur (A an der Spur): dort die Punkte ändern oder die Spur löschen, dann geht der Regler wieder."
+ "Volume or pan follows its automation lane (A on the track): change the points there, or delete the lane to use the slider.": "Lautstärke oder Pan folgt der Automationsspur (A an der Spur): dort die Punkte ändern oder die Spur löschen, dann geht der Regler wieder.",
+ "MIDI effects": "MIDI-Effekte",
+ "MIDI effects change or make the notes before the instrument plays them: arpeggiators, sequencers, chord and pattern generators.": "MIDI-Effekte verändern oder erzeugen die Noten, bevor das Instrument sie spielt: Arpeggiatoren, Sequencer, Akkord- und Pattern-Generatoren.",
+ "MIDI effects play through a VST instrument: choose one under Instrument first (for example Surge XT or Dexed).": "MIDI-Effekte spielen über ein VST-Instrument: zuerst oben unter Instrument eines wählen (z. B. Surge XT oder Dexed).",
+ "Remove this MIDI effect": "Diesen MIDI-Effekt entfernen",
+ "Add a MIDI effect in front of the instrument": "Einen MIDI-Effekt vor das Instrument setzen",
+ "+ MIDI effect…": "+ MIDI-Effekt…",
+ "MIDI plugins": "MIDI-Plugins",
+ "No MIDI plugins found yet: Settings → Plugins → Free plugins → MIDI": "Noch keine MIDI-Plugins gefunden: Einstellungen → Plugins → Kostenlose Plugins → MIDI",
+ "Other plugins (only if they make notes)": "Andere Plugins (nur wenn sie Noten erzeugen)",
+ "MIDI plugin: use it on a MIDI track with a VST instrument, Channel → MIDI effects.": "MIDI-Plugin: auf einer MIDI-Spur mit VST-Instrument verwenden, Kanal → MIDI-Effekte."
 }

@@ -42,6 +42,7 @@ Karaoke Export, Video Composer and Cloud Rendering (Pro): **decide**: hidden in 
 
 ## RC 1.0: test and polish
 
+- **Simple first install (owner, 20.11.2026):** one guided setup on the first start that installs all modules a user wants (AI engines, sound pack, free plugins) in one go. It shows beforehand how much disk space each part and everything together will take, checks that the drive has enough free space (offers another drive for the models if not), and only then installs.
 - Full pass of `docs/TESTPLAN.md` on the owner's PCs (AMD R9 290, a PC with NVIDIA, a PC without a GPU), both shortcut layouts, all four looks.
 - Performance: 30+ tracks with plugins, CPU meter, no clicks at 256 buffer with ASIO.
 - Code signing: reapply at SignPath Foundation with stars, articles and videos as references (so Windows shows no SmartScreen warning).

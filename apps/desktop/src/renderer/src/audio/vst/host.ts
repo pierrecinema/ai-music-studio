@@ -34,14 +34,18 @@ const links = new Map()          // key -> { port, instance }
 const out = new Map()            // global seq -> { key, seq }
 let flushing = null
 function pack(instance, seq, block, reset, events) {
-  // events: MIDI [offset, status, d1, d2]; parameter changes (automation) [offset, 0xF4, index, value 0..1]
-  const midi = (events || []).filter((e) => e[1] !== 0xF4), params = (events || []).filter((e) => e[1] === 0xF4)
-  const frames = block[0].length, pAt = 24 + midi.length * 8, head = pAt + (params.length ? 4 + params.length * 12 : 0)
+  // events: MIDI [offset, status, d1, d2]; parameter changes (automation) [offset, 0xF4, index, value 0..1];
+  // transport [offset, 0xF5, bpm (0: stopped), position in quarter notes]
+  const all = events || []
+  const midi = all.filter((e) => e[1] !== 0xF4 && e[1] !== 0xF5), params = all.filter((e) => e[1] === 0xF4), tr = all.filter((e) => e[1] === 0xF5)
+  const frames = block[0].length, pAt = 24 + midi.length * 8, tAt = pAt + (params.length ? 4 + params.length * 12 : 0)
+  const head = tAt + (tr.length ? 4 + tr.length * 16 : 0)
   const buf = new ArrayBuffer(head + block.length * frames * 4), v = new DataView(buf)
   v.setUint32(0, MAGIC, true); v.setUint32(4, instance, true); v.setUint32(8, seq >>> 0, true)
-  v.setUint16(12, block.length, true); v.setUint16(14, (reset ? 1 : 0) | (params.length ? 2 : 0), true); v.setUint32(16, frames, true); v.setUint32(20, midi.length, true)
+  v.setUint16(12, block.length, true); v.setUint16(14, (reset ? 1 : 0) | (params.length ? 2 : 0) | (tr.length ? 4 : 0), true); v.setUint32(16, frames, true); v.setUint32(20, midi.length, true)
   midi.forEach((e, i) => { const o = 24 + i * 8; v.setUint32(o, e[0], true); v.setUint8(o + 4, e[1]); v.setUint8(o + 5, e[2]); v.setUint8(o + 6, e[3]) })
   if (params.length) { v.setUint32(pAt, params.length, true); params.forEach((e, i) => { const o = pAt + 4 + i * 12; v.setUint32(o, e[0], true); v.setUint32(o + 4, e[2], true); v.setFloat32(o + 8, e[3], true) }) }
+  if (tr.length) { v.setUint32(tAt, tr.length, true); tr.forEach((e, i) => { const o = tAt + 4 + i * 16; v.setUint32(o, e[0], true); v.setFloat32(o + 4, e[2], true); v.setFloat64(o + 8, e[3], true) }) }
   block.forEach((c, i) => new Float32Array(buf, head + i * frames * 4, frames).set(c))
   return buf
 }
@@ -300,9 +304,39 @@ export function projectPlugins(project: Project): InsertFx[] {
   for (const fx of project.masterFx ?? []) if (fx.type === 'vst' && fx.vst) list.push(fx)
   for (const t of project.tracks) {
     for (const fx of t.fx ?? []) if (fx.type === 'vst' && fx.vst) list.push(fx)
-    if (t.instrument?.vst) list.push(t.instrument)
+    if (t.instrument?.vst) {
+      list.push(t.instrument)
+      for (const fx of t.midiFx ?? []) if (fx.type === 'vst' && fx.vst) list.push(fx)
+    }
   }
   return list
+}
+
+/** MIDI effects in front of the instruments: tells each host which loaded effects play into which instrument.
+ *  `inst` gives the loaded instance of a plugin (live or offline). An effect in the other host (32 / 64 bit) than its
+ *  instrument cannot be chained and is left out (it is marked as failed). */
+async function wireMidiChains(project: Project, inst: (id: string) => { instance: number; client: HostClient } | undefined): Promise<void> {
+  await Promise.all(project.tracks.filter((t) => t.instrument?.vst).map(async (t) => {
+    const i = inst(t.instrument!.id)
+    if (!i) return
+    const chain: number[] = []
+    for (const fx of t.midiFx ?? []) {
+      if (!fx.on || !fx.vst) continue
+      const f = inst(fx.id)
+      if (!f) continue
+      if (f.client !== i.client) { failures.set(fx.id, 'A 32-bit and a 64-bit plugin cannot be chained: use both in the same kind.'); continue }
+      chain.push(f.instance)
+    }
+    try { await i.client.call('midiChain', { instance: i.instance, chain }) } catch { /* an older host: the instrument plays the notes as they are */ }
+  }))
+}
+
+/** loads the MIDI effects of one track and puts them in front of its instrument (playing notes in the Piano Roll) */
+export async function prepareMidiFx(project: Project, trackId: string, sampleRate: number): Promise<void> {
+  const t = project.tracks.find((x) => x.id === trackId)
+  if (!t?.instrument?.vst) return
+  for (const fx of t.midiFx ?? []) if (fx.vst) await prepareOne(fx, sampleRate)
+  await wireMidiChains({ ...project, tracks: [t] }, (id) => live.get(id))
 }
 
 /** loads every plugin of the project (live playback at `sampleRate`); unloads plugins no longer in it */
@@ -329,6 +363,7 @@ export async function prepareVst(project: Project, sampleRate: number): Promise<
     }
     return p.then(() => {})
   }))
+  await wireMidiChains(project, (id) => live.get(id))
 }
 
 /** loads one plugin of the Studio (the instrument whose note is played): not the whole project, which took a
@@ -406,6 +441,7 @@ export async function collectVstStates(project: Project): Promise<Project> {
       let n = t
       if (t.fx?.some((f) => states.has(f.id))) n = { ...n, fx: t.fx!.map(withState) }
       if (t.instrument && states.has(t.instrument.id)) n = { ...n, instrument: withState(t.instrument) }
+      if (t.midiFx?.some((f) => states.has(f.id))) n = { ...n, midiFx: t.midiFx!.map(withState) }
       return n
     }),
   }
@@ -469,7 +505,9 @@ const offlineClients = new Set<HostClient>()
 
 export async function prepareVstOffline(ctx: BaseAudioContext, project: Project): Promise<boolean> {
   const fxs = projectPlugins(project).filter((f) => f.on)
-  return prepareVstOfflineList(ctx, fxs.map((f) => ({ id: f.id, vst: f.vst! })))
+  const ok = await prepareVstOfflineList(ctx, fxs.map((f) => ({ id: f.id, vst: f.vst! })))
+  if (ok) await wireMidiChains(project, (id) => offline.get(ctx)?.get(id))
+  return ok
 }
 
 /** separate instances for offline rendering, with the settings the plugins have right now (also unsaved ones) */
@@ -561,7 +599,7 @@ export function makeVstInstrument(ctx: BaseAudioContext, fx: InsertFx): { output
     dispose: () => {
       // all notes off on every channel, so nothing hangs when playback stops
       const t = ctx.currentTime
-      node.port.postMessage({ events: Array.from({ length: 16 }, (_, ch) => [t, 0xb0 | ch, 123, 0]) })
+      node.port.postMessage({ events: [[t, 0xf5, 0, 0], ...Array.from({ length: 16 }, (_, ch) => [t, 0xb0 | ch, 123, 0])] })   // stopped, all notes off
       setTimeout(() => { node.port.postMessage({ dispose: true }); inst.client.detach(key) }, 200)
     },
   }

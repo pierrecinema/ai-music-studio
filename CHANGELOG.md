@@ -3,6 +3,11 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.82.0
+
+- **Free plugins catalog** (Settings → Plugins): the 40 plugins of the LANDR list "Best Free VST Plugins (2026)": 15 effects (Valhalla Supermassive, TDR Nova, Deelay, …), 15 instruments (Surge XT, Dexed, Vital, TAL-NoiseMaker, TyrellN6, Spitfire LABS, BBC Symphony Orchestra Discover, …) and 10 MIDI plugins. Each shows whether it is installed. Open-source ones install with one click (Surge XT, Dexed, CHOW Kick, Stochas); for the others the maker's page opens (some ask for a free account), and *Search for plugins* then finds them. MIDI plugins are listed; playing their notes through an instrument comes in a later version.
+- **Fixed:** installing PyTorch for NVIDIA cards failed on some PCs ("Installing 'torch' failed", reported with a GTX 1080). The app now picks the CUDA build that fits the card (CUDA 12.6 for GTX 9xx to RTX 40xx, 12.8 for RTX 50xx), tries the next one if it fails, and falls back to the processor build instead of stopping.
+
 ## 0.81.0
 
 - **MIDI song generator** (AI Instruments): a whole song as MIDI from a genre (pop, rock, ballad, house, tech house, afro house, trap / rap, funk, reggaeton, jazz, reggae, metal), a key, major or minor and a tempo. It writes the chords of each part (intro, verse, pre-chorus, chorus, bridge or drop, outro) from typical progressions of the genre, a melody that follows them (higher in the chorus), and lets the band play keys, bass, drums and guitar, louder in the chorus. Each part becomes a MIDI track; markers name the parts; *Take* makes another version.

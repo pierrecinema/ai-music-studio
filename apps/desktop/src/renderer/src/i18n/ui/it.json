@@ -1508,5 +1508,17 @@
  "e.g. electric guitar, overdrive": "es. electric guitar, overdrive",
  "{bars} bars, about {min}:{sec} min. Chords: {chords}": "{bars} battute, circa {min}:{sec} min. Accordi: {chords}",
  "{what} is in the Studio: a new MIDI track at bar {bar}. Change its sound with KA → Instrument in its track (any VST instrument too).": "{what} è nello Studio: una nuova traccia MIDI dalla battuta {bar}. Cambia il suono con CA → Strumento nella traccia (anche qualsiasi VST).",
- "½ bar": "½ battuta"
+ "½ bar": "½ battuta",
+ "All": "Tutti",
+ "Effects": "Effetti",
+ "Instruments": "Strumenti",
+ "Free plugins": "Plugin gratuiti",
+ "{n} of {total} installed": "{n} di {total} installati",
+ "The best free plugins (LANDR list 2026). Open-source ones install with one click. For the others the maker’s page opens: download and install the plugin there (some ask for a free account), then press Search for plugins below and it appears in the app.": "I migliori plugin gratuiti (lista LANDR 2026). Quelli open source si installano con un clic. Per gli altri si apre la pagina del produttore: scarica e installa il plugin (alcuni chiedono un account gratuito), poi premi Cerca plugin qui sotto.",
+ "Installed (found by the plugin search)": "Installato (trovato dalla ricerca)",
+ "Not installed yet": "Non ancora installato",
+ "Needs a free account / the maker’s installer app": "Richiede un account gratuito / l’installer del produttore",
+ "MIDI plugin: it makes notes; the app will play them through an instrument in a later version (MIDI effects before the instrument).": "Plugin MIDI: crea note; l’app le suonerà con uno strumento in una versione futura.",
+ "Download page": "Pagina di download",
+ "{name} {tag} is installed.": "{name} {tag} è installato."
 }

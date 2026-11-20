@@ -196,6 +196,12 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 Die Plugins laufen in einem eigenen kleinen Programm (Plugin-Host), das nur läuft, solange ein Plugin benutzt wird. Stürzt ein Plugin ab, läuft die App weiter; beim nächsten Abspielen werden die Plugins mit ihren zuletzt gespeicherten Einstellungen neu geladen. Spuren mit Plugins bleiben im Takt (die Verzögerung durch die Plugins wird ausgeglichen). 64- und 32-Bit-Plugins funktionieren. Plugins auf dem Master, im Mastering und Instrument-Plugins kommen in den nächsten Versionen.
 
+## Neu in 0.82: Kostenlose Plugins (Einstellungen → Plugins)
+
+Die 40 Plugins der LANDR-Liste „Best Free VST Plugins (2026)“: 15 Effekte, 15 Instrumente, 10 MIDI-Plugins, mit Filter (Alle / Effekte / Instrumente / MIDI). Ein ✓ zeigt, dass die Plugin-Suche das Plugin gefunden hat. Open-Source-Plugins (Surge XT, Dexed, CHOW Kick, Stochas) mit **Installieren** in einem Klick; bei den anderen öffnet **Download-Seite ↗** die Seite des Herstellers (manche wollen ein kostenloses Konto oder ihre eigene Installer-App). Nach dem Installieren **Nach Plugins suchen** drücken. MIDI-Plugins erscheinen in der Liste; ihre Noten über ein Instrument abspielen kommt in einer späteren Version.
+
+PyTorch für NVIDIA-Karten: Die App wählt jetzt die passende CUDA-Version (12.6 für GTX 9xx bis RTX 40xx, 12.8 für RTX 50xx) und nimmt sonst die Prozessor-Version, statt abzubrechen.
+
 ## Neu in 0.81: Song-Generator und neues Aussehen der KI-Instrumente
 
 **Song-Generator** (Menü KI-Instrumente, ganz oben): Ein ganzer Song als MIDI. Genre (Pop, Rock, Ballade, House, Tech House, Afro House, Trap / Rap, Funk, Reggaeton, Jazz, Reggae, Metal), Tonart, Dur oder Moll und Tempo (Drehknopf) wählen. Der farbige Streifen zeigt den Aufbau (Intro, Strophe, Pre-Chorus, Refrain, Bridge oder Drop, Outro). Mit den Schaltern unter „Spuren“ Melodie, Keys, Bass, Drums und Gitarre ein- oder ausschalten. **Song im Studio erstellen** legt pro Teil eine MIDI-Spur an (hinter dem, was schon im Projekt ist), setzt das Tempo und Marker für die Teile. **🎲 Take** macht eine andere Version.

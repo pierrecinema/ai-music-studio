@@ -232,9 +232,26 @@ export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   }
 }
 
-function torchArgs(variant: string): string[] {
+// Which CUDA build of PyTorch fits the NVIDIA card: CUDA 12.8 builds are needed for RTX 50xx (compute capability 12)
+// but no longer run on older cards such as the GTX 10xx (6.1); CUDA 12.6 builds run on everything from the GTX 9xx to
+// the RTX 40xx and have wheels for current Python versions (the old CUDA 12.1 builds stop at older Pythons).
+let cudaCap: Promise<number | null> | null = null
+function nvidiaCapability(): Promise<number | null> {
+  cudaCap ??= capture('nvidia-smi', ['--query-gpu=compute_cap', '--format=csv,noheader'], 8000).then((r) => {
+    const v = parseFloat(r.out.trim().split(/\r?\n/)[0] ?? '')
+    return r.code === 0 && Number.isFinite(v) ? v : null
+  })
+  return cudaCap
+}
+export async function cudaIndexes(): Promise<string[]> {
+  const cap = await nvidiaCapability()
+  return cap !== null && cap >= 10 ? ['cu128', 'cu126'] : ['cu126', 'cu128', 'cu118']
+}
+const cudaIndexUrl = (tag: string): string => `https://download.pytorch.org/whl/${tag}`
+
+function torchArgs(variant: string, cuda = 'cu126'): string[] {
   switch (variant) {
-    case 'cuda': return ['torch', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cu121']
+    case 'cuda': return ['torch', 'torchaudio', '--index-url', cudaIndexUrl(cuda)]
     // torch-directml is installed separately afterwards: it is optional and often missing for new Pythons
     case 'directml': return ['torch', 'torchaudio']
     default: return ['torch', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cpu']
@@ -340,9 +357,12 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
   }
   if (torchVariant === 'cuda') {
     log('NVIDIA card: installing the CUDA build of PyTorch first.')
-    if (await run(ace15Python(), ['-m', 'pip', 'install', '--upgrade', 'torch', 'torchaudio', 'torchvision', '--index-url', 'https://download.pytorch.org/whl/cu128'], log) !== 0) {
-      return { ok: false, error: 'Installing PyTorch (CUDA) for ACE-Step 1.5 failed (see log).' }
+    let ok = false
+    for (const tag of await cudaIndexes()) {
+      if (await run(ace15Python(), ['-m', 'pip', 'install', '--upgrade', 'torch', 'torchaudio', 'torchvision', '--index-url', cudaIndexUrl(tag)], log) === 0) { ok = true; break }
+      log(`The PyTorch build ${tag} could not be installed, trying the next one.`)
     }
+    if (!ok) return { ok: false, error: 'Installing PyTorch (CUDA) for ACE-Step 1.5 failed (see log).' }
   } else {
     log('No NVIDIA card chosen: ACE-Step 1.5 runs on the processor (PyTorch CPU build).')
     if (await run(ace15Python(), ['-m', 'pip', 'install', '--upgrade', 'torch', 'torchaudio', 'torchvision', '--index-url', 'https://download.pytorch.org/whl/cpu'], log) !== 0) {
@@ -423,9 +443,11 @@ async function installSep(py: PythonCmd | null, torchVariant: string, log: (l: s
   let extra = 'cpu'
   if (torchVariant === 'cuda') {
     log('NVIDIA card: CUDA build of PyTorch and ONNX Runtime GPU.')
-    if (await run(sepPython(), ['-m', 'pip', 'install', 'torch', '--index-url', 'https://download.pytorch.org/whl/cu128'], log) !== 0) {
-      return { ok: false, error: 'Installing PyTorch (CUDA) for fast vocal separation failed (see log).' }
+    let ok = false
+    for (const tag of await cudaIndexes()) {
+      if (await run(sepPython(), ['-m', 'pip', 'install', 'torch', '--index-url', cudaIndexUrl(tag)], log) === 0) { ok = true; break }
     }
+    if (!ok) return { ok: false, error: 'Installing PyTorch (CUDA) for fast vocal separation failed (see log).' }
     extra = 'gpu'
   } else if (process.platform === 'win32') {
     log('AMD / Intel graphics or none: DirectML build, so a DirectX 12 graphics card can help (falls back to the processor).')
@@ -557,7 +579,24 @@ export async function installGroups(
       // an earlier install may have left TensorFlow behind, which breaks with NumPy 2: remove it
       await run(venvPython(), ['-m', 'pip', 'uninstall', '-y', 'tensorflow', 'tensorflow-intel', 'tensorflow-cpu'], log)
     }
-    let code = await run(venvPython(), ['-m', 'pip', 'install', ...args], log)
+    let code: number
+    if (g === 'torch' && torchVariant === 'cuda') {
+      code = -1
+      const tags = await cudaIndexes()
+      const cap = await nvidiaCapability()
+      if (cap !== null) log(`NVIDIA card with compute capability ${cap}: trying the PyTorch builds ${tags.join(', ')}.`)
+      for (const tag of tags) {
+        code = await run(venvPython(), ['-m', 'pip', 'install', ...torchArgs('cuda', tag)], log)
+        if (code === 0) break
+        log(`The PyTorch build ${tag} could not be installed, trying the next one.`)
+      }
+      if (code !== 0) {
+        log('No CUDA build of PyTorch could be installed for this Python / card: installing the processor build, so the engines still work (slower).')
+        code = await run(venvPython(), ['-m', 'pip', 'install', ...torchArgs('cpu')], log)
+      }
+    } else {
+      code = await run(venvPython(), ['-m', 'pip', 'install', ...args], log)
+    }
     if (code === 0 && g === 'basicpitch') {
       code = await run(venvPython(), ['-m', 'pip', 'install', '--no-deps', 'basic-pitch'], log)
     }

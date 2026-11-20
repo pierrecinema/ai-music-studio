@@ -174,8 +174,9 @@ function PanKnob({ value, onChange }: { value: number; onChange: (v: number) => 
     const el = ref.current
     if (!el) return
     el.setPointerCapture(e.pointerId)
-    const y0 = e.clientY, v0 = value
-    const move = (ev: PointerEvent): void => onChange(Math.max(-1, Math.min(1, Math.round((v0 - (ev.clientY - y0) / 80) * 100) / 100)))
+    // drag up / right = right, down / left = left (owner: dragging sideways did nothing)
+    const x0 = e.clientX, y0 = e.clientY, v0 = value
+    const move = (ev: PointerEvent): void => onChange(Math.max(-1, Math.min(1, Math.round((v0 + ((ev.clientX - x0) - (ev.clientY - y0)) / 80) * 100) / 100)))
     const up = (): void => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up) }
     el.addEventListener('pointermove', move)
     el.addEventListener('pointerup', up)
@@ -186,9 +187,9 @@ function PanKnob({ value, onChange }: { value: number; onChange: (v: number) => 
         <span style={{ position: 'absolute', left: 0, bottom: 0, fontSize: 8, color: C.label, fontWeight: 700 }}>L</span>
         <span style={{ position: 'absolute', left: 23, top: -2, fontSize: 8, color: C.label, fontWeight: 700 }}>C</span>
         <span style={{ position: 'absolute', right: 0, bottom: 0, fontSize: 8, color: C.label, fontWeight: 700 }}>R</span>
-        <div ref={ref} onPointerDown={drag} onDoubleClick={() => onChange(0)} title={tr('Pan (double-click: center)')}
+        <div ref={ref} onPointerDown={drag} onDoubleClick={() => onChange(0)} title={tr('Pan: drag sideways or up / down, mouse wheel (double-click: center)')}
           onWheel={(e) => onChange(Math.max(-1, Math.min(1, Math.round((value - Math.sign(e.deltaY) * 0.05) * 100) / 100)))}
-          style={{ position: 'absolute', left: 10, top: 8, width: 32, height: 32, borderRadius: '50%', cursor: 'ns-resize', touchAction: 'none',
+          style={{ position: 'absolute', left: 10, top: 8, width: 32, height: 32, borderRadius: '50%', cursor: 'grab', touchAction: 'none',
             background: 'radial-gradient(circle at 35% 30%, #4a4f55 0%, #1c1f23 55%, #0b0d0f 100%)',
             boxShadow: '0 3px 6px rgba(0,0,0,0.7), 0 0 0 2px #0e1114, inset 0 1px 1px rgba(255,255,255,0.15)', transform: `rotate(${angle}deg)` }}>
           <div style={{ position: 'absolute', left: 15, top: 3, width: 2, height: 11, background: '#f2f4f6', borderRadius: 1 }} />
@@ -205,19 +206,19 @@ function Strip({ name, color, volume, setVolume, read, pan, setPan, muted, soloe
 }): React.ReactElement {
   const peak = useRef<HTMLSpanElement>(null)
   return (
-    <div style={{ width: master ? 132 : 118, flexShrink: 0, background: C.strip, borderRadius: 4, border: `1px solid ${C.edge}`,
+    <div style={{ width: master ? 112 : 100, flexShrink: 0, background: C.strip, borderRadius: 4, border: `1px solid ${C.edge}`,
       boxShadow: 'inset 1px 0 0 rgba(255,255,255,0.06), 0 6px 14px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'stretch', fontFamily: C.font, overflow: 'hidden' }}>
       <div style={{ height: 4, background: color }} />
-      <div title={name} style={{ padding: '6px 8px 4px', color: C.text, fontSize: master ? 13 : 12, fontWeight: master ? 800 : 600, fontStyle: master ? 'normal' : 'italic',
+      <div title={name} style={{ padding: '6px 6px 4px', color: C.text, fontSize: master ? 12.5 : 11.5, fontWeight: master ? 800 : 600, fontStyle: master ? 'normal' : 'italic',
         textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: master ? '0.12em' : 0 }}>{name}</div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 8px 6px' }}>
-        <span style={{ fontSize: 9, color: C.label, fontWeight: 700, letterSpacing: '0.08em' }}>{tr('OUTPUT')}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 6px 6px' }}>
+        <span style={{ fontSize: 8, color: C.label, fontWeight: 700, letterSpacing: '0.04em' }}>{tr('OUTPUT')}</span>
         {!master && <div style={{ display: 'flex', gap: 3 }}>
           <Key label="M" on={!!muted} color="#ffb020" onClick={onMute!} title={tr('Mute')} />
           <Key label="S" on={!!soloed} color="#5ee36a" onClick={onSolo!} title={tr('Solo')} />
         </div>}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '4px 6px 6px', background: 'rgba(0,0,0,0.12)', borderTop: '1px solid rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '4px 4px 6px', background: 'rgba(0,0,0,0.12)', borderTop: '1px solid rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
         <Fader value={volume} onChange={setVolume} height={height} />
         <LedMeter read={read} peakRef={peak} height={height} />
       </div>

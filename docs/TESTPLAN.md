@@ -459,21 +459,28 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 23.1 | KI-Instrumente öffnen: oben „Klang-Paket: echte Instrumente“ → **Installieren (28 MB)** | Fortschrittsbalken, danach verschwindet die Karte | | | 0.84.0 |
-| 23.2 | Song-Generator: **Funk** → Erstellen, im Studio abspielen | Startet bei Takt 1; Clavinet, Slap-Bass, Bläser und echtes Schlagzeug, kein Knistern | | | 0.84.0 |
-| 23.3 | Dasselbe mit **Jazz**, **Ballade**, **Afro House** | Jedes Genre hat eigene Instrumente und klingt nicht mehr nach 90er-Synth | | | 0.84.0 |
-| 23.4 | Eine Spur → **CH** → Instrument: unter „Klang-Paket: Orchester“ **Violine** wählen | Die Spur spielt Violine | | | 0.84.0 |
-| 23.5 | Im Piano Roll Noten anklicken / mit MIDI-Keyboard spielen | Man hört das gewählte echte Instrument | | | 0.84.0 |
-| 23.6 | Song exportieren (WAV) | Der Export klingt wie im Studio | | | 0.84.0 |
-| 23.7 | Einstellungen → Audio → Klang-Paket | „Installiert“ mit **Entfernen**; nach Entfernen spielt wieder der Synthesizer | | | 0.84.0 |
-| 23.8 | Song-Generator: alle fünf Spuren-Tasten aus | Kein Absturz, „Erstellen“ ist gesperrt | | | 0.84.0 |
+| 23.1 | KI-Instrumente öffnen: oben „Klang-Paket: echte Instrumente“ → **Installieren (28 MB)** | Fortschrittsbalken, danach verschwindet die Karte | ✅ | | 0.84.0 |
+| 23.2 | Song-Generator: **Funk** → Erstellen, im Studio abspielen | Startet bei Takt 1; Clavinet, Slap-Bass, Bläser und echtes Schlagzeug, kein Knistern | ✅ | | 0.84.0 |
+| 23.3 | Dasselbe mit **Jazz**, **Ballade**, **Afro House** | Jedes Genre hat eigene Instrumente und klingt nicht mehr nach 90er-Synth | ✅ | | 0.84.0 |
+| 23.4 | Eine Spur → **CH** → Instrument: unter „Klang-Paket: Orchester“ **Violine** wählen | Die Spur spielt Violine | ✅ | | 0.84.0 |
+| 23.5 | Im Piano Roll Noten anklicken / mit MIDI-Keyboard spielen | Man hört das gewählte echte Instrument | ✅ | Mit Launchpad und Tastatur | 0.84.0 |
+| 23.6 | Song exportieren (WAV) | Der Export klingt wie im Studio | ✅ | | 0.84.0 |
+| 23.7 | Einstellungen → Audio → Klang-Paket | „Installiert“ mit **Entfernen**; nach Entfernen spielt wieder der Synthesizer | ✅ | | 0.84.0 |
+| 23.8 | Song-Generator: alle fünf Spuren-Tasten aus | Kein Absturz, „Erstellen“ ist gesperrt | ✅ | Die Tasten wählen nur, welche Spuren erstellt werden | 0.84.0 |
 
 ## 24. Neu in 0.85.0: Mixer im Konsolen-Look
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 24.1 | Mixer öffnen (Song aus dem Song-Generator) | Dunkelblaugraue Kanalzüge wie dein Vorbild: Fader mit weißer Kappe und dB-Skala, zwei orange LED-Anzeigen, M/S-Tasten, Werte unten, Pan-Knopf | | | 0.85.0 |
-| 24.2 | Abspielen | Die LEDs leuchten mit (orange, oben gelb/rot), unten steht der Spitzenwert in dB | | | 0.85.0 |
-| 24.3 | Fader ziehen, mit Shift fein ziehen, Mausrad, Doppelklick | Lautstärke ändert sich; Doppelklick = 0 dB | | | 0.85.0 |
-| 24.4 | Pan-Knopf ziehen, Doppelklick | Links/rechts, Doppelklick = Mitte | | | 0.85.0 |
-| 24.5 | Trennlinie zwischen Studio und Mixer verschieben | Die Fader werden länger/kürzer, nichts wird abgeschnitten | | | 0.85.0 |
+| 24.1 | Mixer öffnen (Song aus dem Song-Generator) | Dunkelblaugraue Kanalzüge wie dein Vorbild: Fader mit weißer Kappe und dB-Skala, zwei orange LED-Anzeigen, M/S-Tasten, Werte unten, Pan-Knopf | ⚠️ | Einen Tick zu breit → 0.85.1 schmaler | 0.85.0 |
+| 24.2 | Abspielen | Die LEDs leuchten mit (orange, oben gelb/rot), unten steht der Spitzenwert in dB | ✅ | | 0.85.0 |
+| 24.3 | Fader ziehen, mit Shift fein ziehen, Mausrad, Doppelklick | Lautstärke ändert sich; Doppelklick = 0 dB | ✅ | | 0.85.0 |
+| 24.4 | Pan-Knopf ziehen, Doppelklick | Links/rechts, Doppelklick = Mitte | ❌ | Keine Veränderung → 0.85.1: Knopf dreht auch beim Ziehen nach links/rechts | 0.85.0 |
+| 24.5 | Trennlinie zwischen Studio und Mixer verschieben | Die Fader werden länger/kürzer, nichts wird abgeschnitten | ✅ | Perfekt | 0.85.0 |
+
+## 25. Neu in 0.85.1: Mixer schmaler, Pan seitlich
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 25.1 | Mixer öffnen | Die Kanalzüge sind etwas schmaler | | | 0.85.1 |
+| 25.2 | Song abspielen, am Pan-Knopf einer Spur nach links und rechts ziehen | Der Knopf dreht sich, unten steht L.. / R.., die Spur wandert hörbar nach links / rechts | | | 0.85.1 |

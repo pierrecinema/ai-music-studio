@@ -5,7 +5,7 @@ One channel strip per track, plus **MASTER**, built like the output section of a
 | Control | What it does |
 |---|---|
 | **Fader** | volume with a dB scale (0 at the top, then 6, 12 … 48, ∞): drag the white cap, mouse wheel, **Shift** for fine moves, double-click for 0 dB |
-| **Pan** | the black knob at the bottom: drag up / down or mouse wheel, double-click: center (L, C, R around it) |
+| **Pan** | the black knob at the bottom: drag sideways or up / down, or the mouse wheel; double-click: center (L, C, R around it) |
 | **M / S** | mute / solo (the key lights orange / green) |
 | **Level meter** | two orange LED columns with a scale in dB below full level (red 0–3, yellow 6–9); the held peak shows as one lit segment |
 | **Values** | under the fader: the fader in dB (white) and the last peak in dB (orange) |

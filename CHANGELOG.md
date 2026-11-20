@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.85.1
+
+### Fixed
+
+- Mixer: the pan knob also turns when dragged sideways (left / right), not only up and down; before, a sideways drag did nothing.
+- Mixer: the channel strips are a little narrower, so more tracks fit side by side.
+
 ## 0.85.0
 
 ### New

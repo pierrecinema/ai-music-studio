@@ -1727,5 +1727,6 @@
  "OUTPUT": "AUSGANG",
  "Volume (double-click: 0 dB, Shift: fine)": "Lautstärke (Doppelklick: 0 dB, Shift: fein)",
  "Fader (dB)": "Fader (dB)",
- "Peak (dB)": "Spitzenwert (dB)"
+ "Peak (dB)": "Spitzenwert (dB)",
+ "Pan: drag sideways or up / down, mouse wheel (double-click: center)": "Panorama: seitlich oder nach oben/unten ziehen, Mausrad (Doppelklick: Mitte)"
 }

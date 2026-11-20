@@ -421,25 +421,36 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 19.1 | App starten, unten in der Statusleiste schauen | Dort steht wieder „AMD Radeon R9 200 Series · …“ (Laptop: die Intel-Grafik) | | | 0.82.1 |
-| 19.2 | Bibliothek öffnen | Deine Tracks sind da, kein „Failed to fetch“ | | | 0.82.1 |
-| 19.3 | Song-Generator-Song im Studio abspielen | Klingt sauber, nicht verzerrt | | | 0.82.1 |
-| 19.4 | KI-Orchester: Melodie mit Violine | Fortschritt „Phrase 1 von N … noch etwa X Min“; am Ende Audiospur | | | 0.82.1 |
-| 19.5 | Während 19.4 läuft: App über das X schließen, Task-Manager öffnen | Nach wenigen Sekunden kein „python.exe“ von der App mehr | | | 0.82.1 |
+| 19.1 | App starten, unten in der Statusleiste schauen | Dort steht wieder „AMD Radeon R9 200 Series · …“ (Laptop: die Intel-Grafik) | ✅ | | 0.82.1 |
+| 19.2 | Bibliothek öffnen | Deine Tracks sind da, kein „Failed to fetch“ | ✅ | | 0.82.1 |
+| 19.3 | Song-Generator-Song im Studio abspielen | Klingt sauber, nicht verzerrt | ❌ | Immer noch total verzerrt → 0.83.2 (Noten werden vorausgeplant) | 0.82.1 |
+| 19.4 | KI-Orchester: Melodie mit Violine | Fortschritt „Phrase 1 von N … noch etwa X Min“; am Ende Audiospur | ⚠️ | Geht, Ton aber verzerrt → 0.83.2 | 0.82.1 |
+| 19.5 | Während 19.4 läuft: App über das X schließen, Task-Manager öffnen | Nach wenigen Sekunden kein „python.exe“ von der App mehr | ✅ | | 0.82.1 |
 
 ## 20. Neu in 0.83.0: KI-Instrumente im Plugin-Look
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 20.1 | KI-Instrumente öffnen | Geräte mit farbigem Streifen, große Drehknöpfe mit Leuchtring und Wert in der Mitte, LED-Tasten, dunkle Anzeigen; keine Emojis, kein „Schulklassen“-Look | | | 0.83.0 |
-| 20.2 | Schlagzeuger: Stil wechseln, Intensität drehen | Das Schritt-Raster ändert sich sofort | | | 0.83.0 |
-| 20.3 | Bassist / Gitarrist: Stil wechseln | Die Mini-Notenansicht ändert sich | | | 0.83.0 |
-| 20.4 | Song-Generator: Genre wechseln, Tempo-Knopf drehen, ERSTELLEN | Melodie-Vorschau und Akkorde ändern sich; Song im Studio | | | 0.83.0 |
+| 20.1 | KI-Instrumente öffnen | Geräte mit farbigem Streifen, große Drehknöpfe mit Leuchtring und Wert in der Mitte, LED-Tasten, dunkle Anzeigen; keine Emojis, kein „Schulklassen“-Look | ✅ | Viel besser; so lassen | 0.83.0 |
+| 20.2 | Schlagzeuger: Stil wechseln, Intensität drehen | Das Schritt-Raster ändert sich sofort | ✅ | Ton verzerrt → 0.83.2 | 0.83.0 |
+| 20.3 | Bassist / Gitarrist: Stil wechseln | Die Mini-Notenansicht ändert sich | ✅ | Ton verzerrt → 0.83.2 | 0.83.0 |
+| 20.4 | Song-Generator: Genre wechseln, Tempo-Knopf drehen, ERSTELLEN | Melodie-Vorschau und Akkorde ändern sich; Song im Studio | ⚠️ | Wegen Verzerrung nicht testbar → 0.83.2 | 0.83.0 |
 | 20.5 | Orchester: Instrument in der Liste wählen, RENDERN | Der Pegel-Balken zeigt den Fortschritt | | | 0.83.0 |
 
 ## 21. Neu in 0.83.1: Grafikkarte in der Statusleiste
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 21.1 | App starten, ca. 10 Sekunden warten, unten in die Statusleiste schauen | „AMD Radeon R9 200 Series · CPU“ statt „none · CPU“ (Laptop: Intel-Grafik) | | | 0.83.1 |
-| 21.2 | Einstellungen → KI-Engines | Oben steht „GPU: amd“ statt „GPU: none“ | | | 0.83.1 |
+| 21.1 | App starten, ca. 10 Sekunden warten, unten in die Statusleiste schauen | „AMD Radeon R9 200 Series · CPU“ statt „none · CPU“ (Laptop: Intel-Grafik) | ✅ | | 0.83.1 |
+| 21.2 | Einstellungen → KI-Engines | Oben steht „GPU: amd“ statt „GPU: none“ | ✅ | | 0.83.1 |
+
+## 22. Neu in 0.83.2: kein verzerrter Ton mehr
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 22.1 | Song-Generator: Afro House → Song im Studio erstellen, abspielen | Klingt sauber, kein Knistern, keine Verzerrung | | | 0.83.2 |
+| 22.2 | Während der Song spielt: die Violinen-Spur aus 19.4 mit abspielen | Auch die Violine klingt sauber | | | 0.83.2 |
+| 22.3 | Mitten im Song auf Stopp, an eine andere Stelle springen, wieder abspielen | Spielt sofort an der neuen Stelle, keine hängenden Töne | | | 0.83.2 |
+| 22.4 | Loop über 4 Takte setzen, ein paar Durchgänge laufen lassen | Jeder Durchgang klingt gleich, keine Lücken | | | 0.83.2 |
+| 22.5 | Song exportieren (WAV) | Geht in etwa einer halben Minute, die Datei klingt sauber | | | 0.83.2 |
+| 22.6 | 20.2–20.4 nochmal anhören | Band und Song-Generator klingen sauber | | | 0.83.2 |

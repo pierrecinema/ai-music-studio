@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.83.2
+
+### Fixed
+
+- **Generated songs no longer sound distorted.** The built-in sounds (drums, bass, keys, guitar, lead) are now prepared a few seconds ahead while the song plays, instead of all notes of the song at once. A song from the song generator has up to 5000 notes; preparing them all at the start overloaded the audio processing (measured: 10 s of song needed 83 s of computing), so everything crackled, including audio tracks playing at the same time. Now 10 s need about 1 s.
+- Exporting a song with the built-in sounds is much faster for the same reason (a 3-minute generated song: about 30 s instead of over 20 minutes).
+
 ## 0.83.1
 
 ### Fixed

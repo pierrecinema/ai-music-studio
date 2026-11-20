@@ -435,7 +435,7 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 | 20.2 | Schlagzeuger: Stil wechseln, Intensität drehen | Das Schritt-Raster ändert sich sofort | ✅ | Ton verzerrt → 0.83.2 | 0.83.0 |
 | 20.3 | Bassist / Gitarrist: Stil wechseln | Die Mini-Notenansicht ändert sich | ✅ | Ton verzerrt → 0.83.2 | 0.83.0 |
 | 20.4 | Song-Generator: Genre wechseln, Tempo-Knopf drehen, ERSTELLEN | Melodie-Vorschau und Akkorde ändern sich; Song im Studio | ⚠️ | Wegen Verzerrung nicht testbar → 0.83.2 | 0.83.0 |
-| 20.5 | Orchester: Instrument in der Liste wählen, RENDERN | Der Pegel-Balken zeigt den Fortschritt | | | 0.83.0 |
+| 20.5 | Orchester: Instrument in der Liste wählen, RENDERN | Der Pegel-Balken zeigt den Fortschritt | ❌ | | 0.83.0 |
 
 ## 21. Neu in 0.83.1: Grafikkarte in der Statusleiste
 
@@ -448,9 +448,9 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 22.1 | Song-Generator: Afro House → Song im Studio erstellen, abspielen | Klingt sauber, kein Knistern, keine Verzerrung | | | 0.83.2 |
-| 22.2 | Während der Song spielt: die Violinen-Spur aus 19.4 mit abspielen | Auch die Violine klingt sauber | | | 0.83.2 |
-| 22.3 | Mitten im Song auf Stopp, an eine andere Stelle springen, wieder abspielen | Spielt sofort an der neuen Stelle, keine hängenden Töne | | | 0.83.2 |
-| 22.4 | Loop über 4 Takte setzen, ein paar Durchgänge laufen lassen | Jeder Durchgang klingt gleich, keine Lücken | | | 0.83.2 |
-| 22.5 | Song exportieren (WAV) | Geht in etwa einer halben Minute, die Datei klingt sauber | | | 0.83.2 |
-| 22.6 | 20.2–20.4 nochmal anhören | Band und Song-Generator klingen sauber | | | 0.83.2 |
+| 22.1 | Song-Generator: Afro House → Song im Studio erstellen, abspielen | Klingt sauber, kein Knistern, keine Verzerrung | ✅ | | 0.83.2 |
+| 22.2 | Während der Song spielt: die Violinen-Spur aus 19.4 mit abspielen | Auch die Violine klingt sauber | ⚠️ | Neuer Song landete am Projektende (außer Sicht, Spuren wirkten leer) → beginnt jetzt bei Takt 1 | 0.83.2 |
+| 22.3 | Mitten im Song auf Stopp, an eine andere Stelle springen, wieder abspielen | Spielt sofort an der neuen Stelle, keine hängenden Töne | ✅ | | 0.83.2 |
+| 22.4 | Loop über 4 Takte setzen, ein paar Durchgänge laufen lassen | Jeder Durchgang klingt gleich, keine Lücken | ❓ | Wie setzt man einen Loop? | 0.83.2 |
+| 22.5 | Song exportieren (WAV) | Geht in etwa einer halben Minute, die Datei klingt sauber | ✅ | | 0.83.2 |
+| 22.6 | 20.2–20.4 nochmal anhören | Band und Song-Generator klingen sauber | ⚠️ | Klingt langweilig, wie 90er Synth-Pop: Klänge müssen viel besser werden | 0.83.2 |

@@ -197,7 +197,7 @@ function SongGenerator(): React.ReactElement {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <Btn look="silk" onClick={() => setTake(take + 1)} title={tr('Another version: other chords, melody and grooves')}>{trf('Take {n}', { n: take })}</Btn>
-            <Btn look="silk" onClick={make}>{tr('Create')}</Btn>
+            <Btn look="silk" onClick={make} disabled={!song.parts.length}>{tr('Create')}</Btn>
           </div>
           <span style={{ fontSize: 11, color: lightDim }}>{trf('{bars} bars · {min}:{sec} min', { bars: song.bars, min: Math.floor(length / 60), sec: String(length % 60).padStart(2, '0') })}</span>
           <span style={{ fontFamily: G.mono, fontSize: 12, color: '#155e75' }}>{song.chords.slice(0, 4).map((c) => chordName(c)).join(' · ')}</span>
@@ -209,7 +209,7 @@ function SongGenerator(): React.ReactElement {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden' }}>{tr(SECTION_LABEL[s.kind])}</div>
             ))}
           </div>
-          <LightCurve notes={melody.notes.filter((n) => n.startTime >= chorus.bar * 4).map((n) => ({ ...n, startTime: n.startTime - chorus.bar * 4 }))} beats={32} />
+          <LightCurve notes={(melody?.notes ?? []).filter((n) => n.startTime >= chorus.bar * 4).map((n) => ({ ...n, startTime: n.startTime - chorus.bar * 4 }))} beats={32} />
         </div>
       </div>
       <div style={{ background: 'linear-gradient(180deg, #e9ebee, #d5d9de)', borderTop: '1px solid #b4bac2', padding: '12px 20px', display: 'flex', gap: 26, alignItems: 'flex-end', flexWrap: 'wrap' }}>

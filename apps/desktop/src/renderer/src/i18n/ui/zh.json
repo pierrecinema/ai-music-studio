@@ -1528,5 +1528,7 @@
  "Mute MIDI": "静音 MIDI",
  "free": "自由",
  "close": "贴近",
- "Orchestra": "管弦乐"
+ "Orchestra": "管弦乐",
+ "Part": "段落",
+ "Expression": "表情"
 }

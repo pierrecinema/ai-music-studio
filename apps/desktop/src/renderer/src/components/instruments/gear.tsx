@@ -269,3 +269,167 @@ export function Meter({ value, text, color = '#22c55e' }: { value: number; text?
     </div>
   )
 }
+
+// ── skins taken from classic plugin front panels ────────────────────────────
+// silk:    light silver bezel, dark navy face, cyan ring inside the face, value in the middle (light vocal plugins)
+// epic:    black knurled knob, white pointer, value in a white box (light rack effects with a coloured edge)
+// silver:  brushed metal knob (output knobs)
+// antares: small dark knob with a thin cyan ring and the value beside it (navy multi-channel harmonizers)
+// lab:     flat dark knob with a coloured arc (dark synths with operator panels)
+export type Skin = 'silk' | 'epic' | 'silver' | 'antares' | 'lab'
+
+export function SkinKnob({ skin, label, value, min, max, step = 0.01, def, onChange, format, size = 56, color = '#22c3ee', title, bipolar, low, high, dark }: {
+  skin: Skin; label?: string; value: number; min: number; max: number; step?: number; def?: number; onChange: (v: number) => void
+  format?: (v: number) => string; size?: number; color?: string; title?: string; bipolar?: boolean; low?: string; high?: string; dark?: boolean
+}): React.ReactElement {
+  const id = useRef(`s${++knobId}`).current
+  const pos = Math.max(0, Math.min(1, (value - min) / (max - min || 1)))
+  const ang = A0 + pos * (A1 - A0)
+  const drag = useRef<{ y: number; p: number } | null>(null)
+  const put = (p: number): void => onChange(Math.round((min + Math.max(0, Math.min(1, p)) * (max - min)) / step) * step)
+  const inc = Math.max(step / (max - min), 0.02)
+  const text = format ? format(value) : `${Math.round(pos * 100)}`
+  const c = size / 2
+  const from = bipolar ? 0 : A0
+  const lit = (r: number, w: number, col = color): React.ReactNode => Math.abs(ang - from) > 0.5 &&
+    <path d={ang >= from ? arc(c, c, r, from, ang) : arc(c, c, r, ang, from)} fill="none" stroke={col} strokeWidth={w} strokeLinecap="round" style={{ filter: `drop-shadow(0 0 2px ${col})` }} />
+  const pointer = (r0: number, r1: number, col: string, w = 2.2): React.ReactNode => (
+    <line x1={c + r0 * Math.cos(rad(ang))} y1={c + r0 * Math.sin(rad(ang))} x2={c + r1 * Math.cos(rad(ang))} y2={c + r1 * Math.sin(rad(ang))} stroke={col} strokeWidth={w} strokeLinecap="round" />
+  )
+  let body: React.ReactNode
+  if (skin === 'silk') {
+    const bez = c - 2, face = c * 0.72
+    body = <>
+      <defs>
+        <radialGradient id={`${id}b`} cx="40%" cy="25%" r="80%"><stop offset="0" stopColor="#ffffff" /><stop offset="0.6" stopColor="#d9dde2" /><stop offset="1" stopColor="#a9afb8" /></radialGradient>
+        <radialGradient id={`${id}f`} cx="45%" cy="35%" r="75%"><stop offset="0" stopColor="#2a3b4d" /><stop offset="1" stopColor="#0d1722" /></radialGradient>
+      </defs>
+      <circle cx={c} cy={c + 3} r={bez} fill="#000" opacity={0.18} />
+      <circle cx={c} cy={c} r={bez} fill={`url(#${id}b)`} stroke="#9aa1aa" strokeWidth={0.6} />
+      <circle cx={c} cy={c} r={face} fill={`url(#${id}f)`} />
+      <path d={arc(c, c, face - size * 0.06, A0, A1)} fill="none" stroke="#1b2a38" strokeWidth={size * 0.05} strokeLinecap="round" />
+      {lit(face - size * 0.06, size * 0.05)}
+      <text x={c} y={c + size * 0.06} textAnchor="middle" style={{ fontFamily: G.font, fontSize: size * 0.2, fontWeight: 500, fill: '#e8f1f8' }}>{text}</text>
+    </>
+  } else if (skin === 'epic') {
+    const r = c - 3
+    body = <>
+      <defs><radialGradient id={`${id}e`} cx="45%" cy="35%" r="70%"><stop offset="0" stopColor="#3a3a3c" /><stop offset="1" stopColor="#0f0f10" /></radialGradient></defs>
+      <circle cx={c} cy={c + 3} r={r} fill="#000" opacity={0.3} />
+      <circle cx={c} cy={c} r={r} fill="#161617" />
+      {Array.from({ length: 40 }, (_, i) => { const a = (i / 40) * 360; return <line key={i} x1={c + (r - 3) * Math.cos(rad(a))} y1={c + (r - 3) * Math.sin(rad(a))} x2={c + r * Math.cos(rad(a))} y2={c + r * Math.sin(rad(a))} stroke="#3c3c3f" strokeWidth={1.2} /> })}
+      <circle cx={c} cy={c} r={r - 4} fill={`url(#${id}e)`} />
+      {pointer(r * 0.3, r - 6, '#f4f4f5', 2.4)}
+    </>
+  } else if (skin === 'silver') {
+    const r = c - 2
+    body = <>
+      <defs><radialGradient id={`${id}s`} cx="40%" cy="30%" r="85%"><stop offset="0" stopColor="#fbfbfb" /><stop offset="0.5" stopColor="#c7c9cc" /><stop offset="1" stopColor="#7d8186" /></radialGradient></defs>
+      <circle cx={c} cy={c + 3} r={r} fill="#000" opacity={0.35} />
+      <circle cx={c} cy={c} r={r} fill={`url(#${id}s)`} stroke="#5d6166" strokeWidth={0.8} />
+      {[0.25, 0.45, 0.65, 0.85].map((k) => <circle key={k} cx={c} cy={c} r={r * k} fill="none" stroke="#fff" strokeOpacity={0.12} />)}
+      {pointer(r * 0.35, r - 4, '#2b2d31', 2.6)}
+    </>
+  } else if (skin === 'antares') {
+    const r = c - 3
+    body = <>
+      <path d={arc(c, c, r, A0, A1)} fill="none" stroke="#0a1220" strokeWidth={3} strokeLinecap="round" />
+      {lit(r, 3, color)}
+      <circle cx={c} cy={c} r={r - 5} fill="#1a2536" stroke="#0a1220" strokeWidth={1.5} />
+      <circle cx={c} cy={c} r={r - 8} fill="#243248" />
+      {pointer(r * 0.25, r - 7, '#cfe8ff', 2)}
+    </>
+  } else {
+    const r = c - 3
+    body = <>
+      <path d={arc(c, c, r, A0, A1)} fill="none" stroke="#1d1f24" strokeWidth={3} strokeLinecap="round" />
+      {lit(r, 3, color)}
+      <circle cx={c} cy={c} r={r - 5} fill="#3a3d45" stroke="#24262b" />
+      {pointer(r * 0.2, r - 6, '#e5e7eb', 2)}
+    </>
+  }
+  const lab = dark === false ? '#2d3138' : skin === 'silk' || skin === 'epic' ? '#2d3138' : '#cbd5e1'
+  return (
+    <div title={title ? `${title} (${text})` : `${label ?? ''}: ${text}`} tabIndex={0}
+      onKeyDown={(e) => { const d = e.key === 'ArrowUp' || e.key === 'ArrowRight' ? 1 : e.key === 'ArrowDown' || e.key === 'ArrowLeft' ? -1 : 0; if (d) { e.preventDefault(); e.stopPropagation(); put(pos + d * (e.shiftKey ? 0.005 : inc)) } }}
+      style={{ display: 'flex', flexDirection: skin === 'antares' ? 'row' : 'column', alignItems: 'center', gap: skin === 'antares' ? 6 : 4, outline: 'none', userSelect: 'none' }}>
+      {label && skin !== 'antares' && <span style={{ fontFamily: G.font, fontSize: 11.5, fontWeight: 500, color: lab }}>{label}</span>}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {label && skin === 'antares' && <span style={{ fontFamily: G.font, fontSize: 9.5, color: '#9fb4cc', marginBottom: 2 }}>{label}</span>}
+        <svg width={size} height={size} style={{ cursor: 'ns-resize', touchAction: 'none', overflow: 'visible' }}
+          onPointerDown={(e) => { if (e.button !== 0) return; e.preventDefault(); (e.currentTarget as Element).setPointerCapture(e.pointerId); drag.current = { y: e.clientY, p: pos } }}
+          onPointerMove={(e) => { const d = drag.current; if (!d) return; const np = d.p + (d.y - e.clientY) / (e.shiftKey ? 900 : 180); if (e.shiftKey) drag.current = { y: e.clientY, p: np }; put(np) }}
+          onPointerUp={() => { drag.current = null }}
+          onWheel={(e) => put(pos + (e.deltaY < 0 ? 1 : -1) * inc)}
+          onDoubleClick={() => { if (def !== undefined) onChange(def) }}>
+          {body}
+        </svg>
+      </div>
+      {skin === 'epic' && <span style={{ fontFamily: G.font, fontSize: 11, color: '#1f2226', background: '#f7f7f7', border: '1px solid #c9cdd2', borderRadius: 3, padding: '1px 7px', minWidth: 30, textAlign: 'center', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.15)' }}>{text}</span>}
+      {skin === 'silver' && <span style={{ fontFamily: G.font, fontSize: 11, color: '#e5e7eb', background: '#1b1c1f', borderRadius: 3, padding: '1px 7px' }}>{text}</span>}
+      {skin === 'antares' && <span style={{ fontFamily: G.mono, fontSize: 11, color: '#7dd3fc', minWidth: 26 }}>{text}</span>}
+      {skin === 'lab' && <span style={{ fontFamily: G.mono, fontSize: 10, color: '#d4d4d8' }}>{text}</span>}
+      {(low || high) && <div style={{ display: 'flex', justifyContent: 'space-between', width: size + 16, fontSize: 9.5, color: skin === 'silk' || skin === 'epic' ? '#5b616b' : G.faint }}><span>{low}</span><span>{high}</span></div>}
+    </div>
+  )
+}
+
+/** a vertical fader in a slot (harmonizer channel strips, the dynamics fader of vocal plugins) */
+export function Fader({ label, value, min, max, step = 0.01, def, onChange, format, height = 110, color = '#38bdf8', light }: {
+  label: string; value: number; min: number; max: number; step?: number; def?: number; onChange: (v: number) => void; format?: (v: number) => string; height?: number; color?: string; light?: boolean
+}): React.ReactElement {
+  const pos = Math.max(0, Math.min(1, (value - min) / (max - min || 1)))
+  const ref = useRef<HTMLDivElement>(null)
+  const set = (clientY: number): void => {
+    const r = ref.current!.getBoundingClientRect()
+    const p = 1 - (clientY - r.top) / r.height
+    onChange(Math.round((min + Math.max(0, Math.min(1, p)) * (max - min)) / step) * step)
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, userSelect: 'none' }} title={`${label}: ${format ? format(value) : value}`}>
+      <span style={{ fontFamily: G.mono, fontSize: 10.5, color: light ? '#1f2937' : color }}>{format ? format(value) : value}</span>
+      <div ref={ref} onDoubleClick={() => def !== undefined && onChange(def)}
+        onPointerDown={(e) => { (e.currentTarget as Element).setPointerCapture(e.pointerId); set(e.clientY) }}
+        onPointerMove={(e) => { if (e.buttons) set(e.clientY) }}
+        onWheel={(e) => onChange(Math.max(min, Math.min(max, value + (e.deltaY < 0 ? 1 : -1) * step * 5)))}
+        style={{ position: 'relative', width: 26, height, cursor: 'ns-resize', touchAction: 'none' }}>
+        <div style={{ position: 'absolute', left: 10, width: 6, top: 0, bottom: 0, borderRadius: 3, background: light ? '#1f2937' : '#070b12', boxShadow: 'inset 0 1px 3px #000' }} />
+        <div style={{ position: 'absolute', left: 10, width: 6, bottom: 0, height: `${pos * 100}%`, borderRadius: 3, background: color, opacity: 0.85, boxShadow: `0 0 6px ${color}` }} />
+        <div style={{ position: 'absolute', left: 1, width: 24, height: 12, bottom: `calc(${pos * 100}% - 6px)`, borderRadius: 3,
+          background: light ? 'linear-gradient(180deg, #fafafa, #c8ccd2)' : 'linear-gradient(180deg, #5b6576, #2a3240)', border: '1px solid #000', boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+          <div style={{ position: 'absolute', left: 3, right: 3, top: 5, height: 1, background: light ? '#555' : '#cfe8ff' }} />
+        </div>
+      </div>
+      <span style={{ fontFamily: G.font, fontSize: 10, color: light ? '#374151' : '#9fb4cc' }}>{label}</span>
+    </div>
+  )
+}
+
+/** an analogue VU meter with a needle (cream scale) */
+export function VuMeter({ value, label = 'VU' }: { value: number; label?: string }): React.ReactElement {
+  const a = -50 + Math.max(0, Math.min(1, value)) * 100
+  const W = 150, H = 84, cx = W / 2, cy = H + 18
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxWidth: 190, background: 'linear-gradient(180deg, #f5ecd2, #e2d4ad)', borderRadius: 4, border: '2px solid #1b1c1f', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.35)' }}>
+      {Array.from({ length: 11 }, (_, i) => {
+        const t = -50 + i * 10, r1 = 62, r2 = i % 2 ? 68 : 72
+        const x1 = cx + r1 * Math.sin((t * Math.PI) / 180), y1 = cy - r1 * Math.cos((t * Math.PI) / 180)
+        const x2 = cx + r2 * Math.sin((t * Math.PI) / 180), y2 = cy - r2 * Math.cos((t * Math.PI) / 180)
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={i > 7 ? '#c0392b' : '#222'} strokeWidth={1.2} />
+      })}
+      <path d={`M ${cx + 72 * Math.sin((30 * Math.PI) / 180)} ${cy - 72 * Math.cos((30 * Math.PI) / 180)} A 72 72 0 0 1 ${cx + 72 * Math.sin((50 * Math.PI) / 180)} ${cy - 72 * Math.cos((50 * Math.PI) / 180)}`} stroke="#c0392b" strokeWidth={3} fill="none" />
+      <text x={cx} y={H - 22} textAnchor="middle" style={{ fontFamily: G.font, fontSize: 11, fontWeight: 700, fill: '#2b2b2b' }}>{label}</text>
+      <line x1={cx} y1={cy} x2={cx + 76 * Math.sin((a * Math.PI) / 180)} y2={cy - 76 * Math.cos((a * Math.PI) / 180)} stroke="#111" strokeWidth={1.4} />
+    </svg>
+  )
+}
+
+/** a small round LED button in a light or dark panel (no label: put one beside it) */
+export function LedDot({ on, set, color = '#22c3ee', title, light }: { on: boolean; set: (v: boolean) => void; color?: string; title?: string; light?: boolean }): React.ReactElement {
+  return (
+    <button title={title} onClick={() => set(!on)} style={{ width: 22, height: 22, borderRadius: '50%', border: light ? '1px solid #9aa1aa' : '1px solid #000', cursor: 'pointer', padding: 0, display: 'grid', placeItems: 'center',
+      background: light ? 'radial-gradient(circle at 40% 30%, #ffffff, #c8ccd2)' : 'radial-gradient(circle at 40% 30%, #3b3f48, #15171b)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+      <span style={{ width: 10, height: 10, borderRadius: '50%', background: on ? color : light ? '#9ca3af' : '#2b2f36', boxShadow: on ? `0 0 8px ${color}` : 'inset 0 1px 2px rgba(0,0,0,0.4)' }} />
+    </button>
+  )
+}

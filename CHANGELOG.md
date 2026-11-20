@@ -5,9 +5,13 @@ on its GitHub release page, so every version needs a `## <version>` section here
 
 ## 0.83.0
 
-- **AI Instruments redesigned like plugin front panels:** each device (Song Generator, Band with Drummer / Bass player / Guitarist, Orchestra, Text Instrument) has a coloured side stripe and a two-weight name, large rotary knobs with a lit ring and the value in the cap, LED buttons, hardware keys and dark screens for styles and chords.
-- **See what will be played:** the drummer shows its pattern as a step grid (crash, hats, percussion, toms, snare, kick), bass player and guitarist as a mini piano roll, the song generator the chorus melody; they change at once with the style and the knobs.
-- The orchestra instruments are a three-column browser (strings, woodwinds, brass); the progress is a level meter.
+- **AI Instruments redesigned after classic plugin front panels, each device in its own style:**
+  - **Song Generator** like a light vocal plugin: silver front, a big tempo knob with a dark face and a cyan ring, the chorus melody as a curve, LED buttons in the lower strip.
+  - **Drummer** like a dark synth: a green pattern display (crash, hats, percussion, toms, snare, kick) and operator panels (groove, feel, fills, part) with small knobs; the chords and the whole band sit in its top bar.
+  - **Bass player** and **Guitarist** like light rack effects with an orange and a blue edge: black knurled knobs with their value in a white box, a dark side block with the name, a screen (notes) or a VU meter, and a silver intensity knob.
+  - **Orchestra** like a navy multi-voice harmonizer: sections with title bars, an instrument browser in three columns, vertical faders for vibrato, dynamics, brightness and attack.
+  - **Text Instrument** like the vocal plugin in dark: a big knob for "follow the notes".
+- The previews change at once with the style and the knobs.
 
 ## 0.82.1
 

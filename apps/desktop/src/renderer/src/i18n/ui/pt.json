@@ -1528,5 +1528,7 @@
  "Mute MIDI": "MIDI mudo",
  "free": "livre",
  "close": "perto",
- "Orchestra": "Orquestra"
+ "Orchestra": "Orquestra",
+ "Part": "Parte",
+ "Expression": "Expressão"
 }

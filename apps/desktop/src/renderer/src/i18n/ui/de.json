@@ -1667,5 +1667,8 @@
  "Add": "Einfügen",
  "Mute MIDI": "MIDI stumm",
  "free": "frei",
- "close": "nah"
+ "close": "nah",
+ "Part": "Teil",
+ "Expression": "Ausdruck",
+ "Groove": "Groove"
 }

@@ -1,6 +1,6 @@
 # AI Instruments
 
-Musicians for your song (menu **🎻 AI Instruments**, new in 0.80). The page is built like a rack of studio devices:
+Musicians for your song (menu **🎻 AI Instruments**, new in 0.80). Since 0.83 the page looks like a rack of plugin devices, each with a coloured stripe; the drummer shows its pattern as a step grid, bass player and guitarist a mini piano roll, all updated as you turn the knobs:
 turn a **knob** by dragging it up or down (Shift: finer, mouse wheel, arrow keys; double-click: back to its default),
 step through an **LCD** with ◀ ▶ or click it for the list. With the AI assistant closed the page uses the whole width.
 

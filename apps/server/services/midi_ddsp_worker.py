@@ -20,6 +20,7 @@ AMS_DDSP_FAKE=1 builds the models without their trained weights (for tests on ma
 import json
 import os
 import sys
+import time
 import warnings
 
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
@@ -70,6 +71,18 @@ def split_voices(notes: list[dict], max_voices: int) -> list[list[dict]]:
                 voices[i].append(n)
                 ends[i] = n["end"]
     return voices
+
+
+def split_phrases(voice: list[dict], gap: float = 0.75, longest: float = 20.0) -> list[list[dict]]:
+    """A voice in phrases: a new phrase after a rest of `gap` seconds, or when the phrase has reached `longest`."""
+    phrases: list[list[dict]] = []
+    for n in sorted(voice, key=lambda x: x["start"]):
+        cur = phrases[-1] if phrases else None
+        if cur is None or n["start"] - max(x["end"] for x in cur) >= gap or n["start"] - cur[0]["start"] >= longest:
+            phrases.append([n])
+        else:
+            cur.append(n)
+    return phrases
 
 
 def fit_range(pitch: int, inst: str) -> int:
@@ -142,10 +155,23 @@ def main(req_path: str) -> None:
     instrument_id = tf.constant([INST_NAME_TO_ID_DICT[inst]])
     total = len(voices)
     stems = []
-    for k, voice in enumerate(voices):
-        say(stage="play", text=f"Playing voice {k + 1} of {total}", step=k, total=total)
+    # each voice in phrases (split at rests and at most ~20 s long): progress after every phrase instead of once per
+    # voice (a single long melody stood at 0 % for many minutes and looked stuck), and an estimate of the time left
+    jobs = [(k, ph) for k, voice in enumerate(voices) for ph in split_phrases(voice)]
+    total_audio = sum(ph[-1]["end"] - ph[0]["start"] for _, ph in jobs) or 1.0
+    stems = [np.zeros(1) for _ in voices]
+    started, done_audio = time.time(), 0.0
+    for i, (k, phrase) in enumerate(jobs):
+        left = ""
+        if done_audio > 0:
+            rate = (time.time() - started) / done_audio
+            secs = int(rate * (total_audio - done_audio))
+            left = f", about {secs // 60} min {secs % 60:02d} s left" if secs >= 60 else f", about {secs} s left"
+        say(stage="play", text=f"Playing phrase {i + 1} of {len(jobs)}" + (f" (voice {k + 1} of {total})" if total > 1 else "") + left,
+            step=i, total=len(jobs))
+        t0 = phrase[0]["start"]
         pm_notes = [pretty_midi.Note(velocity=int(n.get("velocity", 100)), pitch=fit_range(int(n["pitch"]) + transpose, inst),
-                                     start=float(n["start"]), end=float(n["end"])) for n in voice]
+                                     start=float(n["start"]) - t0, end=float(n["end"]) - t0) for n in phrase]
         seq = note_list_to_sequence(pm_notes, fs=FRAME_RATE)
         seq["instrument_id"] = instrument_id
         out = expression_generator(seq, out=None, training=False)
@@ -160,7 +186,14 @@ def main(req_path: str) -> None:
         df.loc[played, "brightness"] = np.clip(df.loc[played, "brightness"] * ex["brightness"], 0, 1)
         df.loc[played, "attack"] = np.clip(df.loc[played, "attack"] * ex["attack"], 0, 1)
         audio, _, _ = conditioning_df_to_audio(synthesis_generator, df, instrument_id)
-        stems.append(np.asarray(audio[0], dtype=np.float64))
+        part = np.asarray(audio[0], dtype=np.float64)
+        at = int(round(t0 * SAMPLE_RATE))
+        if len(stems[k]) < at + len(part):
+            grown = np.zeros(at + len(part))
+            grown[: len(stems[k])] = stems[k]
+            stems[k] = grown
+        stems[k][at: at + len(part)] += part
+        done_audio += phrase[-1]["end"] - phrase[0]["start"]
 
     say(stage="mix", text="Mixing the voices", step=total, total=total)
     length = max(len(s) for s in stems)

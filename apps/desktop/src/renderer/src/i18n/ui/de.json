@@ -319,7 +319,7 @@
  "Drag to resize the Studio and the panel below (double-click: default)": "Ziehen ändert die Größe von Studio und Bereich darunter (Doppelklick: Standard)",
  "Drag, wheel (Shift: fine) or arrow keys; double-click: 0 dB. The sound goes through the limiter, so it does not clip.": "Ziehen, Mausrad (Umschalt: fein) oder Pfeiltasten; Doppelklick: 0 dB. Der Ton läuft durch den Limiter und übersteuert deshalb nicht.",
  "Drag: track height · double-click: normal height": "Ziehen: Spurhöhe · Doppelklick: normale Höhe",
- "Drive": "Drive",
+ "Drive": "Verzerrung",
  "Driver error compensation": "Treiberfehler-Kompensation",
  "Driver type": "Treiber-Typ",
  "Drives the song into the limiter: louder, without going over the ceiling": "Fährt den Song in den Limiter: lauter, ohne die Obergrenze zu überschreiten",
@@ -1659,5 +1659,16 @@
  "MIDI melody generator": "MIDI-Melodie-Generator",
  "Probability sequencer": "Wahrscheinlichkeits-Sequencer",
  "Part of Reason Rack Free: one plugin that holds the Reason devices": "Teil von Reason Rack Free: ein Plugin, das die Reason-Geräte enthält",
- "All LABS sounds play in the one plugin \"LABS\"": "Alle LABS-Klänge spielen im einen Plugin „LABS“"
+ "All LABS sounds play in the one plugin \"LABS\"": "Alle LABS-Klänge spielen im einen Plugin „LABS“",
+ "{bars} bars · {min}:{sec} min": "{bars} Takte · {min}:{sec} Min",
+ "Text Instrument": "Text-Instrument",
+ "Song Generator": "Song-Generator",
+ "Band": "Band",
+ "Add": "Einfügen",
+ "Mute MIDI": "MIDI stumm",
+ "free": "frei",
+ "close": "nah",
+ "Part": "Teil",
+ "Expression": "Ausdruck",
+ "Groove": "Groove"
 }

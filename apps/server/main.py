@@ -143,6 +143,8 @@ if mcp_asgi_app is not None:
 
 
 if __name__ == "__main__":
+    from services import parent_watch
+    parent_watch.start()                       # ends the backend if the app crashes or is ended hard
     import uvicorn
     port = int(os.environ.get("AMS_PORT", 38765))
     uvicorn.run("main:app", host="127.0.0.1", port=port, log_level="info", access_log=False)  # polling would fill the log

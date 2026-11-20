@@ -1,5 +1,5 @@
 import { ChildProcess, spawn, execFile } from 'child_process'
-import { appendFileSync, existsSync, mkdirSync, renameSync, statSync, writeFileSync } from 'fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'fs'
 import { createServer } from 'net'
 import { dirname, join } from 'path'
 import { app } from 'electron'
@@ -30,6 +30,25 @@ async function findFreePort(start: number): Promise<number> {
   return start
 }
 
+// A backend from an earlier run that is still running (the app crashed or was ended hard before 0.82.1, which added the
+// backend's own watchdog): it held the port and its AI workers used the processor, so playback crackled. Its process id
+// is in backend.pid; it is ended with everything it started, if it is still a Python process.
+const pidFile = (): string => join(app.getPath('userData'), 'backend.pid')
+async function endStaleBackend(): Promise<void> {
+  let pid = 0
+  try { pid = Number(readFileSync(pidFile(), 'utf-8').trim()) } catch { return }
+  if (!pid || pid === process.pid) return
+  if (process.platform === 'win32') {
+    const image = await new Promise<string>((resolve) => execFile('tasklist', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'], { windowsHide: true }, (_e, out) => resolve(String(out ?? ''))))
+    if (!/python/i.test(image)) return
+    await new Promise<void>((resolve) => execFile('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true }, () => resolve()))
+  } else {
+    try { process.kill(pid, 0) } catch { return }
+    try { process.kill(pid, 'SIGKILL') } catch { /* gone */ }
+  }
+  console.warn(`[Server] ended a backend left over from an earlier run (pid ${pid})`)
+}
+
 export class ServerManager {
   private process: ChildProcess | null = null
   private port = DEFAULT_PORT
@@ -54,6 +73,7 @@ export class ServerManager {
     }
 
     this.ready = false
+    await endStaleBackend()
     this.port = await findFreePort(DEFAULT_PORT)
     try {
       writeFileSync(join(app.getPath('userData'), 'server.json'), JSON.stringify({ port: this.port, url: this.serverUrl }))
@@ -61,10 +81,11 @@ export class ServerManager {
     this.process = spawn(python, ['-u', join(serverDir(), 'main.py')], {
       cwd: serverDir(),
       // downloads (ACE-Step, Whisper, Demucs ...) go to the models folder chosen in Settings → Models
-      env: { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8', AMS_PORT: String(this.port), ...backendModelEnv(), ...(hasDml() ? { AMS_DML_PYTHON: dmlPython() } : {}), ...(hasDr() ? { AMS_DR_PYTHON: drPython(), AMS_DR_REPO: drRepo() } : {}), ...(hasAce15() ? { AMS_ACE15_PYTHON: ace15Python(), AMS_ACE15_REPO: ace15Repo(), AMS_ACE15_CKPT: ace15Checkpoints() } : {}), ...(hasSep() ? { AMS_SEP_PYTHON: sepPython(), AMS_SEP_MODELS: sepModels() } : {}), ...(hasDdsp() ? { AMS_DDSP_PYTHON: ddspPython() } : {}) },
+      env: { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8', AMS_PORT: String(this.port), AMS_PARENT_PID: String(process.pid), ...backendModelEnv(), ...(hasDml() ? { AMS_DML_PYTHON: dmlPython() } : {}), ...(hasDr() ? { AMS_DR_PYTHON: drPython(), AMS_DR_REPO: drRepo() } : {}), ...(hasAce15() ? { AMS_ACE15_PYTHON: ace15Python(), AMS_ACE15_REPO: ace15Repo(), AMS_ACE15_CKPT: ace15Checkpoints() } : {}), ...(hasSep() ? { AMS_SEP_PYTHON: sepPython(), AMS_SEP_MODELS: sepModels() } : {}), ...(hasDdsp() ? { AMS_DDSP_PYTHON: ddspPython() } : {}) },
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true
     })
+    try { if (this.process.pid) writeFileSync(pidFile(), String(this.process.pid)) } catch { /* only for clean-up after a crash */ }
 
     // keep the backend output in a file the user can open: errors during a long job must not vanish
     const log = backendLogPath()

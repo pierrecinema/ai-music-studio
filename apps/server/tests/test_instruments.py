@@ -47,3 +47,11 @@ def test_routes_check_the_request():
     assert c.post("/instruments/play", json={"instrument": "violin", "notes": []}).status_code == 400
     os.environ.pop("AMS_DDSP_PYTHON", None)
     assert c.post("/instruments/play", json={"instrument": "violin", "notes": [n(60, 0, 1)]}).status_code == 409
+
+
+def test_long_melodies_are_split_into_phrases():
+    from services.midi_ddsp_worker import split_phrases
+    notes = [n(60, 0, 1), n(62, 1, 2), n(64, 3, 4)] + [n(60 + k % 5, 4 + k * 0.5, 4.5 + k * 0.5) for k in range(60)]
+    ph = split_phrases(notes)
+    assert len(ph) >= 3 and ph[0][-1]["pitch"] == 62 and all(p[-1]["start"] - p[0]["start"] <= 20 for p in ph)
+    assert sum(len(p) for p in ph) == len(notes)

@@ -84,7 +84,37 @@ export interface SongOptions {
   parts?: { melody?: boolean; chords?: boolean; bass?: boolean; drums?: boolean; guitar?: boolean }
 }
 
-export interface SongPart { id: 'melody' | 'chords' | 'bass' | 'drums' | 'guitar'; name: string; sound: 'lead' | 'keys' | 'bass' | '808' | 'drums' | 'guitar' | 'eguitar'; notes: BandNote[] }
+export interface SongPart {
+  id: 'melody' | 'chords' | 'bass' | 'drums' | 'guitar'; name: string; sound: 'lead' | 'keys' | 'bass' | '808' | 'drums' | 'guitar' | 'eguitar'; notes: BandNote[]
+  program?: number          // the sound pack's General MIDI instrument for this genre (the built-in sound without the pack)
+  volume: number            // a starting mix: drums and bass in front, keys and guitar behind the melody
+  reverb?: number           // room for this part (sound pack)
+}
+
+// The instruments of each genre from the sound pack (General MIDI programs; 128 = standard drum kit, 128+25 = TR-808,
+// 128+24 = electronic kit, 128+32 = jazz kit; -1 = keep the built-in sound, like the 808 bass) and how much room each
+// part gets. Without the pack the built-in sounds play.
+type Band = Record<SongPart['id'], number>
+const BANDS: Record<string, { p: Band; room?: Partial<Band> }> = {
+  pop: { p: { melody: 0, chords: 4, bass: 33, drums: 128, guitar: 25 } },
+  rock: { p: { melody: 29, chords: 16, bass: 34, drums: 128, guitar: 29 }, room: { melody: 0.15 } },
+  ballad: { p: { melody: 0, chords: 48, bass: 32, drums: 128 + 40, guitar: 24 }, room: { melody: 0.3, chords: 0.4 } },
+  house: { p: { melody: 81, chords: 4, bass: 38, drums: 128 + 24, guitar: 27 } },
+  techhouse: { p: { melody: 81, chords: 89, bass: 38, drums: 128 + 24, guitar: 27 } },
+  afrohouse: { p: { melody: 12, chords: 4, bass: 33, drums: 128 + 24, guitar: 27 }, room: { melody: 0.28 } },
+  trap: { p: { melody: 8, chords: 89, bass: -1, drums: 128 + 25, guitar: 24 }, room: { melody: 0.3 } },
+  funk: { p: { melody: 61, chords: 7, bass: 36, drums: 128, guitar: 28 }, room: { chords: 0.1 } },
+  reggaeton: { p: { melody: 75, chords: 0, bass: 38, drums: 128 + 25, guitar: 24 } },
+  jazz: { p: { melody: 65, chords: 0, bass: 32, drums: 128 + 32, guitar: 26 }, room: { melody: 0.25 } },
+  reggae: { p: { melody: 22, chords: 16, bass: 33, drums: 128, guitar: 27 } },
+  metal: { p: { melody: 30, chords: 48, bass: 34, drums: 128 + 16, guitar: 30 }, room: { melody: 0.12 } }
+}
+const LEVEL: Band = { melody: 0.78, chords: 0.55, bass: 0.82, drums: 0.85, guitar: 0.6 }
+function dress(genre: string, part: Omit<SongPart, 'volume'>): SongPart {
+  const b = BANDS[genre]
+  const program = b?.p[part.id]
+  return { ...part, program: program !== undefined && program >= 0 ? program : undefined, volume: LEVEL[part.id], reverb: b?.room?.[part.id] }
+}
 export interface Song { bpm: number; bars: number; sections: Array<Section & { bar: number }>; chords: Chord[]; parts: SongPart[] }
 
 const CHORD_TONES: Record<Quality, number[]> = { maj: [0, 4, 7], min: [0, 3, 7], '7': [0, 4, 7, 10], maj7: [0, 4, 7, 11], min7: [0, 3, 7, 10], dim: [0, 3, 6], sus4: [0, 5, 7], '5': [0, 7] }
@@ -202,10 +232,10 @@ export function generateSong(o: SongOptions): Song {
       return make(s, INTENSITY[s.kind], local).map((n) => ({ ...n, startTime: n.startTime + s.bar * 4 }))
     })
   const seed = o.seed ?? 1
-  if (want.melody) parts.push({ id: 'melody', name: 'Melody', sound: 'lead', notes: melodyFor(chords, sections, o.key, mode, g, rand) })
-  if (want.chords && g.keys !== 'none') parts.push({ id: 'chords', name: 'Keys', sound: 'keys', notes: keysFor(chords, g.keys, sections) })
-  if (want.bass) parts.push({ id: 'bass', name: 'Bass', sound: g.bass === '808' ? '808' : 'bass', notes: bySection((s, i, c) => bassist({ style: g.bass, bars: s.bars, chords: c, intensity: i, seed: seed + s.bar, humanize: 0.15, swing: g.swing })) })
-  if (want.drums) parts.push({ id: 'drums', name: 'Drums', sound: 'drums', notes: bySection((s, i) => s.kind === 'intro' && g.id !== 'house' && g.id !== 'techhouse' && g.id !== 'afrohouse' ? [] : drummer({ style: g.drums, bars: s.bars, intensity: i, fills: s.bars >= 8 ? 8 : 4, seed: seed + s.bar, humanize: 0.25, swing: g.swing })) })
-  if (want.guitar && g.guitar) parts.push({ id: 'guitar', name: 'Guitar', sound: g.guitar === 'power' ? 'eguitar' : 'guitar', notes: bySection((s, i, c) => s.kind === 'intro' ? [] : guitarist({ style: g.guitar!, bars: s.bars, chords: c, intensity: i, seed: seed + s.bar, swing: g.swing })) })
+  if (want.melody) parts.push(dress(g.id, { id: 'melody', name: 'Melody', sound: 'lead', notes: melodyFor(chords, sections, o.key, mode, g, rand) }))
+  if (want.chords && g.keys !== 'none') parts.push(dress(g.id, { id: 'chords', name: 'Keys', sound: 'keys', notes: keysFor(chords, g.keys, sections) }))
+  if (want.bass) parts.push(dress(g.id, { id: 'bass', name: 'Bass', sound: g.bass === '808' ? '808' : 'bass', notes: bySection((s, i, c) => bassist({ style: g.bass, bars: s.bars, chords: c, intensity: i, seed: seed + s.bar, humanize: 0.15, swing: g.swing })) }))
+  if (want.drums) parts.push(dress(g.id, { id: 'drums', name: 'Drums', sound: 'drums', notes: bySection((s, i) => s.kind === 'intro' && g.id !== 'house' && g.id !== 'techhouse' && g.id !== 'afrohouse' ? [] : drummer({ style: g.drums, bars: s.bars, intensity: i, fills: s.bars >= 8 ? 8 : 4, seed: seed + s.bar, humanize: 0.25, swing: g.swing })) }))
+  if (want.guitar && g.guitar) parts.push(dress(g.id, { id: 'guitar', name: 'Guitar', sound: g.guitar === 'power' ? 'eguitar' : 'guitar', notes: bySection((s, i, c) => s.kind === 'intro' ? [] : guitarist({ style: g.guitar!, bars: s.bars, chords: c, intensity: i, seed: seed + s.bar, swing: g.swing })) }))
   return { bpm, bars: total, sections, chords, parts }
 }

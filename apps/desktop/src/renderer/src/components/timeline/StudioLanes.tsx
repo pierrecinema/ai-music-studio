@@ -19,6 +19,8 @@ import { nanoid } from 'nanoid'
 import type { PopoverSpec } from './Popover'
 import { tr, trf } from '../../i18n/tr'
 import { askText } from '../common/AskText'
+import { useSoundPack } from '../../lib/useSoundPack'
+import { PACK_INSTRUMENTS } from '../../audio/soundbank'
 
 const small: React.CSSProperties = { fontSize: 10, padding: '1px 6px' }
 
@@ -442,16 +444,23 @@ export function InstrumentSelect({ track, style }: { track: Track; style?: React
   const others = all.filter((p) => !isInstrumentLike(p) && !off.includes(p.id))
   const updateTrack = useProjectStore((s) => s.updateTrack)
   const cur = track.instrument?.vst?.pluginId ?? ''
+  const pack = useSoundPack()
   return (
-    <select value={cur || `builtin:${track.sound ?? ''}`} style={style} title={tr('What plays the notes of this track')} onChange={(e) => {
+    <select value={cur || (pack && track.program !== undefined ? `gm:${track.program}` : `builtin:${track.sound ?? ''}`)} style={style} title={tr('What plays the notes of this track')} onChange={(e) => {
       const v = e.target.value
       e.target.blur()
-      if (v.startsWith('builtin:')) { updateTrack(track.id, { instrument: undefined, sound: (v.slice(8) || undefined) as Track['sound'] }); return }
+      if (v.startsWith('gm:')) { updateTrack(track.id, { instrument: undefined, program: Number(v.slice(3)) }); return }
+      if (v.startsWith('builtin:')) { updateTrack(track.id, { instrument: undefined, program: undefined, sound: (v.slice(8) || undefined) as Track['sound'] }); return }
       const p = [...plugins, ...others].find((x) => x.id === v)
       if (!p) { updateTrack(track.id, { instrument: undefined }); return }
       setInstrument(track, p)
     }}>
-      <optgroup label={tr('Built-in sounds')}>
+      {pack && PACK_INSTRUMENTS.map((g) => (
+        <optgroup key={g.group} label={`${tr('Sound pack')}: ${tr(g.group)}`}>
+          {g.items.map(([n, label]) => <option key={n} value={`gm:${n}`}>{tr(label)}</option>)}
+        </optgroup>
+      ))}
+      <optgroup label={pack ? tr('Built-in sounds (the pack plays them with real instruments)') : tr('Built-in sounds')}>
         <option value="builtin:">{tr('Built-in synth')}</option>
         {TIMBRES.map((s) => <option key={s.id} value={`builtin:${s.id}`}>{tr(s.label)}</option>)}
       </optgroup>

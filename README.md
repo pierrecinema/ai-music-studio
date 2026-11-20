@@ -29,13 +29,11 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.83: AI Instruments as plugin-style devices
+### New in 0.84: real instruments for MIDI tracks
 
-- Rotary knobs with lit rings, LED buttons and screens; the drummer's pattern as a step grid, bass and guitar as a mini piano roll.
-- 0.83.2: generated songs play clean (no more distortion) and export much faster; 0.83.1: the graphics card shows in the status bar again.
-- **40 free plugins** (the LANDR list 2026: effects, instruments, MIDI) in Settings → Plugins: open-source ones install with one click, the others open the maker's page; installed ones are found by the plugin search.
-- **MIDI song generator** (0.81): a whole song as MIDI from a genre, key and tempo.
-- **AI Instruments** (since 0.80): a virtual band (drummer, bass player, guitarist) that follows your chords, an AI orchestra (MIDI-DDSP: violin, cello, trumpet and 10 more, on the processor) and any instrument by text (ACE-Step), now built like studio devices with rotary knobs.
+- **Sound pack** (one download, about 28 MB): recorded piano, guitars, basses, seven drum kits, strings, brass, saxophones and more play your MIDI tracks instead of the simple synthesizer. About 50 instruments to pick per track.
+- **The song generator picks a band per genre** (funk: clavinet, slap bass, brass; jazz: sax, upright bass, jazz kit; ballad: piano, strings, brushes …) and a first mix with levels and room reverb.
+- A new generated song starts at bar 1.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features

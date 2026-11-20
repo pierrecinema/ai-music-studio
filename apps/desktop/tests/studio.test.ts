@@ -493,6 +493,9 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   const avg = (k: string): number => { const s = pop.sections.find((x) => x.kind === k)!; const ns = mel.notes.filter((n) => n.startTime >= s.bar * 4 && n.startTime < (s.bar + s.bars) * 4); return ns.reduce((a, n) => a + n.pitch, 0) / ns.length }
   check('the chorus melody sits higher than the verse', avg('chorus') > avg('verse'), `${avg('chorus')} vs ${avg('verse')}`)
   check('parts can be left out', generateSong({ genre: 'rock', key: 4, parts: { guitar: false, melody: false } }).parts.map((p) => p.id).join(',') === 'bass,drums')
+  check('every genre has sound-pack instruments and a mix', GENRES.every((g) => generateSong({ genre: g.id, key: 0, seed: 1 }).parts.every((p) => p.volume > 0 && p.volume <= 1
+    && (p.program === undefined ? p.sound === '808' : p.program >= 0 && p.program < 256 && (p.id === 'drums') === (p.program >= 128)))))
+  check('no parts at all is allowed (the page must not crash)', generateSong({ genre: 'pop', key: 0, parts: { melody: false, chords: false, bass: false, drums: false, guitar: false } }).parts.length === 0)
   check('another take is different', JSON.stringify(generateSong({ genre: 'pop', key: 0, seed: 1 }).parts[0].notes) !== JSON.stringify(generateSong({ genre: 'pop', key: 0, seed: 2 }).parts[0].notes))
 }
 

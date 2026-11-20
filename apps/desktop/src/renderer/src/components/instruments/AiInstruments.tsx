@@ -11,6 +11,7 @@ import { api, type AiInstrument, type InstrumentJob, type MusicJob } from '../..
 import { beatToSec } from '../../audio/timemap'
 import { encodeWav } from '../../audio/wav'
 import { putBuffer, renderMidiGuide } from '../../audio/engine'
+import { SoundPackCard } from '../common/SoundPackCard'
 import { importAudioFiles } from '../timeline/Timeline'
 import {
   BASS_STYLES, DRUM_STYLES, GUITAR_STYLES, bassist, chordName, detectChords, drummer, fillChords, guitarist, parseProgression,
@@ -38,11 +39,12 @@ function notesOf(t: Track): Array<{ pitch: number; start: number; duration: numb
 }
 
 /** a new MIDI track with one clip holding the part */
-function addPartTrack(name: string, sound: Track['sound'], color: string, notes: BandNote[], startBeat: number, beats: number): void {
+function addPartTrack(name: string, sound: Track['sound'], color: string, notes: BandNote[], startBeat: number, beats: number,
+  mix?: Pick<Track, 'program' | 'volume' | 'reverb'>): void {
   useProjectStore.getState().addTrack('midi')
   const tracks = useProjectStore.getState().project.tracks
   const id = tracks[tracks.length - 1].id
-  useProjectStore.getState().updateTrack(id, { name, sound, color })
+  useProjectStore.getState().updateTrack(id, { name, sound, color, ...(mix ?? {}) })
   useProjectStore.getState().addClip(id, { startTime: startBeat, duration: beats, name, notes: notes.map((n) => ({ ...n, id: nanoid() })) })
   useProjectStore.getState().selectTrack(id)
 }
@@ -162,13 +164,14 @@ function SongGenerator(): React.ReactElement {
   const chorus = song.sections.find((s) => s.kind === 'chorus' || s.kind === 'drop') ?? song.sections[0]
 
   const make = (): void => {
-    const st = useProjectStore.getState()
-    if (setTempo) st.setBpm(bpm)
-    const end = Math.max(0, ...st.project.tracks.flatMap((t) => t.clips.map((c) => c.startTime + c.duration)))
-    const start = Math.ceil(end / 4) * 4
+    if (setTempo) useProjectStore.getState().setBpm(bpm)
+    // from bar 1, under what is there (owner: a new song after the end of the project was out of sight and the new
+    // tracks looked empty); older tracks can be muted or hidden
+    const start = 0
     const keyName = `${KEY_NAMES[key]}${mode === 'minor' ? 'm' : ''}`
-    for (const p of song.parts) addPartTrack(`${tr(p.name)} (${tr(g.label)}, ${keyName})`, p.sound, PART_COLORS[p.id], p.notes, start, song.bars * 4)
+    for (const p of song.parts) addPartTrack(`${tr(p.name)} (${tr(g.label)}, ${keyName})`, p.sound, PART_COLORS[p.id], p.notes, start, song.bars * 4, { program: p.program, volume: p.volume, reverb: p.reverb })
     if (markers) for (const s of song.sections) {
+      if ((useProjectStore.getState().project.markers ?? []).some((m) => m.end === undefined && Math.abs(m.beat - (start + s.bar * 4)) < 0.01)) continue
       const id = useProjectStore.getState().addMarker(start + s.bar * 4)
       useProjectStore.getState().updateMarker(id, { name: tr(SECTION_LABEL[s.kind]) })
     }
@@ -196,7 +199,7 @@ function SongGenerator(): React.ReactElement {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <Btn look="silk" onClick={() => setTake(take + 1)} title={tr('Another version: other chords, melody and grooves')}>{trf('Take {n}', { n: take })}</Btn>
-            <Btn look="silk" onClick={make}>{tr('Create')}</Btn>
+            <Btn look="silk" onClick={make} disabled={!song.parts.length}>{tr('Create')}</Btn>
           </div>
           <span style={{ fontSize: 11, color: lightDim }}>{trf('{bars} bars · {min}:{sec} min', { bars: song.bars, min: Math.floor(length / 60), sec: String(length % 60).padStart(2, '0') })}</span>
           <span style={{ fontFamily: G.mono, fontSize: 12, color: '#155e75' }}>{song.chords.slice(0, 4).map((c) => chordName(c)).join(' · ')}</span>
@@ -208,7 +211,7 @@ function SongGenerator(): React.ReactElement {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden' }}>{tr(SECTION_LABEL[s.kind])}</div>
             ))}
           </div>
-          <LightCurve notes={melody.notes.filter((n) => n.startTime >= chorus.bar * 4).map((n) => ({ ...n, startTime: n.startTime - chorus.bar * 4 }))} beats={32} />
+          <LightCurve notes={(melody?.notes ?? []).filter((n) => n.startTime >= chorus.bar * 4).map((n) => ({ ...n, startTime: n.startTime - chorus.bar * 4 }))} beats={32} />
         </div>
       </div>
       <div style={{ background: 'linear-gradient(180deg, #e9ebee, #d5d9de)', borderTop: '1px solid #b4bac2', padding: '12px 20px', display: 'flex', gap: 26, alignItems: 'flex-end', flexWrap: 'wrap' }}>
@@ -620,6 +623,7 @@ export function AiInstruments(): React.ReactElement {
         <span style={{ fontSize: 15, color: G.text, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 300 }}><b style={{ fontWeight: 800 }}>AI</b> {tr('Instruments')}</span>
         <span style={{ fontSize: 11, color: G.faint }}>{trf('Tempo {bpm} BPM: the parts are made for the tempo of the project.', { bpm: Math.round(bpm) })}</span>
       </div>
+      <SoundPackCard compact />
       <SongGenerator />
       <Band />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(520px, 1fr))', gap: 14, flexShrink: 0 }}>

@@ -1744,5 +1744,6 @@
  "MIDI: {a} events into the effects → {b} to the instrument · song {p} at {bpm} BPM": "MIDI: {a} Ereignisse in die Effekte → {b} ans Instrument · Song {p} bei {bpm} BPM",
  "playing": "läuft",
  "stopped": "steht",
- "The MIDI effects are not connected to the instrument yet: press Play once.": "Die MIDI-Effekte sind noch nicht mit dem Instrument verbunden: einmal Abspielen drücken."
+ "The MIDI effects are not connected to the instrument yet: press Play once.": "Die MIDI-Effekte sind noch nicht mit dem Instrument verbunden: einmal Abspielen drücken.",
+ "This is a MIDI plugin: it makes notes but no sound. Choose a synthesizer as the instrument (for example Dexed or Surge XT) and put this plugin under MIDI effects.": "Das ist ein MIDI-Plugin: es erzeugt Noten, aber keinen Ton. Wähle als Instrument einen Synthesizer (z. B. Dexed oder Surge XT) und setze dieses Plugin unter MIDI-Effekte."
 }

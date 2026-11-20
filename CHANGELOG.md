@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.91.0
+
+### New
+
+- **AI agents can work on the open project (MCP):** new tools for Claude and other MCP clients: add MIDI tracks, choose the instrument (a VST like Dexed or Surge XT, or a sound-pack instrument), put MIDI effects (BlueArp, Stochas …) in front of it, write notes, set volume / pan / mute / solo and the tempo, start and stop playback, list the plugins and read the project. They change the project shown in the app window. Set up once: `claude mcp add --transport http --scope user ai-music-studio http://127.0.0.1:38765/mcp` (see the wiki page MCP).
+- Channel: a note when a MIDI plugin (BlueArp …) is chosen as the instrument: it makes no sound, a synthesizer belongs there and the MIDI plugin under MIDI effects.
+
 ## 0.90.1
 
 ### New

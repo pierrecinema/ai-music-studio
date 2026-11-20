@@ -151,6 +151,9 @@ export function ChannelTab({ onClose }: { onClose: () => void }): React.ReactEle
                 {t.instrument && <button className="btn btn-ghost" style={{ fontSize: 10, padding: '0 5px' }} title={tr('Open the plugin window')} onClick={() => void openPlugin(t.instrument!, t.name)}>{tr('Open')}</button>}
               </div>
               {t.instrument?.vst && <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}><PresetSelect fx={t.instrument} style={{ maxWidth: '100%', flex: 1 }} /><AutomateButton track={t} fx={t.instrument} /></div>}
+              {t.instrument?.vst && isMidiPlugin({ name: t.instrument.vst.name, category: '' }) && (
+                <span style={{ fontSize: 10, color: '#eab308' }}>{tr('This is a MIDI plugin: it makes notes but no sound. Choose a synthesizer as the instrument (for example Dexed or Surge XT) and put this plugin under MIDI effects.')}</span>
+              )}
               <MidiFxSection track={t} />
               <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Play this track with an AI instrument (violin, trumpet …) or let a virtual band play along')}
                 onClick={() => { useUIStore.setState({ aiTrackId: t.id }); useUIStore.getState().setActiveView('instruments') }}>🎻 {tr('AI instrument…')}</button>

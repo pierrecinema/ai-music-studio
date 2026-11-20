@@ -29,7 +29,9 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.90: MIDI effects; 0.86: Russian; 0.85: a console-style Mixer; 0.84: real instruments for MIDI tracks
+### New in 0.91: AI agents work on the open project (MCP); 0.90: MIDI effects; 0.85: a console-style Mixer; 0.84: real instruments
+
+- **MCP tools for the open project:** Claude and other agents add MIDI tracks, choose instruments and MIDI effects, write notes, set the mix and tempo (wiki: MCP).
 
 - **MIDI effects** (arpeggiators, sequencers, chord generators) in front of a VST instrument: Channel → MIDI effects. Plugins now follow the song's tempo and position.
 

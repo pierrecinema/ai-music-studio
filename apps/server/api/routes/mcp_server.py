@@ -7,6 +7,8 @@ import json
 from fastapi import APIRouter, HTTPException
 from typing import Any
 
+from services import app_bridge
+
 router = APIRouter()
 
 # MCP tool definitions — exposed to any MCP client
@@ -196,6 +198,33 @@ MCP_TOOLS = [
     }
 ]
 
+
+# Tools that work on the project open in the app window (through services/app_bridge.py)
+_TRACK = {"type": "string", "description": "Track id or name (see app_get_project)"}
+APP_TOOLS = [
+    {"name": "app_get_project", "description": "The project open in the app: tempo, tracks (id, name, type, instrument, MIDI effects, sound, volume, pan, mute), clips and their notes count",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "app_list_plugins", "description": "Plugins found on this PC (Settings -> Plugins) and the built-in / sound-pack instruments. kind: instrument, midi, effect or all",
+     "inputSchema": {"type": "object", "properties": {"kind": {"type": "string", "enum": ["instrument", "midi", "effect", "all"]}}}},
+    {"name": "app_add_midi_track", "description": "Add a MIDI track. Optional: name, program (General MIDI 0-127 of the sound pack, 128+ drum kits) or sound (soft, bass, lead, drums, guitar, eguitar, keys, 808)",
+     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "program": {"type": "integer"}, "sound": {"type": "string"}}}},
+    {"name": "app_set_instrument", "description": "What plays a MIDI track: a VST instrument by (part of) its name, e.g. 'Dexed' or 'Surge XT', or a sound-pack program / built-in sound",
+     "inputSchema": {"type": "object", "properties": {"track": _TRACK, "plugin": {"type": "string"}, "program": {"type": "integer"}, "sound": {"type": "string"}}, "required": ["track"]}},
+    {"name": "app_add_midi_effect", "description": "Put a MIDI effect (arpeggiator, sequencer, e.g. 'BlueArp', 'Stochas') in front of the VST instrument of a MIDI track",
+     "inputSchema": {"type": "object", "properties": {"track": _TRACK, "plugin": {"type": "string"}}, "required": ["track", "plugin"]}},
+    {"name": "app_add_notes", "description": "Write notes into a MIDI track as a new clip from bar startBar (1 = first bar). Each note: pitch (MIDI 0-127), start and length in beats (quarter notes, from the clip start), velocity 1-127",
+     "inputSchema": {"type": "object", "properties": {"track": _TRACK, "startBar": {"type": "number"}, "name": {"type": "string"},
+                     "notes": {"type": "array", "items": {"type": "object", "properties": {"pitch": {"type": "integer"}, "start": {"type": "number"}, "length": {"type": "number"}, "velocity": {"type": "integer"}}, "required": ["pitch", "start", "length"]}}},
+                     "required": ["track", "notes"]}},
+    {"name": "app_set_track", "description": "Change a track: name, volume (0-1), pan (-1 left .. 1 right), muted, soloed",
+     "inputSchema": {"type": "object", "properties": {"track": _TRACK, "name": {"type": "string"}, "volume": {"type": "number"}, "pan": {"type": "number"}, "muted": {"type": "boolean"}, "soloed": {"type": "boolean"}}, "required": ["track"]}},
+    {"name": "app_set_bpm", "description": "Set the tempo of the project open in the app",
+     "inputSchema": {"type": "object", "properties": {"bpm": {"type": "number", "minimum": 20, "maximum": 300}}, "required": ["bpm"]}},
+    {"name": "app_transport", "description": "Play, stop or go back to the start in the app",
+     "inputSchema": {"type": "object", "properties": {"action": {"type": "string", "enum": ["play", "stop", "start"]}}, "required": ["action"]}},
+]
+MCP_TOOLS += APP_TOOLS
+
 # Simple in-memory project state for MCP
 _project_state: dict[str, Any] = {
     "name": "Untitled",
@@ -215,6 +244,15 @@ async def call_tool(body: dict):
     """Execute an MCP tool call."""
     tool_name = body.get("name")
     args = body.get("arguments", {})
+
+    # tools on the project open in the app window
+    if tool_name.startswith("app_") or (tool_name in ("get_project_info", "set_bpm") and app_bridge.connected()):
+        name = {"get_project_info": "app_get_project", "set_bpm": "app_set_bpm"}.get(tool_name, tool_name)
+        try:
+            result = await app_bridge.request(name[4:], args)
+        except RuntimeError as e:
+            return {"content": [{"type": "text", "text": f"Error: {e}"}], "isError": True}
+        return {"content": [{"type": "text", "text": json.dumps(result, default=str)}]}
 
     if tool_name == "get_project_info":
         return {"content": [{"type": "text", "text": str(_project_state)}]}
@@ -303,6 +341,18 @@ async def _call_extra(name: str, args: dict):
         from dataclasses import asdict
         return {"hardware": asdict(get_profile()), "resources": get_resources()}
     return None
+
+
+@router.get("/app/next")
+async def app_next():
+    """The app window asks for work (long poll)."""
+    return await app_bridge.next_command()
+
+
+@router.post("/app/result")
+async def app_result(body: dict):
+    """The app window's answer to a command."""
+    return {"ok": app_bridge.deliver(int(body.get("id", 0)), bool(body.get("ok")), body.get("result"), body.get("error"))}
 
 
 @router.get("/manifest")

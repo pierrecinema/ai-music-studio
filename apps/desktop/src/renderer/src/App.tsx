@@ -158,6 +158,8 @@ export default function App(): React.ReactElement {
   useEffect(() => { void import('./midi/hardware').then((m) => m.startMidiHardware()) }, [])
   // the sound pack (real instruments for MIDI tracks), if installed
   useEffect(() => { void import('./audio/soundbank').then((m) => m.loadSoundPack()) }, [])
+  // MCP: tools of the backend (Claude, agents) work on the open project through this window
+  useEffect(() => { void import('./lib/appBridge').then((m) => m.startAppBridge()) }, [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)

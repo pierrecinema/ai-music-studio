@@ -482,8 +482,8 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 25.1 | Mixer öffnen | Die Kanalzüge sind etwas schmaler | | | 0.85.1 |
-| 25.2 | Song abspielen, am Pan-Knopf einer Spur nach links und rechts ziehen | Der Knopf dreht sich, unten steht L.. / R.., die Spur wandert hörbar nach links / rechts | | | 0.85.1 |
+| 25.1 | Mixer öffnen | Die Kanalzüge sind etwas schmaler | ✅ | | 0.85.1 |
+| 25.2 | Song abspielen, am Pan-Knopf einer Spur nach links und rechts ziehen | Der Knopf dreht sich, unten steht L.. / R.., die Spur wandert hörbar nach links / rechts | ✅ | | 0.85.1 |
 
 ## 26. Neu in 0.86.0: Russisch, lesbare Spurnamen, Clips nicht mehr über der Spur-Leiste
 

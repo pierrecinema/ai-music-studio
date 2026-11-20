@@ -196,6 +196,12 @@ Das fertige LoRA erscheint automatisch in deiner Liste. Hinweis: Das Training se
 
 Die Plugins laufen in einem eigenen kleinen Programm (Plugin-Host), das nur läuft, solange ein Plugin benutzt wird. Stürzt ein Plugin ab, läuft die App weiter; beim nächsten Abspielen werden die Plugins mit ihren zuletzt gespeicherten Einstellungen neu geladen. Spuren mit Plugins bleiben im Takt (die Verzögerung durch die Plugins wird ausgeglichen). 64- und 32-Bit-Plugins funktionieren. Plugins auf dem Master, im Mastering und Instrument-Plugins kommen in den nächsten Versionen.
 
+## Neu in 0.81: Song-Generator und neues Aussehen der KI-Instrumente
+
+**Song-Generator** (Menü KI-Instrumente, ganz oben): Ein ganzer Song als MIDI. Genre (Pop, Rock, Ballade, House, Tech House, Afro House, Trap / Rap, Funk, Reggaeton, Jazz, Reggae, Metal), Tonart, Dur oder Moll und Tempo (Drehknopf) wählen. Der farbige Streifen zeigt den Aufbau (Intro, Strophe, Pre-Chorus, Refrain, Bridge oder Drop, Outro). Mit den Schaltern unter „Spuren“ Melodie, Keys, Bass, Drums und Gitarre ein- oder ausschalten. **Song im Studio erstellen** legt pro Teil eine MIDI-Spur an (hinter dem, was schon im Projekt ist), setzt das Tempo und Marker für die Teile. **🎲 Take** macht eine andere Version.
+
+Die ganze Seite sieht jetzt aus wie Studio-Geräte: **Drehknöpfe** (nach oben / unten ziehen, Shift = fein, Mausrad, Doppelklick = Standard), **LCD-Anzeigen** für Stile (◀ ▶ oder anklicken), leuchtende Pads für die Orchester-Instrumente. Ist der KI-Assistent zu, nutzt die Seite die ganze Breite.
+
 ## Neu in 0.80: KI-Instrumente (Menü 🎻 KI-Instrumente)
 
 **Virtuelle Band** (jeder PC, nichts zu installieren): Ein **Schlagzeuger**, ein **Bassist** und ein **Gitarrist** spielen zu deinem Song.

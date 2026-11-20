@@ -1,13 +1,28 @@
 # AI Instruments
 
-Musicians for your song (menu **🎻 AI Instruments**, new in 0.80). Three parts on one page:
+Musicians for your song (menu **🎻 AI Instruments**, new in 0.80). The page is built like a rack of studio devices:
+turn a **knob** by dragging it up or down (Shift: finer, mouse wheel, arrow keys; double-click: back to its default),
+step through an **LCD** with ◀ ▶ or click it for the list. With the AI assistant closed the page uses the whole width.
+
+## Song generator (0.81, every PC)
+
+A whole song as MIDI. Choose the **genre** (pop, rock, ballad, house, tech house, afro house, trap / rap, funk,
+reggaeton, jazz, reggae, metal), the **key**, **major or minor** and the **tempo** (knob; the genre sets a typical one).
+The coloured strip shows the form (intro, verse, pre-chorus, chorus, bridge or drop, outro) and the line under it the
+length and the first chords. **Parts** switch melody, keys, bass, drums and guitar on or off.
+
+**Make the song in the Studio** adds one MIDI track per part after what is already in the project, sets the project
+tempo (switch) and puts a marker at each part (switch). The chords of a part stay the same each time it comes back;
+the melody follows them and sits higher in the chorus; the band plays louder in the chorus and the drop.
+**🎲 Take** makes another version. Every part can be edited in the [[Piano Roll]] and played by any built-in sound or
+VST instrument, or by the AI orchestra below.
 
 ## Virtual band (every PC, nothing to install)
 
 A **drummer**, a **bass player** and a **guitarist** play along with your song.
 
 1. **Chords:** *From the song* reads the chords of your MIDI tracks bar by bar (drum tracks are left out), or choose
-   *Typed* and write them: `Am F C G`, `C | G Am | F -` (`|` separates bars, two chords in a bar share it, `-` holds
+   *Type them* and write them in the field marked *Chords (type here)*: `Am F C G`, `C | G Am | F -` (`|` separates bars, two chords in a bar share it, `-` holds
    the chord). Chords like `Am`, `F`, `C#m7`, `Bb`, `G7`, `Fmaj7`, `Dsus4`, `E5`, `F/A` are understood. The line under
    it shows what the players will play.
 2. **Where:** from which bar, for how many bars. **🎲 Take** makes the players play the part a little differently.
@@ -48,7 +63,7 @@ In the [[Studio]], **Channel → 🎻 AI instrument…** opens this page with th
 
 ## Any instrument by text (ACE-Step cover)
 
-Describe the instrument or style (*electric guitar, overdrive*, *jazz piano trio*, *sitar*, *string orchestra* …):
+Describe the instrument or style in the field *Instrument / style (type here)*, or click one of the suggestions (*electric guitar, overdrive*, *jazz piano trio*, *sitar*, *string orchestra* …):
 ACE-Step plays your MIDI track in it. The MIDI track is first played by the built-in sound as a guide, then ACE-Step
 makes a cover of it. **Follow the notes**: low lets the AI play freely in the style, high keeps it close to your notes
 and timing. Needs the ACE-Step engine ([[Settings]] → AI Engines → Music generator (ACE-Step)); fast with an NVIDIA

@@ -29,11 +29,10 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.80: AI Instruments
+### New in 0.81: MIDI song generator
 
-- **Virtual band:** a drummer (15 styles from rock to afro house and trap), a bass player and a guitarist play along with your song. They follow its chords (read from your MIDI tracks or typed in, like `Am F C G`) and become MIDI tracks you can edit, with new built-in sounds: drum kit, guitars, electric piano, 808.
-- **AI orchestra (MIDI-DDSP):** violin, cello, flute, trumpet and 9 more instruments play your MIDI track like real musicians, with vibrato, bow and breath, on the processor (no graphics card needed).
-- **Any instrument by text (ACE-Step cover):** describe an instrument or style and ACE-Step plays your MIDI track in it (best with an NVIDIA card).
+- **Song generator:** a whole song as MIDI (chords, melody, keys, bass, drums, guitar, with intro, verse, chorus and bridge) from a genre, a key and a tempo, ready to edit and to play with any instrument.
+- **AI Instruments** (since 0.80): a virtual band (drummer, bass player, guitarist) that follows your chords, an AI orchestra (MIDI-DDSP: violin, cello, trumpet and 10 more, on the processor) and any instrument by text (ACE-Step), now built like studio devices with rotary knobs.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features

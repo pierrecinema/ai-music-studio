@@ -111,7 +111,20 @@ def main() -> int:
         if seconds is None:
             return 1
         say(done=True, seconds=round(seconds, 2), index=index)
+        free_memory(torch)
     return 0
+
+
+def free_memory(torch) -> None:
+    """After each take: give back what the last song used (on a PC with 12 GB RAM the fourth of four takes ran out
+    of memory while decoding, because the earlier takes' buffers were still held)."""
+    import gc
+    gc.collect()
+    try:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:  # noqa: BLE001 - nothing to free
+        pass
 
 
 def render(dit, llm, req: dict, take: dict, GenerationParams, GenerationConfig, generate_music) -> float | None:
@@ -166,6 +179,7 @@ def render(dit, llm, req: dict, take: dict, GenerationParams, GenerationConfig, 
     if not src or not os.path.exists(src):
         say(error="ACE-Step 1.5 returned no audio file.")
         return None
+    del result
     if os.path.abspath(src) != os.path.abspath(out):
         shutil.move(src, out)
     try:

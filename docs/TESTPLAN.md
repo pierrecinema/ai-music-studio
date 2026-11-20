@@ -330,7 +330,7 @@ behoben, dann der nächste Bereich.
 |---|---|---|---|---|---|
 | 13.1 | Spur mit einem VST-Effekt (z. B. ein Filter oder Hall): **A** an der Spur, im Auswahlfeld der Spur **Plugin parameter → <Plugin>: choose a parameter…** | Liste der Regler des Plugins mit Suchfeld | ⚠️ | „Plugin parameter“ nicht gefunden → 0.72.1: Knopf „Automatisieren…“ beim Plugin | 0.71.0 |
 | 13.2 | Einen Regler wählen (z. B. Cutoff oder Mix), Punkte setzen: unten links, oben rechts | Neue Spur „<Plugin>: <Regler>“ mit der Kurve | | | 0.71.0 |
-| 13.3 | Song abspielen, dabei das Plugin-Fenster offen (**Open**) | Der Regler im Plugin bewegt sich mit der Kurve, man hört es | ⚠️ | Eingebauter Filter: Ton folgt (13.4 ✅), aber die Regler im Rack bewegen sich nicht → 0.73.3 | 0.71.0 |
+| 13.3 | Song abspielen, dabei das Plugin-Fenster offen (**Open**) | Der Regler im Plugin bewegt sich mit der Kurve, man hört es | ⚠️ | Eingebauter Filter: Ton folgt (13.4 ✅), Regler im Rack bewegten sich nicht → 0.73.3 | 0.71.0 |
 | 13.3b | Spur mit eingebautem **Filter**, **Automate…** → Frequenz, Kurve zeichnen, abspielen (Rack-Look oder FX-Zeile offen) | Der Frequenz-Regler im Rack und der Schieber in der Effekt-Zeile drehen sich mit der Kurve | | | 0.73.3 |
 | 13.4 | Exportieren | Der Export folgt der Kurve | ✅ | | 0.71.0 |
 | 13.5 | Dasselbe mit einem Regler von **Dexed** oder **Surge XT** auf einer MIDI-Spur | Klang ändert sich mit der Kurve | ✅ | Mit Dexed (0.73.2) ✅ | 0.71.0 |
@@ -377,17 +377,30 @@ Vorbereitung: Ein Projekt mit einer MIDI-Spur, auf der eine Melodie mit Akkorden
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 16.1 | Menü **🎻 KI-Instrumente** | Die Seite öffnet sich (nicht mehr „Coming soon“) mit Virtuelle Band, KI-Orchester, Jedes Instrument per Text | | | 0.80.0 |
-| 16.2 | Virtuelle Band → Akkorde **Eingegeben**: `Am F C G`, 8 Takte | Unter „Wo“ steht `Am · F · C · G · Am · F · C · G` | | | 0.80.0 |
-| 16.3 | **Ganze Band einfügen**, dann im Studio abspielen | Drei neue MIDI-Spuren (Schlagzeuger, Bassist, Gitarrist) spielen im Takt; Bass und Gitarre folgen den Akkorden | | | 0.80.0 |
-| 16.4 | Schlagzeuger: Stil **Afro House**, dann **Trap**, **Funk** je **Ins Studio** | Jeder Stil klingt anders; alle 4 Takte ein Fill und danach ein Crash | | | 0.80.0 |
-| 16.5 | Akkorde **Aus dem Song** (Projekt mit MIDI-Akkorden) | Die erkannten Akkorde stehen unter „Wo“ und passen zum Song | | | 0.80.0 |
-| 16.6 | Eine Band-Spur im Studio: **KA** → Instrument → z. B. Dexed oder Surge | Die Noten spielen mit dem gewählten Instrument | | | 0.80.0 |
-| 16.7 | Einstellungen → KI-Engines → **AI Instruments (MIDI-DDSP)** → Auswahl installieren | Installation läuft durch (etwa 1,5 GB), am Ende „AI Instruments are installed …“; bei Fehler bitte das Log schicken | | | 0.80.0 |
-| 16.8 | KI-Orchester: MIDI-Spur mit Melodie, **Violine**, **Mit dem KI-Instrument spielen** | Fortschritt läuft (beim ersten Mal lädt es die Modelle, etwa 80 MB); danach eine neue Audiospur „Violin (AI)“ ab dem Takt der ersten Note, die MIDI-Spur ist stumm | | | 0.80.0 |
+| 16.1 | Menü **🎻 KI-Instrumente** | Die Seite öffnet sich (nicht mehr „Coming soon“) mit Virtuelle Band, KI-Orchester, Jedes Instrument per Text | ✅ |  | 0.80.0 |
+| 16.2 | Virtuelle Band → Akkorde **Eingegeben**: `Am F C G`, 8 Takte | Unter „Wo“ steht `Am · F · C · G · Am · F · C · G` | ✅ |  | 0.80.0 |
+| 16.3 | **Ganze Band einfügen**, dann im Studio abspielen | Drei neue MIDI-Spuren (Schlagzeuger, Bassist, Gitarrist) spielen im Takt; Bass und Gitarre folgen den Akkorden | ✅ |  | 0.80.0 |
+| 16.4 | Schlagzeuger: Stil **Afro House**, dann **Trap**, **Funk** je **Ins Studio** | Jeder Stil klingt anders; alle 4 Takte ein Fill und danach ein Crash | ✅ |  | 0.80.0 |
+| 16.5 | Akkorde **Aus dem Song** (Projekt mit MIDI-Akkorden) | Die erkannten Akkorde stehen unter „Wo“ und passen zum Song | ⚠️ | „Aus dem Song“ nicht gefunden → 0.81: Schalter „Aus dem Song / Eingeben“ oben in der Band, Hinweis wenn keine MIDI-Spur da ist | 0.80.0 |
+| 16.6 | Eine Band-Spur im Studio: **KA** → Instrument → z. B. Dexed oder Surge | Die Noten spielen mit dem gewählten Instrument | ⚠️ | Wo? → Spur im Studio: Knopf KA neben FX → Instrument | 0.80.0 |
+| 16.7 | Einstellungen → KI-Engines → **AI Instruments (MIDI-DDSP)** → Auswahl installieren | Installation läuft durch (etwa 1,5 GB), am Ende „AI Instruments are installed …“; bei Fehler bitte das Log schicken | ❌ | Windows: „No module named resource“ → 0.81 | 0.80.0 |
+| 16.8 | KI-Orchester: MIDI-Spur mit Melodie, **Violine**, **Mit dem KI-Instrument spielen** | Fortschritt läuft (beim ersten Mal lädt es die Modelle, etwa 80 MB); danach eine neue Audiospur „Violin (AI)“ ab dem Takt der ersten Note, die MIDI-Spur ist stumm | ❌ | dito → 0.81 | 0.80.0 |
 | 16.9 | Dasselbe mit **Cello**, Vibrato auf 200 % | Klingt wie ein Cello, mit deutlich mehr Vibrato | | | 0.80.0 |
 | 16.10 | Spur mit Akkorden → **Trompete**, Musiker für Akkorde 3 | Ein kleiner Bläsersatz, die Akkordtöne klingen gleichzeitig | | | 0.80.0 |
-| 16.11 | Jedes Instrument per Text: „electric guitar, overdrive“ (ohne NVIDIA: nur kurz starten und **Abbrechen**) | Gelber Hinweis „Keine NVIDIA-Grafikkarte …“; der Fortschritt läuft; Abbrechen stoppt es | | | 0.80.0 |
-| 16.12 | Im Studio Kanal einer MIDI-Spur → **🎻 KI-Instrument…** | Die Seite KI-Instrumente öffnet sich mit dieser Spur gewählt | | | 0.80.0 |
+| 16.11 | Jedes Instrument per Text: „electric guitar, overdrive“ (ohne NVIDIA: nur kurz starten und **Abbrechen**) | Gelber Hinweis „Keine NVIDIA-Grafikkarte …“; der Fortschritt läuft; Abbrechen stoppt es | ⚠️ | Textfeld nicht gefunden → 0.81: Feld „Instrument / Stil (hier eingeben)“ und Vorschläge zum Anklicken | 0.80.0 |
+| 16.12 | Im Studio Kanal einer MIDI-Spur → **🎻 KI-Instrument…** | Die Seite KI-Instrumente öffnet sich mit dieser Spur gewählt | ✅ |  | 0.80.0 |
 | 16.13 | Projekt speichern, schließen, öffnen | Band-Spuren behalten ihren Klang (Schlagzeug, Gitarre …), die KI-Audiospuren sind da | | | 0.80.0 |
 
+## 17. Neu in 0.81.0: Song-Generator, neues Aussehen, Fixes
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 17.1 | KI-Instrumente öffnen, KI-Assistent schließen | Die Seite nutzt die ganze Breite; Geräte mit Drehknöpfen und LCD-Anzeigen | | | 0.81.0 |
+| 17.2 | Einen Drehknopf nach oben ziehen, Mausrad, Doppelklick | Wert ändert sich; Doppelklick setzt ihn zurück | | | 0.81.0 |
+| 17.3 | Song-Generator: Genre **Afro House**, Tonart A, Moll → **Song im Studio erstellen**, abspielen | 5 MIDI-Spuren (Melodie, Keys, Bass, Drums, Gitarre), Tempo 122, Marker Intro / Strophe / Bridge / Drop …; klingt nach einem Song | | | 0.81.0 |
+| 17.4 | **🎲 Take** drücken, nochmal erstellen | Andere Akkorde / Melodie; neue Spuren hinter dem ersten Song | | | 0.81.0 |
+| 17.5 | Band → Akkorde **Aus dem Song** (nach 17.3) | Die Akkorde des Songs erscheinen als Kästchen; Band einfügen passt zum Song | | | 0.81.0 |
+| 17.6 | Einstellungen → KI-Engines → **AI Instruments (MIDI-DDSP)** → Auswahl installieren (nochmal) | Kein „resource“-Fehler mehr; „AI Instruments are installed“ | | | 0.81.0 |
+| 17.7 | KI-Orchester: Melodie-Spur des Songs, **Violine** → spielen | Audiospur „Violin (AI)“ (beim ersten Mal lädt es die Modelle) | | | 0.81.0 |
+| 17.8 | Text-Instrument: Feld **Instrument / Stil (hier eingeben)** oder einen Vorschlag anklicken | Text steht im Feld | | | 0.81.0 |
+| 17.9 | Musik erstellen: ACE-Step 1.5, 2 Songs × 2 Varianten (wie gestern) | Alle 4 entstehen; falls der Speicher ausgeht: Hinweis „ACE-Step was started again for the rest“ und trotzdem 4 Songs | | | 0.81.0 |

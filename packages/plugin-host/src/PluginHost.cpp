@@ -57,6 +57,8 @@ struct PluginInstance : public juce::AudioProcessorListener
     int maxBlock = 2048;
     std::unique_ptr<EditorWindow> window; // message thread only
     std::vector<std::shared_ptr<PluginInstance>> midiChain;   // MIDI effects before this instrument (under `lock`)
+    std::atomic<int> midiIn { 0 }, midiOut { 0 };              // events into the MIDI chain / into the instrument (midiStats)
+    std::atomic<bool> transportPlaying { false };
 };
 
 static juce::var obj() { return juce::var (new juce::DynamicObject()); }
@@ -280,6 +282,18 @@ juce::var PluginHost::handle (std::shared_ptr<WsConnection>, const juce::var& ms
         for (auto& fx : chain) { std::lock_guard<std::mutex> l (fx->lock); fx->plugin->setPlayHead (&inst->head); }
         auto r = okay(); r.getDynamicObject()->setProperty ("chain", (int) chain.size()); return r;
     }
+    if (cmd == "midiStats")
+    {
+        // what went through the MIDI chain since the last call (the app shows it while playing)
+        auto r = okay(); auto* o = r.getDynamicObject();
+        o->setProperty ("in", inst->midiIn.exchange (0));
+        o->setProperty ("out", inst->midiOut.exchange (0));
+        o->setProperty ("chain", (int) inst->midiChain.size());
+        o->setProperty ("playing", inst->transportPlaying.load());
+        o->setProperty ("bpm", inst->head.bpm);
+        o->setProperty ("ppq", inst->head.ppq);
+        return r;
+    }
     if (cmd == "params")
     {
         // the automatable parameters: index (as in the audio frame), name, value 0..1, the value as text, steps
@@ -481,6 +495,7 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
                 if ((int) at >= pos && (int) at < pos + n) inst->midi.addEvent (juce::MidiMessage (e[4], e[5], e[6]), (int) at - pos);
             }
             // MIDI effects first: what they play is what the instrument gets
+            if (! inst->midiChain.empty()) inst->midiIn += inst->midi.getNumEvents();
             for (auto& fx : inst->midiChain)
             {
                 std::lock_guard<std::mutex> fl (fx->lock);
@@ -489,6 +504,8 @@ void PluginHost::onBinary (std::shared_ptr<WsConnection> conn, const juce::Memor
                 fx->buffer.clear();
                 fx->plugin->processBlock (fx->buffer, inst->midi);
             }
+            if (! inst->midiChain.empty()) inst->midiOut += inst->midi.getNumEvents();
+            inst->transportPlaying = inst->head.playing;
             p.processBlock (inst->buffer, inst->midi);
             for (int c = 0; c < channels; ++c)
                 memcpy (res + (size_t) c * frames + pos, inst->buffer.getReadPointer (juce::jmin (c, bufCh - 1)), (size_t) n * 4);

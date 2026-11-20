@@ -7,10 +7,11 @@ import type { AutoParam, InsertFx } from '../../types'
 import { AutomateButton, FxAddSelect, InstrumentSelect, MiniMeter, openPlugin, PresetSelect } from './StudioLanes'
 import { INSERT_LABEL } from '../../audio/fx'
 import { openLanes } from './studioLayout'
-import { tr } from '../../i18n/tr'
+import { tr, trf } from '../../i18n/tr'
 import { useUIStore } from '../../stores/ui.store'
 import { usePluginsStore } from '../../stores/plugins.store'
-import { isInstrumentLike, vstFailure, type PluginInfo } from '../../audio/vst/host'
+import { isInstrumentLike, midiStatsOf, vstFailure, type PluginInfo } from '../../audio/vst/host'
+import { useAudioStore } from '../../stores/audio.store'
 import { FREE_PLUGINS } from '../../lib/freeCatalog'
 import type { Track } from '../../types'
 import { nanoid } from 'nanoid'
@@ -31,6 +32,22 @@ function MidiFxSection({ track: t }: { track: Track }): React.ReactElement {
   const others = usable.filter((p) => !isMidiPlugin(p)).sort((a, b) => Number(isInstrumentLike(b)) - Number(isInstrumentLike(a)))
   const list = t.midiFx ?? []
   const set = (next: InsertFx[]): void => updateTrack(t.id, { midiFx: next })
+  // while the song plays: how many MIDI events went into the effects and how many reached the instrument
+  const playing = useAudioStore((s) => s.isPlaying)
+  const [stats, setStats] = React.useState<{ in: number; out: number; chain: number; playing: boolean; bpm: number } | null>(null)
+  const instId = t.instrument?.vst ? t.instrument.id : ''
+  React.useEffect(() => {
+    if (!instId || !list.length) { setStats(null); return }
+    let total = { in: 0, out: 0 }
+    const timer = window.setInterval(() => {
+      void midiStatsOf(instId).then((s) => {
+        if (!s) { setStats(null); return }
+        total = { in: total.in + s.in, out: total.out + s.out }
+        setStats({ ...total, chain: s.chain, playing: s.playing, bpm: s.bpm })
+      })
+    }, 700)
+    return () => window.clearInterval(timer)
+  }, [instId, list.length, playing])
   const add = (id: string): void => {
     const p = usable.find((x) => x.id === id)
     if (!p) return
@@ -57,6 +74,13 @@ function MidiFxSection({ track: t }: { track: Track }): React.ReactElement {
           </div>
         )
       })}
+      {stats && list.length > 0 && (
+        <span style={{ fontSize: 10, color: stats.chain ? 'var(--text-muted)' : '#eab308' }} title={tr('Counted while the song plays: notes and other MIDI events that went into the MIDI effects, and what came out to the instrument.')}>
+          {stats.chain
+            ? trf('MIDI: {a} events into the effects → {b} to the instrument · song {p} at {bpm} BPM', { a: stats.in, b: stats.out, p: stats.playing ? tr('playing') : tr('stopped'), bpm: Math.round(stats.bpm) })
+            : tr('The MIDI effects are not connected to the instrument yet: press Play once.')}
+        </span>
+      )}
       <select value="" style={{ fontSize: 11, width: '100%' }} title={tr('Add a MIDI effect in front of the instrument')} onChange={(e) => { const v = e.target.value; e.target.blur(); if (v) add(v) }}>
         <option value="">{tr('+ MIDI effect…')}</option>
         {midi.length > 0 && <optgroup label={tr('MIDI plugins')}>{midi.map((p) => <option key={p.id} value={p.id}>{p.name}{p.vendor ? ` (${p.vendor})` : ''} · {p.format}</option>)}</optgroup>}

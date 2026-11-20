@@ -1739,5 +1739,10 @@
  "MIDI plugins": "MIDI-Plugins",
  "No MIDI plugins found yet: Settings → Plugins → Free plugins → MIDI": "Noch keine MIDI-Plugins gefunden: Einstellungen → Plugins → Kostenlose Plugins → MIDI",
  "Other plugins (only if they make notes)": "Andere Plugins (nur wenn sie Noten erzeugen)",
- "MIDI plugin: use it on a MIDI track with a VST instrument, Channel → MIDI effects.": "MIDI-Plugin: auf einer MIDI-Spur mit VST-Instrument verwenden, Kanal → MIDI-Effekte."
+ "MIDI plugin: use it on a MIDI track with a VST instrument, Channel → MIDI effects.": "MIDI-Plugin: auf einer MIDI-Spur mit VST-Instrument verwenden, Kanal → MIDI-Effekte.",
+ "Counted while the song plays: notes and other MIDI events that went into the MIDI effects, and what came out to the instrument.": "Gezählt während der Song läuft: Noten und andere MIDI-Ereignisse, die in die MIDI-Effekte gingen, und was davon beim Instrument ankam.",
+ "MIDI: {a} events into the effects → {b} to the instrument · song {p} at {bpm} BPM": "MIDI: {a} Ereignisse in die Effekte → {b} ans Instrument · Song {p} bei {bpm} BPM",
+ "playing": "läuft",
+ "stopped": "steht",
+ "The MIDI effects are not connected to the instrument yet: press Play once.": "Die MIDI-Effekte sind noch nicht mit dem Instrument verbunden: einmal Abspielen drücken."
 }

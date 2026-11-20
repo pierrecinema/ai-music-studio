@@ -510,3 +510,10 @@ Vorher: in Einstellungen → Plugins → Kostenlose Plugins → MIDI einen MIDI-
 | 27.7 | Song exportieren (WAV) | Im Export ist der Arpeggiator zu hören | ❌ | Export nur Synth, ohne Effekt (kein MIDI-Effekt geladen) | 0.90.0 |
 | 27.8 | Projekt speichern, App schließen, Projekt öffnen | Der MIDI-Effekt ist mit seinen Einstellungen wieder da | ❌ | Ohne Effekt | 0.90.0 |
 | 27.9 | 15 oder mehr Spuren, Mixer öffnen; Mausrad über den Kanälen drehen | Die Kanäle scrollen nach rechts / links (unten eine sichtbare Leiste), MASTER bleibt rechts stehen | ✅ | | 0.90.0 |
+
+## 28. Neu in 0.90.1: Anzeige der MIDI-Effekte
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 28.1 | Spur mit Dexed/Surge + BlueArp: lange Akkordnoten schreiben, **abspielen**, KA offen lassen | Unter den MIDI-Effekten steht „MIDI: X Ereignisse in die Effekte → Y ans Instrument · Song läuft bei … BPM“. Bitte X und Y notieren | | | 0.90.1 |
+| 28.2 | Dasselbe mit Stochas: im Stochas-Fenster ein paar Felder im Raster anklicken (das Muster ist am Anfang leer), abspielen | Stochas spielt sein Muster; Y wird größer | | | 0.90.1 |

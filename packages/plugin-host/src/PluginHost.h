@@ -25,6 +25,7 @@
 //   flag 4: then the transport: u32 count, then count x (u32 offset, f32 bpm, f64 position in quarter notes); from that
 //   sample on the plugins see the song playing at that tempo and position (bpm 0: stopped). Arpeggiators, sequencers
 //   and tempo-synced effects follow it.
+//   midiStats {instance} -> {in, out, chain, playing, bpm, ppq}  MIDI events into the chain / into the instrument since the last call
 //   midiChain {instance, chain: [ids]}  MIDI effects before an instrument: every block, the instrument's MIDI goes
 //   through these plugins in order (their MIDI output is what the instrument plays); they share its transport.
 #include <juce_audio_processors/juce_audio_processors.h>

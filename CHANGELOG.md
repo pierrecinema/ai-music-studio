@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.90.1
+
+### New
+
+- Channel → MIDI effects shows while the song plays how many MIDI events went into the MIDI effects and how many came out to the instrument, and the song's tempo the plugins see. It shows at once where notes get lost (for example an arpeggiator whose pattern is still empty).
+- *+ MIDI effect…* lists every plugin (MIDI plugins first): many MIDI plugins, BlueArp among them, call themselves instruments and were missing from the list.
+
 ## 0.90.0
 
 ### New

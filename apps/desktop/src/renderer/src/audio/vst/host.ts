@@ -331,6 +331,13 @@ async function wireMidiChains(project: Project, inst: (id: string) => { instance
   }))
 }
 
+/** what went through the MIDI chain of an instrument since the last call (null: not loaded / an older host) */
+export async function midiStatsOf(instrumentFxId: string): Promise<{ in: number; out: number; chain: number; playing: boolean; bpm: number; ppq: number } | null> {
+  const l = live.get(instrumentFxId)
+  if (!l) return null
+  try { return await l.client.call('midiStats', { instance: l.instance }, 3000) } catch { return null }
+}
+
 /** loads the MIDI effects of one track and puts them in front of its instrument (playing notes in the Piano Roll) */
 export async function prepareMidiFx(project: Project, trackId: string, sampleRate: number): Promise<void> {
   const t = project.tracks.find((x) => x.id === trackId)

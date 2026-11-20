@@ -143,6 +143,8 @@ assert.equal((await call('unload', { instance: ld.instance })).ok, true)
   const z = new Float32Array(512)
   const c1 = new Float32Array(await block(sy.instance, [z, z], 0, [[100, 0x90, 60, 127]]), 24, 512)
   assert.ok(c1[99] === 0 && Math.abs(c1[100] - 63 / 254) < 1e-6, `through the MIDI effect (velocity 63): ${c1[100]}`)
+  const ms = await call('midiStats', { instance: sy.instance })
+  assert.ok(ms.ok && ms.in === 1 && ms.out === 1 && ms.chain === 1, JSON.stringify(ms))
   // the song plays at 120 BPM from quarter 0.99: the next beat is 0.01 quarters = 240 samples later
   await block(sy.instance, [z, z], 0, [[0, 0x80, 60, 0]])
   const c2 = new Float32Array(await block(sy.instance, [z, z], 0, [], [], [[0, 120, 0.99]]), 24, 512)

@@ -467,3 +467,13 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 | 23.6 | Song exportieren (WAV) | Der Export klingt wie im Studio | | | 0.84.0 |
 | 23.7 | Einstellungen → Audio → Klang-Paket | „Installiert“ mit **Entfernen**; nach Entfernen spielt wieder der Synthesizer | | | 0.84.0 |
 | 23.8 | Song-Generator: alle fünf Spuren-Tasten aus | Kein Absturz, „Erstellen“ ist gesperrt | | | 0.84.0 |
+
+## 24. Neu in 0.85.0: Mixer im Konsolen-Look
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 24.1 | Mixer öffnen (Song aus dem Song-Generator) | Dunkelblaugraue Kanalzüge wie dein Vorbild: Fader mit weißer Kappe und dB-Skala, zwei orange LED-Anzeigen, M/S-Tasten, Werte unten, Pan-Knopf | | | 0.85.0 |
+| 24.2 | Abspielen | Die LEDs leuchten mit (orange, oben gelb/rot), unten steht der Spitzenwert in dB | | | 0.85.0 |
+| 24.3 | Fader ziehen, mit Shift fein ziehen, Mausrad, Doppelklick | Lautstärke ändert sich; Doppelklick = 0 dB | | | 0.85.0 |
+| 24.4 | Pan-Knopf ziehen, Doppelklick | Links/rechts, Doppelklick = Mitte | | | 0.85.0 |
+| 24.5 | Trennlinie zwischen Studio und Mixer verschieben | Die Fader werden länger/kürzer, nichts wird abgeschnitten | | | 0.85.0 |

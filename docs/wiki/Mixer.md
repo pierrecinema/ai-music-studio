@@ -1,13 +1,14 @@
 # Mixer 🎚
 
-One channel strip per track, plus **MASTER**. Changes are heard at once while playing.
+One channel strip per track, plus **MASTER**, built like the output section of a large studio console. Changes are heard at once while playing.
 
 | Control | What it does |
 |---|---|
-| **Fader** | volume (double-click: reset) |
-| **Pan** | left / right (double-click: center) |
-| **M / S** | mute / solo |
-| **Level meter** | real peak level with a short hold mark, also on the master |
+| **Fader** | volume with a dB scale (0 at the top, then 6, 12 … 48, ∞): drag the white cap, mouse wheel, **Shift** for fine moves, double-click for 0 dB |
+| **Pan** | the black knob at the bottom: drag up / down or mouse wheel, double-click: center (L, C, R around it) |
+| **M / S** | mute / solo (the key lights orange / green) |
+| **Level meter** | two orange LED columns with a scale in dB below full level (red 0–3, yellow 6–9); the held peak shows as one lit segment |
+| **Values** | under the fader: the fader in dB (white) and the last peak in dB (orange) |
 | **Sends** | how much of the track goes to a reverb or delay return track |
 | **Return tracks** | shared reverb (*Decay*) or delay (time in song tempo, *FB* feedback): add them with **+ Return…** in the [[Studio]] |
 | **Group tracks** | tracks routed through a group track with its own volume, mute and solo (Ctrl+G) |

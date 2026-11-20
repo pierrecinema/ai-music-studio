@@ -29,7 +29,9 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.84: real instruments for MIDI tracks
+### New in 0.85: a console-style Mixer, real instruments for MIDI tracks
+
+- **Mixer** like a studio console: white-cap faders with a dB scale, orange LED meters, lit mute / solo keys, pan knobs.
 
 - **Sound pack** (one download, about 28 MB): recorded piano, guitars, basses, seven drum kits, strings, brass, saxophones and more play your MIDI tracks instead of the simple synthesizer. About 50 instruments to pick per track.
 - **The song generator picks a band per genre** (funk: clavinet, slap bass, brass; jazz: sax, upright bass, jazz kit; ballad: piano, strings, brushes …) and a first mix with levels and room reverb.

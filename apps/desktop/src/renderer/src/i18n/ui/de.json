@@ -1723,5 +1723,9 @@
  "Saw lead": "Saw-Lead",
  "New age pad": "New-Age-Pad",
  "Warm pad": "Warmes Pad",
- "Choir pad": "Chor-Pad"
+ "Choir pad": "Chor-Pad",
+ "OUTPUT": "AUSGANG",
+ "Volume (double-click: 0 dB, Shift: fine)": "Lautstärke (Doppelklick: 0 dB, Shift: fein)",
+ "Fader (dB)": "Fader (dB)",
+ "Peak (dB)": "Spitzenwert (dB)"
 }

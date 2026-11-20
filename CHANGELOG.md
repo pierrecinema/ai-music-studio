@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.85.0
+
+### New
+
+- **The Mixer looks like a studio console**: dark blue-grey channel strips with a white-cap fader and a dB scale, two orange LED meters with a red / yellow / white scale, lit mute and solo keys, the fader value and the held peak in dB under each strip, and a black pan knob. The faders use the height there is (the Mixer as a panel under the Studio, or on its own). Fine moves with Shift, mouse wheel, double-click for 0 dB.
+
 ## 0.84.0
 
 ### New

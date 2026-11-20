@@ -15,6 +15,8 @@ async function readFile(path: string): Promise<Uint8Array> {
 
 const real = {
   fs: { readFile },
+  // the sound pack: served at /GeneralUser.sf2 when a test puts it there (otherwise "not installed")
+  sounds: { status: async () => ({ installed: await fetch('/GeneralUser.sf2', { method: 'HEAD' }).then((r) => r.ok && r.headers.get('content-type') !== 'text/html').catch(() => false), path: '/GeneralUser.sf2', name: 'GeneralUser GS 1.471', sizeMb: 28 }), install: async () => ({ ok: false, error: 'browser preview' }), remove: async () => true, onProgress: () => () => undefined },
   files: {
     exists: async (paths: string[]) => paths.map(() => true),
     saveRecording: async (bytes: Uint8Array) => { const k = `mem://${++n}.wav`; mem.set(k, bytes); return k },

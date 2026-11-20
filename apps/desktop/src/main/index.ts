@@ -7,6 +7,7 @@ import { setupUpdater } from './updater'
 import { registerFileHandlers, setupCrashLog } from './files-ipc'
 import { registerPluginHostHandlers } from './plugin-host'
 import { registerFreePluginHandlers } from './free-plugins'
+import { registerSoundPackHandlers } from './sound-pack'
 import { registerPluginPresetHandlers } from './plugin-presets'
 
 let mainWindow: BrowserWindow | null = null
@@ -110,6 +111,7 @@ app.whenReady().then(async () => {
   registerIpcHandlers(serverManager)
   registerPluginHostHandlers()
   registerFreePluginHandlers()
+  registerSoundPackHandlers()
   registerPluginPresetHandlers()
   ipcMain.handle('app:close-confirmed', () => { allowClose = true; mainWindow?.close() })
   app.on('before-quit', () => { allowClose = true })

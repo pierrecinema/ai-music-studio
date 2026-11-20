@@ -3,6 +3,7 @@ import { audioSettings, hostDevice, hostStats, listDevices, listHostDevices, mea
 import { liveContext } from '../../audio/engine'
 import { exportSampleRate, setExportSampleRate } from '../../lib/sampleRate'
 import { tr, trf } from '../../i18n/tr'
+import { SoundPackCard } from '../common/SoundPackCard'
 
 // Settings → Audio, laid out like the audio preferences of other DAWs: Audio device, Sample rate, Latency, Test.
 // See docs/AUDIO-PLAN.md. Driver "ASIO": the sound plays through the plugin host (ASIO and the other drivers JUCE knows).
@@ -125,6 +126,8 @@ export function AudioTab(): React.ReactElement {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 720 }}>
+      <div style={section}>{tr('Sound pack')}</div>
+      <SoundPackCard />
       <div style={section}>{tr('Audio device')}</div>
       <label style={row}>{tr('Driver type')}
         <select style={field} value={s.driver} onChange={(e) => setAudioSettings({ driver: e.target.value as 'windows' | 'asio' })}>

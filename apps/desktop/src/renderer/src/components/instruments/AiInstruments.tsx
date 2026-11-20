@@ -11,6 +11,7 @@ import { api, type AiInstrument, type InstrumentJob, type MusicJob } from '../..
 import { beatToSec } from '../../audio/timemap'
 import { encodeWav } from '../../audio/wav'
 import { putBuffer, renderMidiGuide } from '../../audio/engine'
+import { SoundPackCard } from '../common/SoundPackCard'
 import { importAudioFiles } from '../timeline/Timeline'
 import {
   BASS_STYLES, DRUM_STYLES, GUITAR_STYLES, bassist, chordName, detectChords, drummer, fillChords, guitarist, parseProgression,
@@ -38,11 +39,12 @@ function notesOf(t: Track): Array<{ pitch: number; start: number; duration: numb
 }
 
 /** a new MIDI track with one clip holding the part */
-function addPartTrack(name: string, sound: Track['sound'], color: string, notes: BandNote[], startBeat: number, beats: number): void {
+function addPartTrack(name: string, sound: Track['sound'], color: string, notes: BandNote[], startBeat: number, beats: number,
+  mix?: Pick<Track, 'program' | 'volume' | 'reverb'>): void {
   useProjectStore.getState().addTrack('midi')
   const tracks = useProjectStore.getState().project.tracks
   const id = tracks[tracks.length - 1].id
-  useProjectStore.getState().updateTrack(id, { name, sound, color })
+  useProjectStore.getState().updateTrack(id, { name, sound, color, ...(mix ?? {}) })
   useProjectStore.getState().addClip(id, { startTime: startBeat, duration: beats, name, notes: notes.map((n) => ({ ...n, id: nanoid() })) })
   useProjectStore.getState().selectTrack(id)
 }
@@ -167,7 +169,7 @@ function SongGenerator(): React.ReactElement {
     // tracks looked empty); older tracks can be muted or hidden
     const start = 0
     const keyName = `${KEY_NAMES[key]}${mode === 'minor' ? 'm' : ''}`
-    for (const p of song.parts) addPartTrack(`${tr(p.name)} (${tr(g.label)}, ${keyName})`, p.sound, PART_COLORS[p.id], p.notes, start, song.bars * 4)
+    for (const p of song.parts) addPartTrack(`${tr(p.name)} (${tr(g.label)}, ${keyName})`, p.sound, PART_COLORS[p.id], p.notes, start, song.bars * 4, { program: p.program, volume: p.volume, reverb: p.reverb })
     if (markers) for (const s of song.sections) {
       if ((useProjectStore.getState().project.markers ?? []).some((m) => m.end === undefined && Math.abs(m.beat - (start + s.bar * 4)) < 0.01)) continue
       const id = useProjectStore.getState().addMarker(start + s.bar * 4)
@@ -621,6 +623,7 @@ export function AiInstruments(): React.ReactElement {
         <span style={{ fontSize: 15, color: G.text, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 300 }}><b style={{ fontWeight: 800 }}>AI</b> {tr('Instruments')}</span>
         <span style={{ fontSize: 11, color: G.faint }}>{trf('Tempo {bpm} BPM: the parts are made for the tempo of the project.', { bpm: Math.round(bpm) })}</span>
       </div>
+      <SoundPackCard compact />
       <SongGenerator />
       <Band />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(520px, 1fr))', gap: 14, flexShrink: 0 }}>

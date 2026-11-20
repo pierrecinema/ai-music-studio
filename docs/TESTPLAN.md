@@ -454,3 +454,16 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 | 22.4 | Loop über 4 Takte setzen, ein paar Durchgänge laufen lassen | Jeder Durchgang klingt gleich, keine Lücken | ❓ | Wie setzt man einen Loop? | 0.83.2 |
 | 22.5 | Song exportieren (WAV) | Geht in etwa einer halben Minute, die Datei klingt sauber | ✅ | | 0.83.2 |
 | 22.6 | 20.2–20.4 nochmal anhören | Band und Song-Generator klingen sauber | ⚠️ | Klingt langweilig, wie 90er Synth-Pop: Klänge müssen viel besser werden | 0.83.2 |
+
+## 23. Neu in 0.84.0: Klang-Paket (echte Instrumente)
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 23.1 | KI-Instrumente öffnen: oben „Klang-Paket: echte Instrumente“ → **Installieren (28 MB)** | Fortschrittsbalken, danach verschwindet die Karte | | | 0.84.0 |
+| 23.2 | Song-Generator: **Funk** → Erstellen, im Studio abspielen | Startet bei Takt 1; Clavinet, Slap-Bass, Bläser und echtes Schlagzeug, kein Knistern | | | 0.84.0 |
+| 23.3 | Dasselbe mit **Jazz**, **Ballade**, **Afro House** | Jedes Genre hat eigene Instrumente und klingt nicht mehr nach 90er-Synth | | | 0.84.0 |
+| 23.4 | Eine Spur → **CH** → Instrument: unter „Klang-Paket: Orchester“ **Violine** wählen | Die Spur spielt Violine | | | 0.84.0 |
+| 23.5 | Im Piano Roll Noten anklicken / mit MIDI-Keyboard spielen | Man hört das gewählte echte Instrument | | | 0.84.0 |
+| 23.6 | Song exportieren (WAV) | Der Export klingt wie im Studio | | | 0.84.0 |
+| 23.7 | Einstellungen → Audio → Klang-Paket | „Installiert“ mit **Entfernen**; nach Entfernen spielt wieder der Synthesizer | | | 0.84.0 |
+| 23.8 | Song-Generator: alle fünf Spuren-Tasten aus | Kein Absturz, „Erstellen“ ist gesperrt | | | 0.84.0 |

@@ -156,6 +156,8 @@ export default function App(): React.ReactElement {
   useEffect(() => watchHostDevice(), [])
   // MIDI keyboards and controllers (Settings → MIDI) work from the start, on every page
   useEffect(() => { void import('./midi/hardware').then((m) => m.startMidiHardware()) }, [])
+  // the sound pack (real instruments for MIDI tracks), if installed
+  useEffect(() => { void import('./audio/soundbank').then((m) => m.loadSoundPack()) }, [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)

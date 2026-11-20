@@ -91,6 +91,12 @@ declare global {
         save: (name: string) => Promise<string | null>
       }
       fs: { readFile: (path: string) => Promise<Uint8Array> }
+      sounds?: {
+        status: () => Promise<{ installed: boolean; path: string; name: string; sizeMb: number }>
+        install: () => Promise<{ ok: boolean; error?: string }>
+        remove: () => Promise<boolean>
+        onProgress: (cb: (p: { text: string; pct?: number }) => void) => () => void
+      }
       shell: { openPath: (path: string) => Promise<void>; openProject: (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions' | 'donate') => Promise<void> }
       project: {
         openDialog: () => Promise<{ path: string; text: string } | null>

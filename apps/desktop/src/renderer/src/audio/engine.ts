@@ -10,6 +10,7 @@ import { useAudioStore } from '../stores/audio.store'
 import { useProjectStore } from '../stores/project.store'
 import type { AutoParam, Clip, InsertFx, Project, Track } from '../types'
 import { playClick, playSynthNote, type Timbre } from './synth'
+import { playSampleNote, presetFor, programOf, roomReverb, reverbOf, type Choke, type Sf2Preset } from './soundbank'
 import { encodeWav, peakOf } from './wav'
 import { MAX_STRETCH_SECONDS, stretchBuffer } from './stretch'
 import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat } from './timemap'
@@ -340,18 +341,22 @@ export function scheduleProject(
   const live = typeof AudioContext !== 'undefined' && ctx instanceof AudioContext
   // (not with plugins: their own pump suspends the render every block and a second suspend at the same time fails)
   const offline = typeof OfflineAudioContext !== 'undefined' && ctx instanceof OfflineAudioContext && !projectHasVst(project)
-  const pending: Array<{ at: number; dur: number; pitch: number; vel: number; timbre: Timbre; bus: AudioNode }> = []
+  const pending: Array<{ at: number; dur: number; pitch: number; vel: number; timbre: Timbre; bus: AudioNode; preset: Sf2Preset | null; choke: Choke }> = []
   let pendingIx = 0
   const sounding = new Set<AudioScheduledSourceNode>()
   let pumpTimer = 0
   let cutAt = Infinity
   const AHEAD = 2.5
+  // a note: the sound pack's recorded instrument if the track has one, otherwise the built-in synthesizer
+  const noteOf = (e: (typeof pending)[number]): AudioScheduledSourceNode[] => e.preset
+    ? playSampleNote(ctx, e.bus, e.preset, e.pitch, e.vel, e.at, e.dur, e.choke)
+    : playSynthNote(ctx, e.bus, e.pitch, e.vel, e.at, e.dur, e.timbre)
   const pump = (): void => {
     const horizon = (ctx as AudioContext).currentTime + AHEAD
     while (pendingIx < pending.length && pending[pendingIx].at < horizon) {
       const e = pending[pendingIx++]
       if (e.at >= cutAt) continue
-      for (const n of playSynthNote(ctx, e.bus, e.pitch, e.vel, e.at, e.dur, e.timbre)) {
+      for (const n of noteOf(e)) {
         sounding.add(n)
         n.onended = () => { sounding.delete(n) }       // ended notes are let go, the set does not grow with the song
       }
@@ -409,6 +414,22 @@ export function scheduleProject(
     }
     if (track.type === 'group') continue
     const timbre = timbreOf(track)
+    // the sound pack: a recorded instrument with a little room around it (wet into the same strip, so fader, mute
+    // and effects act on both)
+    const program = track.instrument ? null : programOf(track)
+    const preset = program === null ? null : presetFor(program)
+    const choke: Choke = new Map()
+    let noteBus: AudioNode = strip.bus
+    if (preset) {
+      const input = ctx.createGain()
+      input.connect(strip.bus)
+      const amount = reverbOf(program!, track.reverb)
+      if (amount > 0) {
+        const wet = ctx.createGain(); wet.gain.value = amount
+        input.connect(wet).connect(roomReverb(ctx)).connect(strip.bus)
+      }
+      noteBus = input
+    }
     const la = lookahead(track)
     const TT = (beat: number): number => T(beat) - la
     // how early (seconds before `when`, so <= 0) this track's sound may start: its plugins' delay, but not in the past.
@@ -493,8 +514,11 @@ export function scheduleProject(
           if (instrument) {
             const vel = Math.max(1, Math.min(127, Math.round(n.velocity)))
             midi.push([at, 0x90, n.pitch, vel], [at + dur, 0x80, n.pitch, 0])
-          } else if (live || offline) pending.push({ at, dur, pitch: n.pitch, vel: n.velocity, timbre, bus: strip.bus })
-          else nodes.push(...playSynthNote(ctx, strip.bus, n.pitch, n.velocity, at, dur, timbre))
+          } else {
+            const e = { at, dur, pitch: n.pitch, vel: n.velocity, timbre, bus: noteBus, preset, choke }
+            if (live || offline) pending.push(e)
+            else nodes.push(...noteOf(e))
+          }
         }
       }
     }
@@ -1005,6 +1029,9 @@ export async function previewNote(pitch: number, velocity = 100, track?: Track, 
     return
   }
   if (hold && track?.instrument?.vst) return
+  const program = track && !track.instrument ? programOf(track) : null
+  const preset = program === null ? null : presetFor(program)
+  if (preset) { playSampleNote(c, master!, preset, pitch, velocity, c.currentTime + 0.01, 0.6); return }
   playSynthNote(c, master!, pitch, velocity, c.currentTime + 0.01, 0.35, track ? timbreOf(track) : 'soft')
 }
 

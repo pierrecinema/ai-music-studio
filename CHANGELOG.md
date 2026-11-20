@@ -3,6 +3,20 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.84.0
+
+### New
+
+- **Sound pack: real instruments.** Recorded grand piano, electric pianos, organ, acoustic and electric guitars, basses, seven drum kits (standard, room, power, electronic, 808/909, jazz, brushes), strings, choir, brass, saxophones, flutes and pads for every MIDI track. Install it once in *Settings → Audio → Sound pack* or on the *AI Instruments* page (GeneralUser GS by S. Christian Collins, about 28 MB, free for use in software). Without it the built-in synthesizer plays as before.
+- MIDI tracks with a built-in sound (drums, bass, keys, guitar, lead) play the matching real instrument automatically. Any of about 50 instruments can be picked per track in *Channel → Instrument* (groups *Sound pack: Drums / Keys / Guitar and bass / Orchestra / Solo and synth*).
+- **The song generator picks a band per genre**: funk with clavinet, slap bass and brass; jazz with alto sax, acoustic bass, piano and jazz kit; ballad with piano, strings and brushes; afro house with marimba, Rhodes and an electronic kit; rock and metal with overdrive and distortion guitars; and more.
+- **A first mix**: each part gets a starting level (drums and bass in front, keys and guitar behind the melody) and a little room reverb that fits the instrument (none on the bass, more on strings and pads).
+
+### Fixed
+
+- A new song from the song generator starts at bar 1 instead of after the end of the project, where it was out of sight and the new tracks looked empty.
+- The song generator page no longer crashes when every part (melody, keys, bass, drums, guitar) is switched off; *Create* is disabled then.
+
 ## 0.83.2
 
 ### Fixed

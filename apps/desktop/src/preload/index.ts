@@ -62,6 +62,16 @@ const api = {
   fs: {
     readFile: (path: string) => ipcRenderer.invoke('fs:read-file', path)
   },
+  sounds: {
+    status: () => ipcRenderer.invoke('sounds:status'),
+    install: () => ipcRenderer.invoke('sounds:install'),
+    remove: () => ipcRenderer.invoke('sounds:remove'),
+    onProgress: (cb: (p: { text: string; pct?: number }) => void) => {
+      const h = (_: unknown, p: { text: string; pct?: number }): void => cb(p)
+      ipcRenderer.on('sounds:progress', h)
+      return () => { ipcRenderer.removeListener('sounds:progress', h) }
+    }
+  },
   shell: {
     openProject: (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions' | 'donate') => ipcRenderer.invoke('shell:open-project', page),
     openPath: (path: string) => ipcRenderer.invoke('shell:open-path', path)

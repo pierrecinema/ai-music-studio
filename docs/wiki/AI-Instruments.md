@@ -4,6 +4,10 @@ Musicians for your song (menu **🎻 AI Instruments**, new in 0.80). Since 0.83 
 turn a **knob** by dragging it up or down (Shift: finer, mouse wheel, arrow keys; double-click: back to its default),
 step through an **LCD** with ◀ ▶ or click it for the list. With the AI assistant closed the page uses the whole width.
 
+## Sound pack: real instruments (every PC)
+
+The song generator, the band and every MIDI track sound much better with the **sound pack**: recorded instruments instead of the simple synthesizer. Install it once with **Install (28 MB)** at the top of this page or in [[Settings]] → *Audio* (GeneralUser GS by S. Christian Collins, free for use in software). The song generator then picks a band for each genre (for example funk: clavinet, slap bass, brass section; jazz: alto sax, upright bass, piano, jazz kit; ballad: piano, strings, brushes) and sets a first mix: levels per part and a little room reverb. Any track can switch to another instrument in the Studio: *Channel → Instrument*.
+
 ## Song generator (0.81, every PC)
 
 A whole song as MIDI. Choose the **genre** (pop, rock, ballad, house, tech house, afro house, trap / rap, funk,

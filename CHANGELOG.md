@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.83.0
+
+- **AI Instruments redesigned like plugin front panels:** each device (Song Generator, Band with Drummer / Bass player / Guitarist, Orchestra, Text Instrument) has a coloured side stripe and a two-weight name, large rotary knobs with a lit ring and the value in the cap, LED buttons, hardware keys and dark screens for styles and chords.
+- **See what will be played:** the drummer shows its pattern as a step grid (crash, hats, percussion, toms, snare, kick), bass player and guitarist as a mini piano roll, the song generator the chorus melody; they change at once with the style and the knobs.
+- The orchestra instruments are a three-column browser (strings, woodwinds, brass); the progress is a level meter.
+
 ## 0.82.1
 
 - **Fixed: the AI backend kept running after the app crashed or was ended hard** (for example while an update installed). Its AI workers (ACE-Step, MIDI-DDSP) went on using the processor and memory: playback in the Studio crackled and sounded distorted, the next start needed several tries ("Failed to fetch" in Hardware and the Library) and the graphics card or processor name was not found. The backend now ends itself and its workers when the app is gone, and a backend left over from an earlier run is ended when the app starts.

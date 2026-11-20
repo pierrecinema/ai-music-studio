@@ -427,3 +427,13 @@ Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, Ap
 | 19.4 | KI-Orchester: Melodie mit Violine | Fortschritt „Phrase 1 von N … noch etwa X Min“; am Ende Audiospur | | | 0.82.1 |
 | 19.5 | Während 19.4 läuft: App über das X schließen, Task-Manager öffnen | Nach wenigen Sekunden kein „python.exe“ von der App mehr | | | 0.82.1 |
 
+## 20. Neu in 0.83.0: KI-Instrumente im Plugin-Look
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 20.1 | KI-Instrumente öffnen | Geräte mit farbigem Streifen, große Drehknöpfe mit Leuchtring und Wert in der Mitte, LED-Tasten, dunkle Anzeigen; keine Emojis, kein „Schulklassen“-Look | | | 0.83.0 |
+| 20.2 | Schlagzeuger: Stil wechseln, Intensität drehen | Das Schritt-Raster ändert sich sofort | | | 0.83.0 |
+| 20.3 | Bassist / Gitarrist: Stil wechseln | Die Mini-Notenansicht ändert sich | | | 0.83.0 |
+| 20.4 | Song-Generator: Genre wechseln, Tempo-Knopf drehen, ERSTELLEN | Melodie-Vorschau und Akkorde ändern sich; Song im Studio | | | 0.83.0 |
+| 20.5 | Orchester: Instrument in der Liste wählen, RENDERN | Der Pegel-Balken zeigt den Fortschritt | | | 0.83.0 |
+

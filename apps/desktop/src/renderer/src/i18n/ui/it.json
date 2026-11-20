@@ -1520,5 +1520,13 @@
  "Needs a free account / the maker’s installer app": "Richiede un account gratuito / l’installer del produttore",
  "MIDI plugin: it makes notes; the app will play them through an instrument in a later version (MIDI effects before the instrument).": "Plugin MIDI: crea note; l’app le suonerà con uno strumento in una versione futura.",
  "Download page": "Pagina di download",
- "{name} {tag} is installed.": "{name} {tag} è installato."
+ "{name} {tag} is installed.": "{name} {tag} è installato.",
+ "{bars} bars · {min}:{sec} min": "{bars} battute · {min}:{sec} min",
+ "Text Instrument": "Strumento testo",
+ "Song Generator": "Generatore",
+ "Add": "Aggiungi",
+ "Mute MIDI": "MIDI muto",
+ "free": "libero",
+ "close": "vicino",
+ "Orchestra": "Orchestra"
 }

@@ -1520,5 +1520,13 @@
  "Needs a free account / the maker’s installer app": "需要免费账户 / 厂商的安装程序",
  "MIDI plugin: it makes notes; the app will play them through an instrument in a later version (MIDI effects before the instrument).": "MIDI 插件：它生成音符；应用将在后续版本中通过乐器播放。",
  "Download page": "下载页面",
- "{name} {tag} is installed.": "{name} {tag} 已安装。"
+ "{name} {tag} is installed.": "{name} {tag} 已安装。",
+ "{bars} bars · {min}:{sec} min": "{bars} 小节 · {min}:{sec} 分钟",
+ "Text Instrument": "文字乐器",
+ "Song Generator": "歌曲生成器",
+ "Add": "添加",
+ "Mute MIDI": "静音 MIDI",
+ "free": "自由",
+ "close": "贴近",
+ "Orchestra": "管弦乐"
 }

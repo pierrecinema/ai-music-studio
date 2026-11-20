@@ -180,7 +180,7 @@ async function detectGpuNow(): Promise<'nvidia' | 'amd' | 'none'> {
     ['wmic', ['path', 'win32_VideoController', 'get', 'name']]
   ]
   for (const [cmd, args] of attempts) {
-    const out = (await capture(cmd, args, 8000)).out.toLowerCase()
+    const out = (await capture(cmd, args, 20000)).out.toLowerCase()
     if (!out.trim()) continue
     if (/nvidia|geforce|rtx|gtx|quadro/.test(out)) return 'nvidia'
     if (/radeon|amd/.test(out)) return 'amd'
@@ -190,9 +190,11 @@ async function detectGpuNow(): Promise<'nvidia' | 'amd' | 'none'> {
 }
 
 // the graphics card does not change while the app runs: ask once
+// "none" is not kept: on a busy PC (AI workers running) PowerShell can take longer than the timeout and the card was
+// then reported as missing until the next start (owner, R9 290 shown as "none · CPU")
 let gpuOnce: Promise<'nvidia' | 'amd' | 'none'> | null = null
 export function detectGpu(): Promise<'nvidia' | 'amd' | 'none'> {
-  gpuOnce ??= detectGpuNow()
+  gpuOnce ??= detectGpuNow().then((g) => { if (g === 'none') gpuOnce = null; return g })
   return gpuOnce
 }
 

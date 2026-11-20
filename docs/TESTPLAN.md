@@ -395,15 +395,15 @@ Vorbereitung: Ein Projekt mit einer MIDI-Spur, auf der eine Melodie mit Akkorden
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 17.1 | KI-Instrumente öffnen, KI-Assistent schließen | Die Seite nutzt die ganze Breite; Geräte mit Drehknöpfen und LCD-Anzeigen | | | 0.81.0 |
-| 17.2 | Einen Drehknopf nach oben ziehen, Mausrad, Doppelklick | Wert ändert sich; Doppelklick setzt ihn zurück | | | 0.81.0 |
-| 17.3 | Song-Generator: Genre **Afro House**, Tonart A, Moll → **Song im Studio erstellen**, abspielen | 5 MIDI-Spuren (Melodie, Keys, Bass, Drums, Gitarre), Tempo 122, Marker Intro / Strophe / Bridge / Drop …; klingt nach einem Song | | | 0.81.0 |
-| 17.4 | **🎲 Take** drücken, nochmal erstellen | Andere Akkorde / Melodie; neue Spuren hinter dem ersten Song | | | 0.81.0 |
-| 17.5 | Band → Akkorde **Aus dem Song** (nach 17.3) | Die Akkorde des Songs erscheinen als Kästchen; Band einfügen passt zum Song | | | 0.81.0 |
-| 17.6 | Einstellungen → KI-Engines → **AI Instruments (MIDI-DDSP)** → Auswahl installieren (nochmal) | Kein „resource“-Fehler mehr; „AI Instruments are installed“ | | | 0.81.0 |
-| 17.7 | KI-Orchester: Melodie-Spur des Songs, **Violine** → spielen | Audiospur „Violin (AI)“ (beim ersten Mal lädt es die Modelle) | | | 0.81.0 |
-| 17.8 | Text-Instrument: Feld **Instrument / Stil (hier eingeben)** oder einen Vorschlag anklicken | Text steht im Feld | | | 0.81.0 |
-| 17.9 | Musik erstellen: ACE-Step 1.5, 2 Songs × 2 Varianten (wie gestern) | Alle 4 entstehen; falls der Speicher ausgeht: Hinweis „ACE-Step was started again for the rest“ und trotzdem 4 Songs | | | 0.81.0 |
+| 17.1 | KI-Instrumente öffnen, KI-Assistent schließen | Die Seite nutzt die ganze Breite; Geräte mit Drehknöpfen und LCD-Anzeigen | ✅ |  | 0.81.0 |
+| 17.2 | Einen Drehknopf nach oben ziehen, Mausrad, Doppelklick | Wert ändert sich; Doppelklick setzt ihn zurück | ✅ |  | 0.81.0 |
+| 17.3 | Song-Generator: Genre **Afro House**, Tonart A, Moll → **Song im Studio erstellen**, abspielen | 5 MIDI-Spuren (Melodie, Keys, Bass, Drums, Gitarre), Tempo 122, Marker Intro / Strophe / Bridge / Drop …; klingt nach einem Song | ❌ | Klingt im Studio total verzerrt → 0.82.1 (Backend-Waisen, sparsamere Klänge) | 0.81.0 |
+| 17.4 | **🎲 Take** drücken, nochmal erstellen | Andere Akkorde / Melodie; neue Spuren hinter dem ersten Song | ✅ |  | 0.81.0 |
+| 17.5 | Band → Akkorde **Aus dem Song** (nach 17.3) | Die Akkorde des Songs erscheinen als Kästchen; Band einfügen passt zum Song | ✅ |  | 0.81.0 |
+| 17.6 | Einstellungen → KI-Engines → **AI Instruments (MIDI-DDSP)** → Auswahl installieren (nochmal) | Kein „resource“-Fehler mehr; „AI Instruments are installed“ | ✅ |  | 0.81.0 |
+| 17.7 | KI-Orchester: Melodie-Spur des Songs, **Violine** → spielen | Audiospur „Violin (AI)“ (beim ersten Mal lädt es die Modelle) | ⚠️ | Wartet ohne Fortschritt, „none · CPU“, Ton verzerrt → 0.82.1 (Fortschritt pro Phrase) | 0.81.0 |
+| 17.8 | Text-Instrument: Feld **Instrument / Stil (hier eingeben)** oder einen Vorschlag anklicken | Text steht im Feld | ⚠️ | Startete ACE-Step auf dem Prozessor, App geschlossen | 0.81.0 |
+| 17.9 | Musik erstellen: ACE-Step 1.5, 2 Songs × 2 Varianten (wie gestern) | Alle 4 entstehen; falls der Speicher ausgeht: Hinweis „ACE-Step was started again for the rest“ und trotzdem 4 Songs |  | verschoben (dauert zu lange) | 0.81.0 |
 
 ## 18. Neu in 0.82.0: kostenlose Plugins, PyTorch für NVIDIA
 
@@ -414,4 +414,16 @@ Vorbereitung: Ein Projekt mit einer MIDI-Spur, auf der eine Melodie mit Akkorden
 | 18.3 | Supermassive dort herunterladen und installieren, dann **Nach Plugins suchen** | Supermassive bekommt ein ✓ und steht im Studio unter + Effekt… | | | 0.82.0 |
 | 18.4 | **CHOW Kick** → **Installieren** | Lädt und installiert sich (oder öffnet die Release-Seite, falls es dort kein ZIP gibt); danach ✓ und unter Kanal → Instrument wählbar | | | 0.82.0 |
 | 18.5 | (Wer eine NVIDIA-Karte hat, z. B. der YouTube-Nutzer mit GTX 1080) KI-Engines → PyTorch mit CUDA installieren | Das Log zeigt „compute capability 6.1: trying cu126 …“, die Installation läuft durch | | | 0.82.0 |
+
+## 19. Neu in 0.82.1: Backend-Waisen, Grafikkarte, sparsamere Klänge
+
+Vorher einmal: App schließen, im Task-Manager alle „python.exe“ beenden, App neu starten.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 19.1 | App starten, unten in der Statusleiste schauen | Dort steht wieder „AMD Radeon R9 200 Series · …“ (Laptop: die Intel-Grafik) | | | 0.82.1 |
+| 19.2 | Bibliothek öffnen | Deine Tracks sind da, kein „Failed to fetch“ | | | 0.82.1 |
+| 19.3 | Song-Generator-Song im Studio abspielen | Klingt sauber, nicht verzerrt | | | 0.82.1 |
+| 19.4 | KI-Orchester: Melodie mit Violine | Fortschritt „Phrase 1 von N … noch etwa X Min“; am Ende Audiospur | | | 0.82.1 |
+| 19.5 | Während 19.4 läuft: App über das X schließen, Task-Manager öffnen | Nach wenigen Sekunden kein „python.exe“ von der App mehr | | | 0.82.1 |
 

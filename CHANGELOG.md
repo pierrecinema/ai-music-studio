@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.82.1
+
+- **Fixed: the AI backend kept running after the app crashed or was ended hard** (for example while an update installed). Its AI workers (ACE-Step, MIDI-DDSP) went on using the processor and memory: playback in the Studio crackled and sounded distorted, the next start needed several tries ("Failed to fetch" in Hardware and the Library) and the graphics card or processor name was not found. The backend now ends itself and its workers when the app is gone, and a backend left over from an earlier run is ended when the app starts.
+- **Fixed:** the status bar showed "none · CPU" instead of the graphics card (e.g. Radeon R9 290, Intel graphics on a laptop) when the PC was busy at the start; the card is now looked for again.
+- **Lighter built-in sounds:** the guitars and the electric piano need about half the processor time, so songs from the song generator play smoothly on older PCs.
+- **AI orchestra:** long parts are played phrase by phrase with progress after each phrase and an estimate of the time left (a long melody stood at 0 % for minutes and looked stuck).
+
 ## 0.82.0
 
 - **Free plugins catalog** (Settings → Plugins): the 40 plugins of the LANDR list "Best Free VST Plugins (2026)": 15 effects (Valhalla Supermassive, TDR Nova, Deelay, …), 15 instruments (Surge XT, Dexed, Vital, TAL-NoiseMaker, TyrellN6, Spitfire LABS, BBC Symphony Orchestra Discover, …) and 10 MIDI plugins. Each shows whether it is installed. Open-source ones install with one click (Surge XT, Dexed, CHOW Kick, Stochas); for the others the maker's page opens (some ask for a free account), and *Search for plugins* then finds them. MIDI plugins are listed; playing their notes through an instrument comes in a later version.

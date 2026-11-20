@@ -60,7 +60,7 @@ def _gpu_names() -> list[str]:
     ]
     for cmd in commands:
         try:
-            out = subprocess.run(cmd, capture_output=True, text=True, timeout=8,
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=20,
                                  creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
         except Exception:
             continue
@@ -142,10 +142,21 @@ def detect() -> HardwareProfile:
 _profile: HardwareProfile | None = None
 
 
+_no_gpu_at = 0.0
+
+
 def get_profile() -> HardwareProfile:
-    global _profile
+    """The machine, measured once. A Windows PC where no graphics card was found is asked again once a minute: on a
+    busy PC (AI workers running) PowerShell can be slower than the timeout, and the card then stayed "none" until the
+    backend restarted (owner: Radeon R9 290 shown as "none · CPU")."""
+    global _profile, _no_gpu_at
+    import time as _time
+    if _profile is not None and not _profile.gpu_name and platform.system() == "Windows" and _time.time() - _no_gpu_at > 60:
+        _profile = None
     if _profile is None:
         _profile = detect()
+        if not _profile.gpu_name:
+            _no_gpu_at = _time.time()
         logger.info(
             "Hardware: GPU=%s (%s) backend=%s device=%s cores=%d low_cpu=%s fp16=%s",
             _profile.gpu_name or "none", _profile.gpu_vendor,

@@ -188,7 +188,7 @@ function distortion(ctx: BaseAudioContext): WaveShaperNode {
   }
   const w = ctx.createWaveShaper()
   w.curve = c
-  w.oversample = '2x'
+  w.oversample = 'none'                 // per note: oversampling doubled its cost
   return w
 }
 
@@ -211,28 +211,21 @@ function playGuitar(ctx: BaseAudioContext, dest: AudioNode, pitch: number, veloc
   lp.frequency.setValueAtTime(Math.min(12000, f * 12 + 2500), when)
   lp.frequency.setTargetAtTime(Math.min(8000, f * (dist ? 6 : 3) + 500), when, 0.08)
   lp.Q.value = 1.2
-  const a = ctx.createOscillator(), b = ctx.createOscillator()
-  a.type = 'sawtooth'; b.type = 'square'
-  a.frequency.value = f; b.frequency.value = f; b.detune.value = 5
-  const bg = ctx.createGain(); bg.gain.value = 0.35
-  // the pluck: a short burst of noise at the start
-  const pick = ctx.createBufferSource(); pick.buffer = noise(ctx)
-  const pg = ctx.createGain()
-  pg.gain.setValueAtTime(0.25 * v, when); pg.gain.exponentialRampToValueAtTime(0.0001, when + 0.015)
+  // one oscillator per string (a strum is 6 notes at once and the song generator plays thousands of them: a second
+  // oscillator and a noise burst per note made playback crackle on older processors)
+  const a = ctx.createOscillator()
+  a.type = 'sawtooth'
+  a.frequency.value = f
   if (dist) {
     const sh = distortion(ctx)
-    const pre = ctx.createGain(); pre.gain.value = 0.9
     const cab = ctx.createBiquadFilter(); cab.type = 'lowpass'; cab.frequency.value = 4200
-    a.connect(lp); b.connect(bg).connect(lp)
-    lp.connect(pre).connect(sh).connect(cab).connect(out)
+    a.connect(lp).connect(sh).connect(cab).connect(out)
   } else {
-    a.connect(lp); b.connect(bg).connect(lp); lp.connect(out)
+    a.connect(lp).connect(out)
   }
-  pick.connect(pg).connect(out)
   out.connect(dest)
-  for (const o of [a, b]) { o.start(when); o.stop(end + release + 0.05) }
-  pick.start(when); pick.stop(when + 0.03)
-  return [a, b, pick]
+  a.start(when); a.stop(end + release + 0.05)
+  return [a]
 }
 
 /** an electric piano: a sine with a bell-like overtone that fades faster */
@@ -250,12 +243,10 @@ function playKeys(ctx: BaseAudioContext, dest: AudioNode, pitch: number, velocit
   const b = ctx.createOscillator(); b.type = 'sine'; b.frequency.value = f * 4
   const bg = ctx.createGain()
   bg.gain.setValueAtTime(0.35 * v, when); bg.gain.exponentialRampToValueAtTime(0.001, when + 0.4)
-  const c = ctx.createOscillator(); c.type = 'triangle'; c.frequency.value = f * 2; c.detune.value = 3
-  const cg = ctx.createGain(); cg.gain.value = 0.12
-  a.connect(out); b.connect(bg).connect(out); c.connect(cg).connect(out)
+  a.connect(out); b.connect(bg).connect(out)
   out.connect(dest)
-  for (const o of [a, b, c]) { o.start(when); o.stop(end + 0.3) }
-  return [a, b, c]
+  for (const o of [a, b]) { o.start(when); o.stop(end + 0.3) }
+  return [a, b]
 }
 
 /** an 808 bass: a sine that drops into its note, long and round, slightly driven */

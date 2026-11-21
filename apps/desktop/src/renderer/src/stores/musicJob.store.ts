@@ -14,6 +14,22 @@ interface MusicJobState {
 }
 
 let timer: number | null = null
+let watching = false
+
+/** shows music jobs that an AI agent (MCP) or the AI Chat started: they appear in the status bar and on Create music */
+export function watchExternalJobs(): void {
+  if (watching) return
+  watching = true
+  window.setInterval(async () => {
+    const st = useMusicJob.getState()
+    if (st.job && (st.job.status === 'queued' || st.job.status === 'running')) return
+    try {
+      const { jobs } = await api.music.activeJobs()
+      const j = jobs[0]
+      if (j && j.id !== st.job?.id) { st.markHandled(j.id); st.setJob({ id: j.id, status: j.status as 'queued', warnings: [], results: [] }); st.track(j.id) }
+    } catch { /* backend not running */ }
+  }, 4000)
+}
 
 export const useMusicJob = create<MusicJobState>((set, get) => ({
   job: null,

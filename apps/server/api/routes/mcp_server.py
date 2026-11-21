@@ -109,7 +109,10 @@ MCP_TOOLS = [
     },
     {
         "name": "generate_music",
-        "description": "Generate a full song with ACE-Step (optionally with LoRA styles). Returns a jobId; poll get_music_job.",
+        "description": ("Generate a song as AUDIO with the music AI (ACE-Step, optionally with LoRA styles; vocals from lyrics). Slow: "
+                        "minutes with an NVIDIA GPU, often 10-30 minutes or more on a CPU, the first time also a model download. Returns a "
+                        "jobId; poll get_music_job; the song lands in the Library. For a song made of editable MIDI tracks in the Studio "
+                        "(seconds) use app_generate_song instead. Use this only when the user asks for an AI-generated recording or vocals."),
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -396,8 +399,15 @@ async def _call_extra(name: str, args: dict):
         from api.routes.music_gen import generate_music, GenerateMusicRequest
         return await generate_music(GenerateMusicRequest(**args))
     if name == "get_music_job":
+        import time
         from api.routes.music_gen import job_status
-        return await job_status(args["jobId"])
+        job = dict(await job_status(args["jobId"]))
+        start = job.get("started") or job.get("created") or time.time()
+        pct = round(100 * (job.get("step") or 0) / job["step_total"]) if job.get("step_total") else None
+        job["summary"] = (f"{job.get('status')}: {job.get('stage_text') or job.get('stage') or ''}"
+                          + (f", {pct} %" if pct is not None else "") + f", {int(time.time() - start)} s so far."
+                          + (" The app shows the progress in its status bar (bottom) and on the Create music page." if job.get("status") in ("queued", "running") else ""))
+        return job
     if name == "list_loras":
         from api.routes.music_gen import list_loras
         return await list_loras()

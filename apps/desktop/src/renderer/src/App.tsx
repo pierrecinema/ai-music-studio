@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react'
 import { UpdateToast } from './components/updater/UpdateToast'
 import { api, baseUrl } from './lib/api'
 import { useShortcuts } from './shortcuts/useShortcuts'
-import { useMusicJob } from './stores/musicJob.store'
+import { useMusicJob, watchExternalJobs } from './stores/musicJob.store'
 import { useUIStore } from './stores/ui.store'
 import { useProjectStore } from './stores/project.store'
 import { TopBar } from './components/layout/TopBar'
@@ -159,7 +159,7 @@ export default function App(): React.ReactElement {
   // the sound pack (real instruments for MIDI tracks), if installed
   useEffect(() => { void import('./audio/soundbank').then((m) => m.loadSoundPack()) }, [])
   // MCP: tools of the backend (Claude, agents) work on the open project through this window
-  useEffect(() => { void import('./lib/appBridge').then((m) => m.startAppBridge()) }, [])
+  useEffect(() => { void import('./lib/appBridge').then((m) => m.startAppBridge()); watchExternalJobs() }, [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)

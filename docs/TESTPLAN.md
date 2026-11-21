@@ -569,6 +569,6 @@ Nach dem Update: Claude-Sitzung neu starten (oder `/mcp` → neu verbinden), dam
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 33.1 | Musik erstellen: in **Stil** klicken und tippen | Der Text erscheint | | | 0.93.2 |
+| 33.1 | Musik erstellen: in **Stil** klicken und tippen | Der Text erscheint | ✅ | | 0.93.2 |
 | 33.2 | Studio: ein VST-Plugin-Fenster öffnen, wieder schließen, dann Musik erstellen → Stil tippen | Der Text erscheint | | | 0.93.2 |
 | 33.3 | Datei → Öffnen bei ungespeicherten Änderungen (Rückfrage erscheint) → Abbrechen, dann in ein Textfeld tippen | Der Text erscheint | | | 0.93.2 |

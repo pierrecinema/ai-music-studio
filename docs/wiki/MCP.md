@@ -25,6 +25,7 @@ Tools: generate music, LoRAs, stems, Audio → MIDI, mastering, system info and 
 | Sends | `app_add_return`, `app_set_return`, `app_remove_return`, `app_set_send` |
 | Automation | `app_set_automation` (volume, pan, `send:<return>`, `effect:<effect>:<setting>`) |
 | Clips and notes | `app_add_notes`, `app_get_notes`, `app_set_notes`, `app_edit_notes` (transpose, quantize, velocity, length, delete), `app_edit_clip` (move, length, gain, fades), `app_split_clip`, `app_duplicate_clip`, `app_remove_clip` |
+| Audio → MIDI | `app_audio_to_midi` (a song into MIDI tracks, in the background), `app_audio_to_midi_status` |
 | Song | `app_generate_song` (song generator), `app_band_part` (drummer, bass player, guitarist), `app_add_marker`, `app_remove_marker`, `app_set_loop` |
 | Transport | `app_transport` (play, stop, pause, start, go to bar), `app_set_bpm` |
 

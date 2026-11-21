@@ -581,3 +581,18 @@ Claude-Sitzung nach dem Update neu starten.
 |---|---|---|---|---|---|
 | 34.1 | Funk.ams öffnen lassen, dann Claude: „Exportiere das Projekt als MP3 in meinen Musik-Ordner.“ | Claude sagt, der Export läuft, fragt nach und meldet dann die fertige Datei; Funk.mp3 liegt im Ordner | | | 0.93.3 |
 | 34.2 | KI-Chat der App: „Mach einen Schlagzeuger im Rock-Stil für 8 Takte.“ | Nach Sekunden neue Spur „Drummer (Rock)“ im Studio, keine KI-Aufnahme | | | 0.93.3 |
+
+## 35. Neu in 0.94.0: Audio → MIDI für ganze Songs
+
+Voraussetzung: Einstellungen → KI-Engines → „Audio → MIDI (basic-pitch)“ und „Demucs“ installiert.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 35.1 | Bibliothek: bei einem KI-Song **→ MIDI** | Seite „Audio → MIDI“ öffnet sich mit dem Song | | | 0.94.0 |
+| 35.2 | **In MIDI umwandeln** (Instrumente trennen an) | Fortschritt: Trennen, Tempo/Tonart, dann jedes Instrument; danach Tempo, Tonart, Akkorde und pro Instrument Noten, Sicherheit, Vorschau | | | 0.94.0 |
+| 35.3 | Bei einer Spur ▶ drücken | Der getrennte Stem spielt | | | 0.94.0 |
+| 35.4 | Instrumente wählen (z. B. Bass → Slap-Bass), **… Spuren ins Studio** | Im Studio: Original (stumm) + MIDI-Spuren, Tempo übernommen | | | 0.94.0 |
+| 35.5 | Studio: abspielen, Original kurz einschalten | MIDI-Spuren laufen im Takt mit dem Original; Schlagzeug, Bass und Melodie erkennbar | | | 0.94.0 |
+| 35.6 | Stem Splitter: Song trennen, **Alle Stems → MIDI** | Seite öffnet sich mit den Stems, Umwandeln geht ohne erneutes Trennen | | | 0.94.0 |
+| 35.7 | Claude: „Wandle den Song … in MIDI um.“ | Claude startet app_audio_to_midi, fragt nach, meldet Spuren, Tempo, Tonart | | | 0.94.0 |
+| 35.8 | Wie klingt das Ergebnis bei deinen eigenen KI-Songs? Was fehlt, was ist falsch? | (Rückmeldung für die nächste Verbesserung) | | | 0.94.0 |

@@ -33,7 +33,8 @@
     "instruments": "KI-Instrumente",
     "aiChat": "KI-Chat",
     "stemSplitter": "Stem-Trenner",
-    "videoComposer": "Video-Komponist"
+    "videoComposer": "Video-Komponist",
+    "audioToMidi": "Audio → MIDI"
   },
   "track": {
     "addVocal": "Vokal-Spur hinzufügen",

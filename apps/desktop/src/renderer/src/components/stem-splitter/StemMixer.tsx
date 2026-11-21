@@ -17,11 +17,12 @@ interface Props {
   colors: Record<string, string>
   labels: Record<string, string>        // stem name -> shown name
   title: string                         // song name, for file and track names
+  source?: string                       // the song the stems came from (Audio → MIDI finds tempo and chords in it)
 }
 
 interface Strip { volume: number; mute: boolean; solo: boolean }
 
-export function StemMixer({ stems, colors, labels, title }: Props): React.ReactElement {
+export function StemMixer({ stems, colors, labels, title, source }: Props): React.ReactElement {
   const names = Object.keys(stems).filter((n) => stems[n])
   const [strips, setStrips] = useState<Record<string, Strip>>(() =>
     Object.fromEntries(names.map((n) => [n, { volume: 1, mute: false, solo: false }])))
@@ -219,6 +220,11 @@ export function StemMixer({ stems, colors, labels, title }: Props): React.ReactE
             position={() => ({ time: pos, duration: length })}
             onSeek={(v) => { setPos(v); if (playing) void playFrom(v) }} />
         </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: 720 }}>
+        <button className="btn btn-ghost" title={tr('Turn all stems into MIDI tracks: Audio → MIDI page, with tempo, key and chords')}
+          onClick={() => void import('../../stores/stemHandoff').then((m) => m.sendToAudioToMidi(source ?? '', Object.fromEntries(names.map((n) => [n, stems[n]]))))}>🎼 {tr('All stems → MIDI')}</button>
       </div>
 
       {/* one strip per stem */}

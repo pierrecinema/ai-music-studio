@@ -23,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { view: 'instruments',    icon: '🎻', labelKey: 'sidebar.instruments',   fallback: 'AI Instruments' },
   { view: 'mixer',          icon: '🎚', labelKey: 'sidebar.mixer',         fallback: 'Mixer' },
   { view: 'stem-splitter',  icon: '✂',  labelKey: 'sidebar.stemSplitter',  fallback: 'Stem Splitter' },
+  { view: 'audio-to-midi',  icon: '🎼', labelKey: 'sidebar.audioToMidi',   fallback: 'Audio → MIDI' },
   { view: 'mastering',      icon: '◎',  labelKey: 'sidebar.mastering',     fallback: 'Mastering' },
   { view: 'karaoke',        icon: '🎙', labelKey: 'sidebar.karaoke',       fallback: 'Karaoke Export' },
   { view: 'video-composer', icon: '🎬', labelKey: 'sidebar.videoComposer', fallback: 'Video Composer' },

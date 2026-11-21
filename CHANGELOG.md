@@ -3,6 +3,19 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.94.0
+
+### New
+
+- **Audio → MIDI, a new page**: a whole song (for example one made by the music AI) becomes MIDI tracks you can edit and play with any instrument.
+  - The song is split into vocals, bass, drums, piano, guitar and the rest, and each part is turned into notes with the method that suits it: one-voice lines for vocals and bass (no doubled or overtone notes), chords for piano, guitar and keys, and **drums as kick, snare and hi-hat hits** (new: drums could not be converted before).
+  - **Tempo, the first bar, key and chords** are found in the song; the notes land on the bars and beats, with quantize and strength.
+  - Before anything changes you see the tempo, key, chords and, for every part, the notes, how sure the detection is, a preview and the stem to listen to; choose the parts and the instrument of each.
+  - Into the Studio with one click: the project tempo, the original song (muted, lined up to compare), a chord track and chord markers if you like.
+  - Open it from the sidebar, with **→ MIDI** in the Library and on Create music results, with **All stems → MIDI** in the Stem Splitter, or for a clip selected in the Studio.
+  - Measured: bass 0.66 → 0.77 (note F-measure), drums 0.69, tempo and first bar right in 6 of 6 test songs (details on the wiki page).
+- **MCP**: `app_audio_to_midi` and `app_audio_to_midi_status` let AI agents do the same.
+
 ## 0.93.3
 
 ### Fixed

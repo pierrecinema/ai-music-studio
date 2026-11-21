@@ -533,9 +533,9 @@ Nur in einer Claude-Sitzung **auf diesem PC** (Claude-Desktop-App → Code → O
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 30.1 | Einstellungen → Audio → Klang-Pakete | 4 Pakete mit Größe; GeneralUser ist schon installiert (grüner Punkt) | | | 0.92.0 |
-| 30.2 | **Salamander Grand Piano** installieren | Fortschritt, dann grüner Punkt | | | 0.92.0 |
-| 30.3 | **MuseScore General** und **VSCO-2 Orchestra** installieren (Orchester: ca. 330 MB, dauert etwas) | Beide grün | | | 0.92.0 |
-| 30.4 | Song-Generator: **Ballade** → Studio, abspielen | Flügel und Streicher klingen echt (Salamander, VSCO) | | | 0.92.0 |
-| 30.5 | Spur → KA → Instrument-Liste | Hinter den Instrumenten steht, welches Paket spielt (z. B. „Flügel · Salamander“, „Streicher · VSCO-2“) | | | 0.92.0 |
-| 30.6 | Ein Paket entfernen | Das nächste installierte Paket spielt dieses Instrument | | | 0.92.0 |
+| 30.1 | Einstellungen → Audio → Klang-Pakete | 4 Pakete mit Größe; GeneralUser ist schon installiert (grüner Punkt) | ✅ | | 0.92.0 |
+| 30.2 | **Salamander Grand Piano** installieren | Fortschritt, dann grüner Punkt | ✅ | | 0.92.0 |
+| 30.3 | **MuseScore General** und **VSCO-2 Orchestra** installieren (Orchester: ca. 330 MB, dauert etwas) | Beide grün | ✅ | | 0.92.0 |
+| 30.4 | Song-Generator: **Ballade** → Studio, abspielen | Flügel und Streicher klingen echt (Salamander, VSCO) | ✅ | | 0.92.0 |
+| 30.5 | Spur → KA → Instrument-Liste | Hinter den Instrumenten steht, welches Paket spielt (z. B. „Flügel · Salamander“, „Streicher · VSCO-2“) | ✅ | | 0.92.0 |
+| 30.6 | Ein Paket entfernen | Das nächste installierte Paket spielt dieses Instrument | ✅ | | 0.92.0 |

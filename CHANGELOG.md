@@ -3,6 +3,14 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.94.1
+
+### Fixed
+
+- **Audio → MIDI stayed at 60 %**: the page no longer stacks status requests while the AI backend is busy, says so when the backend was restarted or does not answer for a minute (instead of waiting forever), and shows the seconds so far. The result is always sent as valid data, and every step is written to the log with its time.
+- A conversion keeps running when you open another page, and the page follows it again when you come back.
+- **Icons**: the Piano Roll has a keyboard 🎹, Audio → MIDI the note ♪.
+
 ## 0.94.0
 
 ### New

@@ -588,11 +588,20 @@ Voraussetzung: Einstellungen → KI-Engines → „Audio → MIDI (basic-pitch)�
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 35.1 | Bibliothek: bei einem KI-Song **→ MIDI** | Seite „Audio → MIDI“ öffnet sich mit dem Song | | | 0.94.0 |
-| 35.2 | **In MIDI umwandeln** (Instrumente trennen an) | Fortschritt: Trennen, Tempo/Tonart, dann jedes Instrument; danach Tempo, Tonart, Akkorde und pro Instrument Noten, Sicherheit, Vorschau | | | 0.94.0 |
+| 35.1 | Bibliothek: bei einem KI-Song **→ MIDI** | Seite „Audio → MIDI“ öffnet sich mit dem Song | ✅ | | 0.94.0 |
+| 35.2 | **In MIDI umwandeln** (Instrumente trennen an) | Fortschritt: Trennen, Tempo/Tonart, dann jedes Instrument; danach Tempo, Tonart, Akkorde und pro Instrument Noten, Sicherheit, Vorschau | ❌ | hing bei 60 %; 0.94.1: Statusabfrage, Fehlermeldung, Log | 0.94.0 |
 | 35.3 | Bei einer Spur ▶ drücken | Der getrennte Stem spielt | | | 0.94.0 |
 | 35.4 | Instrumente wählen (z. B. Bass → Slap-Bass), **… Spuren ins Studio** | Im Studio: Original (stumm) + MIDI-Spuren, Tempo übernommen | | | 0.94.0 |
 | 35.5 | Studio: abspielen, Original kurz einschalten | MIDI-Spuren laufen im Takt mit dem Original; Schlagzeug, Bass und Melodie erkennbar | | | 0.94.0 |
 | 35.6 | Stem Splitter: Song trennen, **Alle Stems → MIDI** | Seite öffnet sich mit den Stems, Umwandeln geht ohne erneutes Trennen | | | 0.94.0 |
 | 35.7 | Claude: „Wandle den Song … in MIDI um.“ | Claude startet app_audio_to_midi, fragt nach, meldet Spuren, Tempo, Tonart | | | 0.94.0 |
 | 35.8 | Wie klingt das Ergebnis bei deinen eigenen KI-Songs? Was fehlt, was ist falsch? | (Rückmeldung für die nächste Verbesserung) | | | 0.94.0 |
+
+## 36. Neu in 0.94.1: Audio → MIDI bleibt nicht mehr hängen
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 36.1 | Links im Menü: Symbole ansehen | Piano Roll 🎹, Audio → MIDI ♪ | | | 0.94.1 |
+| 36.2 | Bibliothek → **→ MIDI** → **In MIDI umwandeln** | Text mit Sekunden zählt hoch, Prozent steigen bis zum Ergebnis (Trennen: einige Minuten) | | | 0.94.1 |
+| 36.3 | Während es läuft: auf Studio wechseln und zurück | Fortschritt läuft weiter, Ergebnis erscheint | | | 0.94.1 |
+| 36.4 | Falls es wieder stehen bleibt: Feedback → Log kopieren | Im Log stehen Zeilen „[audio-to-midi] …“ mit jedem Schritt: bitte schicken | | | 0.94.1 |

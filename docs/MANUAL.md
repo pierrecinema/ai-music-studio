@@ -406,7 +406,7 @@ Die Statusleiste unten zeigt GPU und Modus. Erkennung übersteuern (z. B. falsch
 
 ## 6. MCP (KI-Agenten steuern die App)
 
-Solange die App läuft **und das Backend eingerichtet ist** (Abschnitt 2), bietet sie einen MCP-Server per HTTP an: `http://127.0.0.1:38765/mcp`. Er nutzt das offizielle MCP-SDK (Streamable HTTP) und liefert 16 Werkzeuge: Musik generieren, LoRAs, Stems, Audio → MIDI, Mastering, Karaoke, Systeminfo u. a.
+Solange die App läuft **und das Backend eingerichtet ist** (Abschnitt 2), bietet sie einen MCP-Server per HTTP an: `http://127.0.0.1:38765/mcp`. Er nutzt das offizielle MCP-SDK (Streamable HTTP) und liefert Werkzeuge zum Erzeugen und Analysieren (Musik generieren, LoRAs, Stems, Audio → MIDI, Mastering, Karaoke, Systeminfo) und seit 0.93 rund 50 Werkzeuge für das offene Projekt: Spuren, Noten und Clips, Instrumente, MIDI-Effekte, Effekte und Plugin-Parameter, Sends, Automation, Marker, Loop, Song-Generator, Band, Transport, Öffnen, Speichern und Export. Die Liste steht im Wiki (Seite MCP). Der KI-Chat in der App nutzt dieselben Werkzeuge.
 
 **Port:** Standard ist 38765. Ist er belegt (z. B. durch einen Webserver), nimmt die App den nächsten freien Port. Die aktuelle Adresse steht in der Statusleiste unten rechts und in `%APPDATA%\desktop\server.json`.
 
@@ -445,6 +445,5 @@ Getestet ist die Verbindung mit dem offiziellen MCP-Python-Client (Verbindung, W
 - **Vocal Editor, AI Instruments, Karaoke Export und Video Composer** sind im Menü abgeblendet und zeigen „Coming soon“: Sie sind noch nicht fertig und kommen mit einem späteren Update.
 - Die Engines (ACE-Step, Matchering, Whisper, MuScriptor) sind eingebunden, aber noch nicht auf allen Hardware-Kombinationen erprobt.
 - Eine LoRA pro Durchgang.
-- MCP steuert nur Erzeugen und Analysieren, noch nicht das offene Projekt (Spuren, Noten, Transport).
 - Japanisch und Koreanisch: nur das Menü ist übersetzt, alles andere erscheint auf Englisch.
 - Der Installer ist nicht signiert (SmartScreen-Hinweis).

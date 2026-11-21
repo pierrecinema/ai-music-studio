@@ -29,22 +29,10 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.92: more sound packs (concert grand, orchestra, MuseScore General); 0.91: AI agents work on the open project (MCP); 0.90: MIDI effects
+### New in 0.93: AI agents work on everything in the Studio (MCP); 0.92: more sound packs
 
+- **MCP**: 50 tools for Claude and other AI agents (and the AI Chat): tracks, notes, instruments, effects, sends, automation, song generator, band, export.
 - **Sound packs** in Settings → Audio: Salamander concert grand, VSCO-2 orchestra (strings, brass), MuseScore General and GeneralUser GS; the best installed one plays each instrument.
-
-- **MCP tools for the open project:** Claude and other agents add MIDI tracks, choose instruments and MIDI effects, write notes, set the mix and tempo (wiki: MCP).
-
-- **MIDI effects** (arpeggiators, sequencers, chord generators) in front of a VST instrument: Channel → MIDI effects. Plugins now follow the song's tempo and position.
-
-- **Русский**: the whole app in Russian (Settings → General → Language).
-- Long track names are readable in the Studio; clips no longer show through the track header.
-
-- **Mixer** like a studio console: white-cap faders with a dB scale, orange LED meters, lit mute / solo keys, pan knobs (0.85.1: narrower strips, pan by dragging sideways).
-
-- **Sound pack** (one download, about 28 MB): recorded piano, guitars, basses, seven drum kits, strings, brass, saxophones and more play your MIDI tracks instead of the simple synthesizer. About 50 instruments to pick per track.
-- **The song generator picks a band per genre** (funk: clavinet, slap bass, brass; jazz: sax, upright bass, jazz kit; ballad: piano, strings, brushes …) and a first mix with levels and room reverb.
-- A new generated song starts at bar 1.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features

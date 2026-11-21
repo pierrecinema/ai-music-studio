@@ -64,6 +64,33 @@ async function writeTo(path: string): Promise<void> {
   void window.api.project.autosaveClear()
 }
 
+/** saves the project to this file without a dialog (MCP tools) */
+export const saveProjectTo = (path: string): Promise<void> => writeTo(path)
+
+/** opens a project file without asking (MCP tools: the caller decides about unsaved changes) */
+export async function openProjectFile(path: string): Promise<OpenResult> {
+  try {
+    const project = parseProject(await window.api.project.read(path))
+    stop()
+    useProjectStore.getState().loadProject(project, path)
+    useAudioStore.setState({ currentBeat: 0, bpm: project.bpm })
+    resetHistory()
+    remember(path)
+    return { ok: true, missing: await missingFiles(project) }
+  } catch (e) {
+    return { ok: false, message: (e as Error).message }
+  }
+}
+
+/** a new empty project without asking (MCP tools) */
+export function newProjectNow(name: string): void {
+  stop()
+  useProjectStore.getState().newProject()
+  useProjectStore.getState().updateProject({ name })
+  useAudioStore.setState({ currentBeat: 0, bpm: 120 })
+  resetHistory()
+}
+
 export async function saveProject(): Promise<boolean> {
   const { filePath, project } = useProjectStore.getState()
   if (filePath) {

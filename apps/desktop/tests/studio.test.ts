@@ -21,7 +21,7 @@ import { parseMidi, writeMidi } from '../src/renderer/src/lib/midiFile'
 import { keyOf, profileFor } from '../src/renderer/src/midi/devices'
 import { isInstrumentLike } from '../src/renderer/src/audio/vst/host'
 import { parseProject } from '../src/renderer/src/project/format'
-import { GENRES, generateSong, romanChord } from '../src/renderer/src/lib/songgen'
+import { GENRES, generateSong, romanChord, toMode } from '../src/renderer/src/lib/songgen'
 import { buildMultiBank, noteNumber } from '../src/renderer/src/audio/soundbank'
 import { bassist, bassRoot, chordName, detectChords, drummer, DRUM, DRUM_STYLES, fillChords, guitarist, guitarVoicing, parseChord, parseProgression, BASS_STYLES, GUITAR_STYLES } from '../src/renderer/src/lib/band'
 import { analyze, BiquadBank, CompressorCore, crossover, LimiterCore, MultibandCore, truePeakTaps } from '../src/renderer/src/audio/master/dsp'
@@ -503,6 +503,9 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
     && (p.program === undefined ? p.sound === '808' : p.program >= 0 && p.program < 256 && (p.id === 'drums') === (p.program >= 128)))))
   check('no parts at all is allowed (the page must not crash)', generateSong({ genre: 'pop', key: 0, parts: { melody: false, chords: false, bass: false, drums: false, guitar: false } }).parts.length === 0)
   check('another take is different', JSON.stringify(generateSong({ genre: 'pop', key: 0, seed: 1 }).parts[0].notes) !== JSON.stringify(generateSong({ genre: 'pop', key: 0, seed: 2 }).parts[0].notes))
+  check('a major-key genre in minor keeps to the minor key', toMode('I', 'minor') === 'i' && toMode('iii', 'minor') === 'III' && toMode('V7', 'minor') === 'V7' && toMode('Imaj7', 'minor') === 'i7' && toMode('bVII', 'minor') === 'bVII' && toMode('i', 'major') === 'I')
+  const am = generateSong({ genre: 'ballad', key: 9, mode: 'minor', seed: 2 }).chords.map(chordName)
+  check('ballad in A minor: Am, C, Dm, E … (no A major, no C minor)', !am.includes('A') && !am.includes('Cm') && am.includes('Am'), am.join(' '))
 }
 
 // ── sound packs: note names and multisample instruments ──

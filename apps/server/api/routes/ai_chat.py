@@ -18,8 +18,11 @@ Keep answers concise and practical. When generating musical content, use standar
 You can use the app's tools. When the user asks you to make a song, a track, a beat or a loop, call generate_music
 (write a style description and, unless it is instrumental, lyrics with [Verse] / [Chorus] sections). It runs in the
 background and takes minutes on a normal PC: tell the user it has started, that the progress shows in the app and that
-the finished song appears in the Library. Use get_music_job when the user asks how far it is. Answer in the user's
-language.
+the finished song appears in the Library. Use get_music_job when the user asks how far it is.
+The app_* tools work on the project open in the Studio, like the user would: tracks, instruments (VST and sound pack),
+MIDI effects, notes and clips, effects, sends, automation, markers, the song generator (app_generate_song) and the band
+(app_band_part), export. Look at the project first (app_get_project), then change it step by step and say what you did.
+Answer in the user's language.
 """
 
 
@@ -128,7 +131,9 @@ GENERATE_TOOL = {
 
 def _tool_list() -> list[dict]:
     from api.routes.mcp_server import MCP_TOOLS
-    return [GENERATE_TOOL] + [t for t in MCP_TOOLS if t["name"] in CHAT_TOOL_NAMES]
+    from api.routes.mcp_server import APP_TOOLS
+    from services import app_bridge
+    return [GENERATE_TOOL] + [t for t in MCP_TOOLS if t["name"] in CHAT_TOOL_NAMES] + (APP_TOOLS if app_bridge.connected() else [])
 
 
 async def _run_tool(name: str, args: dict, ctx: dict) -> str:
@@ -161,7 +166,7 @@ async def _claude_chat(api_key: str, model: str, messages: list[Message], system
     client = anthropic.AsyncAnthropic(api_key=api_key)
     msgs: list[dict] = [{"role": m.role, "content": m.content} for m in messages]
     tools = [{"name": t["name"], "description": t["description"], "input_schema": t["inputSchema"]} for t in _tool_list()] if ctx is not None else None
-    for _ in range(6):
+    for _ in range(16):
         kw = {"model": model, "max_tokens": 1500, "system": system, "messages": msgs}
         if tools:
             kw["tools"] = tools
@@ -186,7 +191,7 @@ async def _openai_chat(api_key: str, model: str, messages: list[Message], system
     msgs.extend({"role": m.role, "content": m.content} for m in messages)
     tools = [{"type": "function", "function": {"name": t["name"], "description": t["description"], "parameters": t["inputSchema"]}}
              for t in _tool_list()] if ctx is not None else None
-    for _ in range(6):
+    for _ in range(16):
         kw = {"model": model, "max_tokens": 1500, "messages": msgs}
         if tools:
             kw["tools"] = tools

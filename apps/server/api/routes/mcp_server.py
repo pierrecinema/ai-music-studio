@@ -199,30 +199,115 @@ MCP_TOOLS = [
 ]
 
 
-# Tools that work on the project open in the app window (through services/app_bridge.py)
-_TRACK = {"type": "string", "description": "Track id or name (see app_get_project)"}
+# Tools that work on the project open in the app window (through services/app_bridge.py): everything the user can do
+# in the Studio. Bars count from 1, beats are quarter notes; a track is its name, id or number (see app_get_project).
+_TRACK = {"type": "string", "description": "Track name, id or number (see app_get_project)"}
+_CLIP = {"type": "string", "description": "Clip number (1 = first in time), id, name, 'last' (default) or 'bar:N' (the clip at bar N)"}
+_S = {"type": "string"}
+_N = {"type": "number"}
+_I = {"type": "integer"}
+_B = {"type": "boolean"}
+_NOTES = {"type": "array", "items": {"type": "object", "properties": {"pitch": {"type": "integer", "description": "MIDI 0-127, 60 = middle C"}, "start": {"type": "number", "description": "beats from the clip start"}, "length": {"type": "number", "description": "beats"}, "velocity": {"type": "integer"}, "lyric": _S}, "required": ["pitch", "start", "length"]}}
+_CHAIN = {"type": "string", "enum": ["insert", "midi"], "description": "insert effects (default) or the MIDI effects before the VST instrument"}
+_TRACK_OR_MASTER = {"type": "string", "description": "Track name, id or number, or 'master'"}
+_EFFECT = {"type": "string", "description": "Effect number in the chain (1 = first), id, type or plugin name"}
+
+
+def _tool(name: str, description: str, props: dict | None = None, required: list | None = None) -> dict:
+    schema: dict = {"type": "object", "properties": props or {}}
+    if required:
+        schema["required"] = required
+    return {"name": name, "description": description, "inputSchema": schema}
+
+
 APP_TOOLS = [
-    {"name": "app_get_project", "description": "The project open in the app: tempo, tracks (id, name, type, instrument, MIDI effects, sound, volume, pan, mute), clips and their notes count",
-     "inputSchema": {"type": "object", "properties": {}}},
-    {"name": "app_list_plugins", "description": "Plugins found on this PC (Settings -> Plugins) and the built-in / sound-pack instruments. kind: instrument, midi, effect or all",
-     "inputSchema": {"type": "object", "properties": {"kind": {"type": "string", "enum": ["instrument", "midi", "effect", "all"]}}}},
-    {"name": "app_add_midi_track", "description": "Add a MIDI track. Optional: name, program (General MIDI 0-127 of the sound pack, 128+ drum kits) or sound (soft, bass, lead, drums, guitar, eguitar, keys, 808)",
-     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "program": {"type": "integer"}, "sound": {"type": "string"}}}},
-    {"name": "app_set_instrument", "description": "What plays a MIDI track: a VST instrument by (part of) its name, e.g. 'Dexed' or 'Surge XT', or a sound-pack program / built-in sound",
-     "inputSchema": {"type": "object", "properties": {"track": _TRACK, "plugin": {"type": "string"}, "program": {"type": "integer"}, "sound": {"type": "string"}}, "required": ["track"]}},
-    {"name": "app_add_midi_effect", "description": "Put a MIDI effect (arpeggiator, sequencer, e.g. 'BlueArp', 'Stochas') in front of the VST instrument of a MIDI track",
-     "inputSchema": {"type": "object", "properties": {"track": _TRACK, "plugin": {"type": "string"}}, "required": ["track", "plugin"]}},
-    {"name": "app_add_notes", "description": "Write notes into a MIDI track as a new clip from bar startBar (1 = first bar). Each note: pitch (MIDI 0-127), start and length in beats (quarter notes, from the clip start), velocity 1-127",
-     "inputSchema": {"type": "object", "properties": {"track": _TRACK, "startBar": {"type": "number"}, "name": {"type": "string"},
-                     "notes": {"type": "array", "items": {"type": "object", "properties": {"pitch": {"type": "integer"}, "start": {"type": "number"}, "length": {"type": "number"}, "velocity": {"type": "integer"}}, "required": ["pitch", "start", "length"]}}},
-                     "required": ["track", "notes"]}},
-    {"name": "app_set_track", "description": "Change a track: name, volume (0-1), pan (-1 left .. 1 right), muted, soloed",
-     "inputSchema": {"type": "object", "properties": {"track": _TRACK, "name": {"type": "string"}, "volume": {"type": "number"}, "pan": {"type": "number"}, "muted": {"type": "boolean"}, "soloed": {"type": "boolean"}}, "required": ["track"]}},
-    {"name": "app_set_bpm", "description": "Set the tempo of the project open in the app",
-     "inputSchema": {"type": "object", "properties": {"bpm": {"type": "number", "minimum": 20, "maximum": 300}}, "required": ["bpm"]}},
-    {"name": "app_transport", "description": "Play, stop or go back to the start in the app",
-     "inputSchema": {"type": "object", "properties": {"action": {"type": "string", "enum": ["play", "stop", "start"]}}, "required": ["action"]}},
+    # project and files
+    _tool("app_get_project", "The project open in the app: name, file, tempo, time signature, length, play position, loop, markers, return tracks, master effects, and every track (number, name, type, instrument, MIDI effects, effects, sends, automation, volume, pan, mute, solo, clips with start bar, length and note count)"),
+    _tool("app_set_project", "Change the project: name, bpm, timeSignature [beats, note value], countInBars (recording), masterVolume (0-1)",
+          {"name": _S, "bpm": _N, "timeSignature": {"type": "array", "items": _I}, "countInBars": _I, "masterVolume": _N}),
+    _tool("app_new_project", "Start a new empty project. Refuses when there are unsaved changes unless discardChanges is true", {"name": _S, "discardChanges": _B}),
+    _tool("app_open_project", "Open an .ams project file. Refuses when there are unsaved changes unless discardChanges is true", {"path": _S, "discardChanges": _B}, ["path"]),
+    _tool("app_save_project", "Save the project (to its file, or to path: an .ams file)", {"path": _S}),
+    _tool("app_undo", "Undo (or with redo: true, redo) the last changes", {"steps": _I, "redo": _B}),
+    _tool("app_export_audio", "Mix the whole project into a .wav or .mp3 file (as it sounds: mute, solo, effects, automation, plugins). bits 16/24, normalize to -1 dBFS, kbps for MP3",
+          {"path": _S, "bits": _I, "normalize": _B, "kbps": _I}, ["path"]),
+    _tool("app_export_midi", "Write the MIDI tracks (or one track) into a .mid file", {"path": _S, "track": _TRACK}, ["path"]),
+    _tool("app_import_file", "Put audio files (wav, mp3, flac, ogg …) or a .mid file into the project at startBar: a new track, or onto an audio track. loopBpm: the file is a loop at this tempo and follows the project tempo",
+          {"path": _S, "paths": {"type": "array", "items": _S}, "track": _TRACK, "startBar": _N, "loopBpm": _N}),
+    _tool("app_show", "Show a page of the app (studio, piano-roll, mixer, mastering, instruments, create, library, vocal-editor, stem-splitter, karaoke, video-composer, ai-chat, settings) and/or select a track and clip",
+          {"page": _S, "track": _TRACK, "clip": _CLIP}),
+    # plugins, instruments, styles
+    _tool("app_list_plugins", "Plugins found on this PC (Settings -> Plugins), built-in sounds, sound-pack instruments (General MIDI programs) and built-in effects. kind: instrument, midi, effect or all",
+          {"kind": {"type": "string", "enum": ["instrument", "midi", "effect", "all"]}}),
+    _tool("app_list_effect_types", "The built-in effects (eq, compressor, delay, reverb, filter, limiter, saturation, stereo, dyneq) and their settings with ranges"),
+    _tool("app_list_styles", "Genres of the song generator, drum / bass / guitar styles of the band, key names"),
+    _tool("app_sound_packs", "The sound packs (recorded instruments) and whether they are installed; install: a pack id to download it (salamander, vsco, musescore, generaluser)", {"install": _S}),
+    # tracks
+    _tool("app_add_track", "Add a track. type: midi (default), audio, vocal, instrument or group. Optional: name, color (#hex), program (sound-pack General MIDI 0-127, 128+ drum kits), sound (soft, bass, lead, drums, guitar, eguitar, keys, 808), volume, position (1 = top)",
+          {"type": _S, "name": _S, "color": _S, "program": _I, "sound": _S, "volume": _N, "position": _I}),
+    _tool("app_add_midi_track", "Add a MIDI track. Optional: name, program (General MIDI 0-127 of the sound pack, 128+ drum kits) or sound (soft, bass, lead, drums, guitar, eguitar, keys, 808)",
+          {"name": _S, "program": _I, "sound": _S}),
+    _tool("app_remove_track", "Delete a track", {"track": _TRACK}, ["track"]),
+    _tool("app_duplicate_track", "Copy a track with its clips, instrument and effects (placed below it)", {"track": _TRACK, "name": _S}, ["track"]),
+    _tool("app_move_track", "Move a track to position (1 = top)", {"track": _TRACK, "position": _I}, ["track", "position"]),
+    _tool("app_set_track", "Change a track: name, volume (0-1), pan (-1 left .. 1 right), muted, soloed, color (#hex), reverb (sound-pack room 0-1), collapsed (group)",
+          {"track": _TRACK, "name": _S, "volume": _N, "pan": _N, "muted": _B, "soloed": _B, "color": _S, "reverb": _N, "collapsed": _B}, ["track"]),
+    _tool("app_group_tracks", "Put tracks into a new group track (their sound goes through the group)", {"tracks": {"type": "array", "items": _S}, "name": _S}, ["tracks"]),
+    _tool("app_ungroup", "Dissolve a group track (its tracks stay)", {"track": _TRACK}, ["track"]),
+    _tool("app_set_instrument", "What plays a MIDI track: a VST instrument by (part of) its name, e.g. 'Dexed' or 'Surge XT', or a sound-pack program / built-in sound",
+          {"track": _TRACK, "plugin": _S, "program": _I, "sound": _S}, ["track"]),
+    _tool("app_add_midi_effect", "Put a MIDI effect (arpeggiator, sequencer, e.g. 'BlueArp', 'Stochas') in front of the VST instrument of a MIDI track",
+          {"track": _TRACK, "plugin": _S}, ["track", "plugin"]),
+    # effects
+    _tool("app_add_effect", "Add an effect to a track or the master: a built-in type (see app_list_effect_types) with settings {key: value}, or a VST effect by plugin name. position: 1 = first",
+          {"track": _TRACK_OR_MASTER, "type": _S, "plugin": _S, "settings": {"type": "object"}, "position": _I, "chain": _CHAIN}, ["track"]),
+    _tool("app_set_effect", "Change an effect: on (true/false), settings {key: value} (built-in: see app_list_effect_types; VST: parameter name or index -> 0..1)",
+          {"track": _TRACK_OR_MASTER, "effect": _EFFECT, "on": _B, "settings": {"type": "object"}, "chain": _CHAIN}, ["track", "effect"]),
+    _tool("app_remove_effect", "Remove an effect from a track or the master", {"track": _TRACK_OR_MASTER, "effect": _EFFECT, "chain": _CHAIN}, ["track", "effect"]),
+    _tool("app_plugin_params", "The parameters of a VST plugin (the track's instrument, or an effect): index, name, value 0..1, shown text. search filters by name",
+          {"track": _TRACK, "effect": {"type": "string", "description": "'instrument' (default) or the effect number / name"}, "search": _S, "chain": _CHAIN}, ["track"]),
+    _tool("app_set_plugin_param", "Set parameters of a VST plugin: params {name or index: value 0..1}",
+          {"track": _TRACK, "effect": {"type": "string", "description": "'instrument' (default) or the effect number / name"}, "params": {"type": "object"}, "chain": _CHAIN}, ["track", "params"]),
+    _tool("app_open_plugin", "Open the window of a VST plugin on the user's screen", {"track": _TRACK, "effect": _S, "chain": _CHAIN}, ["track"]),
+    # sends and returns
+    _tool("app_add_return", "Add a return track (shared reverb or delay). Optional: name, volume, pan, decay (reverb s), delayBeats, feedback",
+          {"effect": {"type": "string", "enum": ["reverb", "delay"]}, "name": _S, "volume": _N, "pan": _N, "decay": _N, "delayBeats": _N, "feedback": _N}),
+    _tool("app_set_return", "Change a return track: name, volume, pan, muted, decay, delayBeats, feedback",
+          {"return": _S, "name": _S, "volume": _N, "pan": _N, "muted": _B, "decay": _N, "delayBeats": _N, "feedback": _N}, ["return"]),
+    _tool("app_remove_return", "Delete a return track", {"return": _S}, ["return"]),
+    _tool("app_set_send", "How much of a track goes to a return track (level 0-1)", {"track": _TRACK, "return": _S, "level": _N}, ["track", "return", "level"]),
+    # automation
+    _tool("app_set_automation", "Draw an automation lane (replaces it; empty points clear it). param: volume (0-1), pan (-1..1), send:<return name> (0-1), effect:<effect number or name>:<setting key or VST parameter index> (0-1). points: [{bar or beat, value}], the value moves in a line between points",
+          {"track": _TRACK, "param": _S, "points": {"type": "array", "items": {"type": "object", "properties": {"bar": _N, "beat": _N, "value": _N}, "required": ["value"]}}}, ["track", "param", "points"]),
+    # clips and notes
+    _tool("app_add_notes", "Write notes into a MIDI track as a new clip from bar startBar (1 = first bar). Each note: pitch (MIDI 0-127), start and length in beats (quarter notes, from the clip start), velocity 1-127, lyric (vocal tracks). bars: clip length",
+          {"track": _TRACK, "startBar": _N, "bars": _N, "name": _S, "notes": _NOTES}, ["track", "notes"]),
+    _tool("app_get_notes", "The notes of a MIDI clip (pitch, start and length in beats from the clip start, velocity)", {"track": _TRACK, "clip": _CLIP}, ["track"]),
+    _tool("app_set_notes", "Replace all notes of a MIDI clip", {"track": _TRACK, "clip": _CLIP, "notes": _NOTES}, ["track", "notes"]),
+    _tool("app_edit_notes", "Change notes of a MIDI clip (all, or those within fromBeat..toBeat and lowestPitch..highestPitch): transpose (semitones), quantize (grid in beats, e.g. 0.25 = 16ths; strength 0-1; quantizeLength), velocity (set) or velocityScale, length or lengthScale, shift (beats), delete: true",
+          {"track": _TRACK, "clip": _CLIP, "fromBeat": _N, "toBeat": _N, "lowestPitch": _I, "highestPitch": _I, "transpose": _I, "quantize": _N, "strength": _N, "quantizeLength": _B,
+           "velocity": _I, "velocityScale": _N, "length": _N, "lengthScale": _N, "shift": _N, "delete": _B}, ["track"]),
+    _tool("app_edit_clip", "Change a clip: name, color, bars or lengthBeats (length), startBar (move), toTrack (move to another track), audio clips: gain (0-2), fadeIn / fadeOut (beats)",
+          {"track": _TRACK, "clip": _CLIP, "name": _S, "color": _S, "bars": _N, "lengthBeats": _N, "startBar": _N, "toTrack": _S, "gain": _N, "fadeIn": _N, "fadeOut": _N}, ["track"]),
+    _tool("app_remove_clip", "Delete a clip", {"track": _TRACK, "clip": _CLIP}, ["track"]),
+    _tool("app_split_clip", "Cut a clip in two at bar atBar", {"track": _TRACK, "clip": _CLIP, "atBar": _N}, ["track", "atBar"]),
+    _tool("app_duplicate_clip", "Repeat a clip right after itself (times: how often)", {"track": _TRACK, "clip": _CLIP, "times": _I}, ["track"]),
+    # markers and loop
+    _tool("app_add_marker", "Add a marker at bar (name; endBar makes it a cycle marker)", {"bar": _N, "name": _S, "endBar": _N}, ["bar"]),
+    _tool("app_remove_marker", "Delete a marker (by name or bar)", {"marker": _S}, ["marker"]),
+    _tool("app_set_loop", "Set the loop range (startBar, endBar) and switch it on or off (enabled)", {"startBar": _N, "endBar": _N, "enabled": _B}),
+    # song generator and band
+    _tool("app_generate_song", "Write a whole song as MIDI tracks (melody, chords, bass, drums, guitar; intro, verse, chorus, bridge …) with the song generator. genre (see app_list_styles), key (e.g. 'Am', 'F#', 'Bb major'), mode, bpm, seed (another take), parts {melody, chords, bass, drums, guitar: true/false}, startBar, setTempo, markers",
+          {"genre": _S, "key": _S, "mode": {"type": "string", "enum": ["major", "minor"]}, "bpm": _N, "seed": _I, "parts": {"type": "object"}, "startBar": _N, "setTempo": _B, "markers": _B}),
+    _tool("app_band_part", "A band member plays a new MIDI track: part drums, bass or guitar; style (see app_list_styles); chords as text ('Am F C G', beatsPerChord) or, without chords, the chords found in the song at these bars; bars, startBar, intensity, humanize, swing (0-1), fills (0/4/8), seed, program, distorted",
+          {"part": {"type": "string", "enum": ["drums", "bass", "guitar"]}, "style": _S, "chords": _S, "beatsPerChord": _N, "bars": _I, "startBar": _N, "intensity": _N, "humanize": _N, "swing": _N, "fills": _I, "seed": _I, "program": _I, "distorted": _B, "name": _S}, ["part"]),
+    # transport
+    _tool("app_set_bpm", "Set the tempo of the project open in the app", {"bpm": {"type": "number", "minimum": 20, "maximum": 300}}, ["bpm"]),
+    _tool("app_transport", "Play, stop, pause, go to the start, or go to bar (seek)", {"action": {"type": "string", "enum": ["play", "stop", "pause", "start", "seek"]}, "bar": _N}, ["action"]),
 ]
+# commands that take longer than the default 30 s
+APP_TIMEOUTS = {"app_export_audio": 900.0, "app_sound_packs": 1800.0, "app_open_project": 120.0, "app_save_project": 120.0, "app_import_file": 300.0,
+                "app_plugin_params": 60.0, "app_set_plugin_param": 60.0, "app_set_effect": 60.0, "app_open_plugin": 60.0}
 MCP_TOOLS += APP_TOOLS
 
 # Simple in-memory project state for MCP
@@ -249,7 +334,7 @@ async def call_tool(body: dict):
     if tool_name.startswith("app_") or (tool_name in ("get_project_info", "set_bpm") and app_bridge.connected()):
         name = {"get_project_info": "app_get_project", "set_bpm": "app_set_bpm"}.get(tool_name, tool_name)
         try:
-            result = await app_bridge.request(name[4:], args)
+            result = await app_bridge.request(name[4:], args, APP_TIMEOUTS.get(name, 30.0))
         except RuntimeError as e:
             return {"content": [{"type": "text", "text": f"Error: {e}"}], "isError": True}
         return {"content": [{"type": "text", "text": json.dumps(result, default=str)}]}

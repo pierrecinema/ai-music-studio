@@ -74,6 +74,20 @@ export function romanChord(rn: string, key: number, mode: Mode): Pick<Chord, 'ro
   return { root, quality }
 }
 
+// the chord on each degree of the other mode (minor: i ii° III iv V VI VII, with the major V of harmonic minor)
+const DIATONIC: Record<Mode, string[]> = { major: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'], minor: ['i', 'ii°', 'III', 'iv', 'V', 'VI', 'VII'] }
+/** a roman numeral written for one mode, moved to the other mode: the same degree, the chord of that degree there
+ *  (a major-key ballad in A minor plays Am – C – Dm – E instead of A – C#m – D – E). bVII and the like stay. */
+export function toMode(rn: string, mode: Mode): string {
+  const m = /^(i{1,3}|iv|v|vi{0,2}|I{1,3}|IV|V|VI{0,2})(°|dim)?(maj7|7)?$/.exec(rn.trim())
+  if (!m) return rn
+  const deg = ROMAN.indexOf(m[1].toUpperCase())
+  const base = DIATONIC[mode][deg]
+  if (!m[3]) return base
+  const lower = base === base.toLowerCase()
+  return base.replace('°', '') + (m[3] === 'maj7' && !lower ? 'maj7' : '7')
+}
+
 export interface SongOptions {
   genre: string
   key: number               // 0 = C … 11 = B
@@ -214,7 +228,7 @@ export function generateSong(o: SongOptions): Song {
       picked.set(s.kind, prog)
     }
     for (let b = 0; b < s.bars; b++) {
-      const rn = prog[b % prog.length]
+      const rn = mode === g.mode ? prog[b % prog.length] : toMode(prog[b % prog.length], mode)
       const c = romanChord(rn, o.key, mode)
       const beat = (s.bar + b) * 4
       const prev = chords[chords.length - 1]

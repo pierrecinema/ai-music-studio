@@ -3,6 +3,22 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.93.0
+
+### New
+
+- **AI agents can now do everything in the Studio over MCP**: 50 tools work on the project open in the app (Claude and other MCP clients, and the AI Chat in the app):
+  - **Files**: new project, open, save, undo / redo, import audio or MIDI files, export the mix (WAV / MP3) and MIDI.
+  - **Tracks**: add (MIDI, audio, vocal, group), copy, move, delete, group; name, color, volume, pan, mute, solo.
+  - **Clips and notes**: read, write and replace notes; transpose, quantize, velocity, length; move, cut, repeat and delete clips; clip gain and fades.
+  - **Sound**: instrument (VST or sound pack), MIDI effects, built-in effects and VST effects on tracks and the master with their settings, VST plugin parameters, open plugin windows, return tracks and sends, automation lanes (volume, pan, sends, effect settings).
+  - **Song**: the song generator (genre, key, tempo, parts) and the band (drummer, bass player, guitarist) from the AI Instruments page, markers, loop, transport, tempo and time signature, pages of the app.
+- **The AI Chat in the app uses the same tools**: ask it to build or change the song in the Studio.
+
+### Fixed
+
+- **Song generator**: a genre in its other key (for example a ballad in A minor) now plays the chords of that key (Am, C, Dm, E) instead of a mix of major and minor chords.
+
 ## 0.92.0
 
 ### New

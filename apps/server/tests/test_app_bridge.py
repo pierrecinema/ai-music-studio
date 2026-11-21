@@ -49,3 +49,16 @@ def test_tools_listed():
     from api.routes.mcp_server import MCP_TOOLS
     names = {t["name"] for t in MCP_TOOLS}
     assert {"app_get_project", "app_add_midi_track", "app_set_instrument", "app_add_midi_effect", "app_add_notes", "app_set_track", "app_list_plugins", "app_set_bpm", "app_transport"} <= names
+
+
+def test_every_app_tool_has_a_handler_in_the_window():
+    """Each app_* tool must be handled by apps/desktop/src/renderer/src/lib/appBridge.ts (HANDLERS)."""
+    import re
+    from api.routes.mcp_server import APP_TOOLS
+    ts = open(os.path.join(os.path.dirname(__file__), "..", "..", "desktop", "src", "renderer", "src", "lib", "appBridge.ts"), encoding="utf-8").read()
+    body = ts[ts.index("const HANDLERS"):ts.index("let running")]
+    handlers = set(re.findall(r"^  ([a-z_]+): ", body, re.M))
+    tools = {t["name"][4:] for t in APP_TOOLS}
+    assert tools - handlers == set(), f"no handler for {tools - handlers}"
+    assert handlers - tools == set(), f"no tool for {handlers - tools}"
+    assert len(tools) >= 50

@@ -547,12 +547,12 @@ In einer Claude-Sitzung mit MCP-Verbindung zur App (oder im KI-Chat der App) ein
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
 | 31.1 | „Leg ein neues Projekt an und schreib einen Funk-Song in E-Moll mit 104 BPM.“ | Neues Projekt, 5 MIDI-Spuren mit Markern (Intro, Verse …), Tempo 104 | ✅ | wie 32.1 | 0.93.0 |
-| 31.2 | „Setz einen Kompressor auf den Bass und einen Hall-Return, schick die Melodie mit 30 % hin.“ | Bass: Kompressor im FX-Bereich; Return „Hall“; Send der Melodie 0.3 | | | 0.93.0 |
-| 31.3 | „Lass die Melodie von Takt 1 bis 9 lauter werden.“ | Volume-Automation auf der Melodie-Spur, Linie steigt | | | 0.93.0 |
-| 31.4 | „Transponiere die Melodie eine Oktave runter und quantisiere sie auf Achtel.“ | Noten im Piano Roll eine Oktave tiefer, auf dem Raster | | | 0.93.0 |
-| 31.5 | „Spiel die Bass-Spur mit Dexed und öffne sein Fenster.“ | Dexed als Instrument, Plugin-Fenster geht auf | | | 0.93.0 |
-| 31.6 | „Speichere das Projekt als Funk.ams in Musik und exportiere es als MP3 daneben.“ | Beide Dateien liegen im Ordner, MP3 klingt wie das Projekt | | | 0.93.0 |
-| 31.7 | KI-Chat der App: „Mach einen Schlagzeuger im Rock-Stil für 8 Takte.“ | Neue Spur „Drummer (Rock)“ im Studio | | | 0.93.0 |
+| 31.2 | „Setz einen Kompressor auf den Bass und einen Hall-Return, schick die Melodie mit 30 % hin.“ | Bass: Kompressor im FX-Bereich; Return „Hall“; Send der Melodie 0.3 | ✅ |  | 0.93.0 |
+| 31.3 | „Lass die Melodie von Takt 1 bis 9 lauter werden.“ | Volume-Automation auf der Melodie-Spur, Linie steigt | ⏸ | Claude Code hat den Aufruf blockiert (Berechtigung), nicht die App; in 0.93.3 Berechtigungsregel im Wiki | 0.93.0 |
+| 31.4 | „Transponiere die Melodie eine Oktave runter und quantisiere sie auf Achtel.“ | Noten im Piano Roll eine Oktave tiefer, auf dem Raster | ✅ |  | 0.93.0 |
+| 31.5 | „Spiel die Bass-Spur mit Dexed und öffne sein Fenster.“ | Dexed als Instrument, Plugin-Fenster geht auf | ✅ |  | 0.93.0 |
+| 31.6 | „Speichere das Projekt als Funk.ams in Musik und exportiere es als MP3 daneben.“ | Beide Dateien liegen im Ordner, MP3 klingt wie das Projekt | ❌ | Export lief ins Zeitlimit; behoben in 0.93.3 (Test 34.1) | 0.93.0 |
+| 31.7 | KI-Chat der App: „Mach einen Schlagzeuger im Rock-Stil für 8 Takte.“ | Neue Spur „Drummer (Rock)“ im Studio | ❌ | KI-Chat startete die KI-Aufnahme; behoben in 0.93.3 (Test 34.2) | 0.93.0 |
 | 31.8 | Song-Generator: Ballade, Tonart A-Moll | Akkorde klingen nach Moll (Am, C, Dm, E), nicht nach A-Dur | | | 0.93.0 |
 
 ## 32. Neu in 0.93.1: Fortschritt und richtige Werkzeugwahl

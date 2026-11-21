@@ -4,9 +4,9 @@ Musicians for your song (menu **🎻 AI Instruments**, new in 0.80). Since 0.83 
 turn a **knob** by dragging it up or down (Shift: finer, mouse wheel, arrow keys; double-click: back to its default),
 step through an **LCD** with ◀ ▶ or click it for the list. With the AI assistant closed the page uses the whole width.
 
-## Sound pack: real instruments (every PC)
+## Sound packs: real instruments (every PC)
 
-The song generator, the band and every MIDI track sound much better with the **sound pack**: recorded instruments instead of the simple synthesizer. Install it once with **Install (28 MB)** at the top of this page or in [[Settings]] → *Audio* (GeneralUser GS by S. Christian Collins, free for use in software). The song generator then picks a band for each genre (for example funk: clavinet, slap bass, brass section; jazz: alto sax, upright bass, piano, jazz kit; ballad: piano, strings, brushes) and sets a first mix: levels per part and a little room reverb. Any track can switch to another instrument in the Studio: *Channel → Instrument*.
+The song generator, the band and every MIDI track sound much better with the **sound packs**: recorded instruments instead of the simple synthesizer. Install them once in [[Settings]] → *Audio* → *Sound packs* (or with **Install** at the top of this page while none is installed): **Salamander Grand Piano** (concert grand, 22 MB), **VSCO-2 Orchestra** (strings and brass, about 330 MB), **MuseScore General** (48 MB) and **GeneralUser GS** (28 MB). The best installed pack plays each instrument; the instrument list in the Studio shows which one. The song generator then picks a band for each genre (for example funk: clavinet, slap bass, brass section; jazz: alto sax, upright bass, piano, jazz kit; ballad: piano, strings, brushes) and sets a first mix: levels per part and a little room reverb. Any track can switch to another instrument in the Studio: *Channel → Instrument*.
 
 ## Song generator (0.81, every PC)
 

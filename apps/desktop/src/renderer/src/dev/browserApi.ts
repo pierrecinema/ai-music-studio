@@ -8,15 +8,22 @@ let n = 0
 async function readFile(path: string): Promise<Uint8Array> {
   const have = mem.get(path)
   if (have) return have
-  const r = await fetch(path)
+  const r = await fetch(path.replace(/#/g, '%23'))
   if (!r.ok) throw new Error(`cannot read ${path}`)
   return new Uint8Array(await r.arrayBuffer())
 }
 
 const real = {
   fs: { readFile },
-  // the sound pack: served at /GeneralUser.sf2 when a test puts it there (otherwise "not installed")
-  sounds: { status: async () => ({ installed: await fetch('/GeneralUser.sf2', { method: 'HEAD' }).then((r) => r.ok && r.headers.get('content-type') !== 'text/html').catch(() => false), path: '/GeneralUser.sf2', name: 'GeneralUser GS 1.471', sizeMb: 28 }), install: async () => ({ ok: false, error: 'browser preview' }), remove: async () => true, onProgress: () => () => undefined },
+  // sound packs: a test may serve /packs/index.json (the packs list of the main process, with URLs as paths)
+  sounds: {
+    status: async () => {
+      const packs = await fetch('/packs/index.json').then((r) => (r.ok && r.headers.get('content-type')?.includes('json') ? r.json() : [])).catch(() => [])
+      const gu = (packs as SoundPackInfo[]).find((x) => x.id === 'generaluser')
+      return { installed: !!gu?.installed, path: gu?.main ?? '', name: 'GeneralUser GS 1.471', sizeMb: 28, packs }
+    },
+    install: async () => ({ ok: false, error: 'browser preview' }), remove: async () => true, onProgress: () => () => undefined,
+  },
   files: {
     exists: async (paths: string[]) => paths.map(() => true),
     saveRecording: async (bytes: Uint8Array) => { const k = `mem://${++n}.wav`; mem.set(k, bytes); return k },

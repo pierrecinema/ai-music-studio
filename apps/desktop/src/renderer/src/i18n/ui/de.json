@@ -1745,5 +1745,16 @@
  "playing": "läuft",
  "stopped": "steht",
  "The MIDI effects are not connected to the instrument yet: press Play once.": "Die MIDI-Effekte sind noch nicht mit dem Instrument verbunden: einmal Abspielen drücken.",
- "This is a MIDI plugin: it makes notes but no sound. Choose a synthesizer as the instrument (for example Dexed or Surge XT) and put this plugin under MIDI effects.": "Das ist ein MIDI-Plugin: es erzeugt Noten, aber keinen Ton. Wähle als Instrument einen Synthesizer (z. B. Dexed oder Surge XT) und setze dieses Plugin unter MIDI-Effekte."
+ "This is a MIDI plugin: it makes notes but no sound. Choose a synthesizer as the instrument (for example Dexed or Surge XT) and put this plugin under MIDI effects.": "Das ist ein MIDI-Plugin: es erzeugt Noten, aber keinen Ton. Wähle als Instrument einen Synthesizer (z. B. Dexed oder Surge XT) und setze dieses Plugin unter MIDI-Effekte.",
+ "Sound packs": "Klang-Pakete",
+ "Sound packs: real instruments": "Klang-Pakete: echte Instrumente",
+ "Installed: {mb} MB on disk. The best installed pack plays each instrument.": "Installiert: {mb} MB auf der Festplatte. Jedes Instrument spielt das beste installierte Paket.",
+ "Recorded instruments for the MIDI tracks, the song generator and the band, instead of the simple synthesizer. Each pack is downloaded once.": "Aufgenommene Instrumente für MIDI-Spuren, Song-Generator und Band statt des einfachen Synthesizers. Jedes Paket wird einmal heruntergeladen.",
+ "{dl} MB download, {disk} MB on disk": "{dl} MB Download, {disk} MB auf der Festplatte",
+ "Install ({mb} MB)": "Installieren ({mb} MB)",
+ "Delete this pack: its instruments are played by another installed pack or the synthesizer": "Paket löschen: seine Instrumente spielt dann ein anderes installiertes Paket oder der Synthesizer",
+ "All General MIDI instruments (piano, guitars, basses, drum kits, strings, brass …)": "Alle General-MIDI-Instrumente (Klavier, Gitarren, Bässe, Schlagzeuge, Streicher, Bläser …)",
+ "All General MIDI instruments in a newer, fuller recording (strings, winds, choir, pianos …)": "Alle General-MIDI-Instrumente in neuerer, vollerer Aufnahme (Streicher, Bläser, Chor, Klaviere …)",
+ "A concert grand piano (Yamaha C5), 4 velocity layers": "Ein Konzertflügel (Yamaha C5), 4 Anschlagstärken",
+ "Violin section, cello section, French horn and trombone (real players)": "Violinen- und Cello-Gruppe, Horn und Posaune (echte Musiker)"
 }

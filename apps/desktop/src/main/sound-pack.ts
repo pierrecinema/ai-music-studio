@@ -1,21 +1,78 @@
-// The sound pack: GeneralUser GS (General MIDI SoundFont by S. Christian Collins, free for use in software; see its
-// LICENSE.txt, which is kept next to it). Downloaded once (about 28 MB) from the npm registry copy of the bank, checked
-// against its published SHA-512, and unpacked into the app's data folder. The renderer plays it (audio/soundbank.ts).
+// Sound packs: recorded instruments for MIDI tracks, each downloaded once from its npm registry copy, checked against
+// the published SHA-512, unpacked into the app's data folder (sounds/<pack>) with its licence. The renderer plays
+// them (audio/soundbank.ts). All are free for use in software:
+//   GeneralUser GS (S. Christian Collins, free licence) – every General MIDI instrument, SoundFont 2
+//   MuseScore General (S. Christian Collins, MIT; parts public domain / CC0) – every GM instrument, SoundFont 3
+//   Salamander Grand Piano V3 (Alexander Holm, CC BY 3.0) – grand piano, 4 velocity layers
+//   VSCO-2 Community Edition (Versilian Studios, CC0) – violin and cello sections, French horn, trombone
 import { app, ipcMain, BrowserWindow } from 'electron'
 import { createHash } from 'crypto'
-import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'fs'
+import { join, relative } from 'path'
 import { gunzipSync } from 'zlib'
 
-const PACK = {
-  name: 'GeneralUser GS 1.471',
-  url: 'https://registry.npmjs.org/generaluser/-/generaluser-1.47.1.tgz',
-  sha512: 'HLojVJe4MJk3Jatr0N4sHREeGyXNH75vU2RA3nNXBbqOmhpuccYByK7r8Dr7+uCpU5aCtKnT5xoK0m8P1/TWqg==',
-  files: { 'package/GeneralUser.sf2': 'GeneralUser.sf2', 'package/LICENSE.txt': 'LICENSE.txt' } as Record<string, string>
+interface Tarball { url: string; sha512: string }
+interface PackSpec {
+  id: string
+  name: string
+  what: string
+  licence: string
+  downloadMb: number
+  diskMb: number
+  kind: 'sf2' | 'multi'
+  main?: string                                   // sf2 / sf3: the bank file inside the pack folder
+  tarballs: Tarball[]
+  keep: (path: string) => string | null           // a file of the tarball -> where it goes in the pack folder (null: dropped)
 }
 
-export function soundPackDir(): string { return join(app.getPath('userData'), 'sounds', 'GeneralUser-GS') }
-export function soundPackFile(): string { return join(soundPackDir(), 'GeneralUser.sf2') }
+const npm = (pkg: string, ver: string, sha512: string): Tarball => {
+  const base = pkg.includes('/') ? pkg.split('/')[1] : pkg
+  return { url: `https://registry.npmjs.org/${pkg}/-/${base}-${ver}.tgz`, sha512 }
+}
+
+export const PACKS: PackSpec[] = [
+  {
+    id: 'generaluser', name: 'GeneralUser GS 1.471', what: 'All General MIDI instruments (piano, guitars, basses, drum kits, strings, brass …)', licence: 'GeneralUser GS licence v2.0 (free for use in software)',
+    downloadMb: 28, diskMb: 31, kind: 'sf2', main: 'GeneralUser.sf2',
+    tarballs: [npm('generaluser', '1.47.1', 'HLojVJe4MJk3Jatr0N4sHREeGyXNH75vU2RA3nNXBbqOmhpuccYByK7r8Dr7+uCpU5aCtKnT5xoK0m8P1/TWqg==')],
+    keep: (p) => (p === 'package/GeneralUser.sf2' ? 'GeneralUser.sf2' : p === 'package/LICENSE.txt' ? 'LICENSE.txt' : null),
+  },
+  {
+    id: 'musescore', name: 'MuseScore General', what: 'All General MIDI instruments in a newer, fuller recording (strings, winds, choir, pianos …)', licence: 'MIT (parts public domain / CC0), by S. Christian Collins',
+    downloadMb: 48, diskMb: 40, kind: 'sf2', main: 'MuseScore_General_Lite.sf3',
+    tarballs: [npm('@librescore/sf3', '0.8.0', 'XW44V1lhiLIx22xSL89+vsbolZ82DPWFOvoy03QuVtno5ugHEDxaaVu9yw8x7wMPh7t0qrLSmLOGGPPxTDRMwQ==')],
+    keep: (p) => (p === 'package/MuseScore_General_Lite.sf3.wasm' ? 'MuseScore_General_Lite.sf3' : p === 'package/MuseScore_General_Lite.copyright' ? 'LICENSE.txt' : null),
+  },
+  {
+    id: 'salamander', name: 'Salamander Grand Piano', what: 'A concert grand piano (Yamaha C5), 4 velocity layers', licence: 'CC BY 3.0, Alexander Holm',
+    downloadMb: 22, diskMb: 22, kind: 'multi',
+    tarballs: [
+      npm('@audio-samples/piano-mp3-velocity4', '1.0.5', 'mhePiSe5z8oCpf4HoesKdY48ulWgk19/AkBgwlizP4J2Mn4RSzmjhzQyo5UH07Z9TZ0EmyF9GqHopi77Sghm+w=='),
+      npm('@audio-samples/piano-mp3-velocity8', '1.0.5', 'Dqraw6baZOPi0EYE8unF2oX2WViZHPgrDMBGl4ht298XYrAKD9YqPC2QDJpwsH6KccZxW2KpxuQ0/ccMzBptmw=='),
+      npm('@audio-samples/piano-mp3-velocity12', '1.0.5', 'I5NLZNX3mbu/37mr/kgH8ClQJy4Ph8I9z3WK8so080DAzMdVYPq9zY1m0UFS/pgV0watRxYG3gQ1yXG3VKpBcw=='),
+      npm('@audio-samples/piano-mp3-velocity16', '1.0.5', 'DhO0NTvcl/O4KXz+xGlbGY0oDj9k6JvTB/qfpRVkHKNvoZICP7Ep20tDwe2xojS85++EsCJTv0FKLRsex/LPWQ=='),
+    ],
+    keep: (p) => (/^package\/audio\/[A-G]#?\dv\d+\.mp3$/.test(p) ? p.slice('package/'.length) : p === 'package/LICENSE' ? 'LICENSE.txt' : null),
+  },
+  {
+    id: 'vsco', name: 'VSCO-2 Orchestra', what: 'Violin section, cello section, French horn and trombone (real players)', licence: 'CC0 (public domain), Versilian Studios',
+    downloadMb: 330, diskMb: 220, kind: 'multi',
+    tarballs: [
+      npm('@minicut/music-samples-1', '1.0.0', 'DIUjmXIgTzib3fxJ4sHPWRfDsabTB/ye+DY3o0rb/wABJPyKmoWFsY6pDMICWDwNq3bVhJx/UpuJ9BViWxrZcg=='),
+      npm('@minicut/music-samples-2', '1.0.0', 'TETf6WB3y8GYYPDMOE9NWZjXsg4coqSOfr/5USmDjRxztzfD6Kf5obuZlKy5IKbKrjhLwyaWUKr6p9wy3tIeIQ=='),
+    ],
+    keep: (p) => {
+      const m = p.match(/^package\/VSCO-2-CE\/((?:Strings\/Violin Section\/susVib|Strings\/Cello Section\/susvib|Brass\/F Horn\/sus|Brass\/Tenor Trombone\/sus)\/[^/]+\.wav)$/)
+      if (m) return m[1]
+      return p === 'package/VSCO-2-CE/LICENSE' ? 'LICENSE.txt' : null
+    },
+  },
+]
+
+const root = (): string => join(app.getPath('userData'), 'sounds')
+// GeneralUser came first (0.84) and kept its folder name
+export const packDir = (id: string): string => join(root(), id === 'generaluser' ? 'GeneralUser-GS' : id)
+const installedPack = (p: PackSpec): boolean => existsSync(join(packDir(p.id), p.main ?? 'LICENSE.txt'))
 
 /** the files of a tar archive (ustar: 512-byte header, data padded to 512) */
 export function untar(tar: Buffer): Map<string, Buffer> {
@@ -35,50 +92,88 @@ export function untar(tar: Buffer): Map<string, Buffer> {
   return out
 }
 
-let busy: Promise<{ ok: boolean; error?: string }> | null = null
-
-async function install(win: BrowserWindow | null): Promise<{ ok: boolean; error?: string }> {
-  const say = (text: string, pct?: number): void => { win?.webContents.send('sounds:progress', { text, pct }) }
-  try {
-    say(`Downloading ${PACK.name}…`, 0)
-    const res = await fetch(PACK.url, { headers: { 'User-Agent': 'AI-Music-Studio' } })
-    if (!res.ok || !res.body) throw new Error(`Download failed: HTTP ${res.status}`)
-    const total = Number(res.headers.get('content-length') || 0)
-    const parts: Buffer[] = []
-    let got = 0, last = 0
-    const reader = res.body.getReader()
-    for (;;) {
-      const { done, value } = await reader.read()
-      if (done) break
-      parts.push(Buffer.from(value)); got += value.length
-      if (total && Date.now() - last > 250) { last = Date.now(); say(`Downloading ${PACK.name}… ${(got / 1e6).toFixed(1)} of ${(total / 1e6).toFixed(1)} MB`, Math.round((got / total) * 100)) }
+function listFiles(dir: string): string[] {
+  const out: string[] = []
+  const walk = (d: string): void => {
+    for (const n of readdirSync(d)) {
+      const f = join(d, n)
+      if (statSync(f).isDirectory()) walk(f); else out.push(relative(dir, f).split('\\').join('/'))
     }
-    const tgz = Buffer.concat(parts)
-    if (createHash('sha512').update(tgz).digest('base64') !== PACK.sha512) throw new Error('The download is damaged (checksum does not match). Please try again.')
-    say('Unpacking…', 100)
-    const files = untar(gunzipSync(tgz))
-    const dir = soundPackDir(), tmp = dir + '.tmp'
+  }
+  if (existsSync(dir)) walk(dir)
+  return out
+}
+
+const busy = new Map<string, Promise<{ ok: boolean; error?: string }>>()
+
+async function install(p: PackSpec, win: BrowserWindow | null): Promise<{ ok: boolean; error?: string }> {
+  const say = (text: string, pct?: number): void => { win?.webContents.send('sounds:progress', { id: p.id, text, pct }) }
+  const dir = packDir(p.id), tmp = dir + '.tmp'
+  try {
     rmSync(tmp, { recursive: true, force: true })
     mkdirSync(tmp, { recursive: true })
-    for (const [from, to] of Object.entries(PACK.files)) {
-      const f = files.get(from)
-      if (!f) throw new Error(`The pack has no ${from}`)
-      writeFileSync(join(tmp, to), f)
+    for (let k = 0; k < p.tarballs.length; k++) {
+      const tb = p.tarballs[k]
+      const part = p.tarballs.length > 1 ? ` (${k + 1}/${p.tarballs.length})` : ''
+      say(`Downloading ${p.name}${part}…`, 0)
+      const res = await fetch(tb.url, { headers: { 'User-Agent': 'AI-Music-Studio' } })
+      if (!res.ok || !res.body) throw new Error(`Download failed: HTTP ${res.status}`)
+      const total = Number(res.headers.get('content-length') || 0)
+      const parts: Buffer[] = []
+      let got = 0, last = 0
+      const reader = res.body.getReader()
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        parts.push(Buffer.from(value)); got += value.length
+        if (total && Date.now() - last > 250) {
+          last = Date.now()
+          const pct = Math.round(((k + got / total) / p.tarballs.length) * 100)
+          say(`Downloading ${p.name}${part}… ${(got / 1e6).toFixed(1)} of ${(total / 1e6).toFixed(1)} MB`, pct)
+        }
+      }
+      const tgz = Buffer.concat(parts)
+      if (createHash('sha512').update(tgz).digest('base64') !== tb.sha512) throw new Error('The download is damaged (checksum does not match). Please try again.')
+      say(`Unpacking${part}…`, Math.round(((k + 1) / p.tarballs.length) * 100))
+      for (const [from, data] of untar(gunzipSync(tgz))) {
+        const to = p.keep(from)
+        if (!to) continue
+        const f = join(tmp, ...to.split('/'))
+        mkdirSync(join(f, '..'), { recursive: true })
+        writeFileSync(f, data)
+      }
     }
+    if (p.main && !existsSync(join(tmp, p.main))) throw new Error(`The pack has no ${p.main}`)
     rmSync(dir, { recursive: true, force: true })
     renameSync(tmp, dir)
     say('Installed', 100)
     return { ok: true }
   } catch (e) {
+    rmSync(tmp, { recursive: true, force: true })
     return { ok: false, error: (e as Error).message }
   }
 }
 
+function status(): { packs: unknown[]; installed: boolean; path: string; name: string; sizeMb: number } {
+  const packs = PACKS.map((p) => ({
+    id: p.id, name: p.name, what: p.what, licence: p.licence, downloadMb: p.downloadMb, diskMb: p.diskMb, kind: p.kind,
+    installed: installedPack(p), dir: packDir(p.id),
+    main: p.main ? join(packDir(p.id), p.main) : undefined,
+    files: p.kind === 'multi' && installedPack(p) ? listFiles(packDir(p.id)).filter((f) => /\.(mp3|wav|ogg|flac)$/i.test(f)) : undefined,
+  }))
+  const gu = PACKS[0]
+  // the 0.84 fields (GeneralUser) stay for older renderer code
+  return { packs, installed: installedPack(gu), path: join(packDir(gu.id), gu.main!), name: gu.name, sizeMb: gu.downloadMb }
+}
+
 export function registerSoundPackHandlers(): void {
-  ipcMain.handle('sounds:status', () => ({ installed: existsSync(soundPackFile()), path: soundPackFile(), name: PACK.name, sizeMb: 28 }))
-  ipcMain.handle('sounds:install', (e) => {
-    busy ??= install(BrowserWindow.fromWebContents(e.sender)).finally(() => { busy = null })
-    return busy
+  ipcMain.handle('sounds:status', () => status())
+  ipcMain.handle('sounds:install', (e, id: string = 'generaluser') => {
+    const p = PACKS.find((x) => x.id === id)
+    if (!p) return { ok: false, error: `unknown pack ${id}` }
+    let job = busy.get(id)
+    if (!job) { job = install(p, BrowserWindow.fromWebContents(e.sender)).finally(() => busy.delete(id)); busy.set(id, job) }
+    return job
   })
-  ipcMain.handle('sounds:remove', () => { rmSync(soundPackDir(), { recursive: true, force: true }); return true })
+  ipcMain.handle('sounds:remove', (_e, id: string = 'generaluser') => { rmSync(packDir(id), { recursive: true, force: true }); return true })
 }

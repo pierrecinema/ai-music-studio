@@ -64,10 +64,10 @@ const api = {
   },
   sounds: {
     status: () => ipcRenderer.invoke('sounds:status'),
-    install: () => ipcRenderer.invoke('sounds:install'),
-    remove: () => ipcRenderer.invoke('sounds:remove'),
-    onProgress: (cb: (p: { text: string; pct?: number }) => void) => {
-      const h = (_: unknown, p: { text: string; pct?: number }): void => cb(p)
+    install: (id?: string) => ipcRenderer.invoke('sounds:install', id),
+    remove: (id?: string) => ipcRenderer.invoke('sounds:remove', id),
+    onProgress: (cb: (p: { id?: string; text: string; pct?: number }) => void) => {
+      const h = (_: unknown, p: { id?: string; text: string; pct?: number }): void => cb(p)
       ipcRenderer.on('sounds:progress', h)
       return () => { ipcRenderer.removeListener('sounds:progress', h) }
     }

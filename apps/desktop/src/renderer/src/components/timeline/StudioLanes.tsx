@@ -20,7 +20,8 @@ import type { PopoverSpec } from './Popover'
 import { tr, trf } from '../../i18n/tr'
 import { askText } from '../common/AskText'
 import { useSoundPack } from '../../lib/useSoundPack'
-import { PACK_INSTRUMENTS } from '../../audio/soundbank'
+import { PACK_INSTRUMENTS, packOf } from '../../audio/soundbank'
+const PACK_NAMES: Record<string, string> = { salamander: 'Salamander', vsco: 'VSCO-2', musescore: 'MuseScore', generaluser: 'GeneralUser' }
 
 const small: React.CSSProperties = { fontSize: 10, padding: '1px 6px' }
 
@@ -457,7 +458,7 @@ export function InstrumentSelect({ track, style }: { track: Track; style?: React
     }}>
       {pack && PACK_INSTRUMENTS.map((g) => (
         <optgroup key={g.group} label={`${tr('Sound pack')}: ${tr(g.group)}`}>
-          {g.items.map(([n, label]) => <option key={n} value={`gm:${n}`}>{tr(label)}</option>)}
+          {g.items.map(([n, label]) => { const pk = packOf(n); return <option key={n} value={`gm:${n}`}>{tr(label)}{pk ? ` · ${PACK_NAMES[pk] ?? pk}` : ''}</option> })}
         </optgroup>
       ))}
       <optgroup label={pack ? tr('Built-in sounds (the pack plays them with real instruments)') : tr('Built-in sounds')}>

@@ -528,3 +528,14 @@ Nur in einer Claude-Sitzung **auf diesem PC** (Claude-Desktop-App → Code → O
 | 29.2 | „Mach eine MIDI-Spur mit Dexed, setz BlueArp davor und schreib einen A-Moll-Akkord über 4 Takte.“ | Die Spur erscheint im Studio mit Dexed und BlueArp, der Akkord liegt im Clip; Abspielen klingt arpeggiert | | | 0.91.0 |
 | 29.3 | „Stell das Tempo auf 100 und spiel ab.“ / „Stopp.“ | Tempo 100, die App spielt / stoppt | | | 0.91.0 |
 | 29.4 | Spur → KA: als Instrument BlueArp wählen | Gelber Hinweis: MIDI-Plugin, kein Ton | | | 0.91.0 |
+
+## 30. Neu in 0.92.0: mehr Klang-Pakete
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 30.1 | Einstellungen → Audio → Klang-Pakete | 4 Pakete mit Größe; GeneralUser ist schon installiert (grüner Punkt) | | | 0.92.0 |
+| 30.2 | **Salamander Grand Piano** installieren | Fortschritt, dann grüner Punkt | | | 0.92.0 |
+| 30.3 | **MuseScore General** und **VSCO-2 Orchestra** installieren (Orchester: ca. 330 MB, dauert etwas) | Beide grün | | | 0.92.0 |
+| 30.4 | Song-Generator: **Ballade** → Studio, abspielen | Flügel und Streicher klingen echt (Salamander, VSCO) | | | 0.92.0 |
+| 30.5 | Spur → KA → Instrument-Liste | Hinter den Instrumenten steht, welches Paket spielt (z. B. „Flügel · Salamander“, „Streicher · VSCO-2“) | | | 0.92.0 |
+| 30.6 | Ein Paket entfernen | Das nächste installierte Paket spielt dieses Instrument | | | 0.92.0 |

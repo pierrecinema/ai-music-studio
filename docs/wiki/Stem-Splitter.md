@@ -20,6 +20,7 @@ Install the packages in [[Settings]] → AI Engines. A progress bar shows the pe
 After splitting: **▶ Play** all stems together, waveform with seeking, per stem **S** (solo), **M** (mute) and volume.
 - **Export remix…:** mixes the stems you hear at these levels, e.g. mute Vocals for a karaoke version ("… – no vocals").
 - **→ MIDI:** turns a stem (bass, vocals, piano…) into notes on a new MIDI track, opened in the [[Piano Roll]].
+- **All stems → MIDI:** all stems at once on the [[Audio to MIDI]] page, with the drums, tempo, key and chords.
 
 ## Saving
 - **Mastering** on a stem opens it in [[Mastering]] (e.g. the instrumental).

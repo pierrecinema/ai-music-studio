@@ -24,6 +24,14 @@ export interface InstrumentJob {
   id: string; status: 'queued' | 'running' | 'done' | 'error' | 'cancelled'; progress: number; text: string; elapsed: number
   audio_file?: string; library_id?: string | null; duration?: number; voices?: number; error?: string
 }
+export interface TranscribedNote { pitch: number; startTime: number; duration: number; velocity: number; confidence: number }
+export interface TranscribedPart { stem: string; name: string; kind: string; method: string; program: number; notes: TranscribedNote[]; confidence: number; audio: string }
+export interface SongToMidiResult {
+  bpm: number; firstBeat: number; key: string; relativeKey: string; keyConfidence: number
+  chords: Array<{ beat: number; beats: number; name: string; root: number; quality: string; confidence: number }>
+  parts: TranscribedPart[]; skipped: string[]; stems: Record<string, string>
+}
+export interface SongToMidiJob { id: string; status: 'running' | 'done' | 'error' | 'cancelled'; progress: number; text: string; error: string | null; result: SongToMidiResult | null; elapsed: number }
 export interface MusicJob {
   id: string; status: 'queued' | 'running' | 'done' | 'error' | 'cancelled'
   audio_file?: string; error?: string; warnings: string[]; engine?: string
@@ -173,6 +181,11 @@ export const api = {
     convert: (body: { filePath: string; engine?: 'auto' | 'basic-pitch' | 'muscriptor' }) =>
       post<{ midiFile: string; engine: string; warnings: string[]; notes: Array<{ pitch: number; startTime: number; duration: number; velocity: number }> }>('/audio-to-midi', body),
     engines: () => get<{ 'basic-pitch': boolean; muscriptor: boolean; muscriptor_license: string }>('/audio-to-midi/engines'),
+    // a whole song -> MIDI tracks (stems, the right method per instrument, tempo, key, chords)
+    startSong: (body: { filePath: string; separate?: boolean; stem?: string; stems?: Record<string, string>; want?: string[]; bpm?: number; quantize?: number; strength?: number }) =>
+      post<{ jobId: string }>('/audio-to-midi/song', body),
+    song: (id: string) => get<SongToMidiJob>(`/audio-to-midi/song/${id}`),
+    cancelSong: (id: string) => post<{ ok: boolean }>(`/audio-to-midi/song/${id}/cancel`, {}),
   },
 
   video: {

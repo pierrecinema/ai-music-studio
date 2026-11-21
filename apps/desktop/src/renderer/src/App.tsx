@@ -20,6 +20,7 @@ import { VocalEditor } from './components/vocal-editor/VocalEditor'
 import { AIChat } from './components/ai-chat/AIChat'
 import { ComingSoon } from './components/common/ComingSoon'
 import { StemSplitter } from './components/stem-splitter/StemSplitter'
+import { AudioToMidi } from './components/audio-to-midi/AudioToMidi'
 import { VideoComposer } from './components/video-composer/VideoComposer'
 import { Settings } from './components/settings/Settings'
 import { CreateMusic } from './components/create/CreateMusic'
@@ -184,6 +185,7 @@ export default function App(): React.ReactElement {
       case 'instruments':   return <AiInstruments />
       case 'ai-chat':       return <AIChat />
       case 'stem-splitter': return <StemSplitter />
+      case 'audio-to-midi': return <AudioToMidi />
       case 'video-composer':return <ComingSoon name={tr('Video Composer')} icon="🎬" />
       case 'create':        return <CreateMusic />
       case 'library':       return <Library />
@@ -198,7 +200,7 @@ export default function App(): React.ReactElement {
 
   // These views need room: they use the whole main area instead of the strip under the timeline
   const panelHeight = useUIStore((st) => st.panelHeight)
-  const FULL_VIEWS = ['create', 'library', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'video-composer', 'ai-chat', 'vocal-editor', 'instruments', 'cloud']
+  const FULL_VIEWS = ['create', 'library', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'audio-to-midi', 'video-composer', 'ai-chat', 'vocal-editor', 'instruments', 'cloud']
   const panel = renderPanel()
   const fullView = FULL_VIEWS.includes(activeView)
 

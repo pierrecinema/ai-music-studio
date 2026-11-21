@@ -161,4 +161,4 @@ export interface StemResult {
   guitar?: string
 }
 
-export type View = 'library' | 'timeline' | 'piano-roll' | 'mixer' | 'vocal-editor' | 'instruments' | 'ai-chat' | 'stem-splitter' | 'video-composer' | 'create' | 'mastering' | 'karaoke' | 'cloud' | 'settings'
+export type View = 'audio-to-midi' | 'library' | 'timeline' | 'piano-roll' | 'mixer' | 'vocal-editor' | 'instruments' | 'ai-chat' | 'stem-splitter' | 'video-composer' | 'create' | 'mastering' | 'karaoke' | 'cloud' | 'settings'

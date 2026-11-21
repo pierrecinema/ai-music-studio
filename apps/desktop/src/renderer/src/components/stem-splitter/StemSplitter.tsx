@@ -220,7 +220,7 @@ export function StemSplitter(): React.ReactElement {
       {result && (
         <div>
           <div style={labelStyle}>{tr('Results: listen, mix and export')}</div>
-          <StemMixer stems={result as Record<string, string>} colors={STEM_COLORS} title={title.trim() || baseName(fileName)}
+          <StemMixer source={file ?? undefined} stems={result as Record<string, string>} colors={STEM_COLORS} title={title.trim() || baseName(fileName)}
             labels={Object.fromEntries(Object.keys(result).map((s) => [s, t(`stemSplitter.${s}`, { defaultValue: s.charAt(0).toUpperCase() + s.slice(1) })]))} />
           {/* keep them: the library (folder "Stems") or files for a DAW */}
           <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 560 }}>

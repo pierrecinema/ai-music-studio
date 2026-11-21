@@ -1,5 +1,5 @@
 import { sendToMastering } from '../../stores/mastering.store'
-import { sendToStemSplitter } from '../../stores/stemHandoff'
+import { sendToStemSplitter, sendToAudioToMidi } from '../../stores/stemHandoff'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { autoStructure, hasSections, SECTION_TAGS } from '../../lib/lyrics'
 import { api, type EngineState, type Lora, type MusicEngineInfo, type MusicJob, type MusicResult, type Resources, type Usage } from '../../lib/api'
@@ -972,6 +972,8 @@ export function CreateMusic(): React.ReactElement {
                     onClick={() => sendToMastering(r.audio_file, `${p.title || tr('Untitled')} ${i + 1}`)}>{tr('Mastering')}</button>
                   <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Split this song into vocals, drums, bass and more')}
                     onClick={() => sendToStemSplitter(r.audio_file, `${p.title || tr('Untitled')} ${i + 1}`)}>{tr('Stem Splitter')}</button>
+                  <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Turn this song into MIDI tracks (Audio → MIDI)')}
+                    onClick={() => sendToAudioToMidi(r.audio_file)}>{tr('→ MIDI')}</button>
                 </>
               )}
             </div>

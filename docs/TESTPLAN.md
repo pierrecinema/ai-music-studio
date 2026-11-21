@@ -547,12 +547,12 @@ In einer Claude-Sitzung mit MCP-Verbindung zur App (oder im KI-Chat der App) ein
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
 | 31.1 | „Leg ein neues Projekt an und schreib einen Funk-Song in E-Moll mit 104 BPM.“ | Neues Projekt, 5 MIDI-Spuren mit Markern (Intro, Verse …), Tempo 104 | ✅ | wie 32.1 | 0.93.0 |
-| 31.2 | „Setz einen Kompressor auf den Bass und einen Hall-Return, schick die Melodie mit 30 % hin.“ | Bass: Kompressor im FX-Bereich; Return „Hall“; Send der Melodie 0.3 | | | 0.93.0 |
-| 31.3 | „Lass die Melodie von Takt 1 bis 9 lauter werden.“ | Volume-Automation auf der Melodie-Spur, Linie steigt | | | 0.93.0 |
-| 31.4 | „Transponiere die Melodie eine Oktave runter und quantisiere sie auf Achtel.“ | Noten im Piano Roll eine Oktave tiefer, auf dem Raster | | | 0.93.0 |
-| 31.5 | „Spiel die Bass-Spur mit Dexed und öffne sein Fenster.“ | Dexed als Instrument, Plugin-Fenster geht auf | | | 0.93.0 |
-| 31.6 | „Speichere das Projekt als Funk.ams in Musik und exportiere es als MP3 daneben.“ | Beide Dateien liegen im Ordner, MP3 klingt wie das Projekt | | | 0.93.0 |
-| 31.7 | KI-Chat der App: „Mach einen Schlagzeuger im Rock-Stil für 8 Takte.“ | Neue Spur „Drummer (Rock)“ im Studio | | | 0.93.0 |
+| 31.2 | „Setz einen Kompressor auf den Bass und einen Hall-Return, schick die Melodie mit 30 % hin.“ | Bass: Kompressor im FX-Bereich; Return „Hall“; Send der Melodie 0.3 | ✅ |  | 0.93.0 |
+| 31.3 | „Lass die Melodie von Takt 1 bis 9 lauter werden.“ | Volume-Automation auf der Melodie-Spur, Linie steigt | ⏸ | Claude Code hat den Aufruf blockiert (Berechtigung), nicht die App; in 0.93.3 Berechtigungsregel im Wiki | 0.93.0 |
+| 31.4 | „Transponiere die Melodie eine Oktave runter und quantisiere sie auf Achtel.“ | Noten im Piano Roll eine Oktave tiefer, auf dem Raster | ✅ |  | 0.93.0 |
+| 31.5 | „Spiel die Bass-Spur mit Dexed und öffne sein Fenster.“ | Dexed als Instrument, Plugin-Fenster geht auf | ✅ |  | 0.93.0 |
+| 31.6 | „Speichere das Projekt als Funk.ams in Musik und exportiere es als MP3 daneben.“ | Beide Dateien liegen im Ordner, MP3 klingt wie das Projekt | ❌ | Export lief ins Zeitlimit; behoben in 0.93.3 (Test 34.1) | 0.93.0 |
+| 31.7 | KI-Chat der App: „Mach einen Schlagzeuger im Rock-Stil für 8 Takte.“ | Neue Spur „Drummer (Rock)“ im Studio | ❌ | KI-Chat startete die KI-Aufnahme; behoben in 0.93.3 (Test 34.2) | 0.93.0 |
 | 31.8 | Song-Generator: Ballade, Tonart A-Moll | Akkorde klingen nach Moll (Am, C, Dm, E), nicht nach A-Dur | | | 0.93.0 |
 
 ## 32. Neu in 0.93.1: Fortschritt und richtige Werkzeugwahl
@@ -581,3 +581,18 @@ Claude-Sitzung nach dem Update neu starten.
 |---|---|---|---|---|---|
 | 34.1 | Funk.ams öffnen lassen, dann Claude: „Exportiere das Projekt als MP3 in meinen Musik-Ordner.“ | Claude sagt, der Export läuft, fragt nach und meldet dann die fertige Datei; Funk.mp3 liegt im Ordner | | | 0.93.3 |
 | 34.2 | KI-Chat der App: „Mach einen Schlagzeuger im Rock-Stil für 8 Takte.“ | Nach Sekunden neue Spur „Drummer (Rock)“ im Studio, keine KI-Aufnahme | | | 0.93.3 |
+
+## 35. Neu in 0.94.0: Audio → MIDI für ganze Songs
+
+Voraussetzung: Einstellungen → KI-Engines → „Audio → MIDI (basic-pitch)“ und „Demucs“ installiert.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 35.1 | Bibliothek: bei einem KI-Song **→ MIDI** | Seite „Audio → MIDI“ öffnet sich mit dem Song | | | 0.94.0 |
+| 35.2 | **In MIDI umwandeln** (Instrumente trennen an) | Fortschritt: Trennen, Tempo/Tonart, dann jedes Instrument; danach Tempo, Tonart, Akkorde und pro Instrument Noten, Sicherheit, Vorschau | | | 0.94.0 |
+| 35.3 | Bei einer Spur ▶ drücken | Der getrennte Stem spielt | | | 0.94.0 |
+| 35.4 | Instrumente wählen (z. B. Bass → Slap-Bass), **… Spuren ins Studio** | Im Studio: Original (stumm) + MIDI-Spuren, Tempo übernommen | | | 0.94.0 |
+| 35.5 | Studio: abspielen, Original kurz einschalten | MIDI-Spuren laufen im Takt mit dem Original; Schlagzeug, Bass und Melodie erkennbar | | | 0.94.0 |
+| 35.6 | Stem Splitter: Song trennen, **Alle Stems → MIDI** | Seite öffnet sich mit den Stems, Umwandeln geht ohne erneutes Trennen | | | 0.94.0 |
+| 35.7 | Claude: „Wandle den Song … in MIDI um.“ | Claude startet app_audio_to_midi, fragt nach, meldet Spuren, Tempo, Tonart | | | 0.94.0 |
+| 35.8 | Wie klingt das Ergebnis bei deinen eigenen KI-Songs? Was fehlt, was ist falsch? | (Rückmeldung für die nächste Verbesserung) | | | 0.94.0 |

@@ -29,10 +29,10 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.93: AI agents work on everything in the Studio (MCP); 0.92: more sound packs
+### New in 0.94: Audio → MIDI for whole songs; 0.93: AI agents work on everything in the Studio (MCP)
 
-- **MCP**: 50 tools for Claude and other AI agents (and the AI Chat): tracks, notes, instruments, effects, sends, automation, song generator, band, export.
-- **Sound packs** in Settings → Audio: Salamander concert grand, VSCO-2 orchestra (strings, brass), MuseScore General and GeneralUser GS; the best installed one plays each instrument.
+- **Audio → MIDI**: a whole song into MIDI tracks: vocals, bass, piano, guitar, keys and drums (kick, snare, hats), on the bars, with tempo, key and chords; choose the instrument of each part.
+- **MCP**: 50 tools for Claude and other AI agents (and the AI Chat): tracks, notes, instruments, effects, sends, automation, song generator, band, Audio → MIDI, export.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features

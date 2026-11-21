@@ -1,6 +1,6 @@
 import { applyOutput } from '../../audio/output'
 import { sendToMastering } from '../../stores/mastering.store'
-import { sendToStemSplitter } from '../../stores/stemHandoff'
+import { sendToStemSplitter, sendToAudioToMidi } from '../../stores/stemHandoff'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type LibraryTrack } from '../../lib/api'
 import { useProjectStore } from '../../stores/project.store'
@@ -254,6 +254,7 @@ export function Library(): React.ReactElement {
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} onClick={() => void toProject(t)}>{tr('Add to project')}</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} title={tr('Open this song in Mastering')} onClick={() => sendToMastering(t.path, t.title)}>{tr('Mastering')}</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} title={tr('Split this song into vocals, drums, bass and more')} onClick={() => sendToStemSplitter(t.path, t.title)}>{tr('Stem Splitter')}</button>
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} title={tr('Turn this song into MIDI tracks (Audio → MIDI)')} onClick={() => sendToAudioToMidi(t.path)}>{tr('→ MIDI')}</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} title={tr('Save a copy as WAV, AIFF, FLAC or MP3')}
             onClick={() => setExporting({ title: `"${t.title}"`, items: [{ path: t.path, name: t.title }] })}>{tr('Export…')}</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={!t.exists} onClick={() => void window.api.files.showItem(t.path)}>{tr('Show file')}</button>

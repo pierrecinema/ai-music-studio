@@ -24,7 +24,7 @@ type Args = Record<string, any>   // eslint-disable-line @typescript-eslint/no-e
 
 const KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const FLATS: Record<string, string> = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' }
-const VIEWS: View[] = ['library', 'timeline', 'piano-roll', 'mixer', 'vocal-editor', 'instruments', 'ai-chat', 'stem-splitter', 'video-composer', 'create', 'mastering', 'karaoke', 'settings']
+const VIEWS: View[] = ['audio-to-midi', 'library', 'timeline', 'piano-roll', 'mixer', 'vocal-editor', 'instruments', 'ai-chat', 'stem-splitter', 'video-composer', 'create', 'mastering', 'karaoke', 'settings']
 const TRACK_TYPES: TrackType[] = ['midi', 'audio', 'vocal', 'instrument', 'group']
 
 const proj = (): ReturnType<typeof useProjectStore.getState>['project'] => useProjectStore.getState().project
@@ -162,6 +162,9 @@ function keyOf(v: unknown): { key: number; mode?: Mode } {
   return { key: k, mode: q ? (q.startsWith('m') && q !== 'maj' && q !== 'major' ? 'minor' : 'major') : undefined }
 }
 
+interface MidiJob { id: string; path: string; status: string; progress: number; text: string; error?: string; tracks?: string[]; summary?: Record<string, unknown>; opts: Args }
+let midiJob: MidiJob | null = null
+
 interface ExportJob { path: string; status: 'running' | 'done' | 'error'; started: number; finished?: number; songSeconds: number; seconds?: number; peakDb?: number | null; clips?: boolean; error?: string }
 let exportJob: ExportJob | null = null
 
@@ -246,6 +249,39 @@ const HANDLERS: Record<string, (a: Args) => unknown | Promise<unknown>> = {
     })()
     return { started: path, songSeconds, note: 'The mix renders in the background (with VST plugins about as long as the song). Ask app_export_status until it says done.' }
   },
+  // Audio → MIDI of a whole song: runs in the background (splitting into stems takes minutes on a CPU); when it is
+  // done the tracks are put into the Studio by the window itself
+  audio_to_midi: async (a) => {
+    if (!a.path) throw new Error('Give path: the audio file (a song, or one instrument with separate: false and stem).')
+    if (midiJob?.status === 'running') throw new Error('An Audio → MIDI job is still running: see app_audio_to_midi_status.')
+    const { api } = await import('./api')
+    const { jobId } = await api.audioToMidi.startSong({ filePath: String(a.path), separate: a.separate !== false, stem: a.stem ? String(a.stem) : 'other',
+      want: Array.isArray(a.instruments) ? a.instruments.map(String) : undefined, bpm: a.tempoHint === false ? undefined : proj().bpm,
+      quantize: num(a.quantize) ?? 0.25, strength: num(a.strength) ?? 0.6 })
+    const job: MidiJob = { id: jobId, path: String(a.path), status: 'running', progress: 0, text: 'Starting', opts: a }
+    midiJob = job
+    void (async () => {
+      const { importTranscription } = await import('./transcriptionImport')
+      for (;;) {
+        await new Promise((r) => setTimeout(r, 1000))
+        let j
+        try { j = await api.audioToMidi.song(jobId) } catch { continue }
+        Object.assign(job, { status: j.status, progress: j.progress, text: j.text, error: j.error ?? undefined })
+        if (j.status === 'running') continue
+        if (j.status === 'done' && j.result) {
+          const r = j.result
+          const programs = (a.programs ?? {}) as Record<string, number>
+          job.tracks = importTranscription(r, { startBar: num(a.startBar) ?? 1, programs, setTempo: a.setTempo !== false, original: a.addOriginal === false ? null : String(a.path),
+            chordTrack: !!a.chordTrack, chordMarkers: !!a.chordMarkers })
+          job.summary = { bpm: r.bpm, key: r.key, orKey: r.relativeKey, firstBarAtSeconds: r.firstBeat, chords: r.chords.slice(0, 24).map((c) => c.name),
+            parts: r.parts.map((p) => ({ stem: p.stem, notes: p.notes.length, method: p.method, confidence: p.confidence })), leftOut: r.skipped }
+        }
+        return
+      }
+    })()
+    return { started: String(a.path), note: 'Runs in the background (with splitting into stems several minutes on a CPU). Ask app_audio_to_midi_status every 20-30 s; when done, the MIDI tracks are in the Studio.' }
+  },
+  audio_to_midi_status: () => (midiJob ? { ...midiJob, opts: undefined } : { status: 'none', note: 'No Audio → MIDI job was started (app_audio_to_midi).' }),
   export_status: () => {
     if (!exportJob) return { status: 'none', note: 'No export was started (app_export_audio).' }
     return { ...exportJob, runningSeconds: Math.round(((exportJob.finished ?? Date.now()) - exportJob.started) / 1000) }

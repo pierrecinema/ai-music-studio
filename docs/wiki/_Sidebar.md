@@ -12,6 +12,7 @@
 - [[Piano Roll]]
 - [[Mixer]]
 - [[Stem Splitter]]
+- [[Audio to MIDI]]
 - [[Mastering]]
 - [[AI Instruments]]
 - [[AI Chat]]

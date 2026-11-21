@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.93.3
+
+### Fixed
+
+- **Export through MCP timed out** on longer songs with VST plugins: `app_export_audio` now mixes in the background and answers at once; the new `app_export_status` tells the agent when the file is ready.
+- **The AI Chat started the slow music AI for a drummer**: it now makes band parts (drummer, bass player, guitarist) and Studio songs as MIDI in seconds, and uses the music AI only when you ask for an AI recording with vocals.
+
 ## 0.93.2
 
 ### Fixed

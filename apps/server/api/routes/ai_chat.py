@@ -111,8 +111,10 @@ CHAT_TOOL_NAMES = ("get_music_job", "list_loras", "split_stems", "master_track",
 
 GENERATE_TOOL = {
     "name": "generate_music",
-    "description": ("Make a song, track, beat or loop with the app's music AI. Runs in the background (minutes) and "
-                    "returns a jobId; the finished song is saved in the Library."),
+    "description": ("Record a song as AUDIO with the app's music AI (sung vocals possible). SLOW: minutes with a GPU, often "
+                    "10-30 minutes on a CPU. Returns a jobId; the finished song is saved in the Library. NOT for a drummer, "
+                    "bass player, guitarist, chords, a beat or a song in the Studio: those are MIDI parts made in seconds with "
+                    "app_band_part and app_generate_song. Use this only when the user asks for an AI recording or sung vocals."),
     "inputSchema": {
         "type": "object",
         "properties": {

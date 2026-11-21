@@ -16,7 +16,7 @@ Tools: generate music, LoRAs, stems, Audio → MIDI, mastering, system info and 
 
 | Area | Tools |
 |---|---|
-| Project and files | `app_get_project` (everything about the project), `app_set_project` (name, tempo, time signature, count-in, master volume), `app_new_project`, `app_open_project`, `app_save_project`, `app_undo`, `app_import_file` (audio or MIDI), `app_export_audio` (WAV / MP3), `app_export_midi` |
+| Project and files | `app_get_project` (everything about the project), `app_set_project` (name, tempo, time signature, count-in, master volume), `app_new_project`, `app_open_project`, `app_save_project`, `app_undo`, `app_import_file` (audio or MIDI), `app_export_audio` (WAV / MP3, in the background) and `app_export_status`, `app_export_midi` |
 | Pages | `app_show` (a page of the app, select a track or clip) |
 | Lists | `app_list_plugins`, `app_list_effect_types`, `app_list_styles` (genres, drum / bass / guitar styles), `app_sound_packs` (status, install) |
 | Tracks | `app_add_track`, `app_add_midi_track`, `app_duplicate_track`, `app_move_track`, `app_remove_track`, `app_set_track` (name, color, volume, pan, mute, solo, room), `app_group_tracks`, `app_ungroup` |
@@ -27,6 +27,8 @@ Tools: generate music, LoRAs, stems, Audio → MIDI, mastering, system info and 
 | Clips and notes | `app_add_notes`, `app_get_notes`, `app_set_notes`, `app_edit_notes` (transpose, quantize, velocity, length, delete), `app_edit_clip` (move, length, gain, fades), `app_split_clip`, `app_duplicate_clip`, `app_remove_clip` |
 | Song | `app_generate_song` (song generator), `app_band_part` (drummer, bass player, guitarist), `app_add_marker`, `app_remove_marker`, `app_set_loop` |
 | Transport | `app_transport` (play, stop, pause, start, go to bar), `app_set_bpm` |
+
+In Claude Code, `/permissions` → *Allow* → `mcp__ai-music-studio` lets Claude use all tools of the app without asking each time (Claude Code may still stop a call it finds risky; then confirm it).
 
 After an app update, start a new Claude session (or reconnect the MCP server) so it loads the new tool list.
 

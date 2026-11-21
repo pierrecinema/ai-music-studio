@@ -546,7 +546,7 @@ In einer Claude-Sitzung mit MCP-Verbindung zur App (oder im KI-Chat der App) ein
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 31.1 | „Leg ein neues Projekt an und schreib einen Funk-Song in E-Moll mit 104 BPM.“ | Neues Projekt, 5 MIDI-Spuren mit Markern (Intro, Verse …), Tempo 104 | | | 0.93.0 |
+| 31.1 | „Leg ein neues Projekt an und schreib einen Funk-Song in E-Moll mit 104 BPM.“ | Neues Projekt, 5 MIDI-Spuren mit Markern (Intro, Verse …), Tempo 104 | ✅ | wie 32.1 | 0.93.0 |
 | 31.2 | „Setz einen Kompressor auf den Bass und einen Hall-Return, schick die Melodie mit 30 % hin.“ | Bass: Kompressor im FX-Bereich; Return „Hall“; Send der Melodie 0.3 | | | 0.93.0 |
 | 31.3 | „Lass die Melodie von Takt 1 bis 9 lauter werden.“ | Volume-Automation auf der Melodie-Spur, Linie steigt | | | 0.93.0 |
 | 31.4 | „Transponiere die Melodie eine Oktave runter und quantisiere sie auf Achtel.“ | Noten im Piano Roll eine Oktave tiefer, auf dem Raster | | | 0.93.0 |
@@ -561,14 +561,23 @@ Nach dem Update: Claude-Sitzung neu starten (oder `/mcp` → neu verbinden), dam
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 32.1 | Claude: „Leg ein neues Projekt an und schreib einen Funk-Song in E-Moll mit 104 BPM.“ | Neues Projekt, nach wenigen Sekunden 5 MIDI-Spuren im Studio (kein KI-Audio-Job) | | | 0.93.1 |
-| 32.2 | Claude: „Lass die Musik-KI einen kurzen Song mit Gesang aufnehmen (30 s).“ | Claude sagt, dass es dauert; unten in der Statusleiste erscheint „Generating music … %“ | | | 0.93.1 |
-| 32.3 | Auf die Anzeige in der Statusleiste klicken | Seite „Create music“ mit Fortschritt; ✕ bricht ab | | | 0.93.1 |
+| 32.1 | Claude: „Leg ein neues Projekt an und schreib einen Funk-Song in E-Moll mit 104 BPM.“ | Neues Projekt, nach wenigen Sekunden 5 MIDI-Spuren im Studio (kein KI-Audio-Job) | ✅ | | 0.93.1 |
+| 32.2 | Claude: „Lass die Musik-KI einen kurzen Song mit Gesang aufnehmen (30 s).“ | Claude sagt, dass es dauert; unten in der Statusleiste erscheint „Generating music … %“ | ✅ | | 0.93.1 |
+| 32.3 | Auf die Anzeige in der Statusleiste klicken | Seite „Create music“ mit Fortschritt; ✕ bricht ab | ✅ | | 0.93.1 |
 
 ## 33. Neu in 0.93.2: Eingabefelder nehmen wieder Text an
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 33.1 | Musik erstellen: in **Stil** klicken und tippen | Der Text erscheint | | | 0.93.2 |
-| 33.2 | Studio: ein VST-Plugin-Fenster öffnen, wieder schließen, dann Musik erstellen → Stil tippen | Der Text erscheint | | | 0.93.2 |
-| 33.3 | Datei → Öffnen bei ungespeicherten Änderungen (Rückfrage erscheint) → Abbrechen, dann in ein Textfeld tippen | Der Text erscheint | | | 0.93.2 |
+| 33.1 | Musik erstellen: in **Stil** klicken und tippen | Der Text erscheint | ✅ | | 0.93.2 |
+| 33.2 | Studio: ein VST-Plugin-Fenster öffnen, wieder schließen, dann Musik erstellen → Stil tippen | Der Text erscheint | ✅ | | 0.93.2 |
+| 33.3 | Datei → Öffnen bei ungespeicherten Änderungen (Rückfrage erscheint) → Abbrechen, dann in ein Textfeld tippen | Der Text erscheint | ✅ | | 0.93.2 |
+
+## 34. Neu in 0.93.3: Export im Hintergrund, KI-Chat macht MIDI
+
+Claude-Sitzung nach dem Update neu starten.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 34.1 | Funk.ams öffnen lassen, dann Claude: „Exportiere das Projekt als MP3 in meinen Musik-Ordner.“ | Claude sagt, der Export läuft, fragt nach und meldet dann die fertige Datei; Funk.mp3 liegt im Ordner | | | 0.93.3 |
+| 34.2 | KI-Chat der App: „Mach einen Schlagzeuger im Rock-Stil für 8 Takte.“ | Nach Sekunden neue Spur „Drummer (Rock)“ im Studio, keine KI-Aufnahme | | | 0.93.3 |

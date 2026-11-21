@@ -232,8 +232,9 @@ APP_TOOLS = [
     _tool("app_open_project", "Open an .ams project file. Refuses when there are unsaved changes unless discardChanges is true", {"path": _S, "discardChanges": _B}, ["path"]),
     _tool("app_save_project", "Save the project (to its file, or to path: an .ams file)", {"path": _S}),
     _tool("app_undo", "Undo (or with redo: true, redo) the last changes", {"steps": _I, "redo": _B}),
-    _tool("app_export_audio", "Mix the whole project into a .wav or .mp3 file (as it sounds: mute, solo, effects, automation, plugins). bits 16/24, normalize to -1 dBFS, kbps for MP3",
+    _tool("app_export_audio", "Mix the whole project into a .wav or .mp3 file (as it sounds: mute, solo, effects, automation, plugins). bits 16/24, normalize to -1 dBFS, kbps for MP3. Starts the mix in the background and answers at once; with VST plugins it takes about as long as the song: ask app_export_status every 20-30 s until done",
           {"path": _S, "bits": _I, "normalize": _B, "kbps": _I}, ["path"]),
+    _tool("app_export_status", "How the last app_export_audio is doing: running (seconds so far, song length), done (file, length, peak) or error"),
     _tool("app_export_midi", "Write the MIDI tracks (or one track) into a .mid file", {"path": _S, "track": _TRACK}, ["path"]),
     _tool("app_import_file", "Put audio files (wav, mp3, flac, ogg …) or a .mid file into the project at startBar: a new track, or onto an audio track. loopBpm: the file is a loop at this tempo and follows the project tempo",
           {"path": _S, "paths": {"type": "array", "items": _S}, "track": _TRACK, "startBar": _N, "loopBpm": _N}),
@@ -309,7 +310,7 @@ APP_TOOLS = [
     _tool("app_transport", "Play, stop, pause, go to the start, or go to bar (seek)", {"action": {"type": "string", "enum": ["play", "stop", "pause", "start", "seek"]}, "bar": _N}, ["action"]),
 ]
 # commands that take longer than the default 30 s
-APP_TIMEOUTS = {"app_export_audio": 900.0, "app_sound_packs": 1800.0, "app_open_project": 120.0, "app_save_project": 120.0, "app_import_file": 300.0,
+APP_TIMEOUTS = {"app_export_audio": 60.0, "app_sound_packs": 1800.0, "app_open_project": 120.0, "app_save_project": 120.0, "app_import_file": 300.0,
                 "app_plugin_params": 60.0, "app_set_plugin_param": 60.0, "app_set_effect": 60.0, "app_open_plugin": 60.0}
 MCP_TOOLS += APP_TOOLS
 

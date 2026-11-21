@@ -45,6 +45,8 @@ function createWindow(): void {
     w.webContents.send('app:close-request')
   })
 
+  // back from a plugin window or another program: the page gets the keyboard (text fields typed nothing otherwise)
+  mainWindow.on('focus', () => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.focus() })
   mainWindow.on('ready-to-show', () => {
     mainWindow!.show()
   })
@@ -114,6 +116,12 @@ app.whenReady().then(async () => {
   registerSoundPackHandlers()
   registerPluginPresetHandlers()
   ipcMain.handle('app:close-confirmed', () => { allowClose = true; mainWindow?.close() })
+  // Windows: after a message box (alert / confirm) or a plugin window, text fields of the page took no more typing
+  // until the window was left and entered again. Blur and focus the window to give the page the keyboard back.
+  ipcMain.handle('app:refocus', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    mainWindow.blur(); mainWindow.focus(); mainWindow.webContents.focus()
+  })
   app.on('before-quit', () => { allowClose = true })
 
   void serverManager.start()

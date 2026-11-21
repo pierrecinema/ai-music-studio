@@ -132,6 +132,7 @@ declare global {
       app?: {
         onCloseRequest: (cb: () => void) => () => void
         closeConfirmed: () => Promise<void>
+        refocus?: () => Promise<void>
       }
       files: {
         exists: (paths: string[]) => Promise<boolean[]>

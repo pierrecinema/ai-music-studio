@@ -118,7 +118,8 @@ const api = {
       ipcRenderer.on('app:close-request', h)
       return () => ipcRenderer.removeListener('app:close-request', h)
     },
-    closeConfirmed: () => ipcRenderer.invoke('app:close-confirmed')
+    closeConfirmed: () => ipcRenderer.invoke('app:close-confirmed'),
+    refocus: () => ipcRenderer.invoke('app:refocus')
   },
   files: {
     exists: (paths: string[]) => ipcRenderer.invoke('files:exists', paths),

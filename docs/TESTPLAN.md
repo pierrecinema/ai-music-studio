@@ -564,3 +564,11 @@ Nach dem Update: Claude-Sitzung neu starten (oder `/mcp` → neu verbinden), dam
 | 32.1 | Claude: „Leg ein neues Projekt an und schreib einen Funk-Song in E-Moll mit 104 BPM.“ | Neues Projekt, nach wenigen Sekunden 5 MIDI-Spuren im Studio (kein KI-Audio-Job) | | | 0.93.1 |
 | 32.2 | Claude: „Lass die Musik-KI einen kurzen Song mit Gesang aufnehmen (30 s).“ | Claude sagt, dass es dauert; unten in der Statusleiste erscheint „Generating music … %“ | | | 0.93.1 |
 | 32.3 | Auf die Anzeige in der Statusleiste klicken | Seite „Create music“ mit Fortschritt; ✕ bricht ab | | | 0.93.1 |
+
+## 33. Neu in 0.93.2: Eingabefelder nehmen wieder Text an
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 33.1 | Musik erstellen: in **Stil** klicken und tippen | Der Text erscheint | | | 0.93.2 |
+| 33.2 | Studio: ein VST-Plugin-Fenster öffnen, wieder schließen, dann Musik erstellen → Stil tippen | Der Text erscheint | | | 0.93.2 |
+| 33.3 | Datei → Öffnen bei ungespeicherten Änderungen (Rückfrage erscheint) → Abbrechen, dann in ein Textfeld tippen | Der Text erscheint | | | 0.93.2 |

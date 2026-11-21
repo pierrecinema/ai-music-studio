@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.93.2
+
+### Fixed
+
+- **Text fields took no typing** (for example the style and lyrics on Create music) after a message box or a plugin window had been open: the app now gives the keyboard back to its page by itself.
+
 ## 0.93.1
 
 ### Fixed

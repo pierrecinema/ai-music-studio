@@ -92,6 +92,7 @@ declare global {
         openVideo: () => Promise<string | null>
         openImage: () => Promise<string | null>
         pickFolder: (title?: string) => Promise<string | null>
+        openVoicebank?: () => Promise<string | null>
         save: (name: string) => Promise<string | null>
       }
       fs: { readFile: (path: string) => Promise<Uint8Array> }

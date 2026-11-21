@@ -30,12 +30,13 @@ The menu on the left of the app, from top to bottom:
 | ✨ [[Create Music]] | Songs from a style and lyrics, instrumentals, seamless loops (1–16 bars), LoRA styles |
 | 🎵 [[Library]] | Your songs, loops, stems and sample folders: play, search, tag, export, add to the Studio |
 | ⊞ [[Studio]] | The arrangement (DAW): audio and MIDI tracks, clips, loop, markers, tempo, recording, automation |
-| ♪ [[Piano Roll]] | Draw, select, move and quantize MIDI notes |
+| 🎹 [[Piano Roll]] | Draw, select, move and quantize MIDI notes |
+| 🎤 [[Vocal Editor]] | Your melody sung with your lyrics: DiffSinger voices (every note exact) or the AI singer |
 | 🎤 Vocal Editor | [[Coming Soon]] |
 | 🎻 AI Instruments | [[AI Instruments]] |
 | 🎚 [[Mixer]] | Faders, pan, mute, solo, level meters, returns and groups |
 | ✂ [[Stem Splitter]] | Vocals, drums, bass and more; stem mixer, karaoke remix |
-| 🎼 [[Audio to MIDI]] | A whole song into MIDI tracks: every instrument, drums too, on the bars, with tempo, key and chords |
+| ♪ [[Audio to MIDI]] | A whole song into MIDI tracks: every instrument, drums too, on the bars, with tempo, key and chords |
 | ◎ [[Mastering]] | Master a song: assistant with suggestions per genre, EQ, dynamic EQ, compressor, multiband, saturation, stereo, limiter to a loudness target, master gain fader, cutting and fades, every meter, export in all formats |
 | 🎙 Karaoke Export | [[Coming Soon]] |
 | 🎬 Video Composer | [[Coming Soon]] |

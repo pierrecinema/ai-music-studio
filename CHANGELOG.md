@@ -3,6 +3,16 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.95.0
+
+### New
+
+- **Vocal Editor: your melody, sung.** A MIDI melody is sung with your lyrics, on a new track in the Studio, in time with the song.
+  - **DiffSinger voices sing every note exactly** (pitch, timing, length) and in seconds on a CPU. Import a DiffSinger voicebank in the OpenUtau format (for example Nishiren or Tiger: English, German, Spanish …); the app downloads the vocoder it needs once. Voices with their own timing, pitch and expression models sing more naturally; simple ones get vibrato from the app.
+  - **Lyrics on the notes with one click** for English, German and Spanish: each word on its note, further syllables held with `+` (pronunciation dictionaries and models from OpenUtau, MIT). Correct any syllable by hand; lyrics are saved with the project.
+  - **AI singer (ACE-Step 1.5)**: sings your lyrics a cappella in the tempo, key and length of the melody, in many languages, without following every note.
+- Voices are not included in the app: each belongs to its author, whose terms are shown with the voice.
+
 ## 0.94.1
 
 ### Fixed

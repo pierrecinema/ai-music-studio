@@ -181,7 +181,7 @@ export default function App(): React.ReactElement {
     switch (activeView) {
       case 'piano-roll':    return <PianoRoll />
       case 'mixer':         return <Mixer />
-      case 'vocal-editor':  return <ComingSoon name={tr('Vocal Editor')} icon="🎤" />
+      case 'vocal-editor':  return <VocalEditor />
       case 'instruments':   return <AiInstruments />
       case 'ai-chat':       return <AIChat />
       case 'stem-splitter': return <StemSplitter />

@@ -57,6 +57,7 @@ const api = {
     openVideo: () => ipcRenderer.invoke('dialog:open-video'),
     openImage: () => ipcRenderer.invoke('dialog:open-image'),
     pickFolder: (title?: string) => ipcRenderer.invoke('dialog:pick-folder', title),
+    openVoicebank: () => ipcRenderer.invoke('dialog:open-voicebank'),
     save: (name: string) => ipcRenderer.invoke('dialog:save', name)
   },
   fs: {

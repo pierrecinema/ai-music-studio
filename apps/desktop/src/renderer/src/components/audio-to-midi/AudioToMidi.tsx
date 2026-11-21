@@ -55,6 +55,8 @@ function NotePreview({ part, bars }: { part: TranscribedPart; bars: number }): R
   return <canvas ref={ref} style={{ width: '100%', height: 58, display: 'block', background: 'rgba(0,0,0,0.25)', borderRadius: 6 }} />
 }
 
+let running: { id: string; file: string | null } | null = null     // the job of this page, also while another page is open
+
 export function AudioToMidi(): React.ReactElement {
   const project = useProjectStore((s) => s.project)
   const [file, setFile] = useState<string | null>(null)
@@ -110,24 +112,44 @@ export function AudioToMidi(): React.ReactElement {
         filePath: file ?? '', separate: !stemsIn && separate, stem: kind, stems: stemsIn ?? undefined,
         want, bpm: useHint ? project.bpm : undefined, quantize: grid, strength,
       })
-      setJob({ id: jobId, progress: 0, text: tr('Starting…') })
+      running = { id: jobId, file }
+      poll(jobId)
+    } catch (e) { setError((e as Error).message) }
+  }
+  // follows a job; it keeps running in the backend when the page is left, and is followed again on return
+  const poll = (jobId: string): void => {
+    if (timer.current) clearInterval(timer.current)
+    setJob({ id: jobId, progress: 0, text: tr('Starting…') })
+    {
+      let inFlight = false, misses = 0
+      const stopPolling = (): void => { if (timer.current) clearInterval(timer.current); timer.current = null; setJob(null); running = null }
       timer.current = window.setInterval(async () => {
+        if (inFlight) return                           // a slow answer must not pile up requests
+        inFlight = true
         try {
           const j = await api.audioToMidi.song(jobId)
-          setJob({ id: jobId, progress: j.progress, text: j.text })
+          misses = 0
+          setJob({ id: jobId, progress: j.progress, text: `${j.text} · ${Math.round(j.elapsed)} s` })
           if (j.status === 'running') return
-          if (timer.current) clearInterval(timer.current)
-          timer.current = null
-          setJob(null)
+          stopPolling()
           if (j.status === 'done' && j.result) {
             setRes(j.result)
             setPick(Object.fromEntries(j.result.parts.map((p) => [p.stem, true])))
             setProg(Object.fromEntries(j.result.parts.map((p) => [p.stem, p.program])))
           } else if (j.status === 'error') setError(j.error)
-        } catch { /* a busy backend may miss a poll */ }
-      }, 700)
-    } catch (e) { setError((e as Error).message) }
+          else if (j.status === 'cancelled') setError(tr('Cancelled.'))
+        } catch (e) {
+          // the backend was restarted (the job is gone) or does not answer for a long time: say so instead of waiting forever
+          const m = (e as Error).message
+          if (/not found/i.test(m) || ++misses > 60) {
+            stopPolling()
+            setError(/not found/i.test(m) ? tr('The AI backend was restarted, so this conversion was lost. Please start it again.') : trf('No answer from the AI backend for a minute ({m}). Please start it again.', { m }))
+          }
+        } finally { inFlight = false }
+      }, 1000)
+    }
   }
+  useEffect(() => { if (running) { setFile(running.file); poll(running.id) } }, [])   // eslint-disable-line react-hooks/exhaustive-deps
   const cancel = (): void => { if (job) void api.audioToMidi.cancelSong(job.id) }
 
   const bars = useMemo(() => (res ? resultBars(res) : 0), [res])

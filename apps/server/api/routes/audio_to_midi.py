@@ -191,11 +191,30 @@ def _rms_db(path: str) -> float:
     return float(20 * np.log10(np.sqrt(np.mean(x ** 2)) + 1e-9))
 
 
+def _plain(x):
+    """numbers from NumPy as plain Python numbers, NaN / infinity as None: the status must always be valid JSON"""
+    import math
+    if isinstance(x, dict):
+        return {str(k): _plain(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [_plain(v) for v in x]
+    if hasattr(x, "item") and not isinstance(x, (str, bytes)):
+        x = x.item()
+    if isinstance(x, float) and not math.isfinite(x):
+        return None
+    return x
+
+
+def _log(text: str) -> None:
+    print(f"[audio-to-midi] {text}", flush=True)
+
+
 def _song_job(job: dict, req: SongToMidiRequest) -> None:
     from services import transcribe as tr
 
     def say(pct: float, text: str) -> None:
         job["progress"] = round(pct, 1); job["text"] = text; job["updated"] = time.time()
+        _log(f"{round(pct)} % {text} ({round(time.time() - job['started'])} s)")
         if job.get("cancel"):
             raise RuntimeError("Cancelled")
 
@@ -227,8 +246,10 @@ def _song_job(job: dict, req: SongToMidiRequest) -> None:
             say(60 + 38 * i / max(1, len(names)), f"Turning {name} into MIDI")
             # a stem the separator left nearly empty (no piano in the song …) is skipped
             if len(stems) > 1 and _rms_db(path) < mix_db - 30:
-                skipped.append(name); continue
+                _log(f"{name}: left out, nearly silent"); skipped.append(name); continue
+            t0 = time.time()
             r = tr.transcribe_stem(path, name)
+            _log(f"{name}: {len(r['notes'])} notes in {time.time() - t0:.1f} s ({r['method']})")
             if len(r["notes"]) < 4:
                 skipped.append(name); continue
             notes = tr.to_beats(r["notes"], song["bpm"], song["firstBeat"], req.quantize if name != "vocals" else min(req.quantize, 0.25) * 0.5, req.strength)
@@ -236,9 +257,11 @@ def _song_job(job: dict, req: SongToMidiRequest) -> None:
             parts.append({"stem": name, "name": STEM_NAME.get(name, name.capitalize()), "kind": r["kind"], "method": r["method"],
                           "program": STEM_PROGRAM.get(name, 0), "notes": notes, "confidence": round(sum(conf) / len(conf), 2),
                           "audio": path})
-        job["result"] = {**song, "parts": parts, "skipped": skipped, "stems": stems}
+        job["result"] = _plain({**song, "parts": parts, "skipped": skipped, "stems": stems})
         job["status"] = "done"; say(100, "Done")
     except Exception as e:  # noqa: BLE001 - the app shows the reason
+        import traceback
+        _log("failed: " + traceback.format_exc()[-1500:])
         msg = "Cancelled" if type(e).__name__ == "Cancelled" else str(getattr(e, "detail", "") or e)
         job["status"] = "cancelled" if msg == "Cancelled" else "error"
         job["error"] = msg
@@ -263,7 +286,7 @@ async def song_status(jid: str):
     job = _song_jobs.get(jid)
     if not job:
         raise HTTPException(404, "Unknown job")
-    return {k: v for k, v in job.items() if k != "cancel"} | {"elapsed": round(time.time() - job["started"], 1)}
+    return _plain({k: v for k, v in job.items() if k != "cancel"} | {"elapsed": round(time.time() - job["started"], 1)})
 
 
 @router.post("/song/{jid}/cancel")

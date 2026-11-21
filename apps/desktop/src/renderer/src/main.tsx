@@ -12,6 +12,12 @@ import { initDiagLog } from './lib/diagLog'
 // every uncaught error ends up in the error log that "Feedback" can show
 window.addEventListener('error', (e) => { void window.api?.feedback?.logError(`window error: ${e.message} at ${e.filename}:${e.lineno}`) })
 window.addEventListener('unhandledrejection', (e) => { void window.api?.feedback?.logError(`unhandled rejection: ${(e.reason as Error)?.stack ?? String(e.reason)}`) })
+// Windows: after a native message box the text fields took no typing until the window was left and entered again
+{
+  const alert0 = window.alert.bind(window), confirm0 = window.confirm.bind(window)
+  window.alert = (m?: unknown): void => { alert0(m); void window.api?.app?.refocus?.() }
+  window.confirm = (m?: string): boolean => { const r = confirm0(m); void window.api?.app?.refocus?.(); return r }
+}
 startAutosave()
 void initDiagLog()
 

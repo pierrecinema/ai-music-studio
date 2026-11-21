@@ -572,3 +572,12 @@ Nach dem Update: Claude-Sitzung neu starten (oder `/mcp` → neu verbinden), dam
 | 33.1 | Musik erstellen: in **Stil** klicken und tippen | Der Text erscheint | ✅ | | 0.93.2 |
 | 33.2 | Studio: ein VST-Plugin-Fenster öffnen, wieder schließen, dann Musik erstellen → Stil tippen | Der Text erscheint | ✅ | | 0.93.2 |
 | 33.3 | Datei → Öffnen bei ungespeicherten Änderungen (Rückfrage erscheint) → Abbrechen, dann in ein Textfeld tippen | Der Text erscheint | ✅ | | 0.93.2 |
+
+## 34. Neu in 0.93.3: Export im Hintergrund, KI-Chat macht MIDI
+
+Claude-Sitzung nach dem Update neu starten.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 34.1 | Funk.ams öffnen lassen, dann Claude: „Exportiere das Projekt als MP3 in meinen Musik-Ordner.“ | Claude sagt, der Export läuft, fragt nach und meldet dann die fertige Datei; Funk.mp3 liegt im Ordner | | | 0.93.3 |
+| 34.2 | KI-Chat der App: „Mach einen Schlagzeuger im Rock-Stil für 8 Takte.“ | Nach Sekunden neue Spur „Drummer (Rock)“ im Studio, keine KI-Aufnahme | | | 0.93.3 |

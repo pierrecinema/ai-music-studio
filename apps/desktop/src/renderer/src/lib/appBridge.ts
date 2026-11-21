@@ -162,6 +162,9 @@ function keyOf(v: unknown): { key: number; mode?: Mode } {
   return { key: k, mode: q ? (q.startsWith('m') && q !== 'maj' && q !== 'major' ? 'minor' : 'major') : undefined }
 }
 
+interface ExportJob { path: string; status: 'running' | 'done' | 'error'; started: number; finished?: number; songSeconds: number; seconds?: number; peakDb?: number | null; clips?: boolean; error?: string }
+let exportJob: ExportJob | null = null
+
 const HANDLERS: Record<string, (a: Args) => unknown | Promise<unknown>> = {
   // ── project and files ──
   get_project: async () => {
@@ -219,18 +222,33 @@ const HANDLERS: Record<string, (a: Args) => unknown | Promise<unknown>> = {
     for (let i = 0; i < clamp(Math.round(Number(a.steps ?? 1)), 1, 50); i++) if (a.redo ? h.redo() : h.undo()) n++
     return { done: n, ...h.historySize() }
   },
+  // the mix renders in the background (with VST plugins it takes about as long as the song): the agent asks
+  // app_export_status instead of waiting, so no MCP client runs into its time limit
   export_audio: async (a) => {
     if (!a.path) throw new Error('Give the path of the file to write (.wav or .mp3).')
-    const path = String(a.path)
-    const mp3 = /\.mp3$/i.test(path)
+    if (exportJob?.status === 'running') throw new Error(`An export is still running (${exportJob.path}): see app_export_status.`)
+    const mp3 = /\.mp3$/i.test(String(a.path))
+    const path = mp3 || /\.wav$/i.test(String(a.path)) ? String(a.path) : `${a.path}.wav`
     const eng = await import('../audio/engine')
-    const mix = await eng.renderMix({ bits: Number(a.bits) === 24 ? 24 : 16, normalize: !!a.normalize })
-    if (mp3) {
-      const r = await window.api.exporter.mp3(mix.wav, path, clamp(Number(a.kbps ?? 320), 64, 320))
-      if (!r.ok) throw new Error(`MP3 needs ffmpeg (${r.error}). Export a .wav instead.`)
-    } else await window.api.exporter.write(/\.wav$/i.test(path) ? path : `${path}.wav`, mix.wav)
-    const db = mix.peak > 0 ? Math.round(20 * Math.log10(mix.peak) * 10) / 10 : -Infinity
-    return { saved: path, seconds: Math.round(mix.seconds * 10) / 10, peakDb: db, clips: mix.peak >= 0.999 }
+    const songSeconds = Math.round(eng.beatsToSec(eng.projectEndBeat(proj()), proj().bpm))
+    const job: ExportJob = { path, status: 'running', started: Date.now(), songSeconds }
+    exportJob = job
+    void (async () => {
+      try {
+        const mix = await eng.renderMix({ bits: Number(a.bits) === 24 ? 24 : 16, normalize: !!a.normalize })
+        if (mp3) {
+          const r = await window.api.exporter.mp3(mix.wav, path, clamp(Number(a.kbps ?? 320), 64, 320))
+          if (!r.ok) throw new Error(`MP3 needs ffmpeg (${r.error}). Export a .wav instead.`)
+        } else await window.api.exporter.write(path, mix.wav)
+        Object.assign(job, { status: 'done', seconds: Math.round(mix.seconds * 10) / 10, peakDb: mix.peak > 0 ? Math.round(20 * Math.log10(mix.peak) * 10) / 10 : null, clips: mix.peak >= 0.999 })
+      } catch (e) { Object.assign(job, { status: 'error', error: (e as Error).message }) }
+      job.finished = Date.now()
+    })()
+    return { started: path, songSeconds, note: 'The mix renders in the background (with VST plugins about as long as the song). Ask app_export_status until it says done.' }
+  },
+  export_status: () => {
+    if (!exportJob) return { status: 'none', note: 'No export was started (app_export_audio).' }
+    return { ...exportJob, runningSeconds: Math.round(((exportJob.finished ?? Date.now()) - exportJob.started) / 1000) }
   },
   export_midi: async (a) => {
     if (!a.path) throw new Error('Give the path of the .mid file to write.')

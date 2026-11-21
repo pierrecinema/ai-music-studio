@@ -131,7 +131,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install fastapi uvicorn pydantic anthropic openai httpx pytest pytest-asyncio numpy
+        run: pip install fastapi uvicorn pydantic anthropic openai httpx pytest pytest-asyncio numpy pyyaml
 
         working-directory: apps/server
 

@@ -10,6 +10,7 @@
 - [[Studio]]
 - [[Beat Matching and Sync]]
 - [[Piano Roll]]
+- [[Vocal Editor]]
 - [[Mixer]]
 - [[Stem Splitter]]
 - [[Audio to MIDI]]

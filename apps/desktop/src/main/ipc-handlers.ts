@@ -195,6 +195,12 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     return result.filePaths[0] ?? null
   })
 
+  // a singing voice (DiffSinger voicebank in the OpenUtau format: .zip, or a vocoder .oudep)
+  ipcMain.handle('dialog:open-voicebank', async (e) => {
+    const result = await openDialog(e, { title: 'Choose a DiffSinger voicebank (.zip) or vocoder (.oudep)', filters: [{ name: 'Voicebank / vocoder', extensions: ['zip', 'oudep'] }], properties: ['openFile'] })
+    return result.filePaths[0] ?? null
+  })
+
   // a folder to export into (stems, loops: one file each)
   ipcMain.handle('dialog:pick-folder', async (e, title?: string) => {
     const result = await openDialog(e, { title: title || 'Choose a folder', properties: ['openDirectory', 'createDirectory'] })

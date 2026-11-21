@@ -12,7 +12,7 @@ interface NavItem {
   soon?: boolean        // not finished yet: shown dimmed, opens a "Coming soon" page
 }
 
-export const COMING_SOON: View[] = ['vocal-editor', 'karaoke', 'video-composer', 'cloud']
+export const COMING_SOON: View[] = ['karaoke', 'video-composer', 'cloud']
 
 const NAV_ITEMS: NavItem[] = [
   { view: 'create',         icon: '✦\uFE0E', labelKey: 'sidebar.create',        fallback: 'Create music' },

@@ -29,10 +29,10 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.94: Audio → MIDI for whole songs; 0.93: AI agents work on everything in the Studio (MCP)
+### New in 0.95: Vocal Editor (your melody, sung); 0.94: Audio → MIDI for whole songs
 
-- **Audio → MIDI**: a whole song into MIDI tracks: vocals, bass, piano, guitar, keys and drums (kick, snare, hats), on the bars, with tempo, key and chords; choose the instrument of each part.
-- **MCP**: 50 tools for Claude and other AI agents (and the AI Chat): tracks, notes, instruments, effects, sends, automation, song generator, band, Audio → MIDI, export.
+- **Vocal Editor**: a MIDI melody sung with your lyrics by a DiffSinger voice (every note exact, English, German, Spanish …) or by the AI singer (ACE-Step 1.5).
+- **Audio → MIDI**: a whole song into MIDI tracks: vocals, bass, piano, guitar, keys and drums, on the bars, with tempo, key and chords.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features

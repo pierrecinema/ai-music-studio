@@ -65,7 +65,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes import vocal, instruments, stems, audio_to_midi, video, ai_chat, vst, mcp_server, music_gen, mastering, karaoke, system, train, library, samples
+from api.routes import singer, vocal, instruments, stems, audio_to_midi, video, ai_chat, vst, mcp_server, music_gen, mastering, karaoke, system, train, library, samples
 try:
     from services.mcp_app import build_server
     mcp_sdk_server = build_server()
@@ -99,6 +99,7 @@ app.add_middleware(
 )
 
 app.include_router(vocal.router, prefix="/vocal", tags=["vocal"])
+app.include_router(singer.router, prefix="/singer", tags=["singer"])
 app.include_router(instruments.router, prefix="/instruments", tags=["instruments"])
 app.include_router(stems.router, prefix="/stems", tags=["stems"])
 app.include_router(audio_to_midi.router, prefix="/audio-to-midi", tags=["audio-to-midi"])

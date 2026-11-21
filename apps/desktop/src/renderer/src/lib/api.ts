@@ -24,6 +24,10 @@ export interface InstrumentJob {
   id: string; status: 'queued' | 'running' | 'done' | 'error' | 'cancelled'; progress: number; text: string; elapsed: number
   audio_file?: string; library_id?: string | null; duration?: number; voices?: number; error?: string
 }
+export interface SingerVoice {
+  id: string; name: string; path?: string; languages?: string[]; speakers?: string[]; vocoder?: string; vocoderInstalled?: boolean
+  models?: { duration: boolean; pitch: boolean; variance: boolean }; author?: string; web?: string; readme?: string; error?: string
+}
 export interface TranscribedNote { pitch: number; startTime: number; duration: number; velocity: number; confidence: number }
 export interface TranscribedPart { stem: string; name: string; kind: string; method: string; program: number; notes: TranscribedNote[]; confidence: number; audio: string }
 export interface SongToMidiResult {
@@ -175,6 +179,18 @@ export const api = {
       status: 'running' | 'done' | 'error' | 'cancelled'; progress: number; text: string; elapsed: number
       result: Record<string, string> | null; error: string | null
     }>(`/stems/jobs/${id}`),
+  },
+
+  // DiffSinger voices sing a melody with lyrics (apps/server/api/routes/singer.py)
+  singer: {
+    voices: () => get<{ voices: SingerVoice[]; folder: string; vocalsFolder: string; vocoders: string[]; vocoderLicence: string }>('/singer/voices'),
+    importVoice: (path: string) => post<{ imported: Array<{ kind: string; id?: string; name?: string }> }>('/singer/voices/import', { path }),
+    deleteVoice: (id: string) => send<{ deleted: string }>('DELETE', `/singer/voices/${encodeURIComponent(id)}`),
+    installVocoder: (name: string) => post<{ jobId: string; licence: string }>('/singer/vocoder/install', { name }),
+    lyrics: (text: string, count: number, lang: string) => post<{ lyrics: string[] }>('/singer/lyrics', { text, count, lang }),
+    render: (body: { voice: string; notes: Array<{ pitch: number; start: number; end: number; lyric: string }>; lang?: string; steps?: number; vibrato?: number; speaker?: string; name?: string }) =>
+      post<{ jobId: string }>('/singer/render', body),
+    job: (id: string) => get<{ id: string; status: 'running' | 'done' | 'error'; progress: number; text: string; error: string | null; elapsed: number; result?: { file: string; seconds: number; unknown: string[] } }>(`/singer/jobs/${id}`),
   },
 
   audioToMidi: {

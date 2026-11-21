@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.93.1
+
+### Fixed
+
+- **A song started by an AI agent or the AI Chat now shows its progress in the app**: in the status bar at the bottom (percent and step, click it for the Create music page, ✕ cancels) and on the Create music page. The song lands in the Library.
+- **AI agents pick the right tool for "write a song"**: the MCP server now tells them that a song for the Studio is made with the song generator (MIDI tracks, seconds), and that the music AI (an audio recording with vocals) is slow, often 10–30 minutes or more on a PC without NVIDIA graphics. The progress check gives them a short line (step, percent, time so far).
+
 ## 0.93.0
 
 ### New

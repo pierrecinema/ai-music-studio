@@ -28,4 +28,8 @@ Tools: generate music, LoRAs, stems, Audio → MIDI, mastering, system info and 
 | Song | `app_generate_song` (song generator), `app_band_part` (drummer, bass player, guitarist), `app_add_marker`, `app_remove_marker`, `app_set_loop` |
 | Transport | `app_transport` (play, stop, pause, start, go to bar), `app_set_bpm` |
 
+After an app update, start a new Claude session (or reconnect the MCP server) so it loads the new tool list.
+
+**A song as MIDI or as audio:** *write a song* in the Studio uses `app_generate_song` (MIDI tracks in seconds). `generate_music` records a song with the music AI (audio, with vocals); it takes minutes with an NVIDIA graphics card and often 10–30 minutes or more on a CPU. Its progress shows in the status bar at the bottom of the app and on *Create music*.
+
 Examples for Claude: *"Make a MIDI track with Dexed, put BlueArp in front of it and write an A minor chord over 4 bars."* *"Write a funk song in E minor at 104 BPM, put a compressor on the bass and a hall reverb on the melody, then export it to my desktop as MP3."* The server listens only on `127.0.0.1`; the tools read files you give them as paths, so use it only with agents you trust.

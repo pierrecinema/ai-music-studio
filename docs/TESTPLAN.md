@@ -554,3 +554,13 @@ In einer Claude-Sitzung mit MCP-Verbindung zur App (oder im KI-Chat der App) ein
 | 31.6 | „Speichere das Projekt als Funk.ams in Musik und exportiere es als MP3 daneben.“ | Beide Dateien liegen im Ordner, MP3 klingt wie das Projekt | | | 0.93.0 |
 | 31.7 | KI-Chat der App: „Mach einen Schlagzeuger im Rock-Stil für 8 Takte.“ | Neue Spur „Drummer (Rock)“ im Studio | | | 0.93.0 |
 | 31.8 | Song-Generator: Ballade, Tonart A-Moll | Akkorde klingen nach Moll (Am, C, Dm, E), nicht nach A-Dur | | | 0.93.0 |
+
+## 32. Neu in 0.93.1: Fortschritt und richtige Werkzeugwahl
+
+Nach dem Update: Claude-Sitzung neu starten (oder `/mcp` → neu verbinden), damit sie die neue Werkzeugliste lädt.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 32.1 | Claude: „Leg ein neues Projekt an und schreib einen Funk-Song in E-Moll mit 104 BPM.“ | Neues Projekt, nach wenigen Sekunden 5 MIDI-Spuren im Studio (kein KI-Audio-Job) | | | 0.93.1 |
+| 32.2 | Claude: „Lass die Musik-KI einen kurzen Song mit Gesang aufnehmen (30 s).“ | Claude sagt, dass es dauert; unten in der Statusleiste erscheint „Generating music … %“ | | | 0.93.1 |
+| 32.3 | Auf die Anzeige in der Statusleiste klicken | Seite „Create music“ mit Fortschritt; ✕ bricht ab | | | 0.93.1 |

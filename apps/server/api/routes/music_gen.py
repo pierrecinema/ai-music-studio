@@ -1322,6 +1322,13 @@ async def engines():
             "gpu_models": sorted(dml_engines())}
 
 
+@router.get("/jobs")
+async def active_jobs():
+    """Jobs that are queued or running (newest first): the app shows them too when an AI agent started them."""
+    act = [j for j in _jobs.values() if j.get("status") in ("queued", "running")]
+    return {"jobs": [{"id": j["id"], "status": j["status"], "created": j.get("created")} for j in sorted(act, key=lambda j: -(j.get("created") or 0))]}
+
+
 @router.get("/jobs/{job_id}")
 async def job_status(job_id: str):
     job = _jobs.get(job_id)

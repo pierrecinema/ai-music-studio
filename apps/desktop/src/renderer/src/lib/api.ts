@@ -209,6 +209,7 @@ export const api = {
     }>('/music/status'),
     generate: (body: Record<string, unknown>) => post<{ jobId: string }>('/music/generate', body),
     job: (id: string) => get<MusicJob>(`/music/jobs/${id}`),
+    activeJobs: () => get<{ jobs: Array<{ id: string; status: string; created?: number }> }>('/music/jobs'),
     cancel: (id: string) => post<{ cancelled: boolean; status: string }>(`/music/jobs/${id}/cancel`, {}),
     engines: () => get<{ engines: MusicEngineInfo[]; recommended: string; gpu_path: boolean; gpu_models: string[] }>('/music/engines'),
     // the backend's view of the LoRAs: the same code that loads them decides which model each one fits

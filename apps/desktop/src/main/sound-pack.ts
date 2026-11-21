@@ -55,7 +55,7 @@ export const PACKS: PackSpec[] = [
     keep: (p) => (/^package\/audio\/[A-G]#?\dv\d+\.mp3$/.test(p) ? p.slice('package/'.length) : p === 'package/LICENSE' ? 'LICENSE.txt' : null),
   },
   {
-    id: 'vsco', name: 'VSCO-2 Orchestra', what: 'Violin section, cello section, French horn, and trombone (real players)', licence: 'CC0 (public domain), Versilian Studios',
+    id: 'vsco', name: 'VSCO-2 Orchestra', what: 'Violin section, cello section, French horn and trombone (real players)', licence: 'CC0 (public domain), Versilian Studios',
     downloadMb: 330, diskMb: 220, kind: 'multi',
     tarballs: [
       npm('@minicut/music-samples-1', '1.0.0', 'DIUjmXIgTzib3fxJ4sHPWRfDsabTB/ye+DY3o0rb/wABJPyKmoWFsY6pDMICWDwNq3bVhJx/UpuJ9BViWxrZcg=='),

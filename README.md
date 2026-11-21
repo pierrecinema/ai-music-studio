@@ -29,7 +29,9 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.91: AI agents work on the open project (MCP); 0.90: MIDI effects; 0.85: a console-style Mixer; 0.84: real instruments
+### New in 0.92: more sound packs (concert grand, orchestra, MuseScore General); 0.91: AI agents work on the open project (MCP); 0.90: MIDI effects
+
+- **Sound packs** in Settings → Audio: Salamander concert grand, VSCO-2 orchestra (strings, brass), MuseScore General and GeneralUser GS; the best installed one plays each instrument.
 
 - **MCP tools for the open project:** Claude and other agents add MIDI tracks, choose instruments and MIDI effects, write notes, set the mix and tempo (wiki: MCP).
 

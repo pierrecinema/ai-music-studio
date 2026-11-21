@@ -2,6 +2,10 @@ export {}
 
 declare global {
   const __APP_VERSION__: string
+  interface SoundPackInfo {
+    id: string; name: string; what: string; licence: string; downloadMb: number; diskMb: number; kind: 'sf2' | 'multi'
+    installed: boolean; dir: string; main?: string; files?: string[]
+  }
   interface ModelsOverview {
     caches: Array<{ id: 'pip-shared' | 'pip-app' | 'updater'; name: string; description: string; path: string; bytes: number | null }>
     baseDir: string
@@ -92,10 +96,10 @@ declare global {
       }
       fs: { readFile: (path: string) => Promise<Uint8Array> }
       sounds?: {
-        status: () => Promise<{ installed: boolean; path: string; name: string; sizeMb: number }>
-        install: () => Promise<{ ok: boolean; error?: string }>
-        remove: () => Promise<boolean>
-        onProgress: (cb: (p: { text: string; pct?: number }) => void) => () => void
+        status: () => Promise<{ installed: boolean; path: string; name: string; sizeMb: number; packs?: SoundPackInfo[] }>
+        install: (id?: string) => Promise<{ ok: boolean; error?: string }>
+        remove: (id?: string) => Promise<boolean>
+        onProgress: (cb: (p: { id?: string; text: string; pct?: number }) => void) => () => void
       }
       shell: { openPath: (path: string) => Promise<void>; openProject: (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions' | 'donate') => Promise<void> }
       project: {

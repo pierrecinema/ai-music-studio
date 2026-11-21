@@ -22,6 +22,7 @@ import { keyOf, profileFor } from '../src/renderer/src/midi/devices'
 import { isInstrumentLike } from '../src/renderer/src/audio/vst/host'
 import { parseProject } from '../src/renderer/src/project/format'
 import { GENRES, generateSong, romanChord } from '../src/renderer/src/lib/songgen'
+import { buildMultiBank, noteNumber } from '../src/renderer/src/audio/soundbank'
 import { bassist, bassRoot, chordName, detectChords, drummer, DRUM, DRUM_STYLES, fillChords, guitarist, guitarVoicing, parseChord, parseProgression, BASS_STYLES, GUITAR_STYLES } from '../src/renderer/src/lib/band'
 import { analyze, BiquadBank, CompressorCore, crossover, LimiterCore, MultibandCore, truePeakTaps } from '../src/renderer/src/audio/master/dsp'
 
@@ -502,6 +503,17 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
     && (p.program === undefined ? p.sound === '808' : p.program >= 0 && p.program < 256 && (p.id === 'drums') === (p.program >= 128)))))
   check('no parts at all is allowed (the page must not crash)', generateSong({ genre: 'pop', key: 0, parts: { melody: false, chords: false, bass: false, drums: false, guitar: false } }).parts.length === 0)
   check('another take is different', JSON.stringify(generateSong({ genre: 'pop', key: 0, seed: 1 }).parts[0].notes) !== JSON.stringify(generateSong({ genre: 'pop', key: 0, seed: 2 }).parts[0].notes))
+}
+
+// ── sound packs: note names and multisample instruments ──
+{
+  check('note names: C4 = 60 (scientific), A0 = 21; VSCO C3 = 60', noteNumber('C4') === 60 && noteNumber('A0') === 21 && noteNumber('D#1') === 27 && noteNumber('C3', 3) === 60 && noteNumber('A#0', 3) === 34 && noteNumber('H2') === null)
+  const sal = buildMultiBank('salamander', ['audio/A0v4.mp3', 'audio/C4v4.mp3', 'audio/C4v16.mp3', 'audio/A0v16.mp3', 'audio/F#4v4.mp3', 'audio/F#4v16.mp3', 'LICENSE.txt'])
+  const piano = sal.presets.get('0:0')!
+  const hit = (pitch: number, vel: number): string[] => piano.zones.filter((z) => pitch >= z.keyLo && pitch <= z.keyHi && vel >= z.velLo && vel <= z.velHi).map((z) => sal.samples[z.sample].file!)
+  check('Salamander: nearest sample per key, velocity layers', hit(62, 30).join() === 'audio/C4v4.mp3' && hit(64, 120).join() === 'audio/F#4v16.mp3' && hit(21, 127).join() === 'audio/A0v16.mp3' && hit(127, 1).join() === 'audio/F#4v4.mp3', JSON.stringify([hit(62, 30), hit(64, 120)]))
+  const vsco = buildMultiBank('vsco', ['Strings/Violin Section/susVib/VlnEns_susVib_A3_v1.wav', 'Strings/Cello Section/susvib/susvib_C2_v1_1.wav', 'Brass/F Horn/sus/MOHorn_sus_C3_v1_1.wav', 'Brass/Tenor Trombone/sus/tenortbn_sus_A#0_v1_1.wav'])
+  check('VSCO: violins, cellos, strings, horn, trombone, brass presets', ['0:40', '0:42', '0:48', '0:57', '0:60', '0:61'].every((k) => vsco.presets.get(k)?.zones.length) && vsco.samples.find((x) => x.file?.includes('VlnEns'))?.root === 69)
 }
 
 console.log(`${passed} passed, ${failed} failed`)

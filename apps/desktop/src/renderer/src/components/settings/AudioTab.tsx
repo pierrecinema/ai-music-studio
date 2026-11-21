@@ -126,7 +126,7 @@ export function AudioTab(): React.ReactElement {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 720 }}>
-      <div style={section}>{tr('Sound pack')}</div>
+      <div style={section}>{tr('Sound packs')}</div>
       <SoundPackCard />
       <div style={section}>{tr('Audio device')}</div>
       <label style={row}>{tr('Driver type')}

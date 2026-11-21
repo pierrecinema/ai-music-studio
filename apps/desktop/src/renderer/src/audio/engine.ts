@@ -10,7 +10,7 @@ import { useAudioStore } from '../stores/audio.store'
 import { useProjectStore } from '../stores/project.store'
 import type { AutoParam, Clip, InsertFx, Project, Track } from '../types'
 import { playClick, playSynthNote, type Timbre } from './synth'
-import { playSampleNote, presetFor, programOf, roomReverb, reverbOf, type Choke, type Sf2Preset } from './soundbank'
+import { playSampleNote, preparePreset, prepareSounds, presetFor, programOf, roomReverb, reverbOf, type Choke, type Sf2Preset } from './soundbank'
 import { encodeWav, peakOf } from './wav'
 import { MAX_STRETCH_SECONDS, stretchBuffer } from './stretch'
 import { beatToSec, bpmAt, barAt, isDownbeat, secToBeat, tempoPoints } from './timemap'
@@ -678,6 +678,8 @@ export function activeLoop(p: Project): { start: number; end: number } | null {
 }
 
 async function loadAllFiles(p: Project): Promise<void> {
+  // the sound-pack samples the MIDI tracks need (compressed and file samples are decoded before they can play)
+  await prepareSounds(p.tracks.filter((t) => !t.instrument && (t.type === 'midi' || t.type === 'instrument')).map((t) => programOf(t)))
   const files = new Set<string>()
   const synced = new Map<string, [string, number, number, number | undefined]>()
   const marked: Array<[Clip, number, number]> = []
@@ -1039,7 +1041,7 @@ export async function previewNote(pitch: number, velocity = 100, track?: Track, 
   if (hold && track?.instrument?.vst) return
   const program = track && !track.instrument ? programOf(track) : null
   const preset = program === null ? null : presetFor(program)
-  if (preset) { playSampleNote(c, master!, preset, pitch, velocity, c.currentTime + 0.01, 0.6); return }
+  if (preset) { await preparePreset(preset); playSampleNote(c, master!, preset, pitch, velocity, c.currentTime + 0.01, 0.6); return }
   playSynthNote(c, master!, pitch, velocity, c.currentTime + 0.01, 0.35, track ? timbreOf(track) : 'soft')
 }
 

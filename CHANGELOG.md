@@ -3,6 +3,17 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.92.0
+
+### New
+
+- **More sound packs, all free, each installed with one click** in *Settings → Audio → Sound packs* (with download and disk size):
+  - **Salamander Grand Piano**: a concert grand recorded at 4 velocities (22 MB, CC BY 3.0).
+  - **VSCO-2 Orchestra**: violin section, cello section, French horn and trombone played by real musicians (about 330 MB download, CC0).
+  - **MuseScore General**: every General MIDI instrument in a newer, fuller recording than GeneralUser GS (48 MB, MIT).
+  - **GeneralUser GS** as before (28 MB).
+- **The best installed pack plays each instrument by itself**: the grand piano from Salamander, strings and brass from VSCO-2, everything else from MuseScore General, then GeneralUser GS. The instrument list in the Studio shows which pack plays each instrument. The song generator, the band and existing projects use them at once.
+
 ## 0.91.0
 
 ### New

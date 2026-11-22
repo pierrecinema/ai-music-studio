@@ -31,6 +31,7 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ### New in 0.96: built-in singing voices with styles, and rap
 
+- **Studio**: a tools box with scissors ✂ and the grid magnet 🧲; zoom up to 16× with a magnetic grid for fine-tuning.
 - **Vocal Editor**: 39 built-in voices with names sing your MIDI melody and lyrics note for note, no voice to import; click a voice to hear it at once. Choose a style (Pop, Rock, Ballad, Soul), and the vocal track gets the matching way of singing and effects.
 - **Rap**: the AI singer (ACE-Step 1.5) raps your lyrics with a real flow in the song's tempo.
 - Full history: [CHANGELOG.md](CHANGELOG.md).

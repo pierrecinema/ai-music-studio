@@ -1916,5 +1916,15 @@
  "{n} found": "{n} gefunden",
  "Grid on": "Raster an",
  "Grid off": "Raster aus",
- "Grid on: clips and notes snap to the grid; zoomed in far, only near a grid line (fine moves in between). Grid off: everything moves freely. (Ctrl+4; Alt while dragging: free once)": "Raster an: Clips und Noten rasten im Raster ein; bei großem Zoom nur nahe einer Rasterlinie (dazwischen fein verschieben). Raster aus: alles lässt sich frei verschieben. (Strg+4; Alt beim Ziehen: einmal frei)"
+ "Grid on: clips and notes snap to the grid; zoomed in far, only near a grid line (fine moves in between). Grid off: everything moves freely. (Ctrl+4; Alt while dragging: free once)": "Raster an: Clips und Noten rasten im Raster ein; bei großem Zoom nur nahe einer Rasterlinie (dazwischen fein verschieben). Raster aus: alles lässt sich frei verschieben. (Strg+4; Alt beim Ziehen: einmal frei)",
+ "Tools": "Werkzeuge",
+ "Pointer: select, move and trim clips": "Zeiger: Clips wählen, verschieben und kürzen",
+ "Scissors: click a clip to cut it there (on the grid; Alt: exactly where you click). Esc: back to the pointer.": "Schere: Klick auf einen Clip schneidet ihn dort (im Raster; Alt: genau an der Klickstelle). Esc: zurück zum Zeiger.",
+ "Cut.": "Geschnitten.",
+ "The AI backend is starting… the voices appear in a moment.": "Das KI-Backend startet … die Stimmen erscheinen gleich.",
+ "Sing is grey: there is no melody yet. Write notes on a MIDI track in the Piano Roll (or turn your singing into MIDI), then choose that track under Melody.": "„Singen“ ist grau: Es gibt noch keine Melodie. Schreib Noten auf eine MIDI-Spur im Piano Roll (oder mach aus deinem Gesang MIDI) und wähle diese Spur unter „Melodie“.",
+ "Sing is grey: the AI backend is still starting.": "„Singen“ ist grau: Das KI-Backend startet noch.",
+ "Sing is grey: install the singer first (button above).": "„Singen“ ist grau: Installiere zuerst den Sänger (Knopf oben).",
+ "Sing is grey: write the lyrics first.": "„Singen“ ist grau: Schreib zuerst den Text.",
+ "Sing is grey: choose a voice first.": "„Singen“ ist grau: Wähle zuerst eine Stimme."
 }

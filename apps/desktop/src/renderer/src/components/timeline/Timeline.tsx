@@ -12,7 +12,7 @@ import type { Clip, Track } from '../../types'
 import { makeMaster, retune, runSyncAll, runSyncSelected, syncOne, useBeatMatch } from '../../beatmatch/store'
 import { minLength, snapBeat, snapDrag } from '../../edit/grid'
 import { runAction } from '../../shortcuts/handlers'
-import { GridControls } from '../../edit/GridControls'
+import { GridControls, SnapButton } from '../../edit/GridControls'
 import { EXPORT_EVENT } from '../layout/FileMenu'
 import { beatOfSrc, srcOfBeat, validMarkers } from '../../audio/warp'
 import { hasTempoChanges } from '../../audio/timemap'
@@ -245,6 +245,14 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const selectedClipIds = useProjectStore((s) => s.selectedClipIds)
   const { addTrack, updateTrack, removeTrack, selectTrack, selectClip, selectClips, toggleClipSelection, updateClip, moveClip, addClip, moveTrack, addReturn, promoteTake } = useProjectStore.getState()
   const zoom = useUIStore((s) => s.zoom)
+  const tool = useUIStore((s) => s.tool)
+  const setTool = useUIStore((s) => s.setTool)
+  // Esc puts the scissors away
+  useEffect(() => {
+    const k = (e: KeyboardEvent): void => { if (e.key === 'Escape' && useUIStore.getState().tool !== 'pointer') useUIStore.getState().setTool('pointer') }
+    window.addEventListener('keydown', k)
+    return () => window.removeEventListener('keydown', k)
+  }, [])
   const setZoom = useUIStore((s) => s.setZoom)
   const setActiveView = useUIStore((s) => s.setActiveView)
   const loadingAudio = useAudioStore((s) => s.loading)
@@ -399,6 +407,14 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const startDrag = (e: React.PointerEvent, track: Track, clip: Clip, width: number): void => {
     if (e.button !== 0) return
     e.stopPropagation()
+    if (useUIStore.getState().tool === 'scissors') {
+      // the scissors: a click cuts the clip there (on the grid; zoomed in, magnetic; Alt: exactly where clicked)
+      const at = snap(beatAt(e.clientX), e.altKey)
+      if (at > clip.startTime + 1e-6 && at < clip.startTime + clip.duration - 1e-6 && useProjectStore.getState().splitClip(track.id, clip.id, at)) {
+        setMessage(tr('Cut.'))
+      }
+      return
+    }
     if (e.ctrlKey || e.metaKey || e.shiftKey) { toggleClipSelection(clip.id); selectTrack(track.id); return }
     const keepGroup = selected.has(clip.id) && selected.size > 1
     selectTrack(track.id)
@@ -706,7 +722,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
               style={{
                 position: 'absolute', left: clip.startTime * beatWidth, top: 6, width, height: th - 12, boxSizing: 'border-box',
                 background: missing ? 'rgba(239,68,68,0.15)' : `${track.color}${sel ? '55' : '33'}`,
-                border: `1px solid ${warpEdit ? '#facc15' : sel ? '#fff' : track.color + '88'}`, borderRadius: 4, overflow: 'hidden', cursor: 'grab', userSelect: 'none'
+                border: `1px solid ${warpEdit ? '#facc15' : sel ? '#fff' : track.color + '88'}`, borderRadius: 4, overflow: 'hidden', cursor: tool === 'scissors' ? 'crosshair' : 'grab', userSelect: 'none'
               }}>
               {clip.audioFile && !missing && <Waveform clip={clip} color={track.color} height={th - 14} width={width} warpEdit={warpEdit} trackId={track.id} />}
               {clip.notes && <MiniNotes clip={clip} color={track.color} height={th - 14} />}
@@ -768,7 +784,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           onClick={() => selectedAudioClip && void useBeatMatch.getState().propose(selectedAudioClip.trackId, selectedAudioClip.clip.id, selectedAudioClip.clip.audioFile!, selectedAudioClip.clip.name ?? 'Audio', false, true)}>
           {tr('Beat match…')}
         </button>
-        <GridControls />
+        <GridControls noSnap />
         <span style={{ width: 1, height: 18, background: 'var(--border)' }} />
         {toolbarBtn('Loop', 'Loop on / off (Ableton: loop switch, Cubase: cycle, Num /). Drag in the strip under the markers to set the range.', toggleLoop, !!loop?.enabled)}
         {toolbarBtn('Punch in', 'Punch in (Cubase I): recording starts at the start of the loop range', () => togglePunch('punchIn'), !!project.punchIn)}
@@ -783,6 +799,13 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         {toolbarBtn('Channel', 'Show / hide the channel tab of the selected track (Cubase 15)', () => { setShowChannel(!showChannel); remember('ams-show-channel', !showChannel) }, showChannel)}
         {toolbarBtn('Master FX', 'Show / hide the effects on the master (built in or VST plugins, after all tracks)', () => { setShowMasterFx(!showMasterFx); remember('ams-show-master-fx', !showMasterFx) }, showMasterFx || !!project.masterFx?.length)}
         {toolbarBtn('Export', 'Quick export: the whole song as WAV or MP3', () => window.dispatchEvent(new CustomEvent(EXPORT_EVENT)))}
+        {/* the tools: one box, with room for more */}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '1px 4px', border: '1px solid var(--border-mid)', borderRadius: 6, background: 'var(--bg-tertiary)' }}>
+          <span style={{ fontSize: 9.5, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginRight: 2 }}>{tr('Tools')}</span>
+          <button className={`btn ${tool === 'pointer' ? 'btn-primary' : 'btn-ghost'}`} style={{ ...tb, padding: '2px 7px' }} title={tr('Pointer: select, move and trim clips')} onClick={() => setTool('pointer')}>↖</button>
+          <button className={`btn ${tool === 'scissors' ? 'btn-primary' : 'btn-ghost'}`} style={{ ...tb, padding: '2px 7px' }} title={tr('Scissors: click a clip to cut it there (on the grid; Alt: exactly where you click). Esc: back to the pointer.')} onClick={() => setTool(tool === 'scissors' ? 'pointer' : 'scissors')}>✂</button>
+          <SnapButton />
+        </span>
         <span style={{ flex: 1 }} />
         {busy && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>{busy}…</span>}
         {loadingAudio && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>{tr('Reading audio files…')}</span>}

@@ -109,8 +109,17 @@ export function VocalEditor(): React.ReactElement {
   const alive = useRef(true)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
 
-  const loadBuiltin = (): void => { api.singer.builtin().then(setBuiltin).catch(() => setBuiltin({ voices: [], problem: tr('The AI backend does not answer.') })) }
-  useEffect(loadBuiltin, [])
+  // the AI backend may still be starting when the page opens (right after the app starts): then the voices are
+  // asked for again every few seconds. Only when the backend answers that the singer is missing is "Install" shown;
+  // before, a backend that was still starting looked like a missing singer.
+  const [offline, setOffline] = useState(false)
+  const loadBuiltin = (): void => {
+    api.singer.builtin().then((b) => { setBuiltin(b); setOffline(false) }).catch(() => {
+      setOffline(true)
+      setTimeout(() => { if (alive.current) loadBuiltin() }, 3000)
+    })
+  }
+  useEffect(loadBuiltin, [])  // eslint-disable-line react-hooks/exhaustive-deps
   const stage = useRef(0)
   const pctRef = useRef(0)
   const installSinger = async (): Promise<void> => {
@@ -356,7 +365,7 @@ export function VocalEditor(): React.ReactElement {
     setBusy(null)
   }
 
-  const ready = engine === 'builtin' ? !!bv && (style === 'rap' || !builtin?.problem) && melody.length > 0 : engine === 'diffsinger' ? !!voice && !voice.error && voice.vocoderInstalled && melody.length > 0 : melody.length > 0 && !!text.trim()
+  const ready = engine === 'builtin' ? !!bv && !offline && (style === 'rap' || !builtin?.problem) && melody.length > 0 : engine === 'diffsinger' ? !!voice && !voice.error && voice.vocoderInstalled && melody.length > 0 : melody.length > 0 && !!text.trim()
 
   return (
     <div style={{ height: '100%', overflow: 'auto', padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -376,7 +385,8 @@ export function VocalEditor(): React.ReactElement {
             {engine === 'builtin' && (
               <>
                 <div style={hint}>{tr('The app’s own voices sing exactly your notes and lyrics. Runs on your processor: about a minute per 5 seconds of singing.')}</div>
-                {builtin?.problem ? (
+                {offline && <div style={{ ...hint, color: 'var(--yellow)' }}>{tr('The AI backend is starting… the voices appear in a moment.')}</div>}
+                {!offline && builtin?.problem ? (
                   <div style={{ ...card, background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.4)' }}>
                     <div style={hint}>{tr('The singer is installed once: about 4 GB (the singing model SoulX-Singer, Apache 2.0, and its own Python environment).')}</div>
                     <button className="btn btn-primary" onClick={() => void installSinger()} disabled={!!busy}>{tr('Install the singer')}</button>
@@ -524,7 +534,15 @@ export function VocalEditor(): React.ReactElement {
           )}
 
           {!busy ? (
+            <>
             <button className="btn btn-primary" style={{ padding: '10px 0', fontSize: 14 }} disabled={!ready} onClick={() => void (engine === 'builtin' ? singBuiltin() : engine === 'diffsinger' ? singDiffSinger() : singAi())}>🎤 {tr('Sing')}</button>
+            {!ready && !busy && <div style={{ ...hint, color: 'var(--yellow)' }}>{
+              !melody.length ? tr('Sing is grey: there is no melody yet. Write notes on a MIDI track in the Piano Roll (or turn your singing into MIDI), then choose that track under Melody.')
+              : engine === 'builtin' && offline ? tr('Sing is grey: the AI backend is still starting.')
+              : engine === 'builtin' && builtin?.problem && style !== 'rap' ? tr('Sing is grey: install the singer first (button above).')
+              : engine === 'ai' && !text.trim() ? tr('Sing is grey: write the lyrics first.')
+              : tr('Sing is grey: choose a voice first.')}</div>}
+            </>
           ) : (
             <div style={card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}><span>{busy.text}</span><span>{Math.round(busy.pct)} %</span></div>

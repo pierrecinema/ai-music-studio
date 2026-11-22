@@ -3,6 +3,18 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.96.3
+
+### New
+
+- **Studio tools**: a *Tools* box in the Studio's top bar with the pointer ↖, the **scissors ✂** (click a clip to cut it there, on the grid; Alt: exactly where you click; Esc goes back to the pointer) and the **grid magnet 🧲**, with room for more tools.
+- **All 39 voices now have their 16-second demo.**
+
+### Fixed
+
+- **Vocal Editor right after the app starts**: while the AI backend was still starting, the built-in voices looked "not installed" and *Install the singer* appeared again (it was installed). The page now waits for the backend and shows "The AI backend is starting…".
+- **When *Sing* is grey, it says why** (no melody yet, backend still starting, singer not installed, no lyrics).
+
 ## 0.96.2
 
 ### New
@@ -13,7 +25,7 @@ on its GitHub release page, so every version needs a `## <version>` section here
 - **Grid on / off button** with a magnet 🧲 at the top of the Studio ("Grid off" shows in yellow). With the grid off, the ← → keys move the selected clip by one pixel.
 - **Library search**: choose where to search (name and tags, name only, tags only), clear it with ×, and filter with the list of all tags (click several to see tracks that have all of them); the number of hits is shown.
 - **Lyrics go onto the notes by themselves**: a moment after you type (or change the language) the lyrics are spread over the notes, and *Sing* does it too when the notes have none yet; correct single syllables under *Notes and syllables*.
-- **Click a voice to hear it at once**: each voice sings a 16-second song line in its typical style (clear: pop, with vibrato: ballad, powerful: rock), with the style's effects. The demos are finished recordings in the app, so listening needs no computing; a second click stops it. (22 voices have their new demo already, the others follow in the next update.)
+- **Click a voice to hear it at once**: each voice sings a 16-second song line in its typical style (clear: pop, with vibrato: ballad, powerful: rock), with the style's effects. The demos are finished recordings in the app, so listening needs no computing; a second click stops it.
 
 ### Fixed
 

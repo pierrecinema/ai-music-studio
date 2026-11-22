@@ -668,3 +668,16 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 | 41.9 | 🧲 **Raster aus** (gelb), Clip anwählen, ← / → | Clip bewegt sich je Tastendruck um ein Pixel | | | 0.96.2 |
 | 41.10 | App schließen, nach 10 s wieder starten (mehrmals) | Fenster öffnet jedes Mal; Task-Manager zeigt nach dem Schließen keine App mehr | | | 0.96.2 |
 | 41.11 | Einstellungen → Plugins → **Plugins suchen** | Keine rote Meldung „null (reading 'name')“; gefundene VST erscheinen, auch im Studio | | | 0.96.2 |
+
+## 42. Neu in 0.96.3: Werkzeuge im Studio, Vocal Editor beim Start
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 42.1 | Studio: oben rechts neben **Exportieren** der Kasten **Werkzeuge** | ↖ Zeiger, ✂ Schere, 🧲 Raster an/aus | | | 0.96.3 |
+| 42.2 | ✂ wählen, auf einen Audio-Clip klicken | Clip wird an der Stelle geschnitten (im Raster); Mauszeiger ist ein Kreuz | | | 0.96.3 |
+| 42.3 | Mit ✂ und **Alt** klicken | Schnitt genau an der Klickstelle | | | 0.96.3 |
+| 42.4 | **Esc** | Zurück zum Zeiger ↖ | | | 0.96.3 |
+| 42.5 | App neu starten, sofort den Vocal Editor öffnen | „Das KI-Backend startet …“, dann erscheinen die Stimmen; kein „Sänger installieren“ | | | 0.96.3 |
+| 42.6 | Ohne Melodie in den Vocal Editor | Unter „Singen“ steht, warum es grau ist | | | 0.96.3 |
+| 42.7 | Alle 39 Stimmen anklicken | Jede hat eine Hörprobe von etwa 16 s | | | 0.96.3 |
+

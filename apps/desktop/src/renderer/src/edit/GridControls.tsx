@@ -5,11 +5,10 @@ import { QUANTIZE_DIALOG_EVENT, defaultGridId, loadOptions, openQuantizeDialog, 
 import { tr } from '../i18n/tr'
 
 // Grid size, snap switch and quantize: shown in the timeline and in the piano roll.
-export function GridControls({ compact = false }: { compact?: boolean }): React.ReactElement {
+export function GridControls({ compact = false, noSnap = false }: { compact?: boolean; noSnap?: boolean }): React.ReactElement {
   const grid = useUIStore((s) => s.grid)
   const snap = useUIStore((s) => s.snap)
   const setGrid = useUIStore((s) => s.setGrid)
-  const toggleSnap = useUIStore((s) => s.toggleSnap)
   const [msg, setMsg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -24,13 +23,7 @@ export function GridControls({ compact = false }: { compact?: boolean }): React.
       <select value={grid} onChange={(e) => { setGrid(e.target.value); e.target.blur() }} style={{ fontSize: 11 }} title={tr('Grid size (Ctrl+1 narrower, Ctrl+2 wider)')}>
         {GRID_OPTIONS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
       </select>
-      <button
-        className={`btn ${snap && gridOf(grid).beats > 0 ? 'btn-primary' : 'btn-ghost'}`}
-        style={{ fontSize: 11, padding: '3px 10px', ...(snap && gridOf(grid).beats > 0 ? {} : { color: '#111', background: '#fbbf24', borderColor: '#f59e0b', fontWeight: 700 }) }}
-        onClick={toggleSnap} title={tr('Grid on: clips and notes snap to the grid; zoomed in far, only near a grid line (fine moves in between). Grid off: everything moves freely. (Ctrl+4; Alt while dragging: free once)')}
-      >
-        🧲 {snap && gridOf(grid).beats > 0 ? tr('Grid on') : tr('Grid off')}
-      </button>
+      {!noSnap && <SnapButton />}
       {!compact && (
         <button className="btn btn-ghost" style={{ fontSize: 11, padding: '3px 10px' }}
           onClick={() => setMsg(quantizeSelection().what)} title={tr('Quantize the selected clip or notes with the saved settings (Ctrl+U)')}>
@@ -90,3 +83,19 @@ export function QuantizeDialog(): React.ReactElement | null {
 }
 
 const row: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, fontSize: 12, color: 'var(--text-primary)' }
+
+/** the grid switch (magnet): on, clips and notes snap to the grid; off (yellow), everything moves freely */
+export function SnapButton(): React.ReactElement {
+  const grid = useUIStore((s) => s.grid)
+  const snap = useUIStore((s) => s.snap)
+  const toggleSnap = useUIStore((s) => s.toggleSnap)
+  return (
+    <button
+        className={`btn ${snap && gridOf(grid).beats > 0 ? 'btn-primary' : 'btn-ghost'}`}
+        style={{ fontSize: 11, padding: '3px 10px', ...(snap && gridOf(grid).beats > 0 ? {} : { color: '#111', background: '#fbbf24', borderColor: '#f59e0b', fontWeight: 700 }) }}
+        onClick={toggleSnap} title={tr('Grid on: clips and notes snap to the grid; zoomed in far, only near a grid line (fine moves in between). Grid off: everything moves freely. (Ctrl+4; Alt while dragging: free once)')}
+      >
+        🧲 {snap && gridOf(grid).beats > 0 ? tr('Grid on') : tr('Grid off')}
+    </button>
+  )
+}

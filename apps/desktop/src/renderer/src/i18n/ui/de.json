@@ -1902,5 +1902,16 @@
  "Rap examples:": "Rap-Beispiele:",
  "An unmastered example song: try the presets and compare Before / After": "Ein ungemasterter Beispiel-Song: Presets ausprobieren und Vorher / Nachher vergleichen",
  "Example song": "Beispiel-Song",
- "Example song (unmastered)": "Beispiel-Song (ungemastert)"
+ "Example song (unmastered)": "Beispiel-Song (ungemastert)",
+ "Search by name…": "Nach Namen suchen…",
+ "Search by tag…": "Nach Tag suchen…",
+ "Where to search": "Wo gesucht wird",
+ "Name and tags": "Name und Tags",
+ "Name only": "Nur Name",
+ "Tags only": "Nur Tags",
+ "Tags:": "Tags:",
+ "Click: no longer filter by this tag": "Klick: nicht mehr nach diesem Tag filtern",
+ "Click: show only tracks with this tag (several tags: all of them)": "Klick: nur Titel mit diesem Tag zeigen (mehrere Tags: alle davon)",
+ "Show all": "Alle zeigen",
+ "{n} found": "{n} gefunden"
 }

@@ -7,7 +7,7 @@ import { beatOfSrc, srcOfBeat, validMarkers, warpSegments } from '../src/rendere
 import { isAudible, recordingPieces } from '../src/renderer/src/audio/engine'
 import { useProjectStore } from '../src/renderer/src/stores/project.store'
 import type { Project, Track } from '../src/renderer/src/types'
-import { matchesQuery } from '../src/renderer/src/lib/librarySearch'
+import { matchesQuery, tagCounts } from '../src/renderer/src/lib/librarySearch'
 import type { LibraryTrack } from '../src/renderer/src/lib/api'
 import { alignStarts, leadBeats, phaseAlign } from '../src/renderer/src/beatmatch/store'
 import { autoStructure } from '../src/renderer/src/lib/lyrics'
@@ -518,6 +518,14 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   check('Salamander: nearest sample per key, velocity layers', hit(62, 30).join() === 'audio/C4v4.mp3' && hit(64, 120).join() === 'audio/F#4v16.mp3' && hit(21, 127).join() === 'audio/A0v16.mp3' && hit(127, 1).join() === 'audio/F#4v4.mp3', JSON.stringify([hit(62, 30), hit(64, 120)]))
   const vsco = buildMultiBank('vsco', ['Strings/Violin Section/susVib/VlnEns_susVib_A3_v1.wav', 'Strings/Cello Section/susvib/susvib_C2_v1_1.wav', 'Brass/F Horn/sus/MOHorn_sus_C3_v1_1.wav', 'Brass/Tenor Trombone/sus/tenortbn_sus_A#0_v1_1.wav'])
   check('VSCO: violins, cellos, strings, horn, trombone, brass presets', ['0:40', '0:42', '0:48', '0:57', '0:60', '0:61'].every((k) => vsco.presets.get(k)?.zones.length) && vsco.samples.find((x) => x.file?.includes('VlnEns'))?.root === 69)
+}
+
+// ── library search: name only, tags only, chosen tags ──
+{
+  const a = { title: 'Summer Funk', prompt: 'funk groove', engine: 'ace', tags: ['Funk', 'demo'] } as unknown as LibraryTrack
+  const b = { title: 'Night Drive', prompt: 'synthwave funk', engine: 'ace', tags: ['synthwave'] } as unknown as LibraryTrack
+  check('library search: name only / tags only / chosen tags', matchesQuery(a, 'summer', 'name') && !matchesQuery(b, 'funk', 'name') && matchesQuery(a, 'funk', 'tags') && !matchesQuery(b, 'funk', 'tags')
+    && matchesQuery(a, '', 'all', ['funk', 'DEMO']) && !matchesQuery(b, '', 'all', ['funk']) && tagCounts([a, b]).length === 3)
 }
 
 // ── the singer: installation progress, rap lyrics ──

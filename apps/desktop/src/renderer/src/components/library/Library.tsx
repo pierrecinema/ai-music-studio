@@ -11,7 +11,7 @@ import { importAudioFiles } from '../timeline/Timeline'
 import { SamplesTab } from './SamplesTab'
 import { seedAnalysis } from '../../beatmatch/store'
 import { ExportDialog, parseTags } from '../common/ExportDialog'
-import { matchesQuery } from '../../lib/librarySearch'
+import { matchesQuery, tagCounts, type SearchScope } from '../../lib/librarySearch'
 import { tr, trf } from '../../i18n/tr'
 
 const muted: React.CSSProperties = { fontSize: 11, color: 'var(--text-muted)' }
@@ -29,6 +29,9 @@ export function Library(): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [onlyFav, setOnlyFav] = useState(false)
+  const [scope, setScope] = useState<SearchScope>('all')
+  const [pickedTags, setPickedTags] = useState<string[]>([])
+  const toggleTag = (g: string): void => setPickedTags((p) => (p.some((x) => x.toLowerCase() === g.toLowerCase()) ? p.filter((x) => x.toLowerCase() !== g.toLowerCase()) : [...p, g]))
   const [renaming, setRenaming] = useState<string | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [playing, setPlaying] = useState<string | null>(null)
@@ -61,7 +64,8 @@ export function Library(): React.ReactElement {
   }, [load])
 
   const inTab = useMemo(() => tracks.filter((t) => (tab === 'stems') === (t.source === 'stem')), [tracks, tab])
-  const shown = useMemo(() => inTab.filter((t) => (!onlyFav || t.favorite) && matchesQuery(t, query)), [inTab, query, onlyFav])
+  const shown = useMemo(() => inTab.filter((t) => (!onlyFav || t.favorite) && matchesQuery(t, query, scope, pickedTags)), [inTab, query, onlyFav, scope, pickedTags])
+  const allTags = useMemo(() => tagCounts(inTab), [inTab])
   // stems of one split stay together
   const stemSets = useMemo(() => {
     const m = new Map<string, LibraryTrack[]>()
@@ -140,9 +144,28 @@ export function Library(): React.ReactElement {
       </div>
 
       {tab === 'samples' && <SamplesTab />}
+      {tab !== 'samples' && allTags.length > 0 && (
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ ...muted, marginRight: 2 }}>{tr('Tags:')}</span>
+          {allTags.map(([g, n]) => {
+            const on = pickedTags.some((x) => x.toLowerCase() === g.toLowerCase())
+            return <span key={g} style={{ ...chip, ...(on ? { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' } : {}) }} title={on ? tr('Click: no longer filter by this tag') : tr('Click: show only tracks with this tag (several tags: all of them)')} onClick={() => toggleTag(g)}>{g} <span style={{ opacity: 0.6 }}>{n}</span></span>
+          })}
+          {pickedTags.length > 0 && <button className="btn btn-ghost" style={{ fontSize: 10.5, padding: '1px 7px' }} onClick={() => setPickedTags([])}>{tr('Show all')}</button>}
+          {(query || pickedTags.length > 0) && <span style={muted}>{trf('{n} found', { n: shown.length })}</span>}
+        </div>
+      )}
 
       {tab !== 'samples' && <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr('Search name, tag or BPM (e.g. house, 124, 120-130)…')} style={{ width: 320 }} />
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 0 }}>
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={scope === 'name' ? tr('Search by name…') : scope === 'tags' ? tr('Search by tag…') : tr('Search name, tag or BPM (e.g. house, 124, 120-130)…')} style={{ width: 300 }} />
+          {query && <button className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} title={tr('Clear')} onClick={() => setQuery('')}>×</button>}
+        </span>
+        <select value={scope} onChange={(e) => setScope(e.target.value as SearchScope)} style={{ fontSize: 11 }} title={tr('Where to search')}>
+          <option value="all">{tr('Name and tags')}</option>
+          <option value="name">{tr('Name only')}</option>
+          <option value="tags">{tr('Tags only')}</option>
+        </select>
         <label style={{ ...muted, display: 'flex', gap: 4, alignItems: 'center' }}>
           <input type="checkbox" checked={onlyFav} onChange={(e) => setOnlyFav(e.target.checked)} /> {tr('Favourites only')}
         </label>
@@ -230,7 +253,7 @@ export function Library(): React.ReactElement {
                 onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditTags(null) }} />
             ) : (t.tags?.length ?? 0) > 0 && (
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
-                {t.tags!.map((g) => <span key={g} style={chip} title={tr('Show everything with this tag')} onClick={() => setQuery(g)}>{g}</span>)}
+                {t.tags!.map((g) => <span key={g} style={chip} title={tr('Show everything with this tag')} onClick={() => toggleTag(g)}>{g}</span>)}
               </div>
             )}
             <div style={muted}>

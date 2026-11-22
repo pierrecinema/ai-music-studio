@@ -8,7 +8,8 @@ import { isPlaying, pause, play, stop } from '../audio/engine'
 import { startAnyRecording } from '../audio/midiRecord'
 import { masterPlayer } from '../audio/master/player'
 import { newProject, openProject, saveProject, saveProjectAs } from '../project/io'
-import { narrowerGrid, nudgeStep, tripletToggle, widerGrid } from '../edit/grid'
+import { narrowerGrid, nudgeStep, snapStep, tripletToggle, widerGrid } from '../edit/grid'
+import { BEAT_WIDTH } from '../components/timeline/studioLayout'
 import { openQuantizeDialog, quantizeSelection } from '../edit/quantize'
 import { EXPORT_EVENT, reportOpen } from '../components/layout/FileMenu'
 import { diagWrite } from '../lib/diagLog'
@@ -81,7 +82,7 @@ function noteClip(): { trackId: string; clipId: string; notes: Note[] } | null {
   return t && c ? { trackId: t.id, clipId: c.id, notes: c.notes ?? [] } : null
 }
 
-// arrow keys: move the selected notes (in the piano roll) or the selected clip by one grid step
+// arrow keys: move the selected notes (in the piano roll) or the selected clip by one grid step (or one pixel)
 function nudge(direction: 1 | -1): void {
   const st = useProjectStore.getState()
   const step = nudgeStep() * direction
@@ -93,9 +94,12 @@ function nudge(direction: 1 | -1): void {
     }
     return
   }
+  // a clip in the Studio: one grid step with the grid on, one screen pixel (at the current zoom) with the grid off,
+  // for lining up beats exactly
   const owner = st.project.tracks.find((t) => t.clips.some((c) => c.id === st.selectedClipId))
   const clip = owner?.clips.find((c) => c.id === st.selectedClipId)
-  if (owner && clip) st.moveClip(owner.id, clip.id, owner.id, Math.max(0, clip.startTime + step))
+  const px = snapStep() ? step : (direction / (BEAT_WIDTH * (useUIStore.getState().zoom || 1)))
+  if (owner && clip) st.moveClip(owner.id, clip.id, owner.id, Math.max(0, clip.startTime + px))
 }
 
 function transpose(semitones: number): void {

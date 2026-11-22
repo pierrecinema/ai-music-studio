@@ -9,6 +9,8 @@ on its GitHub release page, so every version needs a `## <version>` section here
 
 - **The built-in voices have names** (Anna, Bella, Clara … Adam, Ben, Carlos …) instead of numbers.
 - **AI Instruments: click an instrument to hear it**: each of the 13 instruments plays a short melody at once (a finished recording, no computing).
+- **Fine-tuning clips in the Studio**: zoomed in far, the grid is magnetic: a clip snaps only near a grid line and moves steplessly in between, so two beats can be lined up exactly. The zoom goes four times further (16×), and the waveform is drawn sharp for the visible part, so the beats are easy to see.
+- **Grid on / off button** with a magnet 🧲 at the top of the Studio ("Grid off" shows in yellow). With the grid off, the ← → keys move the selected clip by one pixel.
 - **Library search**: choose where to search (name and tags, name only, tags only), clear it with ×, and filter with the list of all tags (click several to see tracks that have all of them); the number of hits is shown.
 - **Lyrics go onto the notes by themselves**: a moment after you type (or change the language) the lyrics are spread over the notes, and *Sing* does it too when the notes have none yet; correct single syllables under *Notes and syllables*.
 - **Click a voice to hear it at once**: each voice sings a 16-second song line in its typical style (clear: pop, with vibrato: ballad, powerful: rock), with the style's effects. The demos are finished recordings in the app, so listening needs no computing; a second click stops it.

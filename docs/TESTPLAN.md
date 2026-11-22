@@ -662,3 +662,7 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 | 41.3 | Nochmal klicken / eine andere Stimme klicken | Stoppt / die andere spielt sofort | | | 0.96.2 |
 | 41.4 | Neue Melodie ohne Silben, Text ins Feld schreiben | Nach einem Moment stehen die Silben unter „Noten und Silben“; einzelne Silbe ändern geht | | | 0.96.2 |
 | 41.5 | Melodie ohne Silben, Text geschrieben, gleich **Singen** | Singt ohne Meldung „Verteile zuerst den Text“ | | | 0.96.2 |
+| 41.6 | Bibliothek: Suche „Nur Name“ / „Nur Tags“, Tags in der Tag-Leiste anklicken | Treffer passen, Anzahl wird gezeigt | | | 0.96.2 |
+| 41.7 | KI-Instrumente: auf ein Instrument klicken | Sofort kurze Melodie, ■ am Namen; nochmal klicken stoppt | | | 0.96.2 |
+| 41.8 | Studio: zwei Audio-Spuren, ganz hineinzoomen (bis 16×), Clip ziehen | Rastet nur nahe einer Rasterlinie ein, dazwischen stufenlos; Wellenform scharf | | | 0.96.2 |
+| 41.9 | 🧲 **Raster aus** (gelb), Clip anwählen, ← / → | Clip bewegt sich je Tastendruck um ein Pixel | | | 0.96.2 |

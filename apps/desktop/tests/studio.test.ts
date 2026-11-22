@@ -12,6 +12,7 @@ import type { LibraryTrack } from '../src/renderer/src/lib/api'
 import { alignStarts, leadBeats, phaseAlign } from '../src/renderer/src/beatmatch/store'
 import { autoStructure } from '../src/renderer/src/lib/lyrics'
 import { installProgress, rapLyrics } from '../src/renderer/src/lib/singer'
+import { snapDrag } from '../src/renderer/src/edit/grid'
 import { measureBalance, PROFILES, suggest, bassWidth } from '../src/renderer/src/audio/master/assistant'
 import { defaultChain } from '../src/renderer/src/audio/master/chain'
 import { applyEdits, applyOp, copyPart, fadeShape } from '../src/renderer/src/audio/master/edit'
@@ -526,6 +527,13 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   const b = { title: 'Night Drive', prompt: 'synthwave funk', engine: 'ace', tags: ['synthwave'] } as unknown as LibraryTrack
   check('library search: name only / tags only / chosen tags', matchesQuery(a, 'summer', 'name') && !matchesQuery(b, 'funk', 'name') && matchesQuery(a, 'funk', 'tags') && !matchesQuery(b, 'funk', 'tags')
     && matchesQuery(a, '', 'all', ['funk', 'DEMO']) && !matchesQuery(b, '', 'all', ['funk']) && tagCounts([a, b]).length === 3)
+}
+
+// ── magnetic grid when zoomed in ──
+{
+  // grid 1/4 (1 beat): zoomed out (80 px per beat) it always snaps; zoomed in (1280 px) only within 8 px of a line
+  check('grid: snaps when zoomed out, magnetic when zoomed in, free with Alt', snapDrag(2.3, false, 80, 1) === 2 && Math.abs(snapDrag(2.3, false, 1280, 1) - 2.3) < 1e-9
+    && snapDrag(2.004, false, 1280, 1) === 2 && snapDrag(2.3, true, 80, 1) === 2.3 && snapDrag(2.3, false, 80, 0) === 2.3)
 }
 
 // ── the singer: installation progress, rap lyrics ──

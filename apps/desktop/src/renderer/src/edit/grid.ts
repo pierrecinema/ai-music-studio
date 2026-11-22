@@ -34,6 +34,18 @@ export function snapBeat(beat: number, free = false, mode: 'round' | 'floor' = '
   return (mode === 'floor' ? Math.floor(n + 1e-6) : Math.round(n)) * step
 }
 
+/** Snap for dragging on the timeline, magnetic when zoomed in: while the grid lines are far apart on the screen
+ *  (at least MAGNET_FROM px), a position snaps only within MAGNET_PX of a line and moves steplessly between lines,
+ *  for fine-tuning (e.g. lining up two beats); zoomed out it snaps to the grid as always. Alt: always free. */
+export const MAGNET_PX = 8
+export const MAGNET_FROM = 40
+export function snapDrag(beat: number, free: boolean, pxPerBeat: number, step = snapStep()): number {
+  if (free || !step) return beat
+  const near = Math.round(beat / step) * step
+  if (step * pxPerBeat < MAGNET_FROM) return near
+  return Math.abs(near - beat) * pxPerBeat <= MAGNET_PX ? near : beat
+}
+
 /** The smallest sensible length for a clip or note: one grid step, or 1/64 when free. */
 export function minLength(): number {
   return snapStep() || 0.0625

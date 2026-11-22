@@ -1913,5 +1913,8 @@
  "Click: no longer filter by this tag": "Klick: nicht mehr nach diesem Tag filtern",
  "Click: show only tracks with this tag (several tags: all of them)": "Klick: nur Titel mit diesem Tag zeigen (mehrere Tags: alle davon)",
  "Show all": "Alle zeigen",
- "{n} found": "{n} gefunden"
+ "{n} found": "{n} gefunden",
+ "Grid on": "Raster an",
+ "Grid off": "Raster aus",
+ "Grid on: clips and notes snap to the grid; zoomed in far, only near a grid line (fine moves in between). Grid off: everything moves freely. (Ctrl+4; Alt while dragging: free once)": "Raster an: Clips und Noten rasten im Raster ein; bei großem Zoom nur nahe einer Rasterlinie (dazwischen fein verschieben). Raster aus: alles lässt sich frei verschieben. (Strg+4; Alt beim Ziehen: einmal frei)"
 }

@@ -90,7 +90,7 @@ export function VocalEditor(): React.ReactElement {
     })
   }
   const pickVoice = (v: BuiltinVoice): void => { setBVoice(v.id); listen(v.id, v.demo) }
-  const [rapEx, setRapEx] = useState<Array<{ file: string; name: string; voice: string; bpm: number }>>([])
+  const [rapEx, setRapEx] = useState<Array<{ file: string; name: string; voice: string; bpm: number; language?: string }>>([])
   useEffect(() => { api.singer.examples().then((r) => setRapEx(r.rap)).catch(() => setRapEx([])) }, [])
   useEffect(() => () => { void import('../../audio/engine').then((m) => m.stopPreview()) }, [])
   const [voices, setVoices] = useState<SingerVoice[] | null>(null)
@@ -451,7 +451,7 @@ export function VocalEditor(): React.ReactElement {
                 {style === 'rap' && rapEx.length > 0 && (
                   <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
                     <span style={{ ...hint, marginRight: 2 }}>{tr('Rap examples:')}</span>
-                    {rapEx.map((x) => <button key={x.file} className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} onClick={() => listen(x.file, x.file)}>{playing === x.file ? '■' : '▶'} {tr(x.voice === 'male' ? 'Male' : 'Female')} · {x.bpm} BPM</button>)}
+                    {rapEx.map((x) => <button key={x.file} className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} onClick={() => listen(x.file, x.file)}>{playing === x.file ? '■' : '▶'} {tr(x.voice === 'male' ? 'Male' : 'Female')} · {x.bpm} BPM{x.language && x.language !== 'English' ? ` · ${tr(x.language)}` : ''}{/-2$/.test(x.name) ? ' 2' : ''}</button>)}
                   </div>
                 )}
                 {style === 'rap' && <div style={hint}>{tr('Rap is made by the AI singer (ACE-Step 1.5, installed with the music AI); it takes a few minutes. The voice choice only decides male or female. The lyrics come from the lyrics field or, if it is empty, from the notes.')}</div>}

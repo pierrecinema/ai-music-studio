@@ -303,7 +303,7 @@ async def examples():
     for f in sorted(d.glob("rap-*.ogg")) if d.exists() else []:
         info = d / (f.stem + ".json")
         meta = json.load(open(info, encoding="utf-8")) if info.exists() else {}
-        out.append({"file": str(f), "name": meta.get("name", f.stem), "voice": meta.get("voice", ""), "bpm": meta.get("bpm", 0)})
+        out.append({"file": str(f), "name": meta.get("name", f.stem), "voice": meta.get("voice", ""), "bpm": meta.get("bpm", 0), "language": meta.get("language", "English")})
     return {"rap": out}
 
 

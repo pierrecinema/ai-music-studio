@@ -1,8 +1,9 @@
 {
- "name": "Male singer 7 · vibrato",
+ "name": "Hugo · vibrato",
  "gender": "male",
  "kind": "vibrato",
  "style": "sing",
  "description": "with vibrato (ballads, soul)",
- "credit": "VocalSet singer m7: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513"
+ "credit": "\"Hugo\" is VocalSet singer m7: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513",
+ "singer": "Hugo"
 }

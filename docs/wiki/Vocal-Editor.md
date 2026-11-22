@@ -20,7 +20,7 @@ Record yourself on an audio track in the [[Studio]], select the clip and press *
 
 *Built-in voices* is the first choice: nothing to import. The first time, press *Install the singer*: the singing model SoulX-Singer (Apache 2.0) and its own Python environment are downloaded once (about 4 GB, also under Settings → AI Engines → *Singer*). It uses an NVIDIA graphics card when there is one.
 
-- **Voices**: 39 voices of 20 singers, filtered by *All / Female / Male* and grouped as *clear* (straight, pop), *with vibrato* (ballads, soul) and *powerful* (belt, good for rock). *Listen to …* plays a short demo.
+- **Voices**: 39 voices of 20 singers with names (Anna, Bella … Adam, Ben …), filtered by *All / Female / Male* and grouped as *clear* (straight, pop), *with vibrato* (ballads, soul) and *powerful* (belt, good for rock). **Click a voice** to choose it and hear it at once: a 16-second song line in its typical style, a finished recording (no computing); click again to stop.
 - **Style**: how the line is sung, and the effects of the new vocal track (*Put the style's effects on the new vocal track*, on by default):
 
 | Style | Way of singing | Effects on the track |

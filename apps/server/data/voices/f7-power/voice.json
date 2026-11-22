@@ -1,8 +1,9 @@
 {
- "name": "Female singer 7 · powerful",
+ "name": "Greta · powerful",
  "gender": "female",
  "kind": "power",
  "style": "sing",
  "description": "powerful belt (good for rock)",
- "credit": "VocalSet singer f7: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513"
+ "credit": "\"Greta\" is VocalSet singer f7: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513",
+ "singer": "Greta"
 }

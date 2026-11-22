@@ -222,7 +222,8 @@ def voices() -> list[dict]:
             v = d / "voice.json"
             if v.exists():
                 info = json.load(open(v, encoding="utf-8"))
-                out.append({"id": d.name, **info, "demo": str(d / "demo.wav") if (d / "demo.wav").exists() else None})
+                demo = next((d / n for n in ("demo.ogg", "demo.wav") if (d / n).exists()), None)
+                out.append({"id": d.name, **info, "demo": str(demo) if demo else None})
     return out
 
 # ── the worker ───────────────────────────────────────────────────────────────────────────────────────────────

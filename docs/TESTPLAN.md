@@ -652,3 +652,11 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 |---|---|---|---|---|---|
 | 40.1 | Vocal Editor → Eingebaute Stimmen → **Sänger installieren** | Schritte 1/4 bis 4/4 mit steigendem Prozentwert; das KI-Backend bleibt online | | | 0.96.1 |
 | 40.2 | Am Ende | Hinweis verschwindet, 39 Stimmen sichtbar; danach 39.2 bis 39.8 testen | | | 0.96.1 |
+
+## 41. Neu in 0.96.2: Namen und Hörproben der Stimmen
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 41.1 | Vocal Editor → Eingebaute Stimmen | Stimmen mit Namen (Anna, Bella … Adam, Ben …) | | | 0.96.2 |
+| 41.2 | Auf eine Stimme klicken | Sofort eine Hörprobe (etwa 16 s), ■ am Namen | | | 0.96.2 |
+| 41.3 | Nochmal klicken / eine andere Stimme klicken | Stoppt / die andere spielt sofort | | | 0.96.2 |

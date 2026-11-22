@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.96.2
+
+### New
+
+- **The built-in voices have names** (Anna, Bella, Clara … Adam, Ben, Carlos …) instead of numbers.
+- **Click a voice to hear it at once**: each voice sings a 16-second song line in its typical style (clear: pop, with vibrato: ballad, powerful: rock), with the style's effects. The demos are finished recordings in the app, so listening needs no computing; a second click stops it.
+
 ## 0.96.1
 
 ### Fixed

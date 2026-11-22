@@ -1892,5 +1892,7 @@
  "1/4 Python environment": "1/4 Python-Umgebung",
  "2/4 PyTorch": "2/4 PyTorch",
  "3/4 Packages": "3/4 Pakete",
- "4/4 Singing model (2.8 GB)": "4/4 Gesangsmodell (2,8 GB)"
+ "4/4 Singing model (2.8 GB)": "4/4 Gesangsmodell (2,8 GB)",
+ "Click a voice to hear it right away (a short song line in its typical style); click again to stop.": "Klick auf eine Stimme, um sie sofort zu hören (eine kurze Liedzeile in ihrem typischen Stil); nochmal klicken stoppt.",
+ "Click: choose and listen (click again: stop)": "Klick: wählen und anhören (nochmal klicken: stopp)"
 }

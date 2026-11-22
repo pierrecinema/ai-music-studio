@@ -16,7 +16,7 @@ import { insertDefaults } from '../../audio/fx'
 import { nanoid } from 'nanoid'
 import { installProgress, rapLyrics, STAGE_TEXT } from '../../lib/singer'
 
-interface BuiltinVoice { id: string; name: string; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
+interface BuiltinVoice { id: string; name: string; singer?: string; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
 
 // how the built-in voices sing: the way of singing is shaped in the backend (services/soulx.py STYLES), the sound
 // of the new vocal track here (its effects); rap is performed by the AI singer (ACE-Step), which really raps
@@ -38,6 +38,7 @@ const STYLE_FX: Record<SingStyle, Array<[InsertType, Record<string, number>]>> =
 const styleFx = (st: SingStyle): InsertFx[] => STYLE_FX[st].map(([type, p]) => ({ id: nanoid(), type, on: true, p: { ...insertDefaults(type), ...p } }))
 /** a built-in voice's name in the UI language: "Female singer 3", with "(2)" for a singer's second recording */
 const voiceLabel = (v: BuiltinVoice): string => {
+  if (v.singer) return `${v.singer}${v.id.endsWith('-2') ? ' 2' : ''}`
   const n = /^[fm](\d+)/.exec(v.id)?.[1] ?? ''
   return `${tr(v.gender === 'male' ? 'Male singer' : 'Female singer')} ${n}${v.id.endsWith('-2') ? ' (2)' : ''}`
 }
@@ -75,6 +76,21 @@ export function VocalEditor(): React.ReactElement {
   const [style, setStyle] = useState<SingStyle>('pop')
   const [gender, setGender] = useState<'all' | 'female' | 'male'>('all')
   const [autoFx, setAutoFx] = useState(true)
+  const [playing, setPlaying] = useState<string | null>(null)
+  // a click on a voice chooses it and plays its demo at once (a finished recording, nothing is computed);
+  // a second click on the playing voice stops it
+  const pickVoice = (v: BuiltinVoice): void => {
+    setBVoice(v.id)
+    void import('../../audio/engine').then(async (m) => {
+      if (playing === v.id) { m.stopPreview(); setPlaying(null); return }
+      if (!v.demo) { m.stopPreview(); setPlaying(null); return }
+      setPlaying(v.id)
+      const r = await m.previewSample(v.demo)
+      if (!r) { setPlaying(null); return }
+      void r.ended.then(() => setPlaying((cur) => (cur === v.id ? null : cur)))
+    })
+  }
+  useEffect(() => () => { void import('../../audio/engine').then((m) => m.stopPreview()) }, [])
   const [voices, setVoices] = useState<SingerVoice[] | null>(null)
   const [voicesInfo, setVoicesInfo] = useState<{ vocalsFolder: string; vocoderLicence: string } | null>(null)
   const [voiceId, setVoiceId] = useState('')
@@ -371,8 +387,8 @@ export function VocalEditor(): React.ReactElement {
                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tr(kl)} · {tr(list[0].description)}</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
                           {list.map((v) => (
-                            <button key={v.id} className={`btn ${bv?.id === v.id ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setBVoice(v.id)} style={{ textAlign: 'left', fontSize: 11.5, padding: '5px 7px' }} title={v.credit}>
-                              {voiceLabel(v)}
+                            <button key={v.id} className={`btn ${bv?.id === v.id ? 'btn-primary' : 'btn-ghost'}`} onClick={() => pickVoice(v)} style={{ textAlign: 'left', fontSize: 11.5, padding: '5px 7px' }} title={`${tr('Click: choose and listen (click again: stop)')}\n${v.credit}`}>
+                              {playing === v.id ? '■ ' : '▶ '}{voiceLabel(v)}
                             </button>
                           ))}
                         </div>
@@ -380,7 +396,7 @@ export function VocalEditor(): React.ReactElement {
                     )
                   })}
                 </div>
-                {bv?.demo && <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void import('../../audio/engine').then((m) => m.previewSample(bv.demo!))}>▶ {trf('Listen to {name}', { name: voiceLabel(bv) })}</button>}
+                <div style={hint}>{tr('Click a voice to hear it right away (a short song line in its typical style); click again to stop.')}</div>
                 <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
                   <input type="checkbox" checked={natural} onChange={(e) => setNatural(e.target.checked)} />{tr('Best quality (slower; off: about twice as fast)')}
                 </label>

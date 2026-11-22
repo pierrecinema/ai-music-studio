@@ -22,6 +22,7 @@ interface UIState {
   pianoZoom: number
   grid: string          // id of a grid size (see edit/grid.ts)
   snap: boolean         // snap to the grid while moving, trimming and drawing
+  tool: 'pointer' | 'scissors'   // the Studio's tool: select and move, or cut clips with a click
   libraryTab: 'tracks' | 'stems' | 'samples'   // open tab of the Library (other views can open it on a tab)
   panelHeight: number   // the panel under the Studio (mixer, piano roll, ...): drag its top edge
   chatOpen: boolean     // the AI assistant panel on the right
@@ -33,6 +34,7 @@ interface UIState {
 
   setGrid: (id: string) => void
   toggleSnap: () => void
+  setTool: (tool: 'pointer' | 'scissors') => void
   setShortcutPreset: (p: 'ableton' | 'cubase') => void
   setCustomKeys: (k: Record<string, string[]>) => void
   setPianoTool: (t: 'draw' | 'select' | 'erase') => void
@@ -70,9 +72,11 @@ export const useUIStore = create<UIState>()(
       pianoZoom: 1,
       grid: '1/16',
       snap: true,
+      tool: 'pointer',
 
       setGrid: (grid) => set({ grid }),
       toggleSnap: () => set((s) => ({ snap: !s.snap })),
+      setTool: (tool) => set({ tool }),
       chatOpen: true,
       setChatOpen: (chatOpen) => set({ chatOpen }),
       setShortcutPreset: (shortcutPreset) => set({ shortcutPreset }),

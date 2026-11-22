@@ -645,3 +645,10 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 | 39.7 | Stil **Rap** (eine Männerstimme), Singen | KI-Sänger rappt den Text im Tempo des Songs (einige Minuten), neue Spur „Gesang – Rap“ ab der ersten Note | | | 0.96.0 |
 | 39.8 | Allgemein: Klingen die Stile typisch genug? | Eindruck notieren | | | 0.96.0 |
 
+
+## 40. Neu in 0.96.1: Sänger-Installation mit Fortschritt
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 40.1 | Vocal Editor → Eingebaute Stimmen → **Sänger installieren** | Schritte 1/4 bis 4/4 mit steigendem Prozentwert; das KI-Backend bleibt online | | | 0.96.1 |
+| 40.2 | Am Ende | Hinweis verschwindet, 39 Stimmen sichtbar; danach 39.2 bis 39.8 testen | | | 0.96.1 |

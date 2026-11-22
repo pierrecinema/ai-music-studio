@@ -11,6 +11,7 @@ import { matchesQuery } from '../src/renderer/src/lib/librarySearch'
 import type { LibraryTrack } from '../src/renderer/src/lib/api'
 import { alignStarts, leadBeats, phaseAlign } from '../src/renderer/src/beatmatch/store'
 import { autoStructure } from '../src/renderer/src/lib/lyrics'
+import { installProgress, rapLyrics } from '../src/renderer/src/lib/singer'
 import { measureBalance, PROFILES, suggest, bassWidth } from '../src/renderer/src/audio/master/assistant'
 import { defaultChain } from '../src/renderer/src/audio/master/chain'
 import { applyEdits, applyOp, copyPart, fadeShape } from '../src/renderer/src/audio/master/edit'
@@ -517,6 +518,14 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   check('Salamander: nearest sample per key, velocity layers', hit(62, 30).join() === 'audio/C4v4.mp3' && hit(64, 120).join() === 'audio/F#4v16.mp3' && hit(21, 127).join() === 'audio/A0v16.mp3' && hit(127, 1).join() === 'audio/F#4v4.mp3', JSON.stringify([hit(62, 30), hit(64, 120)]))
   const vsco = buildMultiBank('vsco', ['Strings/Violin Section/susVib/VlnEns_susVib_A3_v1.wav', 'Strings/Cello Section/susvib/susvib_C2_v1_1.wav', 'Brass/F Horn/sus/MOHorn_sus_C3_v1_1.wav', 'Brass/Tenor Trombone/sus/tenortbn_sus_A#0_v1_1.wav'])
   check('VSCO: violins, cellos, strings, horn, trombone, brass presets', ['0:40', '0:42', '0:48', '0:57', '0:60', '0:61'].every((k) => vsco.presets.get(k)?.zones.length) && vsco.samples.find((x) => x.file?.includes('VlnEns'))?.root === 69)
+}
+
+// ── the singer: installation progress, rap lyrics ──
+{
+  let st = 0
+  const step = (l: string): number | null => { const r = installProgress(l, st); st = r.stage; return r.pct }
+  check('singer install: steps and progress inside a step', step('Step 2/4: PyTorch 2.2') === 5 && step('   ━━━━ 101.5/203.0 MB 5.1 MB/s eta 0:00:20') === 20 && step('Step 4/4: the singing model') === 45 && step('model.pt:  50%|█████     | 1.4G/2.8G') === 73 && step('Collecting einops') === null)
+  check('rap lyrics: a rap verse tag, lines of 8 words', rapLyrics('one two three four five six seven eight nine') === '[Verse - rap]\none two three four five six seven eight\nnine' && rapLyrics('[Chorus]\nyeah').startsWith('[Chorus - rap]'))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

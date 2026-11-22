@@ -315,7 +315,7 @@ function run(cmd: string, args: string[], log: (l: string) => void, env: Record<
     log(`> ${cmd} ${args.join(' ')}`)
     const p = spawn(cmd, args, { windowsHide: true, env: { ...process.env, PIP_CACHE_DIR: pipCacheDir(), ...env } })
     running = p
-    const pipe = (d: Buffer) => d.toString().split(/\r?\n/).filter(Boolean).forEach(log)
+    const pipe = (d: Buffer) => d.toString().split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean).forEach(log)   // \r: progress bars
     p.stdout?.on('data', pipe)
     p.stderr?.on('data', pipe)
     p.on('error', e => { log(`error: ${e.message}`); resolve(-1) })
@@ -364,20 +364,24 @@ async function installSinger(py: PythonCmd | null, torchVariant: string, log: (l
   if (!py) return { ok: false, error: 'Python 3.10 to 3.12 was not found.' }
   const minor = Number(py.version.split('.')[1])
   if (minor < 10 || minor > 12) return { ok: false, error: `The singer needs Python 3.10 to 3.12 (found ${py.version}). Install Python 3.11 from python.org and try again.` }
+  log('Step 1/4: the singer\'s own Python environment')
   if (!existsSync(singerPython())) {
     mkdirSync(join(singerDir(), '..'), { recursive: true })
     if (await run(py.cmd, [...py.args, '-m', 'venv', singerDir()], log) !== 0) return { ok: false, error: 'Could not create the singer environment.' }
     await run(singerPython(), ['-m', 'pip', 'install', '--upgrade', 'pip'], log)
   }
   const index = torchVariant === 'cuda' ? 'https://download.pytorch.org/whl/cu121' : 'https://download.pytorch.org/whl/cpu'
+  log(`Step 2/4: PyTorch 2.2 (${torchVariant === 'cuda' ? 'about 2.5 GB' : 'about 200 MB'})`)
   log(`The singer uses PyTorch 2.2 (${torchVariant === 'cuda' ? 'NVIDIA graphics card' : 'processor'}).`)
   if (await run(singerPython(), ['-m', 'pip', 'install', 'torch==2.2.2', 'torchaudio==2.2.2', '--index-url', index], log) !== 0) {
     return { ok: false, error: 'Installing PyTorch for the singer failed (see log).' }
   }
+  log('Step 3/4: the singer\'s packages')
   if (await run(singerPython(), ['-m', 'pip', 'install', 'numpy<2', 'transformers==4.41.2', 'accelerate==1.0.1', 'omegaconf==2.3.0',
     'librosa==0.10.2.post1', 'soundfile', 'scipy', 'einops', 'huggingface_hub>=0.23,<0.26'], log) !== 0) {
     return { ok: false, error: 'Installing the singer packages failed (see log).' }
   }
+  log('Step 4/4: the singing model (2.8 GB)')
   log('Downloading the singing model (SoulX-Singer, 2.8 GB, Apache 2.0) and whisper-base (MIT): this takes a while.')
   const models = singerModels()
   mkdirSync(models, { recursive: true })
@@ -604,6 +608,14 @@ export async function installGroups(
 ): Promise<{ ok: boolean; error?: string }> {
   const py = await findPython()
   pkgCache = null
+
+  // the singer alone: only its own environment, the AI backend's environment stays as it is (the backend keeps running)
+  if (groups.length && groups.every((g) => g === 'singer')) {
+    log('=== singer (built-in voices that sing your melody and lyrics) ===')
+    const r = await installSinger(py, torchVariant, log)
+    if (!r.ok) log(r.error ?? 'failed')
+    return r
+  }
 
   // An environment built on a very new Python lacks wheels for several engines (basic-pitch,
   // ACE-Step). If a better interpreter is installed now, rebuild the environment with it.

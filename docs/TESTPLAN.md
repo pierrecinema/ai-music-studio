@@ -660,3 +660,5 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 | 41.1 | Vocal Editor → Eingebaute Stimmen | Stimmen mit Namen (Anna, Bella … Adam, Ben …) | | | 0.96.2 |
 | 41.2 | Auf eine Stimme klicken | Sofort eine Hörprobe (etwa 16 s), ■ am Namen | | | 0.96.2 |
 | 41.3 | Nochmal klicken / eine andere Stimme klicken | Stoppt / die andere spielt sofort | | | 0.96.2 |
+| 41.4 | Neue Melodie ohne Silben, Text ins Feld schreiben | Nach einem Moment stehen die Silben unter „Noten und Silben“; einzelne Silbe ändern geht | | | 0.96.2 |
+| 41.5 | Melodie ohne Silben, Text geschrieben, gleich **Singen** | Singt ohne Meldung „Verteile zuerst den Text“ | | | 0.96.2 |

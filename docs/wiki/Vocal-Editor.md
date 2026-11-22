@@ -48,7 +48,7 @@ Voices with their own timing, pitch and expression models (folders `dsdur`, `dsp
 ## Lyrics
 
 1. Choose the language (English, German, Spanish; or *Phonemes* to type the voice's own phonemes, e.g. `l a`).
-2. Write the lyrics and press *Put the lyrics on the notes*: each word goes on its first note, and a note with `+` holds a further syllable (the word is pronounced with a dictionary and, for unknown words, a small model, both from OpenUtau, MIT).
+2. Write the lyrics: a moment later they are on the notes by themselves (*Sing* also does it when the notes have no syllables yet; *Put the lyrics on the notes again* redoes it): each word goes on its first note, and a note with `+` holds a further syllable (the word is pronounced with a dictionary and, for unknown words, a small model, both from OpenUtau, MIT).
 3. Check the syllables under *Notes and syllables* and correct them; they are saved with the project and shown in the Piano Roll.
 4. *Sing*: the vocals land on a new track in the Studio, in time with the song. Syllables the voice cannot sing are named.
 

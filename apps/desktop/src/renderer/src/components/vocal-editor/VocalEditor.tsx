@@ -142,9 +142,10 @@ export function VocalEditor(): React.ReactElement {
       if (!words) { setError(tr('Write the lyrics first.')); return }
       await singAi({ lyrics: words, voice: bv.gender === 'male' ? 'male' : 'female', rap: true }); return
     }
-    if (!notes.some((n) => n.lyric && n.lyric !== '+')) { setError(tr('Put lyrics on the notes first.')); return }
+    const sung = await withLyrics(notes)
+    if (!sung) return
     try {
-      const { jobId } = await api.singer.builtinRender({ voice: bv.id, notes, lang: lang || 'en', rap: false, style, steps: natural ? 32 : 16, name: `${track?.name ?? 'Vocals'} ${bv.name}` })
+      const { jobId } = await api.singer.builtinRender({ voice: bv.id, notes: sung, lang: lang || 'en', rap: false, style, steps: natural ? 32 : 16, name: `${track?.name ?? 'Vocals'} ${bv.name}` })
       setBusy({ text: tr('Singing…'), pct: 0 })
       if (await poll(() => api.singer.job(jobId))) {
         const j = await api.singer.job(jobId)
@@ -206,8 +207,8 @@ export function VocalEditor(): React.ReactElement {
   }
 
   // lyrics onto the notes: a word on its first note, "+" on the notes of its further syllables
-  const putLyrics = async (): Promise<void> => {
-    if (!melody.length) return
+  const putLyrics = async (): Promise<string[] | null> => {
+    if (!melody.length || !text.trim()) return null
     setError(null)
     try {
       const { lyrics } = await api.singer.lyrics(text, melody.length, lang || 'en')
@@ -216,7 +217,23 @@ export function VocalEditor(): React.ReactElement {
       const words = text.split(/\s+/).filter(Boolean).length
       const placed = lyrics.filter((l) => l && l !== '+').length
       setNotice(placed < words ? trf('{placed} of {words} words fit on the {n} notes: add notes or shorten the lyrics.', { placed, words, n: melody.length }) : trf('The lyrics are on the {n} notes. Check and correct them below.', { n: melody.length }))
-    } catch (e) { setError((e as Error).message) }
+      return lyrics
+    } catch (e) { setError((e as Error).message); return null }
+  }
+  // the lyrics go onto the notes by themselves a moment after typing (or changing the language); single syllables
+  // can then be corrected under "Notes and syllables"
+  const typed = useRef(false)
+  useEffect(() => {
+    if (!typed.current || engine === 'ai' || !text.trim() || !melody.length) return
+    const t = setTimeout(() => { void putLyrics() }, 900)
+    return () => clearTimeout(t)
+  }, [text, lang, melody.length])  // eslint-disable-line react-hooks/exhaustive-deps
+  /** the notes to sing with their syllables: lyrics written but not yet on the notes are put on them first */
+  const withLyrics = async <T extends { lyric: string }>(notes: T[]): Promise<T[] | null> => {
+    if (notes.some((n) => n.lyric && n.lyric !== '+')) return notes
+    if (!text.trim()) { setError(tr('Write the lyrics first (in the Lyrics field): they are put on the notes by themselves.')); return null }
+    const l = await putLyrics()
+    return l ? notes.map((n, i) => ({ ...n, lyric: l[i] ?? '' })) : null
   }
   const setLyric = (m: SungNote, lyric: string): void => useProjectStore.getState().updateNote(m.trackId, m.clipId, m.note.id, { lyric: lyric || undefined })
 
@@ -236,9 +253,10 @@ export function VocalEditor(): React.ReactElement {
     setError(null); setNotice(null)
     const p = useProjectStore.getState().project
     const notes = melody.map((m) => ({ pitch: m.note.pitch, start: beatToSec(p, m.beat), end: beatToSec(p, m.beat + m.note.duration), lyric: m.note.lyric ?? '' }))
-    if (!notes.some((n) => n.lyric && n.lyric !== '+')) { setError(tr('Put lyrics on the notes first.')); return }
+    const sung = await withLyrics(notes)
+    if (!sung) return
     try {
-      const { jobId } = await api.singer.render({ voice: voice.id, notes, lang: lang || undefined, steps, vibrato, name: `${track?.name ?? 'Vocals'} ${voice.name}` })
+      const { jobId } = await api.singer.render({ voice: voice.id, notes: sung, lang: lang || undefined, steps, vibrato, name: `${track?.name ?? 'Vocals'} ${voice.name}` })
       setBusy({ text: tr('Singing…'), pct: 0 })
       if (await poll(() => api.singer.job(jobId))) {
         const j = await api.singer.job(jobId)
@@ -466,11 +484,12 @@ export function VocalEditor(): React.ReactElement {
 
           <div style={card}>
             <div style={label}>{tr('Lyrics')}</div>
-            <select value={lang} onChange={(e) => setLang(e.target.value)}>
+            <select value={lang} onChange={(e) => { typed.current = true; setLang(e.target.value) }}>
               {LANGS.filter(([k]) => engine === 'ai' ? k : true).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}
             </select>
-            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} placeholder={tr('Write the lyrics here…')} style={{ resize: 'vertical' }} />
-            {engine !== 'ai' && <button className="btn btn-ghost" onClick={() => void putLyrics()} disabled={!melody.length || !text.trim() || !!busy}>{tr('Put the lyrics on the notes')}</button>}
+            <textarea value={text} onChange={(e) => { typed.current = true; setText(e.target.value) }} rows={5} placeholder={tr('Write the lyrics here…')} style={{ resize: 'vertical' }} />
+            {engine !== 'ai' && <div style={hint}>{tr('The lyrics go onto the notes by themselves while you type; correct single syllables under “Notes and syllables”.')}</div>}
+            {engine !== 'ai' && <button className="btn btn-ghost" onClick={() => void putLyrics()} disabled={!melody.length || !text.trim() || !!busy}>{tr('Put the lyrics on the notes again')}</button>}
           </div>
 
           {engine === 'diffsinger' && (

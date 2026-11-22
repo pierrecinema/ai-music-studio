@@ -1894,5 +1894,8 @@
  "3/4 Packages": "3/4 Pakete",
  "4/4 Singing model (2.8 GB)": "4/4 Gesangsmodell (2,8 GB)",
  "Click a voice to hear it right away (a short song line in its typical style); click again to stop.": "Klick auf eine Stimme, um sie sofort zu hören (eine kurze Liedzeile in ihrem typischen Stil); nochmal klicken stoppt.",
- "Click: choose and listen (click again: stop)": "Klick: wählen und anhören (nochmal klicken: stopp)"
+ "Click: choose and listen (click again: stop)": "Klick: wählen und anhören (nochmal klicken: stopp)",
+ "The lyrics go onto the notes by themselves while you type; correct single syllables under “Notes and syllables”.": "Der Text kommt beim Schreiben von selbst auf die Noten; einzelne Silben korrigierst du unter „Noten und Silben“.",
+ "Put the lyrics on the notes again": "Text neu auf die Noten verteilen",
+ "Write the lyrics first (in the Lyrics field): they are put on the notes by themselves.": "Schreib zuerst den Text (im Feld Text): er kommt von selbst auf die Noten."
 }

@@ -1,0 +1,6 @@
+The built-in voices are short recordings of singers from VocalSet (singing "Row, Row, Row Your Boat", a public-domain
+song, and vowel arpeggios), used by the singing model as voice examples.
+
+Julia Wilkins, Prem Seetharaman, Alison Wahl, Bryan Pardo (2018). VocalSet: A Singing Voice Dataset (1.2).
+Zenodo. https://doi.org/10.5281/zenodo.1442513 - Creative Commons Attribution 4.0 International (CC BY 4.0).
+Cut to a few seconds each; demo.wav files are sung by the model (SoulX-Singer) in these voices.

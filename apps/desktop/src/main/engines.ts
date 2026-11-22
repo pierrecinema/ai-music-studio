@@ -80,6 +80,24 @@ export function drRepo(): string {
   return join(modelsDir(), 'diffrhythm', 'DiffRhythm')
 }
 
+// The built-in singer (SoulX-Singer, Apache 2.0): its own environment with the PyTorch and Transformers versions it
+// was made with, so it cannot disturb the other engines; the model (2.8 GB) and whisper-base live next to the models.
+export function singerDir(): string {
+  return join(app.getPath('userData'), 'engines', 'venv-singer')
+}
+
+export function singerPython(): string {
+  return join(singerDir(), 'Scripts', 'python.exe')
+}
+
+export function singerModels(): string {
+  return join(modelsDir(), 'soulx-singer')
+}
+
+export function hasSinger(): boolean {
+  return existsSync(singerPython()) && existsSync(join(singerModels(), 'SoulX-Singer', 'model.pt'))
+}
+
 export function hasDr(): boolean {
   return existsSync(drPython()) && existsSync(join(drRepo(), 'infer', 'infer.py'))
 }
@@ -224,6 +242,7 @@ export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   for (const [g, names] of Object.entries(GROUP_PROBE)) installed[g] = names.some((n) => have.has(n))
   installed.gpuamd = hasDml()
   installed.diffrhythm = hasDr()
+  installed.singer = hasSinger()
   installed.ace15 = hasAce15()
   installed.separator = hasSep()
   installed.aiinst = hasDdsp()
@@ -291,10 +310,10 @@ async function venvPythonMinor(): Promise<number | null> {
 
 let running: ChildProcess | null = null
 
-function run(cmd: string, args: string[], log: (l: string) => void): Promise<number> {
+function run(cmd: string, args: string[], log: (l: string) => void, env: Record<string, string> = {}): Promise<number> {
   return new Promise(resolve => {
     log(`> ${cmd} ${args.join(' ')}`)
-    const p = spawn(cmd, args, { windowsHide: true, env: { ...process.env, PIP_CACHE_DIR: pipCacheDir() } })
+    const p = spawn(cmd, args, { windowsHide: true, env: { ...process.env, PIP_CACHE_DIR: pipCacheDir(), ...env } })
     running = p
     const pipe = (d: Buffer) => d.toString().split(/\r?\n/).filter(Boolean).forEach(log)
     p.stdout?.on('data', pipe)
@@ -338,6 +357,41 @@ async function installDiffRhythm(py: PythonCmd | null, log: (l: string) => void)
     return { ok: false, error: 'Installing the DiffRhythm packages failed (see log).' }
   }
   log('Also needed on Windows: eSpeak NG (https://github.com/espeak-ng/espeak-ng/releases, the .msi). Install it once, then DiffRhythm can sing.')
+  return { ok: true }
+}
+
+async function installSinger(py: PythonCmd | null, torchVariant: string, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
+  if (!py) return { ok: false, error: 'Python 3.10 to 3.12 was not found.' }
+  const minor = Number(py.version.split('.')[1])
+  if (minor < 10 || minor > 12) return { ok: false, error: `The singer needs Python 3.10 to 3.12 (found ${py.version}). Install Python 3.11 from python.org and try again.` }
+  if (!existsSync(singerPython())) {
+    mkdirSync(join(singerDir(), '..'), { recursive: true })
+    if (await run(py.cmd, [...py.args, '-m', 'venv', singerDir()], log) !== 0) return { ok: false, error: 'Could not create the singer environment.' }
+    await run(singerPython(), ['-m', 'pip', 'install', '--upgrade', 'pip'], log)
+  }
+  const index = torchVariant === 'cuda' ? 'https://download.pytorch.org/whl/cu121' : 'https://download.pytorch.org/whl/cpu'
+  log(`The singer uses PyTorch 2.2 (${torchVariant === 'cuda' ? 'NVIDIA graphics card' : 'processor'}).`)
+  if (await run(singerPython(), ['-m', 'pip', 'install', 'torch==2.2.2', 'torchaudio==2.2.2', '--index-url', index], log) !== 0) {
+    return { ok: false, error: 'Installing PyTorch for the singer failed (see log).' }
+  }
+  if (await run(singerPython(), ['-m', 'pip', 'install', 'numpy<2', 'transformers==4.41.2', 'accelerate==1.0.1', 'omegaconf==2.3.0',
+    'librosa==0.10.2.post1', 'soundfile', 'scipy', 'einops', 'huggingface_hub>=0.23,<0.26'], log) !== 0) {
+    return { ok: false, error: 'Installing the singer packages failed (see log).' }
+  }
+  log('Downloading the singing model (SoulX-Singer, 2.8 GB, Apache 2.0) and whisper-base (MIT): this takes a while.')
+  const models = singerModels()
+  mkdirSync(models, { recursive: true })
+  const script = [
+    'import sys, os',
+    'from huggingface_hub import hf_hub_download, snapshot_download',
+    'm = sys.argv[1]',
+    "hf_hub_download('Soul-AILab/SoulX-Singer', 'model.pt', local_dir=os.path.join(m, 'SoulX-Singer'))",
+    "snapshot_download('openai/whisper-base', allow_patterns=['*.json', '*.txt', '*.safetensors'])",
+    "print('models ready')",
+  ].join('\n')
+  if (await run(singerPython(), ['-c', script, models], log, { HF_HOME: join(models, 'hf'), HF_HUB_ENABLE_HF_TRANSFER: '0' }) !== 0) {
+    return { ok: false, error: 'Downloading the singing model failed (see log). Press Install again: finished parts are kept.' }
+  }
   return { ok: true }
 }
 
@@ -635,6 +689,11 @@ export async function installGroups(
     log('=== separator (fast vocal / instrumental separation, also on AMD / Intel graphics) ===')
     const r = await installSep(py, torchVariant, log)
     if (!r.ok) { failed.push('separator'); log(r.error ?? 'failed') }
+  }
+  if (groups.includes('singer')) {
+    log('=== singer (built-in voices that sing your melody and lyrics) ===')
+    const r = await installSinger(py, torchVariant, log)
+    if (!r.ok) { failed.push('singer'); log(r.error ?? 'failed') }
   }
   if (groups.includes('diffrhythm')) {
     log('=== diffrhythm (full songs in one go, needs an NVIDIA card) ===')

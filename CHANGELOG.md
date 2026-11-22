@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.95.1
+
+### New
+
+- **Your singing becomes a MIDI melody**: in the Vocal Editor, *My singing (Studio clip) → MIDI* (or *A recording file → MIDI*) turns a recorded vocal line into a MIDI track, in the project tempo from where the clip starts. Put lyrics on it and press *Sing*, or edit it in the Piano Roll.
+
 ## 0.95.0
 
 ### New

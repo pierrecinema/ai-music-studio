@@ -149,6 +149,42 @@ export function VocalEditor(): React.ReactElement {
     setBusy(null)
   }
 
+  // your own singing -> a MIDI melody track (Audio → MIDI with one-voice transcription, on the song's grid)
+  const singingToMidi = async (from: 'clip' | 'file'): Promise<void> => {
+    setError(null); setNotice(null)
+    let path: string | null = null
+    let startBeat = 0
+    if (from === 'clip') {
+      const st = useProjectStore.getState()
+      for (const t of st.project.tracks) for (const c of t.clips) if (c.id === st.selectedClipId && c.audioFile) { path = c.audioFile; startBeat = c.startTime }
+      if (!path) { setError(tr('Select your recorded singing (an audio clip) in the Studio first.')); return }
+    } else {
+      const paths: string[] = await window.api.dialog.openAudio()
+      path = paths?.[0] ?? null
+      if (!path) return
+    }
+    try {
+      const p = useProjectStore.getState().project
+      const { jobId } = await api.audioToMidi.startSong({ filePath: path, separate: false, stem: 'vocals', want: ['vocals'], bpm: p.bpm, quantize: 0.25, strength: 0.5, grid_from_song: false })
+      setBusy({ text: tr('Turning your singing into notes…'), pct: 0 })
+      const ok = await poll(async () => { const j = await api.audioToMidi.song(jobId); return { ...j, error: j.error } })
+      if (ok) {
+        const j = await api.audioToMidi.song(jobId)
+        const part = j.result?.parts[0]
+        if (j.result && part) {
+          const { importTranscription } = await import('../../lib/transcriptionImport')
+          // the recording keeps the project tempo; its notes start where the clip starts
+          const made = importTranscription(j.result, { startBar: Math.floor(startBeat / 4) + 1, setTempo: false, original: null, programs: { vocals: 73 } })
+          const ts = useProjectStore.getState().project.tracks
+          const created = ts[ts.length - 1]
+          if (created) { useProjectStore.getState().updateTrack(created.id, { name: tr('My melody (MIDI)') }); setTrackId(created.id) }
+          setNotice(trf('{n} notes from your singing are on a new MIDI track ({made}). Put lyrics on them and press Sing, or edit them in the Piano Roll.', { n: part.notes.length, made: made.join(', ') }))
+        } else setError(tr('No notes found in the recording.'))
+      }
+    } catch (e) { setError((e as Error).message) }
+    setBusy(null)
+  }
+
   // the AI singer: ACE-Step sings the lyrics a cappella in the tempo, key and length of the melody
   const singAi = async (): Promise<void> => {
     if (!melody.length || !text.trim()) { setError(tr('Write the lyrics first.')); return }
@@ -264,6 +300,11 @@ export function VocalEditor(): React.ReactElement {
               </select>
             ) : <div style={{ ...hint, color: 'var(--yellow)' }}>{tr('No MIDI track with notes yet: write a melody in the Piano Roll first.')}</div>}
             <div style={hint}>{trf('{n} notes. One note per syllable; a note with "+" holds the syllable before it.', { n: melody.length })}</div>
+            <div style={{ ...hint, marginTop: 4 }}>{tr('Or sing it: record yourself on an audio track in the Studio (or choose a recording), and the app writes the melody as MIDI.')}</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button className="btn btn-ghost" onClick={() => void singingToMidi('clip')} disabled={!!busy} title={tr('The audio clip selected in the Studio')}>🎙 {tr('My singing (Studio clip) → MIDI')}</button>
+              <button className="btn btn-ghost" onClick={() => void singingToMidi('file')} disabled={!!busy}>{tr('A recording file → MIDI')}</button>
+            </div>
           </div>
 
           <div style={card}>

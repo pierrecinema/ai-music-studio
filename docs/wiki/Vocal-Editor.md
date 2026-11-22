@@ -2,6 +2,10 @@
 
 A melody of a MIDI track is sung with your lyrics. Write the melody in the [[Piano Roll]] (one note per syllable), or turn a sung line into MIDI with [[Audio to MIDI]], then open *Vocal Editor* in the sidebar.
 
+## Sing the melody yourself
+
+Record yourself on an audio track in the [[Studio]], select the clip and press *My singing (Studio clip) → MIDI* (or choose a recording file). The melody lands on a new MIDI track, in the project tempo from where the clip starts, ready for lyrics and *Sing* or for the [[Piano Roll]].
+
 ## Two singers
 
 | | DiffSinger voice (exact) | AI singer (ACE-Step) |

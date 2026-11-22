@@ -4,6 +4,7 @@ Voicebanks are not shipped with the app: their authors set the terms. The user d
 and imports the .zip or folder here. The vocoder they need (NSF-HiFiGAN by OpenVPI, CC BY-NC-SA 4.0, a
 non-commercial component) is downloaded once on request.
 """
+import json
 import os
 import shutil
 import tempfile
@@ -290,3 +291,63 @@ async def job_status(jid: str):
     if not job:
         raise HTTPException(404, "Unknown job")
     return job | {"elapsed": round(time.time() - job["started"], 1)}
+
+
+# ── the built-in singer (SoulX-Singer with the app's own voices, services/soulx.py) ──────────────────────────────
+
+@router.get("/builtin")
+async def builtin():
+    from services import soulx
+    return {"voices": soulx.voices(), "problem": soulx.worker.available()}
+
+
+class BuiltinRequest(BaseModel):
+    voice: str
+    notes: list[SingNote]
+    lang: str = "en"
+    rap: bool = False
+    steps: int = 32
+    name: str = "vocals"
+
+
+@router.post("/builtin/render")
+async def builtin_render(req: BuiltinRequest):
+    from services import soulx
+    problem = soulx.worker.available()
+    if problem:
+        raise HTTPException(503, problem)
+    vdir = soulx.VOICES / req.voice
+    if not (vdir / "prompt.json").exists():
+        raise HTTPException(404, f"No built-in voice \"{req.voice}\".")
+    if not req.notes:
+        raise HTTPException(400, "No notes to sing.")
+    segs, unknown = soulx.segments([n.model_dump() for n in req.notes], req.lang, rap=req.rap)
+    jid = uuid.uuid4().hex[:10]
+    job = {"id": jid, "status": "running", "progress": 0, "text": "Starting", "error": None, "result": None, "started": time.time()}
+    _jobs[jid] = job
+
+    def work():
+        try:
+            OUT.mkdir(parents=True, exist_ok=True)
+            safe = "".join(c for c in req.name if c.isalnum() or c in " _-").strip() or "vocals"
+            path = OUT / f"{safe}-{time.strftime('%Y%m%d-%H%M%S')}.wav"
+            meta = json.load(open(vdir / "prompt.json", encoding="utf-8"))[0]
+            soulx.worker.render(str(vdir / "prompt.wav"), meta, segs, str(path), max(4, min(64, req.steps)),
+                                lambda p, t: job.update(progress=round(p, 1), text=t), lambda: bool(job.get("cancel")))
+            import soundfile as sf
+            secs = sf.info(str(path)).duration
+            job.update(status="done", progress=100, text="Done", result={"file": str(path), "seconds": round(secs, 2), "unknown": sorted(set(unknown))})
+        except Exception as e:  # noqa: BLE001
+            job.update(status="cancelled" if str(e) == "Cancelled" else "error", error=str(e))
+
+    threading.Thread(target=work, daemon=True).start()
+    return {"jobId": jid}
+
+
+@router.post("/jobs/{jid}/cancel")
+async def cancel_job(jid: str):
+    job = _jobs.get(jid)
+    if not job:
+        raise HTTPException(404, "Unknown job")
+    job["cancel"] = True
+    return {"ok": True}

@@ -13,6 +13,7 @@ import { beatToSec } from '../../audio/timemap'
 import { tr, trf } from '../../i18n/tr'
 import type { Note, Track } from '../../types'
 
+interface BuiltinVoice { id: string; name: string; description: string; style: string; gender: string; credit: string; demo: string | null }
 const LANGS: Array<[string, string]> = [['en', 'English'], ['de', 'Deutsch'], ['es', 'Español'], ['', 'Phonemes / the voice’s own language']]
 const QUALITY: Array<[number, string]> = [[8, 'Fast (draft)'], [20, 'Normal'], [50, 'Best (slower)']]
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
@@ -38,7 +39,11 @@ export function VocalEditor(): React.ReactElement {
   const [trackId, setTrackId] = useState<string>('')
   const track = midiTracks.find((t) => t.id === trackId) ?? midiTracks.find((t) => t.id === selectedTrackId) ?? midiTracks[0]
   const melody = useMemo(() => melodyOf(track), [track])
-  const [engine, setEngine] = useState<'diffsinger' | 'ai'>('diffsinger')
+  const [engine, setEngine] = useState<'builtin' | 'diffsinger' | 'ai'>('builtin')
+  const [builtin, setBuiltin] = useState<{ voices: BuiltinVoice[]; problem: string | null } | null>(null)
+  const [bVoice, setBVoice] = useState('')
+  const bv = builtin?.voices.find((v) => v.id === bVoice) ?? builtin?.voices[0]
+  const [natural, setNatural] = useState(true)
   const [voices, setVoices] = useState<SingerVoice[] | null>(null)
   const [voicesInfo, setVoicesInfo] = useState<{ vocalsFolder: string; vocoderLicence: string } | null>(null)
   const [voiceId, setVoiceId] = useState('')
@@ -54,6 +59,43 @@ export function VocalEditor(): React.ReactElement {
   const [aiStyle, setAiStyle] = useState('pop')
   const alive = useRef(true)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
+
+  const loadBuiltin = (): void => { api.singer.builtin().then(setBuiltin).catch(() => setBuiltin({ voices: [], problem: tr('The AI backend does not answer.') })) }
+  useEffect(loadBuiltin, [])
+  const installSinger = async (): Promise<void> => {
+    if (!window.confirm(tr('Install the singer now? About 4 GB are downloaded once (the singing model SoulX-Singer and its own Python environment). The AI backend restarts afterwards.'))) return
+    setError(null); setBusy({ text: tr('Installing the singer…'), pct: 0 })
+    const off = window.api.engines.onLog?.((line: string) => setBusy({ text: line.slice(0, 120), pct: 0 }))
+    try {
+      const st = await window.api.engines.status()
+      const r = await window.api.engines.install(['singer'], st.gpu === 'nvidia' ? 'cuda' : 'cpu')
+      if (!r.ok) setError(r.error ?? tr('It did not work.'))
+      for (let i = 0; i < 60; i++) {                       // the backend restarts: wait until it answers again
+        await new Promise((res) => setTimeout(res, 2000))
+        try { const b = await api.singer.builtin(); setBuiltin(b); break } catch { /* not up yet */ }
+      }
+    } catch (e) { setError((e as Error).message) }
+    off?.(); setBusy(null)
+  }
+  const singBuiltin = async (): Promise<void> => {
+    if (!bv || !melody.length) return
+    setError(null); setNotice(null)
+    const p = useProjectStore.getState().project
+    const notes = melody.map((m) => ({ pitch: m.note.pitch, start: beatToSec(p, m.beat), end: beatToSec(p, m.beat + m.note.duration), lyric: m.note.lyric ?? '' }))
+    if (!notes.some((n) => n.lyric && n.lyric !== '+')) { setError(tr('Put lyrics on the notes first.')); return }
+    try {
+      const { jobId } = await api.singer.builtinRender({ voice: bv.id, notes, lang: lang || 'en', rap: bv.style === 'rap', steps: natural ? 32 : 16, name: `${track?.name ?? 'Vocals'} ${bv.name}` })
+      setBusy({ text: tr('Singing…'), pct: 0 })
+      if (await poll(() => api.singer.job(jobId))) {
+        const j = await api.singer.job(jobId)
+        if (j.result) {
+          addAudioTrack(j.result.file, `${tr('Vocals')} – ${bv.name}`, 0, j.result.seconds)
+          setNotice((j.result.unknown.length ? trf('Sung as "ah" (word not known): {list}. ', { list: j.result.unknown.join(', ') }) : '') + tr('The vocals are on a new track in the Studio, in time with the song.'))
+        }
+      }
+    } catch (e) { setError((e as Error).message) }
+    setBusy(null)
+  }
 
   const loadVoices = (): void => {
     api.singer.voices().then((r) => { setVoices(r.voices); setVoicesInfo({ vocalsFolder: r.vocalsFolder, vocoderLicence: r.vocoderLicence }) })
@@ -229,7 +271,7 @@ export function VocalEditor(): React.ReactElement {
     setBusy(null)
   }
 
-  const ready = engine === 'diffsinger' ? !!voice && !voice.error && voice.vocoderInstalled && melody.length > 0 : melody.length > 0 && !!text.trim()
+  const ready = engine === 'builtin' ? !!bv && !builtin?.problem && melody.length > 0 : engine === 'diffsinger' ? !!voice && !voice.error && voice.vocoderInstalled && melody.length > 0 : melody.length > 0 && !!text.trim()
 
   return (
     <div style={{ height: '100%', overflow: 'auto', padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -242,11 +284,34 @@ export function VocalEditor(): React.ReactElement {
           <div style={card}>
             <div style={label}>{tr('Singer')}</div>
             <div style={{ display: 'flex', gap: 6 }}>
-              {([['diffsinger', tr('DiffSinger voice (exact)')], ['ai', tr('AI singer (ACE-Step)')]] as const).map(([k, l]) => (
+              {([['builtin', tr('Built-in voices')], ['diffsinger', tr('DiffSinger voice')], ['ai', tr('AI singer (ACE-Step)')]] as const).map(([k, l]) => (
                 <button key={k} className={`btn ${engine === k ? 'btn-primary' : 'btn-ghost'}`} style={{ flex: 1, fontSize: 12 }} onClick={() => setEngine(k)}>{l}</button>
               ))}
             </div>
-            {engine === 'diffsinger' ? (
+            {engine === 'builtin' && (
+              <>
+                <div style={hint}>{tr('The app’s own voices sing exactly your notes and lyrics. Runs on your processor: about a minute per 5 seconds of singing.')}</div>
+                {builtin?.problem ? (
+                  <div style={{ ...card, background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.4)' }}>
+                    <div style={hint}>{tr('The singer is installed once: about 4 GB (the singing model SoulX-Singer, Apache 2.0, and its own Python environment).')}</div>
+                    <button className="btn btn-primary" onClick={() => void installSinger()} disabled={!!busy}>{tr('Install the singer')}</button>
+                  </div>
+                ) : null}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                  {(builtin?.voices ?? []).map((v) => (
+                    <button key={v.id} className={`btn ${bv?.id === v.id ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setBVoice(v.id)} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '6px 8px' }} title={v.credit}>
+                      <b style={{ fontSize: 12.5 }}>{v.name}</b><span style={{ fontSize: 10.5, opacity: 0.8 }}>{tr(v.description)}</span>
+                    </button>
+                  ))}
+                </div>
+                {bv?.demo && <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void import('../../audio/engine').then((m) => m.previewSample(bv.demo!))}>▶ {trf('Listen to {name}', { name: bv.name })}</button>}
+                <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
+                  <input type="checkbox" checked={natural} onChange={(e) => setNatural(e.target.checked)} />{tr('Best quality (slower; off: about twice as fast)')}
+                </label>
+                {bv?.style === 'rap' && <div style={hint}>{tr('Rap voice: the words follow the rhythm of the notes and are spoken more than sung; put one note per syllable on one pitch.')}</div>}
+              </>
+            )}
+            {engine === 'builtin' ? null : engine === 'diffsinger' ? (
               <>
                 <div style={hint}>{tr('Sings exactly your notes: pitch, timing and length. Needs a DiffSinger voicebank (OpenUtau format) that you download from its author and import here.')}</div>
                 {voices && voices.length > 0 ? (
@@ -313,7 +378,7 @@ export function VocalEditor(): React.ReactElement {
               {LANGS.filter(([k]) => engine === 'ai' ? k : true).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}
             </select>
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} placeholder={tr('Write the lyrics here…')} style={{ resize: 'vertical' }} />
-            {engine === 'diffsinger' && <button className="btn btn-ghost" onClick={() => void putLyrics()} disabled={!melody.length || !text.trim() || !!busy}>{tr('Put the lyrics on the notes')}</button>}
+            {engine !== 'ai' && <button className="btn btn-ghost" onClick={() => void putLyrics()} disabled={!melody.length || !text.trim() || !!busy}>{tr('Put the lyrics on the notes')}</button>}
           </div>
 
           {engine === 'diffsinger' && (
@@ -331,7 +396,7 @@ export function VocalEditor(): React.ReactElement {
           )}
 
           {!busy ? (
-            <button className="btn btn-primary" style={{ padding: '10px 0', fontSize: 14 }} disabled={!ready} onClick={() => void (engine === 'diffsinger' ? singDiffSinger() : singAi())}>🎤 {tr('Sing')}</button>
+            <button className="btn btn-primary" style={{ padding: '10px 0', fontSize: 14 }} disabled={!ready} onClick={() => void (engine === 'builtin' ? singBuiltin() : engine === 'diffsinger' ? singDiffSinger() : singAi())}>🎤 {tr('Sing')}</button>
           ) : (
             <div style={card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}><span>{busy.text}</span><span>{Math.round(busy.pct)} %</span></div>

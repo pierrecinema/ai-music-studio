@@ -190,6 +190,10 @@ export const api = {
     lyrics: (text: string, count: number, lang: string) => post<{ lyrics: string[] }>('/singer/lyrics', { text, count, lang }),
     render: (body: { voice: string; notes: Array<{ pitch: number; start: number; end: number; lyric: string }>; lang?: string; steps?: number; vibrato?: number; speaker?: string; name?: string }) =>
       post<{ jobId: string }>('/singer/render', body),
+    builtin: () => get<{ voices: Array<{ id: string; name: string; description: string; style: string; gender: string; credit: string; demo: string | null }>; problem: string | null }>('/singer/builtin'),
+    builtinRender: (body: { voice: string; notes: Array<{ pitch: number; start: number; end: number; lyric: string }>; lang?: string; rap?: boolean; steps?: number; name?: string }) =>
+      post<{ jobId: string }>('/singer/builtin/render', body),
+    cancel: (id: string) => post<{ ok: boolean }>(`/singer/jobs/${id}/cancel`, {}),
     job: (id: string) => get<{ id: string; status: 'running' | 'done' | 'error'; progress: number; text: string; error: string | null; elapsed: number; result?: { file: string; seconds: number; unknown: string[] } }>(`/singer/jobs/${id}`),
   },
 

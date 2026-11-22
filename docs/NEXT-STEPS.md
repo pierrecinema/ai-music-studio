@@ -13,6 +13,10 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
   "Cloud Rendering (Pro)" is only a Coming soon page.
 - Reddit drafts: `docs/reddit-posts.md` (two posts are live; waiting for feedback).
 
+## Talking with the owner
+
+- Always in German, informal: **du**, never Sie (owner, 22.11.2026). Code, docs and commits stay in English.
+
 ## Tonight / next session
 
 0. Plan to 1.0: `docs/ROADMAP-1.0.md`. Testing goes by `docs/TESTPLAN.md` (German checklist, the owner fills in results; fix ❌ first).

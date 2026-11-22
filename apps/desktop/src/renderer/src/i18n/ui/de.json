@@ -1897,5 +1897,10 @@
  "Click: choose and listen (click again: stop)": "Klick: wählen und anhören (nochmal klicken: stopp)",
  "The lyrics go onto the notes by themselves while you type; correct single syllables under “Notes and syllables”.": "Der Text kommt beim Schreiben von selbst auf die Noten; einzelne Silben korrigierst du unter „Noten und Silben“.",
  "Put the lyrics on the notes again": "Text neu auf die Noten verteilen",
- "Write the lyrics first (in the Lyrics field): they are put on the notes by themselves.": "Schreib zuerst den Text (im Feld Text): er kommt von selbst auf die Noten."
+ "Write the lyrics first (in the Lyrics field): they are put on the notes by themselves.": "Schreib zuerst den Text (im Feld Text): er kommt von selbst auf die Noten.",
+ "{name} in each style:": "{name} in jedem Stil:",
+ "Rap examples:": "Rap-Beispiele:",
+ "An unmastered example song: try the presets and compare Before / After": "Ein ungemasterter Beispiel-Song: Presets ausprobieren und Vorher / Nachher vergleichen",
+ "Example song": "Beispiel-Song",
+ "Example song (unmastered)": "Beispiel-Song (ungemastert)"
 }

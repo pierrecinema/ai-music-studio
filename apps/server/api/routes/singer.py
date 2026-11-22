@@ -295,6 +295,18 @@ async def job_status(jid: str):
 
 # ── the built-in singer (SoulX-Singer with the app's own voices, services/soulx.py) ──────────────────────────────
 
+@router.get("/examples")
+async def examples():
+    """finished rap examples (made with ACE-Step 1.5): what the style Rap gives, heard before waiting minutes"""
+    d = Path(__file__).resolve().parents[2] / "data" / "examples"
+    out = []
+    for f in sorted(d.glob("rap-*.ogg")) if d.exists() else []:
+        info = d / (f.stem + ".json")
+        meta = json.load(open(info, encoding="utf-8")) if info.exists() else {}
+        out.append({"file": str(f), "name": meta.get("name", f.stem), "voice": meta.get("voice", ""), "bpm": meta.get("bpm", 0)})
+    return {"rap": out}
+
+
 @router.get("/builtin")
 async def builtin():
     from services import soulx

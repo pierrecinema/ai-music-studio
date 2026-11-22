@@ -16,7 +16,7 @@ import { insertDefaults } from '../../audio/fx'
 import { nanoid } from 'nanoid'
 import { installProgress, rapLyrics, STAGE_TEXT } from '../../lib/singer'
 
-interface BuiltinVoice { id: string; name: string; singer?: string; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
+interface BuiltinVoice { id: string; name: string; singer?: string; styles?: Record<string, string>; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
 
 // how the built-in voices sing: the way of singing is shaped in the backend (services/soulx.py STYLES), the sound
 // of the new vocal track here (its effects); rap is performed by the AI singer (ACE-Step), which really raps
@@ -79,17 +79,19 @@ export function VocalEditor(): React.ReactElement {
   const [playing, setPlaying] = useState<string | null>(null)
   // a click on a voice chooses it and plays its demo at once (a finished recording, nothing is computed);
   // a second click on the playing voice stops it
-  const pickVoice = (v: BuiltinVoice): void => {
-    setBVoice(v.id)
+  /** plays a finished recording (a demo); the same key again stops it */
+  const listen = (key: string, file: string | null | undefined): void => {
     void import('../../audio/engine').then(async (m) => {
-      if (playing === v.id) { m.stopPreview(); setPlaying(null); return }
-      if (!v.demo) { m.stopPreview(); setPlaying(null); return }
-      setPlaying(v.id)
-      const r = await m.previewSample(v.demo)
+      if (playing === key || !file) { m.stopPreview(); setPlaying(null); return }
+      setPlaying(key)
+      const r = await m.previewSample(file)
       if (!r) { setPlaying(null); return }
-      void r.ended.then(() => setPlaying((cur) => (cur === v.id ? null : cur)))
+      void r.ended.then(() => setPlaying((cur) => (cur === key ? null : cur)))
     })
   }
+  const pickVoice = (v: BuiltinVoice): void => { setBVoice(v.id); listen(v.id, v.demo) }
+  const [rapEx, setRapEx] = useState<Array<{ file: string; name: string; voice: string; bpm: number }>>([])
+  useEffect(() => { api.singer.examples().then((r) => setRapEx(r.rap)).catch(() => setRapEx([])) }, [])
   useEffect(() => () => { void import('../../audio/engine').then((m) => m.stopPreview()) }, [])
   const [voices, setVoices] = useState<SingerVoice[] | null>(null)
   const [voicesInfo, setVoicesInfo] = useState<{ vocalsFolder: string; vocoderLicence: string } | null>(null)
@@ -386,6 +388,15 @@ export function VocalEditor(): React.ReactElement {
                     <button key={k} className={`btn ${style === k ? 'btn-primary' : 'btn-ghost'}`} style={{ flex: 1, fontSize: 12, padding: '5px 6px' }} onClick={() => setStyle(k)}>{tr(l)}</button>
                   ))}
                 </div>
+                {bv?.styles && Object.keys(bv.styles).length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ ...hint, marginRight: 2 }}>{trf('{name} in each style:', { name: voiceLabel(bv) })}</span>
+                    {STYLES.filter(([k]) => bv.styles?.[k]).map(([k, l]) => {
+                      const key = `${bv.id}:${k}`
+                      return <button key={k} className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} onClick={() => listen(key, bv.styles?.[k])}>{playing === key ? '■' : '▶'} {tr(l)}</button>
+                    })}
+                  </div>
+                )}
                 <div style={hint}>{tr(STYLES.find(([k]) => k === style)?.[2] ?? '')}</div>
                 <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
                   <input type="checkbox" checked={autoFx} onChange={(e) => setAutoFx(e.target.checked)} />{tr('Put the style’s effects on the new vocal track')}
@@ -418,6 +429,12 @@ export function VocalEditor(): React.ReactElement {
                 <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
                   <input type="checkbox" checked={natural} onChange={(e) => setNatural(e.target.checked)} />{tr('Best quality (slower; off: about twice as fast)')}
                 </label>
+                {style === 'rap' && rapEx.length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ ...hint, marginRight: 2 }}>{tr('Rap examples:')}</span>
+                    {rapEx.map((x) => <button key={x.file} className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} onClick={() => listen(x.file, x.file)}>{playing === x.file ? '■' : '▶'} {tr(x.voice === 'male' ? 'Male' : 'Female')} · {x.bpm} BPM</button>)}
+                  </div>
+                )}
                 {style === 'rap' && <div style={hint}>{tr('Rap is made by the AI singer (ACE-Step 1.5, installed with the music AI); it takes a few minutes. The voice choice only decides male or female. The lyrics come from the lyrics field or, if it is empty, from the notes.')}</div>}
               </>
             )}

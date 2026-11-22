@@ -446,6 +446,19 @@ function Orchestra({ preset }: { preset: string }): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
   const timer = useRef<number>(0)
   useEffect(() => { api.instruments.list().then(setList).catch(() => setList(ORCHESTRA)) }, [])
+  // a click on an instrument chooses it and plays its demo at once (a finished recording); a second click stops it
+  const [playing, setPlaying] = useState<string | null>(null)
+  const pickInst = (i: AiInstrument): void => {
+    setInst(i.id)
+    void import('../../audio/engine').then(async (m) => {
+      if (playing === i.id || !i.demo) { m.stopPreview(); setPlaying(null); return }
+      setPlaying(i.id)
+      const r = await m.previewSample(i.demo)
+      if (!r) { setPlaying(null); return }
+      void r.ended.then(() => setPlaying((cur) => (cur === i.id ? null : cur)))
+    })
+  }
+  useEffect(() => () => { void import('../../audio/engine').then((m) => m.stopPreview()) }, [])
   useEffect(() => () => clearTimeout(timer.current), [])
   const tracks = project.tracks.filter((t) => t.type === 'midi' && notesOf(t).length)
   const track = tracks.find((t) => t.id === trackId) ?? tracks[0]
@@ -504,8 +517,8 @@ function Orchestra({ preset }: { preset: string }): React.ReactElement {
                     <span style={{ fontSize: 9.5, letterSpacing: '0.12em', color: '#7aa5cc', textAlign: 'center' }}>{tr(c).toUpperCase()}</span>
                     {list.filter((i) => i.category === c).map((i) => {
                       const on = inst === i.id
-                      return <button key={i.id} onClick={() => setInst(i.id)} style={{ border: '1px solid #0a1220', borderRadius: 2, padding: '4px 4px', fontSize: 11, cursor: 'pointer', fontFamily: G.font,
-                        background: on ? 'linear-gradient(180deg, #1d6fa5, #155682)' : 'linear-gradient(180deg, #24364e, #1a283b)', color: on ? '#fff' : '#a7c2dd', boxShadow: on ? '0 0 8px rgba(56,189,248,0.5)' : undefined }}>{tr(i.name)}</button>
+                      return <button key={i.id} onClick={() => pickInst(i)} title={i.demo ? tr('Click: choose and listen (click again: stop)') : undefined} style={{ border: '1px solid #0a1220', borderRadius: 2, padding: '4px 4px', fontSize: 11, cursor: 'pointer', fontFamily: G.font,
+                        background: on ? 'linear-gradient(180deg, #1d6fa5, #155682)' : 'linear-gradient(180deg, #24364e, #1a283b)', color: on ? '#fff' : '#a7c2dd', boxShadow: on ? '0 0 8px rgba(56,189,248,0.5)' : undefined }}>{i.demo ? (playing === i.id ? '■ ' : '▶ ') : ''}{tr(i.name)}</button>
                     })}
                   </div>
                 ))}

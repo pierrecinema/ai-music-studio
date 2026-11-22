@@ -248,6 +248,9 @@ export function Mastering(): React.ReactElement {
           </span>
         ))}
         <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={openFiles}>{tr('Open…')}</button>
+        <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('An unmastered example song: try the presets and compare Before / After')} onClick={() => {
+          api.mastering.example().then((r) => open({ path: r.file, name: tr(r.name) })).catch((e: Error) => setError(e.message))
+        }}>♪ {tr('Example song')}</button>
         {recent.length > 0 && (
           <select value="" onChange={(e) => { const r = recent.find((x) => x.path === e.target.value); if (r) open(r) }} style={{ fontSize: 11 }}>
             <option value="">{tr('Recent…')}</option>

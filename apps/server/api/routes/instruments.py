@@ -72,9 +72,13 @@ class PlayRequest(BaseModel):
     save: bool = True                         # also keep it in the Library
 
 
+DEMOS = Path(__file__).resolve().parents[2] / "data" / "instrument-demos"
+
+
 @router.get("/list")
 async def list_instruments():
-    return INSTRUMENTS
+    # each instrument with its demo: a short melody it played once (a finished recording, nothing is computed)
+    return [i | {"demo": str(DEMOS / f"{i['id']}.ogg") if (DEMOS / f"{i['id']}.ogg").exists() else None} for i in INSTRUMENTS]
 
 
 @router.get("/status")

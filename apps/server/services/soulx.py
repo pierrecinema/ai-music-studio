@@ -223,7 +223,9 @@ def voices() -> list[dict]:
             if v.exists():
                 info = json.load(open(v, encoding="utf-8"))
                 demo = next((d / n for n in ("demo.ogg", "demo.wav") if (d / n).exists()), None)
-                out.append({"id": d.name, **info, "demo": str(demo) if demo else None})
+                # the same short line in each style, finished recordings (style-pop.ogg ...): heard without computing
+                styles = {st: str(d / f"style-{st}.ogg") for st in STYLES if (d / f"style-{st}.ogg").exists()}
+                out.append({"id": d.name, **info, "demo": str(demo) if demo else None, "styles": styles})
     return out
 
 # ── the worker ───────────────────────────────────────────────────────────────────────────────────────────────

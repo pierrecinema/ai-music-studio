@@ -198,7 +198,7 @@ export const api = {
       post<{ midiFile: string; engine: string; warnings: string[]; notes: Array<{ pitch: number; startTime: number; duration: number; velocity: number }> }>('/audio-to-midi', body),
     engines: () => get<{ 'basic-pitch': boolean; muscriptor: boolean; muscriptor_license: string }>('/audio-to-midi/engines'),
     // a whole song -> MIDI tracks (stems, the right method per instrument, tempo, key, chords)
-    startSong: (body: { filePath: string; separate?: boolean; stem?: string; stems?: Record<string, string>; want?: string[]; bpm?: number; quantize?: number; strength?: number }) =>
+    startSong: (body: { filePath: string; separate?: boolean; stem?: string; stems?: Record<string, string>; want?: string[]; bpm?: number; quantize?: number; strength?: number; grid_from_song?: boolean }) =>
       post<{ jobId: string }>('/audio-to-midi/song', body),
     song: (id: string) => get<SongToMidiJob>(`/audio-to-midi/song/${id}`),
     cancelSong: (id: string) => post<{ ok: boolean }>(`/audio-to-midi/song/${id}/cancel`, {}),

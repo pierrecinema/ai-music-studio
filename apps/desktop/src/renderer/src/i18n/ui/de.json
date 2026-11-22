@@ -1851,5 +1851,13 @@
  "natural pitch": "natürliche Tonhöhe",
  "timing": "Timing",
  "{n} notes. One note per syllable; a note with \"+\" holds the syllable before it.": "{n} Noten. Eine Note pro Silbe; eine Note mit „+“ hält die Silbe davor.",
- "{placed} of {words} words fit on the {n} notes: add notes or shorten the lyrics.": "{placed} von {words} Wörtern passen auf die {n} Noten: füge Noten hinzu oder kürze den Text."
+ "{placed} of {words} words fit on the {n} notes: add notes or shorten the lyrics.": "{placed} von {words} Wörtern passen auf die {n} Noten: füge Noten hinzu oder kürze den Text.",
+ "Select your recorded singing (an audio clip) in the Studio first.": "Wähle zuerst deinen aufgenommenen Gesang (einen Audio-Clip) im Studio.",
+ "Turning your singing into notes…": "Dein Gesang wird in Noten umgewandelt…",
+ "No notes found in the recording.": "In der Aufnahme wurden keine Noten gefunden.",
+ "My melody (MIDI)": "Meine Melodie (MIDI)",
+ "{n} notes from your singing are on a new MIDI track ({made}). Put lyrics on them and press Sing, or edit them in the Piano Roll.": "{n} Noten aus deinem Gesang liegen auf einer neuen MIDI-Spur ({made}). Verteile den Text darauf und drücke Singen, oder bearbeite sie im Piano Roll.",
+ "Or sing it: record yourself on an audio track in the Studio (or choose a recording), and the app writes the melody as MIDI.": "Oder sing sie: nimm dich im Studio auf einer Audio-Spur auf (oder wähle eine Aufnahme), und die App schreibt die Melodie als MIDI.",
+ "My singing (Studio clip) → MIDI": "Mein Gesang (Studio-Clip) → MIDI",
+ "A recording file → MIDI": "Aufnahme-Datei → MIDI"
 }

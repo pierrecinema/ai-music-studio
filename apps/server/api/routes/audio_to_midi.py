@@ -182,6 +182,7 @@ class SongToMidiRequest(BaseModel):
     bpm: float | None = None                  # the project tempo as a hint (a song at 72 is not taken for 144)
     quantize: float = 0.25                    # grid in beats (0 = off)
     strength: float = 0.6                     # 0..1: how far notes move to the grid (1 = exactly on it)
+    grid_from_song: bool = True               # False: the project tempo (bpm) from the file's start, e.g. a recorded melody
 
 
 def _rms_db(path: str) -> float:
@@ -229,7 +230,7 @@ def _song_job(job: dict, req: SongToMidiRequest) -> None:
                               lambda pct, text=None: say(2 + 0.55 * float(pct), f"Splitting into stems: {text or ''} {round(float(pct))} %".strip()), job)
         else:
             stems = {req.stem: req.filePath}
-        say(58, "Finding tempo, bars, key and chords")
+        say(58, "Finding tempo, bars, key and chords" if req.grid_from_song else "Reading the recording")
         if os.path.exists(req.filePath):
             mix = req.filePath
         elif len(stems) > 1:
@@ -237,7 +238,8 @@ def _song_job(job: dict, req: SongToMidiRequest) -> None:
             mix = mix_stems(stems, {})
         else:
             mix = next(iter(stems.values()))
-        song = tr.analyze_song(mix, req.bpm)
+        song = tr.analyze_song(mix, req.bpm) if req.grid_from_song or not req.bpm else {
+            "bpm": req.bpm, "firstBeat": 0.0, "key": "", "relativeKey": "", "keyConfidence": 0.0, "chords": []}
         mix_db = _rms_db(mix)
         parts, skipped = [], []
         names = [s for s in ("drums", "bass", "vocals", "piano", "guitar", "other") if s in stems] + [s for s in stems if s not in STEM_PROGRAM]

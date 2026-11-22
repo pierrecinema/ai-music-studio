@@ -621,3 +621,11 @@ Vorbereitung: eine DiffSinger-Stimme im OpenUtau-Format herunterladen, z. B. **N
 | 37.7 | Dasselbe auf **Deutsch** und **Spanisch** | Aussprache verständlich | | | 0.95.0 |
 | 37.8 | Eine Silbe von Hand ändern, nochmal singen | Die neue Silbe wird gesungen | | | 0.95.0 |
 | 37.9 | **KI-Sänger (ACE-Step)**, Text schreiben, Singen | Fortschritt (einige Minuten), dann Gesangs-Spur ab der ersten Note | | | 0.95.0 |
+
+## 38. Neu in 0.95.1: eigener Gesang → MIDI-Melodie
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 38.1 | Studio: Audio-Spur, eine kurze Melodie einsingen (z. B. auf „la“), Clip anklicken | Clip ist gewählt | | | 0.95.1 |
+| 38.2 | Vocal Editor → **Mein Gesang (Studio-Clip) → MIDI** | Nach Sekunden neue Spur „Meine Melodie (MIDI)“ ab der Stelle des Clips | | | 0.95.1 |
+| 38.3 | Im Piano Roll ansehen / abspielen | Die Noten folgen deinem Gesang (einzelne Noten nachbessern) | | | 0.95.1 |

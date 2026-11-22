@@ -1888,5 +1888,9 @@
  "powerful belt (good for rock)": "kraftvoll, mit Brustbelting (gut für Rock)",
  "real rap flow by the AI singer (ACE-Step) in the song’s tempo; it raps your lyrics, not the single notes": "echter Rap-Flow vom KI-Sänger (ACE-Step) im Tempo des Songs; er rappt deinen Text, nicht die einzelnen Noten",
  "turns and slides into the notes, warm, with vibrato": "Verzierungen und Schleifer in die Töne, warm, mit Vibrato",
- "with vibrato (ballads, soul)": "mit Vibrato (Balladen, Soul)"
+ "with vibrato (ballads, soul)": "mit Vibrato (Balladen, Soul)",
+ "1/4 Python environment": "1/4 Python-Umgebung",
+ "2/4 PyTorch": "2/4 PyTorch",
+ "3/4 Packages": "3/4 Pakete",
+ "4/4 Singing model (2.8 GB)": "4/4 Gesangsmodell (2,8 GB)"
 }

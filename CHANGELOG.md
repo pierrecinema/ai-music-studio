@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.96.1
+
+### Fixed
+
+- **Installing the singer showed 0 % the whole time** and the AI backend went offline meanwhile. The installation now shows its four steps (Python environment, PyTorch, packages, singing model) with a real percentage from the downloads, and the AI backend keeps running while the singer installs; it restarts once at the end.
+
 ## 0.96.0
 
 ### New

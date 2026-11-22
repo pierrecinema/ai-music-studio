@@ -14,6 +14,7 @@ import { tr, trf } from '../../i18n/tr'
 import type { InsertFx, InsertType, Note, Track } from '../../types'
 import { insertDefaults } from '../../audio/fx'
 import { nanoid } from 'nanoid'
+import { installProgress, rapLyrics, STAGE_TEXT } from '../../lib/singer'
 
 interface BuiltinVoice { id: string; name: string; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
 
@@ -35,17 +36,6 @@ const STYLE_FX: Record<SingStyle, Array<[InsertType, Record<string, number>]>> =
   rap: [['filter', { mode: 1, freq: 110, q: 0.7 }], ['compressor', { threshold: -24, ratio: 5, attack: 5, release: 120, makeup: 6 }], ['eq', { low: -1, mid: 2, high: 3 }], ['saturation', { driveDb: 4, mix: 0.2, excite: 0.15, exciteFreq: 5000, outDb: -1 }], ['reverb', { decay: 0.9, mix: 0.08 }]],
 }
 const styleFx = (st: SingStyle): InsertFx[] => STYLE_FX[st].map(([type, p]) => ({ id: nanoid(), type, on: true, p: { ...insertDefaults(type), ...p } }))
-/** lyrics for the AI rapper: structure tags it knows ([Verse], [Chorus]) with a rap mark, lines of about 8 words */
-export function rapLyrics(text: string): string {
-  if (/^\s*\[/m.test(text)) return text.replace(/^\s*\[(verse|chorus|hook|bridge|intro|outro)([^\]]*)\]/gim, (_m, a: string, b: string) => `[${a}${b} - rap]`)
-  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean)
-  const out: string[] = []
-  for (const l of lines) {
-    const w = l.split(/\s+/)
-    for (let i = 0; i < w.length; i += 8) out.push(w.slice(i, i + 8).join(' '))
-  }
-  return `[Verse - rap]\n${out.join('\n')}`
-}
 /** a built-in voice's name in the UI language: "Female singer 3", with "(2)" for a singer's second recording */
 const voiceLabel = (v: BuiltinVoice): string => {
   const n = /^[fm](\d+)/.exec(v.id)?.[1] ?? ''
@@ -103,10 +93,17 @@ export function VocalEditor(): React.ReactElement {
 
   const loadBuiltin = (): void => { api.singer.builtin().then(setBuiltin).catch(() => setBuiltin({ voices: [], problem: tr('The AI backend does not answer.') })) }
   useEffect(loadBuiltin, [])
+  const stage = useRef(0)
+  const pctRef = useRef(0)
   const installSinger = async (): Promise<void> => {
     if (!window.confirm(tr('Install the singer now? About 4 GB are downloaded once (the singing model SoulX-Singer and its own Python environment). The AI backend restarts afterwards.'))) return
-    setError(null); setBusy({ text: tr('Installing the singer…'), pct: 0 })
-    const off = window.api.engines.onLog?.((line: string) => setBusy({ text: line.slice(0, 120), pct: 0 }))
+    setError(null); stage.current = 0; pctRef.current = 0; setBusy({ text: tr('Installing the singer…'), pct: 0 })
+    const off = window.api.engines.onLog?.((line: string) => {
+      const p = installProgress(line, stage.current)
+      stage.current = p.stage
+      if (p.pct !== null) pctRef.current = Math.max(pctRef.current, p.pct)
+      setBusy({ text: `${tr(STAGE_TEXT[stage.current] ?? '')}${line.startsWith('>') ? '' : ' · ' + line.slice(0, 110)}`, pct: pctRef.current })
+    })
     try {
       const st = await window.api.engines.status()
       const r = await window.api.engines.install(['singer'], st.gpu === 'nvidia' ? 'cuda' : 'cpu')

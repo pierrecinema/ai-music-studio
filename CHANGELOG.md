@@ -3,6 +3,15 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.96.0
+
+### New
+
+- **Built-in voices: singing without importing anything.** In the Vocal Editor, *Built-in voices* sing your MIDI melody and lyrics note for note, with 39 voices from 20 singers (female and male), grouped as *clear* (pop), *with vibrato* (ballads, soul) and *powerful* (belt, good for rock). Each voice has a demo to listen to. The singing model (SoulX-Singer, Apache 2.0) is installed once with *Install the singer* (about 4 GB) and runs on the processor, faster with an NVIDIA graphics card.
+- **Styles: Pop, Rock, Ballad, Soul** for every voice. Each style changes how the line is sung (rock: hard attacks, sliding up into the notes, short notes and a fall at the end of a phrase; ballad: lots of vibrato, legato; soul: turns and slides; pop: light vibrato) and puts matching effects on the new vocal track (rock: saturation, strong compressor, EQ; ballad: long reverb and delay; pop: compressor and reverb). The effects can be switched off.
+- **Rap with a real flow**: the style *Rap* has the AI singer (ACE-Step 1.5) rap your lyrics in the song's tempo, with a male or female voice and punchy vocal effects. It follows the rhythm and the words, not every single note.
+- The voices are short recordings from VocalSet (Wilkins et al. 2018, CC BY 4.0), named with each voice.
+
 ## 0.95.1
 
 ### New

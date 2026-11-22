@@ -92,10 +92,38 @@ def vowel_count(phs: list[str]) -> int:
 
 # ── notes -> the model's input ───────────────────────────────────────────────────────────────────────────────
 
-def segments(notes: list[dict], lang: str, rap: bool = False, max_len: float = 18.0, gap: float = 0.6) -> tuple[list[dict], list[str]]:
+# How each style sings: the pitch curve the model follows and how the notes are held.
+#   scoop: semitones below the note a word starts from, scoop_ms: how long it takes to reach the note
+#   vib: vibrato depth (semitones), vib_hz, vib_at: where in a long note it starts (0..1), glide: smoothing (frames)
+#   hold: share of each note that is sung (rock cuts notes short), legato: gaps up to this (s) are filled
+#   fall: a fall-off at the end of each phrase (semitones), turn: a small turn into long notes (soul)
+STYLES: dict[str, dict] = {
+    "pop":    {"scoop": 0.5, "scoop_ms": 90, "vib": 0.22, "vib_hz": 5.8, "vib_at": 0.55, "glide": 3, "hold": 0.92, "legato": 0.12, "fall": 0.0, "turn": 0.0},
+    "rock":   {"scoop": 1.6, "scoop_ms": 70, "vib": 0.10, "vib_hz": 6.5, "vib_at": 0.75, "glide": 2, "hold": 0.80, "legato": 0.0, "fall": 2.5, "turn": 0.0},
+    "ballad": {"scoop": 0.4, "scoop_ms": 140, "vib": 0.50, "vib_hz": 5.0, "vib_at": 0.30, "glide": 6, "hold": 1.0, "legato": 0.35, "fall": 0.0, "turn": 0.0},
+    "soul":   {"scoop": 1.0, "scoop_ms": 120, "vib": 0.40, "vib_hz": 6.0, "vib_at": 0.45, "glide": 4, "hold": 1.0, "legato": 0.25, "fall": 1.0, "turn": 1.0},
+}
+
+
+def shape_notes(notes: list[dict], style: str) -> list[dict]:
+    """the style's way of holding notes: legato styles fill short gaps, rock cuts notes short"""
+    st = STYLES.get(style, STYLES["pop"])
+    notes = [dict(n) for n in sorted(notes, key=lambda n: n["start"])]
+    for i, n in enumerate(notes):
+        nxt = notes[i + 1]["start"] if i + 1 < len(notes) else None
+        if nxt is not None and 0 < nxt - n["end"] <= st["legato"]:
+            n["end"] = nxt
+        length = n["end"] - n["start"]
+        if st["hold"] < 1 and length > 0.25:
+            n["end"] = n["start"] + max(0.2, length * st["hold"])
+    return notes
+
+
+def segments(notes: list[dict], lang: str, rap: bool = False, max_len: float = 18.0, gap: float = 0.6,
+             style: str = "pop") -> tuple[list[dict], list[str]]:
     """notes [{pitch, start, end (s), lyric}] -> the model's segments (each a phrase, at most ~max_len seconds),
     and the lyrics it cannot pronounce"""
-    notes = sorted(notes, key=lambda n: n["start"])
+    notes = shape_notes(notes, style) if not rap else sorted(notes, key=lambda n: n["start"])
     phrases: list[list[dict]] = []
     for n in notes:
         if phrases and n["start"] - phrases[-1][-1]["end"] < gap and n["end"] - phrases[-1][0]["start"] < max_len:
@@ -133,29 +161,42 @@ def segments(notes: list[dict], lang: str, rap: bool = False, max_len: float = 1
         meta = {"index": f"{s0:.2f}", "language": "English", "time": [int(round(s0 * 1000)), int(round(s1 * 1000))],
                 "duration": " ".join(f"{d:.3f}" for d in dur), "text": " ".join(txt), "phoneme": " ".join(phs),
                 "note_pitch": " ".join(map(str, pit)), "note_type": " ".join(map(str, typ))}
-        meta["f0"] = rap_f0(meta) if rap else sung_f0(meta)
+        meta["f0"] = rap_f0(meta) if rap else sung_f0(meta, style)
         out.append(meta)
     return out, unknown
 
 
-def sung_f0(meta: dict) -> str:
-    """a sung pitch curve: ~80 ms glides between notes, a small scoop into each word, vibrato (5.5 Hz, +-0.35
-    semitone) growing over the second half of long notes"""
+def sung_f0(meta: dict, style: str = "pop") -> str:
+    """a sung pitch curve in the style's manner: glides between notes, a scoop into each word, vibrato growing
+    over long notes, for some styles a turn into long notes and a fall-off at the end of the phrase"""
+    st = STYLES.get(style, STYLES["pop"])
     dur = [float(x) for x in meta["duration"].split()]; pit = [int(x) for x in meta["note_pitch"].split()]
     typ = [int(x) for x in meta["note_type"].split()]
     n = int(round(sum(dur) / HOP)); m = np.zeros(n); voiced = np.zeros(n, bool); t = 0.0
-    for d, p, ty in zip(dur, pit, typ):
+    sung = [i for i, p in enumerate(pit) if p > 0]
+    last_of_phrase = {i for j, i in enumerate(sung) if j + 1 == len(sung) or sung[j + 1] != i + 1 and dur[i + 1] > 0.2}
+    for i, (d, p, ty) in enumerate(zip(dur, pit, typ)):
         a, b = int(round(t / HOP)), int(round((t + d) / HOP)); t += d
         if p <= 0 or b <= a:
             continue
         m[a:b] = p; voiced[a:b] = True
         L = b - a
-        if ty == 2 and L > 6:
-            m[a:a + 5] += np.linspace(-0.6, 0, 5)
-        if L * HOP > 0.45:
-            k = np.arange(L); start = int(L * 0.45)
-            m[a:b] += 0.35 * np.clip((k - start) / max(1, L * 0.25), 0, 1) * np.sin(2 * np.pi * 5.5 * k * HOP)
-    k = 4
+        sc = max(2, int(st["scoop_ms"] / 1000 / HOP))
+        if ty == 2 and L > sc + 2:
+            m[a:a + sc] += -st["scoop"] * (1 - np.linspace(0, 1, sc)) ** 2
+        if st["turn"] and ty == 2 and L * HOP > 0.6:
+            # a soul turn: up a step, back, a touch below, onto the note
+            k0 = a + sc; seg = min(L - sc, int(0.24 / HOP))
+            if seg > 6:
+                x = np.linspace(0, 1, seg)
+                m[k0:k0 + seg] += st["turn"] * 1.6 * np.sin(2 * np.pi * x) * (1 - x)
+        if L * HOP > 0.4 and st["vib"]:
+            k = np.arange(L); start = int(L * st["vib_at"])
+            m[a:b] += st["vib"] * np.clip((k - start) / max(1, L * 0.2), 0, 1) * np.sin(2 * np.pi * st["vib_hz"] * k * HOP)
+        if st["fall"] and i in last_of_phrase and L * HOP > 0.3:
+            f = min(L // 2, int(0.18 / HOP))
+            m[b - f:b] -= st["fall"] * np.linspace(0, 1, f) ** 2
+    k = st["glide"]
     sm = np.convolve(np.pad(m, k, mode="edge"), np.ones(2 * k + 1) / (2 * k + 1), "valid")
     f0 = np.where(voiced, 440 * 2 ** ((sm - 69) / 12), 0.0)
     return " ".join(f"{x:.1f}" for x in f0)

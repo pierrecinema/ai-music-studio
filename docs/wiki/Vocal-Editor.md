@@ -6,14 +6,36 @@ A melody of a MIDI track is sung with your lyrics. Write the melody in the [[Pia
 
 Record yourself on an audio track in the [[Studio]], select the clip and press *My singing (Studio clip) → MIDI* (or choose a recording file). The melody lands on a new MIDI track, in the project tempo from where the clip starts, ready for lyrics and *Sing* or for the [[Piano Roll]].
 
-## Two singers
+## Three singers
 
-| | DiffSinger voice (exact) | AI singer (ACE-Step) |
+| | Built-in voices | DiffSinger voice (exact) | AI singer (ACE-Step) |
+|---|---|---|---|
+| Follows the melody | every note | every note: pitch, timing, length | only tempo, key and length |
+| Voices | 39 in the app | a voicebank you import | male or female |
+| Languages | English, German, Spanish | those of the voice | many |
+| Speed on a CPU | about a minute per 5 s of singing | seconds | minutes |
+| Needs | *Install the singer* once (about 4 GB) | the voicebank and its vocoder | ACE-Step 1.5 (Settings → AI Engines) |
+
+## Built-in voices
+
+*Built-in voices* is the first choice: nothing to import. The first time, press *Install the singer*: the singing model SoulX-Singer (Apache 2.0) and its own Python environment are downloaded once (about 4 GB, also under Settings → AI Engines → *Singer*). It uses an NVIDIA graphics card when there is one.
+
+- **Voices**: 39 voices of 20 singers, filtered by *All / Female / Male* and grouped as *clear* (straight, pop), *with vibrato* (ballads, soul) and *powerful* (belt, good for rock). *Listen to …* plays a short demo.
+- **Style**: how the line is sung, and the effects of the new vocal track (*Put the style's effects on the new vocal track*, on by default):
+
+| Style | Way of singing | Effects on the track |
 |---|---|---|
-| Follows the melody | every note: pitch, timing, length | only tempo, key and length |
-| Languages | those of the voice (English, German, Spanish with the right voicebank) | many |
-| Speed on a CPU | seconds | minutes |
-| Needs | a DiffSinger voicebank you import, and its vocoder | ACE-Step 1.5 (Settings → AI Engines) |
+| Pop | light vibrato, small slides | high-pass, compressor, EQ, short delay, reverb |
+| Rock | hard attacks, sliding up into the notes, shorter notes, a fall at the end of phrases | high-pass, saturation, strong compressor, EQ with presence, short reverb |
+| Ballad | lots of vibrato, legato (short gaps are filled) | high-pass, gentle compressor, delay, long reverb |
+| Soul | turns and slides into long notes, vibrato | high-pass, light saturation, compressor, warm EQ, reverb |
+| Rap | performed by the AI singer (see below) | high-pass, compressor, EQ, light saturation, short reverb |
+
+- **Rap**: the built-in voices sing; rapping needs a model that really raps, so the style *Rap* has the AI singer (ACE-Step 1.5) rap the lyrics in the song's tempo (lyrics from the lyrics field or, if it is empty, from the notes). The chosen voice decides male or female. It takes a few minutes and follows the rhythm and words, not every note.
+- *Best quality* off sings about twice as fast, a little less clean.
+- Words the voice does not know are sung as "ah" and named afterwards.
+
+The voices are short recordings of singers from **VocalSet** (Julia Wilkins, Prem Seetharaman, Alison Wahl, Bryan Pardo, 2018, doi:10.5281/zenodo.1442513, CC BY 4.0); the singing model is **SoulX-Singer** by Soul AI Lab (Apache 2.0).
 
 ## DiffSinger voices
 

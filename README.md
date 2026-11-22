@@ -29,10 +29,10 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.95: Vocal Editor (your melody, sung); 0.94: Audio → MIDI for whole songs
+### New in 0.96: built-in singing voices with styles, and rap
 
-- **Vocal Editor**: a MIDI melody sung with your lyrics by a DiffSinger voice (every note exact, English, German, Spanish …) or by the AI singer (ACE-Step 1.5).
-- **Audio → MIDI**: a whole song into MIDI tracks: vocals, bass, piano, guitar, keys and drums, on the bars, with tempo, key and chords.
+- **Vocal Editor**: 39 built-in voices sing your MIDI melody and lyrics note for note, no voice to import. Choose a style (Pop, Rock, Ballad, Soul), and the vocal track gets the matching way of singing and effects.
+- **Rap**: the AI singer (ACE-Step 1.5) raps your lyrics with a real flow in the song's tempo.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features

@@ -629,3 +629,19 @@ Vorbereitung: eine DiffSinger-Stimme im OpenUtau-Format herunterladen, z. B. **N
 | 38.1 | Studio: Audio-Spur, eine kurze Melodie einsingen (z. B. auf „la“), Clip anklicken | Clip ist gewählt | | | 0.95.1 |
 | 38.2 | Vocal Editor → **Mein Gesang (Studio-Clip) → MIDI** | Nach Sekunden neue Spur „Meine Melodie (MIDI)“ ab der Stelle des Clips | | | 0.95.1 |
 | 38.3 | Im Piano Roll ansehen / abspielen | Die Noten folgen deinem Gesang (einzelne Noten nachbessern) | | | 0.95.1 |
+
+## 39. Neu in 0.96.0: eingebaute Stimmen, Stile und Rap
+
+Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „Hello world, tonight we sing“ mit **Text auf die Noten verteilen** daraufgelegt.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 39.1 | Vocal Editor → **Eingebaute Stimmen** → **Sänger installieren** | Fortschritt; nach einigen Minuten verschwindet der Hinweis | | | 0.96.0 |
+| 39.2 | Stimmen ansehen: **Alle / Frauen / Männer**, Gruppen Klar / Mit Vibrato / Kraftvoll | 39 Stimmen, nach Gruppe sortiert | | | 0.96.0 |
+| 39.3 | Eine Stimme wählen, **… anhören** | Kurze Hörprobe der Stimme | | | 0.96.0 |
+| 39.4 | Stil **Pop**, **Singen** | Fortschritt mit Restzeit; neue Spur „Gesang – Sängerin … (Pop)“ mit Effekten (Filter, Kompressor, EQ, Delay, Hall) | | | 0.96.0 |
+| 39.5 | Dieselbe Stimme mit **Rock**, **Ballade**, **Soul** | Hörbar anders: Rock hart und angezerrt, Ballade mit viel Vibrato und Hall, Soul mit Verzierungen | | | 0.96.0 |
+| 39.6 | Haken **Effekte des Stils** aus, Singen | Neue Spur ohne Effekte | | | 0.96.0 |
+| 39.7 | Stil **Rap** (eine Männerstimme), Singen | KI-Sänger rappt den Text im Tempo des Songs (einige Minuten), neue Spur „Gesang – Rap“ ab der ersten Note | | | 0.96.0 |
+| 39.8 | Allgemein: Klingen die Stile typisch genug? | Eindruck notieren | | | 0.96.0 |
+

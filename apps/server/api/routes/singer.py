@@ -306,6 +306,7 @@ class BuiltinRequest(BaseModel):
     notes: list[SingNote]
     lang: str = "en"
     rap: bool = False
+    style: str = "pop"
     steps: int = 32
     name: str = "vocals"
 
@@ -321,7 +322,7 @@ async def builtin_render(req: BuiltinRequest):
         raise HTTPException(404, f"No built-in voice \"{req.voice}\".")
     if not req.notes:
         raise HTTPException(400, "No notes to sing.")
-    segs, unknown = soulx.segments([n.model_dump() for n in req.notes], req.lang, rap=req.rap)
+    segs, unknown = soulx.segments([n.model_dump() for n in req.notes], req.lang, rap=req.rap, style=req.style)
     jid = uuid.uuid4().hex[:10]
     job = {"id": jid, "status": "running", "progress": 0, "text": "Starting", "error": None, "result": None, "started": time.time()}
     _jobs[jid] = job

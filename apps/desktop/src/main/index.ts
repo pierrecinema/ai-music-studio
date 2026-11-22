@@ -5,7 +5,7 @@ import { ServerManager } from './server-manager'
 import { registerIpcHandlers } from './ipc-handlers'
 import { setupUpdater } from './updater'
 import { registerFileHandlers, setupCrashLog } from './files-ipc'
-import { registerPluginHostHandlers } from './plugin-host'
+import { registerPluginHostHandlers, stopPluginHost } from './plugin-host'
 import { registerFreePluginHandlers } from './free-plugins'
 import { registerSoundPackHandlers } from './sound-pack'
 import { registerPluginPresetHandlers } from './plugin-presets'
@@ -36,6 +36,15 @@ function createWindow(): void {
       sandbox: false,
       contextIsolation: true
     }
+  })
+
+  // the window is gone: forget it, so a later start of the app opens a new one instead of showing nothing
+  mainWindow.on('closed', () => { mainWindow = null })
+  // the page crashed (blank window): load it again instead of leaving an empty window
+  mainWindow.webContents.on('render-process-gone', (_e, d) => {
+    console.error(`[app] the page stopped (${d.reason}); loading it again`)
+    if (d.reason === 'clean-exit') return
+    setTimeout(() => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.reload() }, 500)
   })
 
   mainWindow.on('close', (e) => {
@@ -85,7 +94,11 @@ if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
   app.on('second-instance', () => {
-    if (!mainWindow) return
+    // the app was still running without a window (it had not quit completely): open the window again
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      if (app.isReady()) { allowClose = false; if (!serverManager.isReady()) void serverManager.start(); createWindow() }
+      return
+    }
     if (mainWindow.isMinimized()) mainWindow.restore()
     mainWindow.show()
     mainWindow.focus()
@@ -135,7 +148,14 @@ app.whenReady().then(async () => {
   })
 })
 
+// Closing the window ends the app completely: the AI backend and the plugin host are stopped (waiting at most a few
+// seconds for them), then the app quits; if anything still holds it, it is ended for sure. Before, an app left
+// running in the background (seen in the Task Manager) kept the next start from opening any window.
 app.on('window-all-closed', async () => {
-  await serverManager.stop()
-  if (process.platform !== 'darwin') app.quit()
+  if (process.platform === 'darwin') { await serverManager.stop(); return }
+  const hard = setTimeout(() => app.exit(0), 8000)
+  hard.unref?.()
+  try { stopPluginHost() } catch { /* already gone */ }
+  await Promise.race([serverManager.stop().catch(() => undefined), new Promise((r) => setTimeout(r, 5000))])
+  app.quit()
 })

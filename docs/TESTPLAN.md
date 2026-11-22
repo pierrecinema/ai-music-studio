@@ -666,3 +666,5 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 | 41.7 | KI-Instrumente: auf ein Instrument klicken | Sofort kurze Melodie, ■ am Namen; nochmal klicken stoppt | | | 0.96.2 |
 | 41.8 | Studio: zwei Audio-Spuren, ganz hineinzoomen (bis 16×), Clip ziehen | Rastet nur nahe einer Rasterlinie ein, dazwischen stufenlos; Wellenform scharf | | | 0.96.2 |
 | 41.9 | 🧲 **Raster aus** (gelb), Clip anwählen, ← / → | Clip bewegt sich je Tastendruck um ein Pixel | | | 0.96.2 |
+| 41.10 | App schließen, nach 10 s wieder starten (mehrmals) | Fenster öffnet jedes Mal; Task-Manager zeigt nach dem Schließen keine App mehr | | | 0.96.2 |
+| 41.11 | Einstellungen → Plugins → **Plugins suchen** | Keine rote Meldung „null (reading 'name')“; gefundene VST erscheinen, auch im Studio | | | 0.96.2 |

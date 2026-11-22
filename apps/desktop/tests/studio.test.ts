@@ -13,6 +13,7 @@ import { alignStarts, leadBeats, phaseAlign } from '../src/renderer/src/beatmatc
 import { autoStructure } from '../src/renderer/src/lib/lyrics'
 import { installProgress, rapLyrics } from '../src/renderer/src/lib/singer'
 import { snapDrag } from '../src/renderer/src/edit/grid'
+import { cleanPlugins } from '../src/renderer/src/lib/pluginList'
 import { measureBalance, PROFILES, suggest, bassWidth } from '../src/renderer/src/audio/master/assistant'
 import { defaultChain } from '../src/renderer/src/audio/master/chain'
 import { applyEdits, applyOp, copyPart, fadeShape } from '../src/renderer/src/audio/master/edit'
@@ -535,6 +536,9 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   check('grid: snaps when zoomed out, magnetic when zoomed in, free with Alt', snapDrag(2.3, false, 80, 1) === 2 && Math.abs(snapDrag(2.3, false, 1280, 1) - 2.3) < 1e-9
     && snapDrag(2.004, false, 1280, 1) === 2 && snapDrag(2.3, true, 80, 1) === 2.3 && snapDrag(2.3, false, 80, 0) === 2.3)
 }
+
+// ── plugin search: empty entries do not break the list ──
+check('plugins: null and nameless entries are left out', cleanPlugins([null, { id: 'a', name: 'Dexed' }, { id: 'b' }, 'x', { id: 'c', name: '' }]).map((p) => p.id).join() === 'a' && cleanPlugins(null).length === 0)
 
 // ── the singer: installation progress, rap lyrics ──
 {

@@ -3,6 +3,7 @@
 // The search runs on the first start of a version with plugin support, then only when the user presses the button.
 import { create } from 'zustand'
 import { host, vstInUse, type FailedPlugin, type PluginInfo } from '../audio/vst/host'
+import { cleanFailed, cleanPlugins } from '../lib/pluginList'
 
 interface Saved { plugins: PluginInfo[]; failed: FailedPlugin[]; off: string[]; folders: string[]; scannedAt: number }
 
@@ -49,7 +50,7 @@ export const usePluginsStore = create<PluginsState>()((set, get) => ({
     try { saved = (await window.api?.plugins?.listRead?.()) as Partial<Saved> | null } catch { saved = null }
     set({
       available, loaded: true,
-      plugins: saved?.plugins ?? [], failed: saved?.failed ?? [], off: saved?.off ?? [],
+      plugins: cleanPlugins(saved?.plugins), failed: cleanFailed(saved?.failed), off: saved?.off ?? [],
       folders: saved?.folders ?? [], scannedAt: saved?.scannedAt ?? 0,
     })
     // first start with plugin support: search once by itself
@@ -67,7 +68,8 @@ export const usePluginsStore = create<PluginsState>()((set, get) => ({
       try { free = (await window.api?.plugins?.freeDir?.()) ?? '' } catch { /* not in the app */ }
       const paths = [...new Set([...DEFAULT_FOLDERS, ...get().folders, ...(free ? [free] : [])])]
       const before = get().plugins
-      const r = await host.call<{ plugins: PluginInfo[]; failed: FailedPlugin[] }>('scan', { paths, known: [] }, 3600000)
+      const raw = await host.call<{ plugins: unknown; failed: unknown }>('scan', { paths, known: [] }, 3600000)
+      const r = { plugins: cleanPlugins(raw?.plugins), failed: cleanFailed(raw?.failed) }
       // a plugin that worked before but failed this time (busy, slow to answer) keeps its place: it is not dropped
       const failedFiles = new Set(r.failed.map((f) => f.file))
       const kept = before.filter((p) => failedFiles.has(p.file) && !r.plugins.some((q) => q.id === p.id))

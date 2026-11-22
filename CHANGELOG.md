@@ -15,6 +15,11 @@ on its GitHub release page, so every version needs a `## <version>` section here
 - **Lyrics go onto the notes by themselves**: a moment after you type (or change the language) the lyrics are spread over the notes, and *Sing* does it too when the notes have none yet; correct single syllables under *Notes and syllables*.
 - **Click a voice to hear it at once**: each voice sings a 16-second song line in its typical style (clear: pop, with vibrato: ballad, powerful: rock), with the style's effects. The demos are finished recordings in the app, so listening needs no computing; a second click stops it.
 
+### Fixed
+
+- **The app did not open again after closing it** (it kept running in the background, seen in the Task Manager, until the PC was restarted): closing the window now ends the app for sure (AI backend and plugin host included, at most a few seconds), and if an older run is still in the background, starting the app opens its window again. A crashed page is loaded again instead of staying blank.
+- **VST plugins: the list stayed empty** after the search with the red message "cannot read properties of null (reading 'name')": a plugin that prints its own text while it is checked no longer breaks the list; such entries are skipped and all other plugins are shown.
+
 ## 0.96.1
 
 ### Fixed

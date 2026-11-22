@@ -547,7 +547,7 @@ int PluginHost::scanOne (const juce::String& formatName, const juce::String& fil
         fmt->findAllTypesForFile (found, file);
         for (auto* d : found)
         {
-            std::cout << "PLUGIN " << juce::JSON::toString (describe (*d), true).toStdString() << std::endl;
+            std::cout << std::endl << "PLUGIN " << juce::JSON::toString (describe (*d), true).toStdString() << std::endl;
         }
         return found.isEmpty() ? 2 : 0;
     }
@@ -623,8 +623,18 @@ void PluginHost::scan (std::shared_ptr<WsConnection> conn, int id, juce::StringA
                 else out += child.readAllProcessOutput();
             }
             int added = 0;
+            // a plugin may print its own text while it is checked, also on the same line: take what follows "PLUGIN "
+            // and keep it only if it is a complete description with a name
             for (auto& line : juce::StringArray::fromLines (out))
-                if (line.startsWith ("PLUGIN ")) { plugins.add (juce::JSON::parse (line.substring (7))); ++added; }
+            {
+                auto at = line.indexOf ("PLUGIN {");
+                if (at < 0) continue;
+                auto d = juce::JSON::parse (line.substring (at + 7));
+                if (auto* o = d.getDynamicObject(); o != nullptr && o->getProperty ("name").toString().isNotEmpty())
+                {
+                    plugins.add (d); ++added;
+                }
+            }
             if (! ok || added == 0)
             {
                 auto f = obj(); f.getDynamicObject()->setProperty ("file", items[i].file);

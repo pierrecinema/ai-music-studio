@@ -19,7 +19,7 @@ export interface Lora {
   family?: 'v1' | '1.5' | 'xl' | 'unknown'      // the model it is made for (ACE-Step v1, 1.5 2B, 1.5 XL)
 }
 export interface MusicResult { audio_file: string; seed: number; duration: number; library_id?: string | null; title?: string; bpm?: number | null; first_beat?: number | null; loop_bars?: number | null }
-export interface AiInstrument { id: string; name: string; category: string; low: number; high: number }
+export interface AiInstrument { id: string; name: string; category: string; low: number; high: number; demo?: string | null }
 export interface InstrumentJob {
   id: string; status: 'queued' | 'running' | 'done' | 'error' | 'cancelled'; progress: number; text: string; elapsed: number
   audio_file?: string; library_id?: string | null; duration?: number; voices?: number; error?: string
@@ -191,6 +191,7 @@ export const api = {
     render: (body: { voice: string; notes: Array<{ pitch: number; start: number; end: number; lyric: string }>; lang?: string; steps?: number; vibrato?: number; speaker?: string; name?: string }) =>
       post<{ jobId: string }>('/singer/render', body),
     builtin: () => get<{ voices: Array<{ id: string; name: string; description: string; style: string; gender: string; credit: string; demo: string | null }>; problem: string | null }>('/singer/builtin'),
+    examples: () => get<{ rap: Array<{ file: string; name: string; voice: string; bpm: number }> }>('/singer/examples'),
     builtinRender: (body: { voice: string; notes: Array<{ pitch: number; start: number; end: number; lyric: string }>; lang?: string; rap?: boolean; style?: string; steps?: number; name?: string }) =>
       post<{ jobId: string }>('/singer/builtin/render', body),
     cancel: (id: string) => post<{ ok: boolean }>(`/singer/jobs/${id}/cancel`, {}),
@@ -294,6 +295,7 @@ export const api = {
   },
 
   mastering: {
+    example: () => get<{ file: string; name: string }>('/mastering/example'),
     master: (body: { targetPath: string; referencePath: string; bitDepth: 16 | 24 }) =>
       post<{ audioFile: string }>('/mastering/master', body),
     export: (body: {

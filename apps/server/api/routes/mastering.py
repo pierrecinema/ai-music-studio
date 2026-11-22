@@ -8,6 +8,17 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+EXAMPLES = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "examples")
+
+
+@router.get("/example")
+async def example():
+    """an unmastered example song (made with ACE-Step 1.5), to try the presets on without a song of your own"""
+    f = os.path.join(EXAMPLES, "mastering-example.ogg")
+    if not os.path.exists(f):
+        raise HTTPException(404, "No example song in this version.")
+    return {"file": f, "name": "Example song (unmastered)"}
+
 
 class MasterRequest(BaseModel):
     targetPath: str

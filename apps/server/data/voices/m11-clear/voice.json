@@ -1,8 +1,9 @@
 {
- "name": "Male singer 11 · clear",
+ "name": "Max · clear",
  "gender": "male",
  "kind": "clear",
  "style": "sing",
  "description": "clear and straight (pop)",
- "credit": "VocalSet singer m11: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513"
+ "credit": "\"Max\" is VocalSet singer m11: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513",
+ "singer": "Max"
 }

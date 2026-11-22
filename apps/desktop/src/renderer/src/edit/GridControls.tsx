@@ -25,10 +25,11 @@ export function GridControls({ compact = false }: { compact?: boolean }): React.
         {GRID_OPTIONS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
       </select>
       <button
-        className={`btn ${snap && gridOf(grid).beats > 0 ? 'btn-primary' : 'btn-ghost'}`} style={{ fontSize: 11, padding: '3px 10px' }}
-        onClick={toggleSnap} title={tr('Snap to the grid on / off (Ctrl+4). Hold Alt while dragging to move freely.')}
+        className={`btn ${snap && gridOf(grid).beats > 0 ? 'btn-primary' : 'btn-ghost'}`}
+        style={{ fontSize: 11, padding: '3px 10px', ...(snap && gridOf(grid).beats > 0 ? {} : { color: '#111', background: '#fbbf24', borderColor: '#f59e0b', fontWeight: 700 }) }}
+        onClick={toggleSnap} title={tr('Grid on: clips and notes snap to the grid; zoomed in far, only near a grid line (fine moves in between). Grid off: everything moves freely. (Ctrl+4; Alt while dragging: free once)')}
       >
-        {tr('Snap')} {snap && gridOf(grid).beats > 0 ? tr('on') : tr('off')}
+        🧲 {snap && gridOf(grid).beats > 0 ? tr('Grid on') : tr('Grid off')}
       </button>
       {!compact && (
         <button className="btn btn-ghost" style={{ fontSize: 11, padding: '3px 10px' }}

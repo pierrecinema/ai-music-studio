@@ -10,7 +10,7 @@ import { useAudioStore } from '../../stores/audio.store'
 import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER_SECOND, projectEndBeat, secToBeats, seek } from '../../audio/engine'
 import type { Clip, Track } from '../../types'
 import { makeMaster, retune, runSyncAll, runSyncSelected, syncOne, useBeatMatch } from '../../beatmatch/store'
-import { minLength, snapBeat } from '../../edit/grid'
+import { minLength, snapBeat, snapDrag } from '../../edit/grid'
 import { runAction } from '../../shortcuts/handlers'
 import { GridControls } from '../../edit/GridControls'
 import { EXPORT_EVENT } from '../layout/FileMenu'
@@ -127,12 +127,21 @@ export async function pickAndImport(at?: { trackId?: string; startBeat?: number;
 
 // ── waveform (with sync grid and warp markers) ───────────────────────────────
 
+// the largest zoom: 16 × 80 px per beat, fine enough to line up beats by eye (a pixel is under half a millisecond at 120 BPM)
+const MAX_ZOOM = 16
+
+// the visible part of the lanes (screen x): waveforms draw only what is seen, so they stay sharp when zoomed in
+const ViewportCtx = React.createContext<{ left: number; right: number; x: number } | null>(null)
+
 const Waveform = React.memo(function Waveform({ clip, color, height, width, warpEdit, trackId }: {
   clip: Clip; color: string; height: number; width: number; warpEdit: boolean; trackId: string
 }): React.ReactElement | null {
   const ref = useRef<HTMLCanvasElement>(null)
   const [version, bump] = useState(0)
   useEffect(() => onBuffersChanged(() => bump((n) => n + 1)), [])
+  const view = React.useContext(ViewportCtx)
+  // the drawn span of the clip (px from its left edge): the visible part with a margin, or all of a short clip
+  const [span, setSpan] = useState<[number, number]>([0, width])
   const project = useProjectStore((s) => s.project)
   const path = clip.audioFile
   const spb = spbSrcOf(clip, project)
@@ -142,7 +151,16 @@ const Waveform = React.memo(function Waveform({ clip, color, height, width, warp
     const canvas = ref.current
     const peaks = path ? peaksOf(path) : null
     if (!canvas || !peaks) return
-    const w = Math.max(1, Math.min(8192, Math.floor(width)))
+    let a = 0; let b = width
+    const parent = canvas.parentElement
+    if (view && parent && width > 4096) {
+      const left = parent.getBoundingClientRect().left
+      const margin = (view.right - view.left) * 0.5
+      a = Math.max(0, Math.floor(view.left - left - margin)); b = Math.min(width, Math.ceil(view.right - left + margin))
+      if (b <= a) { a = 0; b = Math.min(width, 1) }
+    }
+    if (a !== span[0] || b !== span[1]) setSpan([a, b])
+    const w = Math.max(1, Math.min(8192, Math.floor(b - a)))
     const h = height
     canvas.width = w
     canvas.height = h
@@ -151,12 +169,14 @@ const Waveform = React.memo(function Waveform({ clip, color, height, width, warp
     g.clearRect(0, 0, w, h)
     g.fillStyle = color
     const mid = h / 2
-    const perPx = clip.duration / w
+    const beatsPerPx = clip.duration / Math.max(1e-6, width)
+    const b0 = startFileBeat + a * beatsPerPx
+    const perPx = ((b - a) * beatsPerPx) / w
     for (let x = 0; x < w; x++) {
-      const a = srcOfBeat(clip.warpMarkers, startFileBeat + x * perPx, spb) * PEAKS_PER_SECOND
-      const b = srcOfBeat(clip.warpMarkers, startFileBeat + (x + 1) * perPx, spb) * PEAKS_PER_SECOND
-      const from = Math.max(0, Math.floor(a))
-      const to = Math.max(from + 1, Math.floor(b))
+      const s0 = srcOfBeat(clip.warpMarkers, b0 + x * perPx, spb) * PEAKS_PER_SECOND
+      const s1 = srcOfBeat(clip.warpMarkers, b0 + (x + 1) * perPx, spb) * PEAKS_PER_SECOND
+      const from = Math.max(0, Math.floor(s0))
+      const to = Math.max(from + 1, Math.floor(s1))
       let m = 0
       for (let i = from; i < to && i < peaks.length; i++) if (peaks[i] > m) m = peaks[i]
       const half = Math.min(mid, Math.max(m > 0.002 ? 1 : 0, m * mid * 0.95))
@@ -171,19 +191,21 @@ const Waveform = React.memo(function Waveform({ clip, color, height, width, warp
       for (let k = k0; ; k++) {
         const t = clip.gridFirst + k * secPerBeat - off
         if (t > spanSec + 1e-6) break
-        const x = Math.round((t / spanSec) * w)
+        const x = Math.round(((t / spanSec) * width - a) * (w / Math.max(1, b - a)))
+        if (x < 0) continue
+        if (x > w) break
         g.fillStyle = k % 4 === 0 ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)'
         g.fillRect(x, 0, 1, k % 4 === 0 ? h : Math.round(h * 0.45))
       }
     }
-  }, [path, clip.offset, clip.duration, clip.warpBpm, clip.gridFirst, clip.warpMarkers, width, height, color, version, spb, startFileBeat])
+  }, [path, clip.offset, clip.duration, clip.warpBpm, clip.gridFirst, clip.warpMarkers, width, height, color, version, spb, startFileBeat, view, clip.startTime])  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!path || !peaksOf(path)) return null
   const markers = clip.warpMarkers ?? []
   const pxPerBeat = width / Math.max(1e-6, clip.duration)
   return (
     <>
-      <canvas ref={ref} style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', opacity: 0.75, pointerEvents: 'none' }} />
+      <canvas ref={ref} style={{ position: 'absolute', left: span[0], top: 0, width: Math.max(1, span[1] - span[0]), height: '100%', opacity: 0.75, pointerEvents: 'none' }} />
       {(warpEdit || markers.length > 0) && markers.map((m, i) => {
         const x = (m.beat - startFileBeat) * pxPerBeat
         if (x < -2 || x > width + 2) return null
@@ -228,6 +250,21 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const loadingAudio = useAudioStore((s) => s.loading)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lanesRef = useRef<HTMLDivElement>(null)
+  // the visible screen span of the lanes, for the waveforms (updated on scroll, zoom and resize, once per frame)
+  const [viewport, setViewport] = useState<{ left: number; right: number; x: number } | null>(null)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    let raf = 0
+    const update = (): void => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => { const r = el.getBoundingClientRect(); setViewport({ left: r.left, right: r.right, x: el.scrollLeft }) })
+    }
+    el.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    update()
+    return () => { el.removeEventListener('scroll', update); window.removeEventListener('resize', update); cancelAnimationFrame(raf) }
+  }, [])
   const drag = useRef<ClipDrag | null>(null)
   const [renaming, setRenaming] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -257,7 +294,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const bpm = project.bpm || 120
   const beatWidth = BEAT_WIDTH * zoom
   const totalBeats = Math.max(128, Math.ceil(projectEndBeat(project)) + 32, Math.ceil(project.loop?.end ?? 0) + 16)
-  const snap = (b: number, free: boolean): number => snapBeat(b, free)         // free = Alt held, or Snap is off
+  // free = Alt held, or Snap is off; zoomed in the grid is magnetic (edit/grid.ts snapDrag): fine moves between lines
+  const snap = (b: number, free: boolean): number => snapDrag(b, free, beatWidth)
   const rows = useMemo(() => buildRows(project), [project])
   const tops = useMemo(() => rowTops(rows), [rows])
   const lanesTop = RULER_HEIGHT + (showTempo ? TEMPO_HEIGHT : 0)
@@ -467,7 +505,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const onWheel = (e: React.WheelEvent): void => {
     if (!e.ctrlKey) return
     e.preventDefault()
-    setZoom(Math.min(4, Math.max(0.25, +(zoom * (e.deltaY < 0 ? 1.15 : 0.87)).toFixed(3))))
+    setZoom(Math.min(MAX_ZOOM, Math.max(0.25, +(zoom * (e.deltaY < 0 ? 1.15 : 0.87)).toFixed(3))))
   }
 
   // with a panel below (mixer, piano roll, ...) the Studio takes the rest of the height; the line between them moves it
@@ -750,7 +788,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         {loadingAudio && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>{tr('Reading audio files…')}</span>}
         {(message ?? notice) && <span style={{ fontSize: 11, color: 'var(--yellow)', maxWidth: 520, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={message ?? notice ?? ''}>{message ?? notice}</span>}
         <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{tr('Zoom')}</span>
-        <input type="range" min={0.25} max={4} step={0.05} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 70, accentColor: 'var(--accent)' }} />
+        <input type="range" min={0.25} max={MAX_ZOOM} step={0.05} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 70, accentColor: 'var(--accent)' }} />
       </div>
 
       {showMasterFx && <MasterFxBar />}
@@ -775,6 +813,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
       )}
 
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+        <ViewportCtx.Provider value={viewport}>
         <div ref={scrollRef} onWheel={onWheel} style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
           <div style={{ width: HEADER_WIDTH + totalBeats * beatWidth, minHeight: '100%', position: 'relative' }}>
             {/* ruler */}
@@ -829,6 +868,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             <Playhead scrollRef={scrollRef} beatWidth={beatWidth} />
           </div>
         </div>
+        </ViewportCtx.Provider>
         {showChannel && <ChannelTab onClose={() => { setShowChannel(false); remember('ams-show-channel', false) }} />}
       </div>
 

@@ -1,8 +1,9 @@
 {
- "name": "Male singer 3 · powerful",
+ "name": "Carlos · powerful",
  "gender": "male",
  "kind": "power",
  "style": "sing",
  "description": "powerful belt (good for rock)",
- "credit": "VocalSet singer m3: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513"
+ "credit": "\"Carlos\" is VocalSet singer m3: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513",
+ "singer": "Carlos"
 }

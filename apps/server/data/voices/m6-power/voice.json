@@ -1,8 +1,9 @@
 {
- "name": "Male singer 6 · powerful",
+ "name": "Felix · powerful",
  "gender": "male",
  "kind": "power",
  "style": "sing",
  "description": "powerful belt (good for rock)",
- "credit": "VocalSet singer m6: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513"
+ "credit": "\"Felix\" is VocalSet singer m6: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513",
+ "singer": "Felix"
 }

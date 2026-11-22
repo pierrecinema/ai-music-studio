@@ -7,11 +7,13 @@ import { beatOfSrc, srcOfBeat, validMarkers, warpSegments } from '../src/rendere
 import { isAudible, recordingPieces } from '../src/renderer/src/audio/engine'
 import { useProjectStore } from '../src/renderer/src/stores/project.store'
 import type { Project, Track } from '../src/renderer/src/types'
-import { matchesQuery } from '../src/renderer/src/lib/librarySearch'
+import { matchesQuery, tagCounts } from '../src/renderer/src/lib/librarySearch'
 import type { LibraryTrack } from '../src/renderer/src/lib/api'
 import { alignStarts, leadBeats, phaseAlign } from '../src/renderer/src/beatmatch/store'
 import { autoStructure } from '../src/renderer/src/lib/lyrics'
 import { installProgress, rapLyrics } from '../src/renderer/src/lib/singer'
+import { snapDrag } from '../src/renderer/src/edit/grid'
+import { cleanPlugins } from '../src/renderer/src/lib/pluginList'
 import { measureBalance, PROFILES, suggest, bassWidth } from '../src/renderer/src/audio/master/assistant'
 import { defaultChain } from '../src/renderer/src/audio/master/chain'
 import { applyEdits, applyOp, copyPart, fadeShape } from '../src/renderer/src/audio/master/edit'
@@ -519,6 +521,24 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
   const vsco = buildMultiBank('vsco', ['Strings/Violin Section/susVib/VlnEns_susVib_A3_v1.wav', 'Strings/Cello Section/susvib/susvib_C2_v1_1.wav', 'Brass/F Horn/sus/MOHorn_sus_C3_v1_1.wav', 'Brass/Tenor Trombone/sus/tenortbn_sus_A#0_v1_1.wav'])
   check('VSCO: violins, cellos, strings, horn, trombone, brass presets', ['0:40', '0:42', '0:48', '0:57', '0:60', '0:61'].every((k) => vsco.presets.get(k)?.zones.length) && vsco.samples.find((x) => x.file?.includes('VlnEns'))?.root === 69)
 }
+
+// ── library search: name only, tags only, chosen tags ──
+{
+  const a = { title: 'Summer Funk', prompt: 'funk groove', engine: 'ace', tags: ['Funk', 'demo'] } as unknown as LibraryTrack
+  const b = { title: 'Night Drive', prompt: 'synthwave funk', engine: 'ace', tags: ['synthwave'] } as unknown as LibraryTrack
+  check('library search: name only / tags only / chosen tags', matchesQuery(a, 'summer', 'name') && !matchesQuery(b, 'funk', 'name') && matchesQuery(a, 'funk', 'tags') && !matchesQuery(b, 'funk', 'tags')
+    && matchesQuery(a, '', 'all', ['funk', 'DEMO']) && !matchesQuery(b, '', 'all', ['funk']) && tagCounts([a, b]).length === 3)
+}
+
+// ── magnetic grid when zoomed in ──
+{
+  // grid 1/4 (1 beat): zoomed out (80 px per beat) it always snaps; zoomed in (1280 px) only within 8 px of a line
+  check('grid: snaps when zoomed out, magnetic when zoomed in, free with Alt', snapDrag(2.3, false, 80, 1) === 2 && Math.abs(snapDrag(2.3, false, 1280, 1) - 2.3) < 1e-9
+    && snapDrag(2.004, false, 1280, 1) === 2 && snapDrag(2.3, true, 80, 1) === 2.3 && snapDrag(2.3, false, 80, 0) === 2.3)
+}
+
+// ── plugin search: empty entries do not break the list ──
+check('plugins: null and nameless entries are left out', cleanPlugins([null, { id: 'a', name: 'Dexed' }, { id: 'b' }, 'x', { id: 'c', name: '' }]).map((p) => p.id).join() === 'a' && cleanPlugins(null).length === 0)
 
 // ── the singer: installation progress, rap lyrics ──
 {

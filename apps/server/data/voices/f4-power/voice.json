@@ -1,8 +1,9 @@
 {
- "name": "Female singer 4 · powerful",
+ "name": "Dana · powerful",
  "gender": "female",
  "kind": "power",
  "style": "sing",
  "description": "powerful belt (good for rock)",
- "credit": "VocalSet singer f4: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513"
+ "credit": "\"Dana\" is VocalSet singer f4: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513",
+ "singer": "Dana"
 }

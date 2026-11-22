@@ -1,8 +1,9 @@
 {
- "name": "Male singer 2 · powerful",
+ "name": "Ben · powerful",
  "gender": "male",
  "kind": "power",
  "style": "sing",
  "description": "powerful belt (good for rock)",
- "credit": "VocalSet singer m2: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513"
+ "credit": "\"Ben\" is VocalSet singer m2: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513",
+ "singer": "Ben"
 }

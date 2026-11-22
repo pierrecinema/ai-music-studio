@@ -1,8 +1,9 @@
 {
- "name": "Female singer 9 · powerful",
+ "name": "Iris · powerful",
  "gender": "female",
  "kind": "power",
  "style": "sing",
  "description": "powerful belt (good for rock)",
- "credit": "VocalSet singer f9: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513"
+ "credit": "\"Iris\" is VocalSet singer f9: Wilkins, Seetharaman, Wahl, Pardo (2018), VocalSet, CC BY 4.0, doi:10.5281/zenodo.1442513",
+ "singer": "Iris"
 }

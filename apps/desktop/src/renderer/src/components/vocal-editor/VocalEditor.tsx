@@ -16,7 +16,7 @@ import { insertDefaults } from '../../audio/fx'
 import { nanoid } from 'nanoid'
 import { installProgress, rapLyrics, STAGE_TEXT } from '../../lib/singer'
 
-interface BuiltinVoice { id: string; name: string; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
+interface BuiltinVoice { id: string; name: string; singer?: string; styles?: Record<string, string>; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
 
 // how the built-in voices sing: the way of singing is shaped in the backend (services/soulx.py STYLES), the sound
 // of the new vocal track here (its effects); rap is performed by the AI singer (ACE-Step), which really raps
@@ -38,6 +38,7 @@ const STYLE_FX: Record<SingStyle, Array<[InsertType, Record<string, number>]>> =
 const styleFx = (st: SingStyle): InsertFx[] => STYLE_FX[st].map(([type, p]) => ({ id: nanoid(), type, on: true, p: { ...insertDefaults(type), ...p } }))
 /** a built-in voice's name in the UI language: "Female singer 3", with "(2)" for a singer's second recording */
 const voiceLabel = (v: BuiltinVoice): string => {
+  if (v.singer) return `${v.singer}${v.id.endsWith('-2') ? ' 2' : ''}`
   const n = /^[fm](\d+)/.exec(v.id)?.[1] ?? ''
   return `${tr(v.gender === 'male' ? 'Male singer' : 'Female singer')} ${n}${v.id.endsWith('-2') ? ' (2)' : ''}`
 }
@@ -75,6 +76,23 @@ export function VocalEditor(): React.ReactElement {
   const [style, setStyle] = useState<SingStyle>('pop')
   const [gender, setGender] = useState<'all' | 'female' | 'male'>('all')
   const [autoFx, setAutoFx] = useState(true)
+  const [playing, setPlaying] = useState<string | null>(null)
+  // a click on a voice chooses it and plays its demo at once (a finished recording, nothing is computed);
+  // a second click on the playing voice stops it
+  /** plays a finished recording (a demo); the same key again stops it */
+  const listen = (key: string, file: string | null | undefined): void => {
+    void import('../../audio/engine').then(async (m) => {
+      if (playing === key || !file) { m.stopPreview(); setPlaying(null); return }
+      setPlaying(key)
+      const r = await m.previewSample(file)
+      if (!r) { setPlaying(null); return }
+      void r.ended.then(() => setPlaying((cur) => (cur === key ? null : cur)))
+    })
+  }
+  const pickVoice = (v: BuiltinVoice): void => { setBVoice(v.id); listen(v.id, v.demo) }
+  const [rapEx, setRapEx] = useState<Array<{ file: string; name: string; voice: string; bpm: number }>>([])
+  useEffect(() => { api.singer.examples().then((r) => setRapEx(r.rap)).catch(() => setRapEx([])) }, [])
+  useEffect(() => () => { void import('../../audio/engine').then((m) => m.stopPreview()) }, [])
   const [voices, setVoices] = useState<SingerVoice[] | null>(null)
   const [voicesInfo, setVoicesInfo] = useState<{ vocalsFolder: string; vocoderLicence: string } | null>(null)
   const [voiceId, setVoiceId] = useState('')
@@ -126,9 +144,10 @@ export function VocalEditor(): React.ReactElement {
       if (!words) { setError(tr('Write the lyrics first.')); return }
       await singAi({ lyrics: words, voice: bv.gender === 'male' ? 'male' : 'female', rap: true }); return
     }
-    if (!notes.some((n) => n.lyric && n.lyric !== '+')) { setError(tr('Put lyrics on the notes first.')); return }
+    const sung = await withLyrics(notes)
+    if (!sung) return
     try {
-      const { jobId } = await api.singer.builtinRender({ voice: bv.id, notes, lang: lang || 'en', rap: false, style, steps: natural ? 32 : 16, name: `${track?.name ?? 'Vocals'} ${bv.name}` })
+      const { jobId } = await api.singer.builtinRender({ voice: bv.id, notes: sung, lang: lang || 'en', rap: false, style, steps: natural ? 32 : 16, name: `${track?.name ?? 'Vocals'} ${bv.name}` })
       setBusy({ text: tr('Singing…'), pct: 0 })
       if (await poll(() => api.singer.job(jobId))) {
         const j = await api.singer.job(jobId)
@@ -190,8 +209,8 @@ export function VocalEditor(): React.ReactElement {
   }
 
   // lyrics onto the notes: a word on its first note, "+" on the notes of its further syllables
-  const putLyrics = async (): Promise<void> => {
-    if (!melody.length) return
+  const putLyrics = async (): Promise<string[] | null> => {
+    if (!melody.length || !text.trim()) return null
     setError(null)
     try {
       const { lyrics } = await api.singer.lyrics(text, melody.length, lang || 'en')
@@ -200,7 +219,23 @@ export function VocalEditor(): React.ReactElement {
       const words = text.split(/\s+/).filter(Boolean).length
       const placed = lyrics.filter((l) => l && l !== '+').length
       setNotice(placed < words ? trf('{placed} of {words} words fit on the {n} notes: add notes or shorten the lyrics.', { placed, words, n: melody.length }) : trf('The lyrics are on the {n} notes. Check and correct them below.', { n: melody.length }))
-    } catch (e) { setError((e as Error).message) }
+      return lyrics
+    } catch (e) { setError((e as Error).message); return null }
+  }
+  // the lyrics go onto the notes by themselves a moment after typing (or changing the language); single syllables
+  // can then be corrected under "Notes and syllables"
+  const typed = useRef(false)
+  useEffect(() => {
+    if (!typed.current || engine === 'ai' || !text.trim() || !melody.length) return
+    const t = setTimeout(() => { void putLyrics() }, 900)
+    return () => clearTimeout(t)
+  }, [text, lang, melody.length])  // eslint-disable-line react-hooks/exhaustive-deps
+  /** the notes to sing with their syllables: lyrics written but not yet on the notes are put on them first */
+  const withLyrics = async <T extends { lyric: string }>(notes: T[]): Promise<T[] | null> => {
+    if (notes.some((n) => n.lyric && n.lyric !== '+')) return notes
+    if (!text.trim()) { setError(tr('Write the lyrics first (in the Lyrics field): they are put on the notes by themselves.')); return null }
+    const l = await putLyrics()
+    return l ? notes.map((n, i) => ({ ...n, lyric: l[i] ?? '' })) : null
   }
   const setLyric = (m: SungNote, lyric: string): void => useProjectStore.getState().updateNote(m.trackId, m.clipId, m.note.id, { lyric: lyric || undefined })
 
@@ -220,9 +255,10 @@ export function VocalEditor(): React.ReactElement {
     setError(null); setNotice(null)
     const p = useProjectStore.getState().project
     const notes = melody.map((m) => ({ pitch: m.note.pitch, start: beatToSec(p, m.beat), end: beatToSec(p, m.beat + m.note.duration), lyric: m.note.lyric ?? '' }))
-    if (!notes.some((n) => n.lyric && n.lyric !== '+')) { setError(tr('Put lyrics on the notes first.')); return }
+    const sung = await withLyrics(notes)
+    if (!sung) return
     try {
-      const { jobId } = await api.singer.render({ voice: voice.id, notes, lang: lang || undefined, steps, vibrato, name: `${track?.name ?? 'Vocals'} ${voice.name}` })
+      const { jobId } = await api.singer.render({ voice: voice.id, notes: sung, lang: lang || undefined, steps, vibrato, name: `${track?.name ?? 'Vocals'} ${voice.name}` })
       setBusy({ text: tr('Singing…'), pct: 0 })
       if (await poll(() => api.singer.job(jobId))) {
         const j = await api.singer.job(jobId)
@@ -352,6 +388,15 @@ export function VocalEditor(): React.ReactElement {
                     <button key={k} className={`btn ${style === k ? 'btn-primary' : 'btn-ghost'}`} style={{ flex: 1, fontSize: 12, padding: '5px 6px' }} onClick={() => setStyle(k)}>{tr(l)}</button>
                   ))}
                 </div>
+                {bv?.styles && Object.keys(bv.styles).length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ ...hint, marginRight: 2 }}>{trf('{name} in each style:', { name: voiceLabel(bv) })}</span>
+                    {STYLES.filter(([k]) => bv.styles?.[k]).map(([k, l]) => {
+                      const key = `${bv.id}:${k}`
+                      return <button key={k} className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} onClick={() => listen(key, bv.styles?.[k])}>{playing === key ? '■' : '▶'} {tr(l)}</button>
+                    })}
+                  </div>
+                )}
                 <div style={hint}>{tr(STYLES.find(([k]) => k === style)?.[2] ?? '')}</div>
                 <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
                   <input type="checkbox" checked={autoFx} onChange={(e) => setAutoFx(e.target.checked)} />{tr('Put the style’s effects on the new vocal track')}
@@ -371,8 +416,8 @@ export function VocalEditor(): React.ReactElement {
                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tr(kl)} · {tr(list[0].description)}</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
                           {list.map((v) => (
-                            <button key={v.id} className={`btn ${bv?.id === v.id ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setBVoice(v.id)} style={{ textAlign: 'left', fontSize: 11.5, padding: '5px 7px' }} title={v.credit}>
-                              {voiceLabel(v)}
+                            <button key={v.id} className={`btn ${bv?.id === v.id ? 'btn-primary' : 'btn-ghost'}`} onClick={() => pickVoice(v)} style={{ textAlign: 'left', fontSize: 11.5, padding: '5px 7px' }} title={`${tr('Click: choose and listen (click again: stop)')}\n${v.credit}`}>
+                              {playing === v.id ? '■ ' : '▶ '}{voiceLabel(v)}
                             </button>
                           ))}
                         </div>
@@ -380,10 +425,16 @@ export function VocalEditor(): React.ReactElement {
                     )
                   })}
                 </div>
-                {bv?.demo && <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void import('../../audio/engine').then((m) => m.previewSample(bv.demo!))}>▶ {trf('Listen to {name}', { name: voiceLabel(bv) })}</button>}
+                <div style={hint}>{tr('Click a voice to hear it right away (a short song line in its typical style); click again to stop.')}</div>
                 <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
                   <input type="checkbox" checked={natural} onChange={(e) => setNatural(e.target.checked)} />{tr('Best quality (slower; off: about twice as fast)')}
                 </label>
+                {style === 'rap' && rapEx.length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ ...hint, marginRight: 2 }}>{tr('Rap examples:')}</span>
+                    {rapEx.map((x) => <button key={x.file} className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} onClick={() => listen(x.file, x.file)}>{playing === x.file ? '■' : '▶'} {tr(x.voice === 'male' ? 'Male' : 'Female')} · {x.bpm} BPM</button>)}
+                  </div>
+                )}
                 {style === 'rap' && <div style={hint}>{tr('Rap is made by the AI singer (ACE-Step 1.5, installed with the music AI); it takes a few minutes. The voice choice only decides male or female. The lyrics come from the lyrics field or, if it is empty, from the notes.')}</div>}
               </>
             )}
@@ -450,11 +501,12 @@ export function VocalEditor(): React.ReactElement {
 
           <div style={card}>
             <div style={label}>{tr('Lyrics')}</div>
-            <select value={lang} onChange={(e) => setLang(e.target.value)}>
+            <select value={lang} onChange={(e) => { typed.current = true; setLang(e.target.value) }}>
               {LANGS.filter(([k]) => engine === 'ai' ? k : true).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}
             </select>
-            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} placeholder={tr('Write the lyrics here…')} style={{ resize: 'vertical' }} />
-            {engine !== 'ai' && <button className="btn btn-ghost" onClick={() => void putLyrics()} disabled={!melody.length || !text.trim() || !!busy}>{tr('Put the lyrics on the notes')}</button>}
+            <textarea value={text} onChange={(e) => { typed.current = true; setText(e.target.value) }} rows={5} placeholder={tr('Write the lyrics here…')} style={{ resize: 'vertical' }} />
+            {engine !== 'ai' && <div style={hint}>{tr('The lyrics go onto the notes by themselves while you type; correct single syllables under “Notes and syllables”.')}</div>}
+            {engine !== 'ai' && <button className="btn btn-ghost" onClick={() => void putLyrics()} disabled={!melody.length || !text.trim() || !!busy}>{tr('Put the lyrics on the notes again')}</button>}
           </div>
 
           {engine === 'diffsinger' && (

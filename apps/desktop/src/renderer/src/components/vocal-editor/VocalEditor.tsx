@@ -120,6 +120,14 @@ export function VocalEditor(): React.ReactElement {
     })
   }
   useEffect(loadBuiltin, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  // sent from the Studio (right-click on a recording → "My singing → MIDI melody"): convert that clip right away
+  useEffect(() => {
+    if (!useUIStore.getState().singingToMidi) return
+    useUIStore.getState().setSingingToMidi(false)
+    const t = setTimeout(() => { void singingRef.current?.('clip') }, 50)
+    return () => clearTimeout(t)
+  }, [])
+  const singingRef = useRef<((from: 'clip' | 'file') => Promise<void>) | null>(null)
   const stage = useRef(0)
   const pctRef = useRef(0)
   const installSinger = async (): Promise<void> => {
@@ -365,6 +373,7 @@ export function VocalEditor(): React.ReactElement {
     setBusy(null)
   }
 
+  singingRef.current = singingToMidi
   const ready = engine === 'builtin' ? !!bv && !offline && (style === 'rap' || !builtin?.problem) && melody.length > 0 : engine === 'diffsinger' ? !!voice && !voice.error && voice.vocoderInstalled && melody.length > 0 : melody.length > 0 && !!text.trim()
 
   return (

@@ -23,6 +23,8 @@ interface UIState {
   grid: string          // id of a grid size (see edit/grid.ts)
   snap: boolean         // snap to the grid while moving, trimming and drawing
   tool: 'pointer' | 'scissors'   // the Studio's tool: select and move, or cut clips with a click
+  singingToMidi: boolean          // the Vocal Editor turns the selected audio clip into a melody when it opens
+  setSingingToMidi: (on: boolean) => void
   libraryTab: 'tracks' | 'stems' | 'samples'   // open tab of the Library (other views can open it on a tab)
   panelHeight: number   // the panel under the Studio (mixer, piano roll, ...): drag its top edge
   chatOpen: boolean     // the AI assistant panel on the right
@@ -73,10 +75,12 @@ export const useUIStore = create<UIState>()(
       grid: '1/16',
       snap: true,
       tool: 'pointer',
+      singingToMidi: false,
 
       setGrid: (grid) => set({ grid }),
       toggleSnap: () => set((s) => ({ snap: !s.snap })),
       setTool: (tool) => set({ tool }),
+      setSingingToMidi: (singingToMidi) => set({ singingToMidi }),
       chatOpen: true,
       setChatOpen: (chatOpen) => set({ chatOpen }),
       setShortcutPreset: (shortcutPreset) => set({ shortcutPreset }),

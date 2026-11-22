@@ -946,6 +946,9 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                 { label: 'Crossfade with the clip before (X)', run: () => setMessage(crossfade()) },
                 { label: 'Loop this clip (Ctrl+L)', run: () => loopToSelection() },
                 { label: 'Edit warp markers', run: () => { setWarpClip(menu.clipId!); setMessage(tr('Warp: double-click the waveform to set a marker, drag a marker onto another beat, Alt+click deletes it.')) } },
+                ...(project.tracks.find((t) => t.id === menu.trackId)?.clips.find((c) => c.id === menu.clipId)?.audioFile
+                  ? [{ label: 'My singing → MIDI melody (Vocal Editor)', run: () => { selectClip(menu.clipId!); useUIStore.getState().setSingingToMidi(true); setActiveView('vocal-editor') } }]
+                  : []),
                 { label: 'Split into stems (Demucs)', run: () => void run('Separating stems', () => splitIntoStems(menu.trackId, menu.clipId!, (pct, text) => setBusy(`Separating stems ${Math.floor(pct)} % · ${text}`))) },
                 { label: 'Delete clip', run: () => { const ids = selected.size > 1 && selected.has(menu.clipId!) ? [...selected] : [menu.clipId!]; useProjectStore.getState().removeClips(ids) }, danger: true }
               ]

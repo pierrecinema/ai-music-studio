@@ -11,7 +11,7 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 | **+ Return… (Reverb / Delay)** | a shared reverb or delay; every track sends to it with its send knob (effects for one track: **FX** on the track) |
 | **Sync all to … BPM** / **Sync N selected** | brings all audio (or the selected clips, together) in time with the master BPM: [[Beat Matching and Sync]] |
 | **Beat match…** | measures the selected audio clip and offers to sync it |
-| **Tools** | the box in the top bar: ↖ pointer (select, move, trim), ✂ scissors (click a clip to cut it there; on the grid, Alt: exactly where you click; Esc: back to the pointer), 🧲 grid on / off |
+| **Tools** | the box in the top bar: ↖ pointer (select, move, trim), ✂ scissors (click a clip to cut it there, or drag over a range, also over several tracks, to cut it out as its own clip; on the grid, Alt: exactly; afterwards the pointer is back), 🧲 grid on / off |
 | **Grid / 🧲 Grid on/off** | grid from 1 bar to 1/64, triplets; the 🧲 button switches the grid off (yellow: everything moves freely, Ctrl+4); hold **Alt** to move freely once. Zoomed in far (up to 16×) the grid is magnetic: clips snap only near a grid line and move steplessly in between, for lining up beats. With the grid off, **← →** move the selected clip by one pixel |
 | **Loop** | loop (cycle) on/off; drag the range in the strip under the markers |
 | **Punch in / Punch out** | recording starts / stops at the loop range |

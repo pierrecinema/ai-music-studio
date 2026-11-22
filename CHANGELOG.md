@@ -7,6 +7,7 @@ on its GitHub release page, so every version needs a `## <version>` section here
 
 ### New
 
+- **Scissors: cut out a range**: with ✂, drag over a range (also over several tracks): it is cut at both ends and becomes its own clip(s), selected, ready to move or delete. A click still cuts at one point. After cutting, the pointer is back by itself.
 - **Right-click on a recording in the Studio → "My singing → MIDI melody (Vocal Editor)"**: the Vocal Editor opens and turns that clip into a melody right away.
 
 ## 0.96.3

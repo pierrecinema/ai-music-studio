@@ -1927,5 +1927,7 @@
  "Sing is grey: install the singer first (button above).": "„Singen“ ist grau: Installiere zuerst den Sänger (Knopf oben).",
  "Sing is grey: write the lyrics first.": "„Singen“ ist grau: Schreib zuerst den Text.",
  "Sing is grey: choose a voice first.": "„Singen“ ist grau: Wähle zuerst eine Stimme.",
- "My singing → MIDI melody (Vocal Editor)": "Mein Gesang → MIDI-Melodie (Vocal Editor)"
+ "My singing → MIDI melody (Vocal Editor)": "Mein Gesang → MIDI-Melodie (Vocal Editor)",
+ "Scissors: click a clip to cut it there, or drag over a range (also over several tracks) to cut it out as its own clip. On the grid; Alt: exactly. Afterwards the pointer is back.": "Schere: Klick auf einen Clip schneidet ihn dort, oder über einen Bereich ziehen (auch über mehrere Spuren), um ihn als eigenen Clip herauszuschneiden. Im Raster; Alt: genau. Danach ist wieder der Zeiger aktiv.",
+ "Cut out: {n} clip(s), selected (move them, Delete removes them).": "Herausgeschnitten: {n} Clip(s), ausgewählt (verschieben, Entf löscht sie)."
 }

@@ -20,6 +20,8 @@ import { Ruler } from './Ruler'
 import { Popover, type PopoverSpec } from './Popover'
 import { AutomationHeader, AutomationLane, FxHeader, FxLane, MasterFxBar, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
 import { ChannelTab } from './ChannelTab'
+import { LiveTake } from './LiveTake'
+import { REC_INPUTS, canRecordAudio } from '../../audio/recInput'
 import { tr, trf } from '../../i18n/tr'
 import { parseMidi, writeMidi } from '../../lib/midiFile'
 import {
@@ -256,6 +258,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const setZoom = useUIStore((s) => s.setZoom)
   const setActiveView = useUIStore((s) => s.setActiveView)
   const loadingAudio = useAudioStore((s) => s.loading)
+  const isRecording = useAudioStore((s) => s.isRecording)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lanesRef = useRef<HTMLDivElement>(null)
   const [cutRange, setCutRange] = useState<{ a: number; b: number; top: number; bottom: number } | null>(null)   // the scissors' range while dragging
@@ -658,6 +661,12 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
               <button onClick={(e) => { e.stopPropagation(); openGroup(track) }} style={{ ...tinyBtn, color: track.height !== undefined ? 'var(--accent-light)' : 'var(--text-muted)' }}
                 title={tr('Show the stems large / normal (or double-click the group)')}>⇕</button>
             )}
+            {!isGroup && (
+              // record arm: the recording (Record button, Ctrl+R) goes to this track; only one track is armed
+              <button onClick={(e) => { e.stopPropagation(); for (const t of project.tracks) if (t.armed && t.id !== track.id) updateTrack(t.id, { armed: false }); updateTrack(track.id, { armed: !track.armed }); selectTrack(track.id) }}
+                title={track.armed ? tr('Armed for recording: Record (Ctrl+R) records on this track. Click to disarm') : tr('Arm for recording: Record (Ctrl+R) records on this track')}
+                style={{ ...tinyBtn, color: track.armed ? '#fff' : '#ef4444', background: track.armed ? (isRecording ? '#dc2626' : '#b91c1c') : undefined, borderRadius: 3, boxShadow: track.armed && isRecording ? '0 0 8px #ef4444' : undefined }}>●</button>
+            )}
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { muted: !track.muted }) }} style={{ ...tinyBtn, color: track.muted ? '#f59e0b' : 'var(--text-muted)' }} title={tr('Mute')}>M</button>
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { soloed: !track.soloed }) }} style={{ ...tinyBtn, color: track.soloed ? 'var(--accent-light)' : 'var(--text-muted)' }} title={tr('Solo')}>S</button>
             <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showFx: !track.showFx }) }} title={tr('Effects of this track (EQ, compressor, delay, reverb, filter)')}
@@ -676,6 +685,14 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             <button onClick={(e) => { e.stopPropagation(); removeTrack(track.id) }} style={{ ...tinyBtn, color: 'var(--text-muted)' }} title={tr('Delete track (Ctrl+Z brings it back)')}>×</button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            {canRecordAudio(track) && (
+              // what this track records of the audio interface: stereo (In 1+2) or one input as mono
+              <select value={track.input ?? 'stereo'} onClick={(e) => e.stopPropagation()} onChange={(e) => updateTrack(track.id, { input: e.target.value as Track['input'] })}
+                title={tr('Recording input: In 1+2 (stereo), or In 1 / In 2 as mono (a microphone on one input of the interface)')}
+                style={{ fontSize: 9.5, padding: '0 2px', height: 17, maxWidth: 52, background: 'var(--bg-primary)', color: track.armed ? '#fca5a5' : 'var(--text-secondary)', border: '1px solid var(--border-mid)', borderRadius: 3 }}>
+                {REC_INPUTS.map((o) => <option key={o.id} value={o.id} title={tr(o.title)}>{o.label}</option>)}
+              </select>
+            )}
             <input type="range" min={0} max={1} step={0.01} value={track.volume} title={tr('Volume')} onClick={(e) => e.stopPropagation()}
               onChange={(e) => updateTrack(track.id, { volume: parseFloat(e.target.value) })} style={{ width: 62, accentColor: track.color }} />
             {returns.map((r, k) => (
@@ -703,7 +720,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             {barH >= 14 && <span style={{ position: 'relative', fontSize: 9, color: '#fff', padding: '0 4px', pointerEvents: 'none', whiteSpace: 'nowrap', textShadow: '0 0 3px #000' }}>{t.name}</span>}
           </div>
         )))
-        : renderClips(track)
+        : <>{renderClips(track)}<LiveTake trackId={track.id} beatWidth={beatWidth} height={trackHeight(track)} /></>
     }
     return (
       <div key={`${row.kind}-${track.id}-${row.kind === 'take' ? row.lane.id : row.kind === 'auto' ? row.param : ''}`} style={{ display: 'flex', height: h, position: 'relative' }}>
@@ -734,7 +751,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           }}
           style={{
             width: HEADER_WIDTH, flexShrink: 0, position: 'sticky', left: 0, zIndex: 4, boxSizing: 'border-box',
-            borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', borderLeft: `3px solid ${track.color}`,
+            borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', borderLeft: `3px solid ${track.color}`, boxShadow: row.kind === 'track' && track.armed ? `inset 0 0 0 1px ${isRecording ? '#ef4444' : '#ef444466'}` : undefined,
             padding: row.kind === 'track' ? `6px 8px 4px ${8 + (row.depth ?? 0) * 12}px` : 0, cursor: row.kind === 'track' ? 'pointer' : 'default',
             // always opaque: the selected colour is see-through in some looks, and clips scrolled under the header showed
             // through it (owner: a clicked clip covered the track header)

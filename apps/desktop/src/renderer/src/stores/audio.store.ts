@@ -8,6 +8,7 @@ interface AudioState {
   masterVolume: number
   metronomeEnabled: boolean
   loading: boolean          // audio files are being read before playback starts
+  recTick?: number          // counts up while recording (the Studio redraws the growing take)
 
   setPlaying: (v: boolean) => void
   setRecording: (v: boolean) => void

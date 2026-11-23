@@ -64,11 +64,13 @@ Right-click a track header, or click the colour strip at its left: pick a colour
 ## Recording
 **MIDI:** select a MIDI track or a MIDI clip (or open the Piano Roll) and press ● (top bar), **Ctrl+R** or **● Rec** in the Piano Roll. The song plays; what you play on the Piano Roll's keyboard or on a MIDI keyboard becomes notes in the clip, as long as you hold the keys. Press again or Space to stop.
 **Audio:** on an audio track the same buttons record from the microphone or audio interface. In a loop, every pass becomes a take in its own lane (**T** on the track shows them); click a take to use it.
+**Arm a track:** the red **●** in a track header arms it (one track at a time): the recording goes to that track, audio or MIDI, whichever track is selected. While recording, the armed track has a red frame and the take grows on it as a red clip with the input's waveform.
+**Input (audio tracks):** the small list next to the volume slider chooses what is recorded of the audio interface: **In 1+2** (stereo), **In 1** or **In 2** (mono). A microphone or guitar on one input of a stereo interface belongs on **In 1** / **In 2**: it is then recorded in the middle (pan it with the track's pan) instead of on one side.
 ## Warp markers
 Right-click → *Edit warp markers*: double-click the waveform to set a marker, drag it onto another beat (the audio between is stretched without changing the pitch), Alt+click deletes it.
 
 ## Track header
-The first row shows the whole track name (double-click to rename). The row below shows the type (audio, midi, group, or the VST instrument) and the buttons **M** (mute), **S** (solo), **FX** (effects lane), **CH** (channel), **A** (automation lanes), **T** (take lanes, after loop recording) and **×** (delete). The third row has the volume slider and one small send slider per return track.
+The first row shows the whole track name (double-click to rename). The row below shows the type (audio, midi, group, or the VST instrument) and the buttons **●** (arm for recording), **M** (mute), **S** (solo), **FX** (effects lane), **CH** (channel), **A** (automation lanes), **T** (take lanes, after loop recording) and **×** (delete). The third row has (on audio tracks) the recording input, the volume slider and one small send slider per return track.
 
 ## Studio and Mixer height
 Drag the divider between the Studio and the [[Mixer]] to any height; double-click resets it.

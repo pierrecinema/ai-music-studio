@@ -3,6 +3,18 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.4
+
+### New
+
+- **Arm a track for recording**: the red **●** in each track header arms the track; recording (● or Ctrl+R) goes to the armed track, audio or MIDI. The armed track has a red frame while recording.
+- **You see the recording while it happens**: the take grows on the track as a red clip with the waveform of the input, instead of appearing only when recording stops.
+- **Recording input per audio track**: **In 1+2** (stereo), **In 1** or **In 2** (mono). A microphone on one input of a stereo interface is now recorded in the middle instead of on one side.
+
+### Fixed
+
+- **MIDI recording crackled and stuttered**, even with no plugins and a large buffer: every played note restarted the whole playback. Notes played while recording no longer restart it; in a loop they are heard from the next pass on.
+
 ## 0.98.3
 
 ### Fixed

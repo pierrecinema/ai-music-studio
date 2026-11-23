@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.2
+
+### Fixed
+
+- **The setup assistant did not appear after a new installation when old AI engines were still on the PC** (for example after uninstalling an older version, whose uninstaller did not ask yet): every new installation (not an update) now opens the setup assistant on the first start, whatever is on the PC. If the engines are already there, it checks them and repairs what is missing.
+
 ## 0.98.1
 
 ### Changed

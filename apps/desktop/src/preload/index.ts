@@ -10,6 +10,7 @@ const api = {
   },
   engines: {
     status: () => ipcRenderer.invoke('engines:status'),
+    setupPending: () => ipcRenderer.invoke('setup:pending'),
     install: (groups: string[], torchVariant: string) => ipcRenderer.invoke('engines:install', groups, torchVariant),
     cancel: () => ipcRenderer.invoke('engines:cancel'),
     onLog: (cb: (line: string) => void) => {

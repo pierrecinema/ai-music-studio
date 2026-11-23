@@ -1,4 +1,4 @@
-import { ipcMain, dialog, shell, BrowserWindow } from 'electron'
+import { app, ipcMain, dialog, shell, BrowserWindow } from 'electron'
 import type { IpcMainInvokeEvent, OpenDialogOptions, OpenDialogReturnValue } from 'electron'
 import { ServerManager, backendLogPath } from './server-manager'
 import { getStatus, installGroups, cancelInstall } from './engines'
@@ -32,6 +32,13 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
   ipcMain.handle('server:show-log', () => { shell.showItemInFolder(backendLogPath()) })
 
   ipcMain.handle('engines:status', () => getStatus(serverManager.isReady()))
+  // set by the installer on a new installation (not an update): the setup assistant opens once, then the mark goes
+  ipcMain.handle('setup:pending', () => {
+    const f = join(app.getPath('userData'), 'setup-pending')
+    if (!fs.existsSync(f)) return false
+    try { fs.rmSync(f, { force: true }) } catch { /* read-only: it shows again next time */ }
+    return true
+  })
   ipcMain.handle('engines:cancel', () => cancelInstall())
   ipcMain.handle('engines:install', async (e, groups: string[], torchVariant: string) => {
     const win = BrowserWindow.fromWebContents(e.sender)

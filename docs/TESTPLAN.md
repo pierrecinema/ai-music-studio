@@ -783,6 +783,20 @@ Auf dem zweiten PC: den Installer 0.98.3 (oder neuer) von GitHub laden und von H
 | 52.6 | Warten bis fertig | „Fertig“ mit Häkchen; danach unten „KI-Backend bereit“ | ✅ | 0.98.3 | 0.98.0 |
 | 52.7 | Stem Splitter: einen Song teilen | Stems kommen (auf der NVIDIA-Karte schnell) | ✅ | 0.98.3 | 0.98.0 |
 | 52.8 | Einstellungen → KI-Engines → **Einrichtungs-Assistent** | Der Assistent öffnet sich wieder | ✅ | 0.98.3 | 0.98.0 |
-| 52.9 | Optional: Paket **Alles** | Musik-KI, Sänger, KI-Instrumente werden installiert (auch ohne Git) | ✅ | 0.98.3 | 0.98.0 |
+| 52.9 | Optional: Paket **Alles** | Musik-KI, Sänger, KI-Instrumente werden installiert (auch ohne Git) | | | 0.98.0 |
 | 52.10 | Deinstallieren (Version 0.98.3 oder neuer; auch bei Installation „für alle Benutzer“) | Frage „Auch die KI-Engines … entfernen?“ (Englisch und Deutsch); „Ja“ entfernt sie, „Nein“ lässt sie | ✅ | 0.98.3 | 0.98.1 |
 
+## 53. Neu in 0.98.4: Aufnahme im Studio (Feedback eines Users)
+
+Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 53.1 | Studio: Audio-Spur, im Spurkopf den roten **●** klicken | Der Knopf wird rot gefüllt, die Spur bekommt einen roten Rahmen; nur eine Spur ist scharf | | | 0.98.4 |
+| 53.2 | Eine andere Spur auswählen, Aufnahme (● oben oder Strg+R) | Aufgenommen wird auf der scharfen Spur, nicht auf der ausgewählten | | | 0.98.4 |
+| 53.3 | Während der Aufnahme schauen | Auf der Spur wächst ein roter Clip „Aufnahme…“ mit der Wellenform des Eingangs | | | 0.98.4 |
+| 53.4 | Neben dem Lautstärke-Regler **In 1** wählen (Mikro an Eingang 1), aufnehmen | Die Aufnahme ist mono und klingt in der Mitte, nicht nur links oder rechts | | | 0.98.4 |
+| 53.5 | **In 2** (Mikro/Gitarre an Eingang 2) | Wie 53.4, mit Eingang 2 | | | 0.98.4 |
+| 53.6 | **In 1+2** | Stereo wie bisher | | | 0.98.4 |
+| 53.7 | MIDI-Spur scharf machen, mit dem MIDI-Keyboard aufnehmen (Puffer 256 oder 512) | Keine Aussetzer und kein Knacken beim Spielen; die Noten erscheinen im Clip | | | 0.98.4 |
+| 53.8 | MIDI-Aufnahme in einer Loop | Ab dem nächsten Durchlauf hört man die eben gespielten Noten | | | 0.98.4 |

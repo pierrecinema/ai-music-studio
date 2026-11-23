@@ -3,9 +3,10 @@
 import { useProjectStore } from '../stores/project.store'
 import { useAudioStore } from '../stores/audio.store'
 import { useUIStore } from '../stores/ui.store'
-import { currentBeat, isPlaying, onTransportStop, play, previewNote, releaseNote, startRecording } from './engine'
+import { currentBeat, isPlaying, onTransportStop, play, previewNote, releaseNote, setRecordingClip, startRecording } from './engine'
 import type { Track } from '../types'
 import { pianoFocus } from '../components/timeline/studioOps'
+import { armedTrack, canRecordAudio } from './recInput'
 
 const NOTE_TRACKS: Track['type'][] = ['midi', 'instrument', 'vocal']
 
@@ -15,6 +16,9 @@ export const isMidiRecording = (): boolean => rec !== null
 
 function noteTrack(): Track | undefined {
   const st = useProjectStore.getState()
+  // an armed MIDI track (red button) first, then the selected one
+  const armed = armedTrack(st.project)
+  if (armed && NOTE_TRACKS.includes(armed.type)) return armed
   return st.project.tracks.find((t) => t.id === st.selectedTrackId && NOTE_TRACKS.includes(t.type))
 }
 
@@ -22,6 +26,10 @@ function noteTrack(): Track | undefined {
  *  audio (microphone) otherwise. */
 export async function startAnyRecording(): Promise<string | null> {
   const st = useProjectStore.getState()
+  // an armed track decides: audio (microphone) or MIDI
+  const armed = armedTrack(st.project)
+  if (armed && canRecordAudio(armed) && armed.type !== 'vocal') return startRecording()
+  if (armed && NOTE_TRACKS.includes(armed.type) && armed.type !== 'vocal') return startMidiRecording()
   const midiClip = st.project.tracks.some((t) => NOTE_TRACKS.includes(t.type) && t.clips.some((c) => c.id === st.selectedClipId && !c.audioFile))
   if (noteTrack() || midiClip || pianoFocus.active || useUIStore.getState().activeView === 'piano-roll') return startMidiRecording()
   return startRecording()
@@ -46,6 +54,7 @@ export async function startMidiRecording(): Promise<string | null> {
     useProjectStore.getState().addClip(track.id, { startTime: start, duration: perBar, notes: [], name: 'Recorded MIDI' })
     clipId = useProjectStore.getState().project.tracks.find((t) => t.id === track!.id)!.clips.at(-1)!.id
   }
+  setRecordingClip(clipId)
   useProjectStore.getState().selectClip(clipId)
   rec = { trackId: track.id, clipId, held: new Map() }
   useAudioStore.setState({ isRecording: true })
@@ -58,6 +67,7 @@ export function stopMidiRecording(): void {
   if (!rec) return
   for (const pitch of [...rec.held.keys()]) noteOff(pitch)
   rec = null
+  setRecordingClip(null)
   useAudioStore.setState({ isRecording: false })
 }
 

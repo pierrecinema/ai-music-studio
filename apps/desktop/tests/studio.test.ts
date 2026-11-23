@@ -13,6 +13,7 @@ import { alignStarts, leadBeats, phaseAlign } from '../src/renderer/src/beatmatc
 import { autoStructure } from '../src/renderer/src/lib/lyrics'
 import { installProgress, rapLyrics } from '../src/renderer/src/lib/singer'
 import { snapDrag } from '../src/renderer/src/edit/grid'
+import { armedTrack, inputChannel, pickInput } from '../src/renderer/src/audio/recInput'
 import { cleanPlugins } from '../src/renderer/src/lib/pluginList'
 import { adjustChain, albumFileName, planLoudness, planTone, toneOf } from '../src/renderer/src/audio/master/album'
 import { defaultChain } from '../src/renderer/src/audio/master/chain'
@@ -567,6 +568,15 @@ check('plugins: null and nameless entries are left out', cleanPlugins([null, { i
   const step = (l: string): number | null => { const r = installProgress(l, st); st = r.stage; return r.pct }
   check('singer install: steps and progress inside a step', step('Step 2/4: PyTorch 2.2') === 5 && step('   ━━━━ 101.5/203.0 MB 5.1 MB/s eta 0:00:20') === 20 && step('Step 4/4: the singing model') === 45 && step('model.pt:  50%|█████     | 1.4G/2.8G') === 73 && step('Collecting einops') === null)
   check('rap lyrics: a rap verse tag, lines of 8 words', rapLyrics('one two three four five six seven eight nine') === '[Verse - rap]\none two three four five six seven eight\nnine' && rapLyrics('[Chorus]\nyeah').startsWith('[Chorus - rap]'))
+}
+
+// ── recording input (mono In 1 / In 2) and the armed track ──
+{
+  const L = new Float32Array([1, 1]), R = new Float32Array([2, 2])
+  check('rec input: stereo keeps both, In 1 / In 2 one channel', pickInput([L, R], 'stereo').length === 2 && pickInput([L, R], undefined).length === 2 && pickInput([L, R], 'in1')[0] === L && pickInput([L, R], 'in2')[0] === R && pickInput([L], 'in2')[0] === L)
+  check('rec input: live level channel', inputChannel('in1', 2) === 0 && inputChannel('in2', 2) === 1 && inputChannel('in2', 1) === 0 && inputChannel('stereo', 2) === -1)
+  const t = (id: string, type: string, armed?: boolean): Track => ({ id, type, armed }) as unknown as Track
+  check('armed track: found, never a group', armedTrack({ tracks: [t('a', 'audio'), t('b', 'midi', true)] } as unknown as Project)?.id === 'b' && !armedTrack({ tracks: [t('g', 'group', true)] } as unknown as Project))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

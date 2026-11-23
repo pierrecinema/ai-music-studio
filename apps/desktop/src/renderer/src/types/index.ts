@@ -38,6 +38,8 @@ export interface Track {
   takes?: TakeLane[]          // loop recording: one lane per pass (comping)
   showTakes?: boolean
   height?: number             // height of the track in the Studio (pixels), dragged at its lower edge
+  armed?: boolean             // armed for recording (red button): recording goes to this track
+  input?: 'stereo' | 'in1' | 'in2'   // audio tracks: what is recorded of the audio interface (see audio/recInput.ts)
 }
 
 // automated parameters: volume and pan of the track, and the send level to each return track ("send:<id>")

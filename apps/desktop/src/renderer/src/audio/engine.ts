@@ -21,6 +21,7 @@ import { liveInstance, makeVstInstrument, prepareMidiFx, prepareOne, prepareVst,
 import { loadWorklets } from './master/worklets'
 import { exportSampleRate } from '../lib/sampleRate'
 import { beatOfSrc, renderWarped } from './warp'
+import { armedTrack, canRecordAudio, inputChannel, pickInput } from './recInput'
 
 // ── files → buffers ──────────────────────────────────────────────────────────
 
@@ -698,6 +699,14 @@ async function loadAllFiles(p: Project): Promise<void> {
 }
 
 // everything that needs a new schedule when it changes (fader moves and mute/solo do not)
+// The MIDI clip being recorded: its notes are heard live while they are played, so a new note must not restart the
+// whole playback (that made MIDI recording crackle, user report). The next loop pass picks the new notes up anyway.
+const recordingClips = new Set<string>()
+export function setRecordingClip(id: string | null): void {
+  recordingClips.clear()
+  if (id) recordingClips.add(id)
+}
+
 function structureSignature(p: Project): string {
   return JSON.stringify([
     p.bpm, p.tempoMap ?? [], p.returns?.map((r) => [r.id, r.effect, r.decay, r.delayBeats, r.feedback]) ?? [],
@@ -705,7 +714,7 @@ function structureSignature(p: Project): string {
     p.tracks.map((t) => [
       t.id, t.type, t.name, t.parentId ?? '', t.automation ?? {}, Object.keys(t.sends ?? {}).filter((k) => (t.sends?.[k] ?? 0) > 0), (t.fx ?? []).map((f) => (f.vst ? { ...f, vst: { ...f.vst, state: undefined } } : f)),
       t.instrument ? [t.instrument.id, t.instrument.on] : 0,
-      t.clips.map((c) => [c.id, c.startTime, c.duration, c.offset ?? 0, c.audioFile ?? '', c.gain ?? 1, c.warpBpm ?? 0, c.fadeIn ?? 0, c.fadeOut ?? 0,
+      t.clips.filter((c) => !recordingClips.has(c.id)).map((c) => [c.id, c.startTime, c.duration, c.offset ?? 0, c.audioFile ?? '', c.gain ?? 1, c.warpBpm ?? 0, c.fadeIn ?? 0, c.fadeOut ?? 0,
         c.warpMarkers ?? [], (c.notes ?? []).map((n) => `${n.pitch}/${n.startTime}/${n.duration}/${n.velocity}`).join(';')])
     ])
   ])
@@ -862,7 +871,7 @@ let restartToken = 0
 function restartSoon(): void {
   window.clearTimeout(restartTimer)
   restartTimer = window.setTimeout(() => {
-    if (!playing) return
+    if (!playing || structureSignature(useProjectStore.getState().project) === lastSignature) return
     const token = ++restartToken
     void (async () => {
       try { await loadAllFiles(useProjectStore.getState().project) } catch { /* startAt reports problems */ }
@@ -1061,20 +1070,72 @@ let recStartBeat = 0
 let recCtxStart = 0                  // context time when the recorder started
 let recPlayStart = 0                 // context time when the music (after the count-in) started
 
+// while recording: the level of the input, a few times a second, so the Studio draws the take as it grows
+interface LiveRec { trackId: string; startBeat: number; peaks: number[] }
+let live: LiveRec | null = null
+let liveTimer = 0
+let liveNodes: AudioNode[] = []
+export const LIVE_PEAKS_PER_SECOND = 20
+/** the recording that is running now (track, where it starts, its level so far), for the Studio */
+export function liveRecording(): LiveRec | null { return live }
+
+function startLiveLevel(c: AudioContext, stream: MediaStream, input: Track['input']): void {
+  const src = c.createMediaStreamSource(stream)
+  const count = src.channelCount
+  const an = c.createAnalyser()
+  an.fftSize = 2048
+  const ch = inputChannel(input, stream.getAudioTracks()[0]?.getSettings().channelCount ?? count)
+  if (ch >= 0) {
+    const split = c.createChannelSplitter(2)
+    src.connect(split); split.connect(an, Math.min(ch, 1))
+    liveNodes = [src, split, an]
+  } else {
+    src.connect(an)
+    liveNodes = [src, an]
+  }
+  const data = new Float32Array(an.fftSize)
+  window.clearInterval(liveTimer)
+  liveTimer = window.setInterval(() => {
+    if (!live) return
+    if (c.currentTime < recPlayStart) return                     // the count-in is not part of the take
+    an.getFloatTimeDomainData(data)
+    let m = 0
+    for (let i = 0; i < data.length; i++) { const v = Math.abs(data[i]); if (v > m) m = v }
+    live.peaks.push(Math.min(1, m))
+    useAudioStore.setState({ recTick: (useAudioStore.getState().recTick ?? 0) + 1 })
+  }, 1000 / LIVE_PEAKS_PER_SECOND)
+}
+
+function stopLiveLevel(): void {
+  window.clearInterval(liveTimer)
+  for (const n of liveNodes) { try { n.disconnect() } catch { /* gone */ } }
+  liveNodes = []
+  live = null
+}
+
 export async function startRecording(): Promise<string | null> {
   if (recorder) return null
   const store = useProjectStore.getState()
-  let trackId = store.selectedTrackId
+  // the armed track (red button in its header), else the selected audio track, else a new audio track
+  const armed = armedTrack(store.project)
+  let trackId = armed && canRecordAudio(armed) ? armed.id : store.selectedTrackId
   const sel = store.project.tracks.find((t) => t.id === trackId)
-  if (!sel || (sel.type !== 'audio' && sel.type !== 'vocal')) {
+  if (!sel || !canRecordAudio(sel)) {
     store.addTrack('audio')
     const tracks = useProjectStore.getState().project.tracks
     trackId = tracks[tracks.length - 1].id
     useProjectStore.getState().selectTrack(trackId)
   }
+  const target = useProjectStore.getState().project.tracks.find((t) => t.id === trackId)
+  // the take is drawn on the track it goes to: arm it, so it is clear where the recording lands
+  if (target && !target.armed) {
+    for (const t of useProjectStore.getState().project.tracks) if (t.armed && t.id !== trackId) useProjectStore.getState().updateTrack(t.id, { armed: false })
+    useProjectStore.getState().updateTrack(trackId!, { armed: true })
+  }
   try {
     if (audioSettings().inputId === 'none') { useAudioStore.setState({ isRecording: false }); return 'No input device is chosen: Settings → Audio → Audio input device.' }
-    recStream = await navigator.mediaDevices.getUserMedia({ audio: inputConstraints() })   // Settings → Audio
+    // both channels of the interface, so a track can take input 1 or input 2 as mono (Settings → Audio: the device)
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: { ...inputConstraints(), channelCount: { ideal: 2 } } })
   } catch (e) {
     useAudioStore.setState({ isRecording: false })
     return `No microphone access: ${(e as Error).message}`
@@ -1090,14 +1151,17 @@ export async function startRecording(): Promise<string | null> {
   recorder.ondataavailable = (e) => { if (e.data.size) recChunks.push(e.data) }
   recorder.start(250)
   recCtxStart = c.currentTime
+  recPlayStart = Infinity                                         // set below: no level is drawn before the music
   useAudioStore.setState({ isRecording: true })
   if (playing) {
     recStartBeat = currentBeat()
     recPlayStart = recCtxStart                                    // already playing: the music is "now"
   } else {
     recStartBeat = useAudioStore.getState().currentBeat
-    await startAt(recStartBeat, countIn)
   }
+  live = { trackId: trackId!, startBeat: recStartBeat, peaks: [] }
+  startLiveLevel(c, recStream, target?.input)
+  if (!playing) await startAt(recStartBeat, countIn)
   return null
 }
 
@@ -1135,12 +1199,21 @@ export async function stopRecording(): Promise<void> {
   await done
   recStream?.getTracks().forEach((t) => t.stop())
   recStream = null
+  stopLiveLevel()
   useAudioStore.setState({ isRecording: false })
   if (!recChunks.length || !recTrackId) return
   try {
     const raw = await new Blob(recChunks).arrayBuffer()
     decoder ??= new AudioContext()
-    const buf = await decoder.decodeAudioData(raw)
+    const decoded = await decoder.decodeAudioData(raw)
+    // the track's input: both channels, or one of them as mono (In 1 / In 2)
+    const input = useProjectStore.getState().project.tracks.find((t) => t.id === recTrackId)?.input
+    const chans = pickInput(Array.from({ length: decoded.numberOfChannels }, (_, i) => decoded.getChannelData(i)), input)
+    let buf = decoded
+    if (chans.length !== decoded.numberOfChannels) {
+      buf = new AudioBuffer({ numberOfChannels: chans.length, length: decoded.length, sampleRate: decoded.sampleRate })
+      chans.forEach((d, i) => buf.copyToChannel(d as Float32Array<ArrayBuffer>, i))
+    }
     const wav = encodeWav(buf, 16)
     const path = await window.api.files.saveRecording(wav)
     putBuffer(path, buf)
@@ -1148,7 +1221,7 @@ export async function stopRecording(): Promise<void> {
     const loop = activeLoop(project)
     const wraps = loopWraps.map((t) => t - recCtxStart)
     // driver error compensation (Settings → Audio): the recording is moved this much earlier
-    const lead = Math.max(0, recPlayStart - recCtxStart + audioSettings().compensationMs / 1000)
+    const lead = Math.max(0, (Number.isFinite(recPlayStart) ? recPlayStart - recCtxStart : 0) + audioSettings().compensationMs / 1000)
     let pieces = recordingPieces(project, recStartBeat, buf.duration, lead, wraps, loop)
     // punch in / out: only what lies inside the loop range is kept
     const range = project.loop

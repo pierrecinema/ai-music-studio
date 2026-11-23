@@ -1983,5 +1983,12 @@
  "Play the album from this song": "Album ab diesem Song abspielen",
  "Stop the album": "Album stoppen",
  "Hear the album": "Album anhören",
- "Preparing {name}…": "{name} wird vorbereitet …"
+ "Preparing {name}…": "{name} wird vorbereitet …",
+ "Previous song": "Vorheriger Song",
+ "Next song": "Nächster Song",
+ "Click to play from there": "Klicken: ab dort abspielen",
+ "Click to read the songs' lengths": "Klicken: Längen der Songs lesen",
+ "Hear the transition {a} → {b}": "Übergang {a} → {b} anhören",
+ "Press ▶ or click here: the album appears as one timeline": "▶ drücken oder hier klicken: das Album erscheint als eine Zeitleiste",
+ "Play from 8 seconds before the end of this song, through the pause into the next": "Ab 8 Sekunden vor dem Ende dieses Songs abspielen, durch die Pause in den nächsten"
 }

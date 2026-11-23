@@ -3,6 +3,19 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.96.4
+
+### New
+
+- **Rap examples**: with the style *Rap*, five finished examples (male / female, 90 to 140 BPM, English and German) can be heard with one click before the AI singer works for minutes.
+
+- **Scissors: cut out a range**: with ✂, drag over a range (also over several tracks): it is cut at both ends and becomes its own clip(s), selected, ready to move or delete. A click still cuts at one point. After cutting, the pointer is back by itself.
+- **Right-click on a recording in the Studio → "My singing → MIDI melody (Vocal Editor)"**: the Vocal Editor opens and turns that clip into a melody right away.
+
+### Fixed
+
+- **Starting the app needed a second click** (the app ran, but its window stayed hidden until it was started again; also from a pinned taskbar icon): the window now always appears, at the latest after a few seconds. Starting the app while it is still closing opens it again instead of being lost.
+
 ## 0.96.3
 
 ### New

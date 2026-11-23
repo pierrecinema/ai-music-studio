@@ -407,14 +407,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const startDrag = (e: React.PointerEvent, track: Track, clip: Clip, width: number): void => {
     if (e.button !== 0) return
     e.stopPropagation()
-    if (useUIStore.getState().tool === 'scissors') {
-      // the scissors: a click cuts the clip there (on the grid; zoomed in, magnetic; Alt: exactly where clicked)
-      const at = snap(beatAt(e.clientX), e.altKey)
-      if (at > clip.startTime + 1e-6 && at < clip.startTime + clip.duration - 1e-6 && useProjectStore.getState().splitClip(track.id, clip.id, at)) {
-        setMessage(tr('Cut.'))
-      }
-      return
-    }
+    if (useUIStore.getState().tool === 'scissors') { startScissors(e, { trackId: track.id, clip }); return }
     if (e.ctrlKey || e.metaKey || e.shiftKey) { toggleClipSelection(clip.id); selectTrack(track.id); return }
     const keepGroup = selected.has(clip.id) && selected.size > 1
     selectTrack(track.id)
@@ -469,6 +462,54 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   }
 
   // drag a frame on empty lanes: selects every clip it touches (Ctrl/Shift: adds to the selection)
+  // the scissors: a click cuts the clip there; dragging marks a range (over one or more tracks) that is cut out
+  // at both ends, so it becomes its own clip(s), selected. On the grid (zoomed in: magnetic), Alt: exactly.
+  // After the cut the pointer is back (no Esc needed).
+  const startScissors = (e: React.PointerEvent, on?: { trackId: string; clip: Clip }): void => {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    const rect = lanesRef.current!.getBoundingClientRect()
+    const x0 = e.clientX - rect.left
+    const y0 = e.clientY - rect.top
+    let moved = false
+    trackPointer((ev) => {
+      const x1 = ev.clientX - rect.left
+      const y1 = ev.clientY - rect.top
+      if (!moved && Math.abs(x1 - x0) < 4) return
+      moved = true
+      setFrame({ x0, y0, x1, y1 })
+    }, (ev) => {
+      setFrame(null)
+      const st = useProjectStore.getState()
+      if (!moved) {
+        if (!on) return
+        const at = snap(x0 / beatWidth, ev.altKey)
+        const c = on.clip
+        if (at > c.startTime + 1e-6 && at < c.startTime + c.duration - 1e-6 && st.splitClip(on.trackId, c.id, at)) setMessage(tr('Cut.'))
+        useUIStore.getState().setTool('pointer')
+        return
+      }
+      const x1 = ev.clientX - rect.left
+      const y1 = ev.clientY - rect.top
+      const a = Math.max(0, snap(Math.min(x0, x1) / beatWidth, ev.altKey))
+      const b = snap(Math.max(x0, x1) / beatWidth, ev.altKey)
+      if (b - a < 1e-6) { useUIStore.getState().setTool('pointer'); return }
+      const [ya, yb] = [Math.min(y0, y1), Math.max(y0, y1)]
+      const trackIds: string[] = []
+      rows.forEach((r, i) => { if (r.kind === 'track' && tops[i + 1] >= ya && tops[i] <= yb) trackIds.push(r.track.id) })
+      const cutAt = (trackId: string, at: number): void => {
+        const t = useProjectStore.getState().project.tracks.find((x) => x.id === trackId)
+        const c = t?.clips.find((x) => at > x.startTime + 1e-6 && at < x.startTime + x.duration - 1e-6)
+        if (c) useProjectStore.getState().splitClip(trackId, c.id, at)
+      }
+      for (const id of trackIds) { cutAt(id, a); cutAt(id, b) }
+      const inside = useProjectStore.getState().project.tracks.filter((t) => trackIds.includes(t.id))
+        .flatMap((t) => t.clips.filter((c) => c.startTime >= a - 1e-6 && c.startTime + c.duration <= b + 1e-6).map((c) => c.id))
+      if (inside.length) { selectClips(inside); setMessage(trf('Cut out: {n} clip(s), selected (move them, Delete removes them).', { n: inside.length })) }
+      useUIStore.getState().setTool('pointer')
+    })
+  }
+
   const startFrame = (e: React.PointerEvent): void => {
     if (e.button !== 0) return
     const rect = lanesRef.current!.getBoundingClientRect()
@@ -695,7 +736,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         <div
           data-lane={track.id}
           onDoubleClick={row.kind === 'track' ? (e) => { if (e.target !== e.currentTarget) return; if (track.type === 'group') openGroup(track); else void laneDoubleClick(e, track) } : undefined}
-          onPointerDown={row.kind === 'track' ? (e) => { if (e.target === e.currentTarget) { selectTrack(track.id); startFrame(e) } } : undefined}
+          onPointerDown={row.kind === 'track' ? (e) => { if (e.target === e.currentTarget) { selectTrack(track.id); if (useUIStore.getState().tool === 'scissors') startScissors(e); else startFrame(e) } } : undefined}
           style={{ flex: 1, position: 'relative', zIndex: 1, borderBottom: '1px solid var(--border)', background: isSel ? 'color-mix(in srgb, var(--accent) 5%, transparent)' : 'transparent' }}>
           {lane}
         </div>
@@ -803,7 +844,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '1px 4px', border: '1px solid var(--border-mid)', borderRadius: 6, background: 'var(--bg-tertiary)' }}>
           <span style={{ fontSize: 9.5, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginRight: 2 }}>{tr('Tools')}</span>
           <button className={`btn ${tool === 'pointer' ? 'btn-primary' : 'btn-ghost'}`} style={{ ...tb, padding: '2px 7px' }} title={tr('Pointer: select, move and trim clips')} onClick={() => setTool('pointer')}>↖</button>
-          <button className={`btn ${tool === 'scissors' ? 'btn-primary' : 'btn-ghost'}`} style={{ ...tb, padding: '2px 7px' }} title={tr('Scissors: click a clip to cut it there (on the grid; Alt: exactly where you click). Esc: back to the pointer.')} onClick={() => setTool(tool === 'scissors' ? 'pointer' : 'scissors')}>✂</button>
+          <button className={`btn ${tool === 'scissors' ? 'btn-primary' : 'btn-ghost'}`} style={{ ...tb, padding: '2px 7px' }} title={tr('Scissors: click a clip to cut it there, or drag over a range (also over several tracks) to cut it out as its own clip. On the grid; Alt: exactly. Afterwards the pointer is back.')} onClick={() => setTool(tool === 'scissors' ? 'pointer' : 'scissors')}>✂</button>
           <SnapButton />
         </span>
         <span style={{ flex: 1 }} />
@@ -946,6 +987,9 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                 { label: 'Crossfade with the clip before (X)', run: () => setMessage(crossfade()) },
                 { label: 'Loop this clip (Ctrl+L)', run: () => loopToSelection() },
                 { label: 'Edit warp markers', run: () => { setWarpClip(menu.clipId!); setMessage(tr('Warp: double-click the waveform to set a marker, drag a marker onto another beat, Alt+click deletes it.')) } },
+                ...(project.tracks.find((t) => t.id === menu.trackId)?.clips.find((c) => c.id === menu.clipId)?.audioFile
+                  ? [{ label: 'My singing → MIDI melody (Vocal Editor)', run: () => { selectClip(menu.clipId!); useUIStore.getState().setSingingToMidi(true); setActiveView('vocal-editor') } }]
+                  : []),
                 { label: 'Split into stems (Demucs)', run: () => void run('Separating stems', () => splitIntoStems(menu.trackId, menu.clipId!, (pct, text) => setBusy(`Separating stems ${Math.floor(pct)} % · ${text}`))) },
                 { label: 'Delete clip', run: () => { const ids = selected.size > 1 && selected.has(menu.clipId!) ? [...selected] : [menu.clipId!]; useProjectStore.getState().removeClips(ids) }, danger: true }
               ]

@@ -191,7 +191,7 @@ export const api = {
     render: (body: { voice: string; notes: Array<{ pitch: number; start: number; end: number; lyric: string }>; lang?: string; steps?: number; vibrato?: number; speaker?: string; name?: string }) =>
       post<{ jobId: string }>('/singer/render', body),
     builtin: () => get<{ voices: Array<{ id: string; name: string; description: string; style: string; gender: string; credit: string; demo: string | null }>; problem: string | null }>('/singer/builtin'),
-    examples: () => get<{ rap: Array<{ file: string; name: string; voice: string; bpm: number }> }>('/singer/examples'),
+    examples: () => get<{ rap: Array<{ file: string; name: string; voice: string; bpm: number; language?: string }> }>('/singer/examples'),
     builtinRender: (body: { voice: string; notes: Array<{ pitch: number; start: number; end: number; lyric: string }>; lang?: string; rap?: boolean; style?: string; steps?: number; name?: string }) =>
       post<{ jobId: string }>('/singer/builtin/render', body),
     cancel: (id: string) => post<{ ok: boolean }>(`/singer/jobs/${id}/cancel`, {}),

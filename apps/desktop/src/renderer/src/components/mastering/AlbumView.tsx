@@ -34,6 +34,34 @@ async function songBuffer(path: string): Promise<AudioBuffer> {
 
 // the waveform of each song for the album player (max of |sample| in n parts), kept while the app runs
 const peakCache = new Map<string, Float32Array>()
+// lengths and waveforms are also kept between runs of the app (small: 400 points per song), so the album opens and
+// plays at once; a song whose file changed (size or date) is read again
+const WAVE_KEY = 'ams-album-waves'
+type WaveEntry = { dur: number; peaks: number[]; size: number }
+const loadWaves = (): Record<string, WaveEntry> => { try { return JSON.parse(localStorage.getItem(WAVE_KEY) || '{}') } catch { return {} } }
+const saveWave = (path: string, e: WaveEntry): void => {
+  try { const all = loadWaves(); all[path] = e; const keys = Object.keys(all); for (const k of keys.slice(0, Math.max(0, keys.length - 60))) delete all[k]; localStorage.setItem(WAVE_KEY, JSON.stringify(all)) } catch { /* storage full or off */ }
+}
+for (const [path, e] of Object.entries(loadWaves())) if (!peakCache.has(path)) peakCache.set(path, Float32Array.from(e.peaks))
+const durCache = new Map<string, number>(Object.entries(loadWaves()).map(([p, e]) => [p, e.dur]))
+
+/** the length of a song from its file header (fast: the file is not decoded) */
+async function durationOf(path: string): Promise<number> {
+  const known = durCache.get(path)
+  if (known) return known
+  const bytes: Uint8Array = await window.api.fs.readFile(path)
+  const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)]))
+  try {
+    const d = await new Promise<number>((res, rej) => {
+      const a = new Audio(); a.preload = 'metadata'
+      a.onloadedmetadata = () => res(a.duration); a.onerror = () => rej(new Error('no metadata')); a.src = url
+    })
+    if (Number.isFinite(d) && d > 0) { durCache.set(path, d); return d }
+  } catch { /* fall back to decoding */ } finally { URL.revokeObjectURL(url) }
+  const b = await cachedSong(path)
+  durCache.set(path, b.duration)
+  return b.duration
+}
 function peaksOf(b: AudioBuffer, n: number): Float32Array {
   const l = b.getChannelData(0), r = b.numberOfChannels > 1 ? b.getChannelData(1) : l
   const out = new Float32Array(n)
@@ -51,10 +79,16 @@ function peaksOf(b: AudioBuffer, n: number): Float32Array {
 
 // the last few decoded songs, so the player does not decode a song again for every piece
 const songCache = new Map<string, AudioBuffer>()
+const decoding = new Map<string, Promise<AudioBuffer>>()
 async function cachedSong(path: string): Promise<AudioBuffer> {
   const hit = songCache.get(path)
   if (hit) { songCache.delete(path); songCache.set(path, hit); return hit }
-  const b = await songBuffer(path)
+  const busy = decoding.get(path)
+  if (busy) return busy                                // already being read (e.g. by the waveform): wait for it
+  const job = songBuffer(path)
+  decoding.set(path, job)
+  let b: AudioBuffer
+  try { b = await job } finally { decoding.delete(path) }
   songCache.set(path, b)
   while (songCache.size > 4) songCache.delete(songCache.keys().next().value as string)
   return b
@@ -167,20 +201,33 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
   const [peaks, setPeaks] = useState<Record<string, Float32Array>>(() => Object.fromEntries(peakCache))
   const [loadingWave, setLoadingWave] = useState(false)
   // the songs' lengths and waveforms (each song decoded once; the waveforms are kept while the app runs)
+  // the lengths (fast, from the file headers): enough to play; the waveforms follow in the background
   const knowLengths = async (): Promise<number[]> => {
     const out: Record<string, number> = { ...durs }
-    const need = songs.filter((s) => !out[s.path] || !peakCache.has(s.path))
-    if (need.length) setLoadingWave(true)
-    try {
-      for (const s of need) {
-        const b = await cachedSong(s.path)
-        out[s.path] = b.duration
-        if (!peakCache.has(s.path)) peakCache.set(s.path, peaksOf(b, 1200))
-      }
-    } finally { setLoadingWave(false) }
-    setDurs(out); setPeaks(Object.fromEntries(peakCache))
+    for (const s of songs) if (!out[s.path]) out[s.path] = measures[s.path]?.seconds ?? await durationOf(s.path)
+    setDurs(out)
+    void loadWaveforms()
     return songs.map((s) => out[s.path])
   }
+  const waving = useRef(false)
+  const loadWaveforms = async (): Promise<void> => {
+    if (waving.current) return
+    waving.current = true
+    try {
+      for (const s of songs) {
+        if (peakCache.has(s.path)) continue
+        // while the album plays, the player gets the processor (and the memory) first
+        while (player.current) await new Promise((r) => setTimeout(r, 700))
+        setLoadingWave(true)
+        const b = await songBuffer(s.path)
+        const pk = peaksOf(b, 400)
+        peakCache.set(s.path, pk)
+        saveWave(s.path, { dur: b.duration, peaks: Array.from(pk, (v) => Math.round(v * 100) / 100), size: b.length })
+        setPeaks(Object.fromEntries(peakCache))
+      }
+    } finally { waving.current = false; setLoadingWave(false) }
+  }
+
   const stop = (): void => {
     for (const x of player.current?.srcs ?? []) { try { x.stop() } catch { /* over */ } }
     player.current?.ctx.close().catch(() => undefined); player.current = null; setPlaying(null); setStarting(false)

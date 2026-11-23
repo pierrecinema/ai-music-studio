@@ -771,7 +771,7 @@ Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein l
 
 ## 52. Neu in 0.98.0: einfache Erstinstallation (Release Candidate)
 
-Auf dem zweiten PC: den Installer 0.98.2 (oder neuer) von GitHub laden und ausführen. Ab 0.98.2 öffnet jede neue Installation (kein Update) beim ersten Start den Einrichtungs-Assistenten, auch wenn noch alte KI-Engines auf dem PC sind. Für einen ganz frischen Test vorher deinstallieren und bei der Frage „Auch die KI-Engines … entfernen?“ **Ja** wählen (der Deinstaller ab 0.98.1 fragt das).
+Auf dem zweiten PC: den Installer 0.98.3 (oder neuer) von GitHub laden und von Hand ausführen (nicht über „Nach Updates suchen“). Ab 0.98.3 öffnet jede neue Installation, auch eine Installation über eine vorhandene Version und eine Installation „für alle Benutzer“, beim ersten Start den Einrichtungs-Assistenten, auch wenn noch alte KI-Engines auf dem PC sind. Ein Update in der App öffnet ihn nicht. Für einen ganz frischen Test vorher deinstallieren und bei der Frage „Auch die KI-Engines … entfernen?“ **Ja** wählen (der Deinstaller ab 0.98.1 fragt das).
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
@@ -784,5 +784,5 @@ Auf dem zweiten PC: den Installer 0.98.2 (oder neuer) von GitHub laden und ausf�
 | 52.7 | Stem Splitter: einen Song teilen | Stems kommen (auf der NVIDIA-Karte schnell) | | | 0.98.0 |
 | 52.8 | Einstellungen → KI-Engines → **Einrichtungs-Assistent** | Der Assistent öffnet sich wieder | | | 0.98.0 |
 | 52.9 | Optional: Paket **Alles** | Musik-KI, Sänger, KI-Instrumente werden installiert (auch ohne Git) | | | 0.98.0 |
-| 52.10 | Deinstallieren (Version 0.98.1 oder neuer) | Frage „Auch die KI-Engines … entfernen?“ (Englisch und Deutsch); „Ja“ entfernt sie, „Nein“ lässt sie | | | 0.98.1 |
+| 52.10 | Deinstallieren (Version 0.98.3 oder neuer; auch bei Installation „für alle Benutzer“) | Frage „Auch die KI-Engines … entfernen?“ (Englisch und Deutsch); „Ja“ entfernt sie, „Nein“ lässt sie | | | 0.98.1 |
 

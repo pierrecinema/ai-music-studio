@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.3
+
+### Fixed
+
+- **The setup assistant still did not appear after a new installation** when AI Music Studio was installed "for all users": the installer left its mark in the shared program data instead of your own app data. The mark now always goes to your own app data, and the installation also leaves an installation number next to the app, so the app recognises every new installation in any case.
+- **Uninstalling with "Yes" did not remove the AI engines and settings** for an installation "for all users": they are now removed from your own app data.
+
 ## 0.98.2
 
 ### Fixed

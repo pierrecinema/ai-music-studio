@@ -16,6 +16,7 @@ import { tr, trf } from '../../i18n/tr'
 
 const AUDIO = /\.(wav|mp3|flac|ogg|opus|m4a|aac|aif|aiff)$/i
 interface Measure { before: number; after: number; peak: number; seconds: number }
+const measured: Record<string, Measure> = {}            // kept while the app runs (also when the page is left)
 const later = (): Promise<void> => new Promise((r) => setTimeout(r, 20))
 const clock = (t: number): string => `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, '0')}`
 
@@ -37,12 +38,13 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
   const baseChain = useMasteringStore((s) => s.chain)
   const setChainFor = useMasteringStore((s) => s.setChainFor)
   const files = useMasteringStore((s) => s.files)
-  const [measures, setMeasures] = useState<Record<string, Measure>>({})
+  const [measures, setMeasuresState] = useState<Record<string, Measure>>(() => ({ ...measured }))
+  const setMeasures = (f: (x: Record<string, Measure>) => Record<string, Measure>): void => setMeasuresState((x) => { const n = f(x); Object.assign(measured, n); return n })
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<string[] | null>(null)
   const [playing, setPlaying] = useState<number | null>(null)
-  const player = useRef<{ ctx: AudioContext; src: AudioBufferSourceNode } | null>(null)
+  const player = useRef<{ ctx: AudioContext; srcs: AudioBufferSourceNode[] } | null>(null)
   const stopRef = useRef(false)
   const tgt = TARGETS.find((t) => t.id === target) ?? TARGETS[0]
   const songs = album.songs
@@ -109,26 +111,70 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
     for (const s of songs) setChainFor(s.path, cs[s.path])
   })
 
+  /** a piece of a song through its chain: only these seconds are rendered (with a few seconds before, so the
+   *  compressor and limiter have settled), which is fast also for long songs */
+  const renderPart = async (path: string, from: number, seconds: number): Promise<AudioBuffer> => {
+    const buf = await songBuffer(path)
+    const sr = buf.sampleRate
+    const pre = Math.min(Math.round(3 * sr), Math.round(Math.max(0, from) * sr))
+    const a = Math.max(0, Math.round(from * sr) - pre), b = Math.min(buf.length, Math.round((from + seconds) * sr))
+    const part = new AudioBuffer({ numberOfChannels: 2, length: Math.max(1, b - a), sampleRate: sr })
+    for (let c = 0; c < 2; c++) part.copyToChannel(buf.getChannelData(c).subarray(a, b), c)
+    const out = await renderChain(part, chainOf(path))
+    const keep = new AudioBuffer({ numberOfChannels: 2, length: Math.max(1, out.length - pre), sampleRate: sr })
+    for (let c = 0; c < 2; c++) keep.copyToChannel(out.getChannelData(c).subarray(pre), c)
+    return keep
+  }
+
   // the transition from song i to song i+1: the last seconds of one, the pause, the first seconds of the next
-  const stop = (): void => { try { player.current?.src.stop() } catch { /* over */ } player.current?.ctx.close().catch(() => undefined); player.current = null; setPlaying(null) }
+  const stop = (): void => {
+    for (const s of player.current?.srcs ?? []) { try { s.stop() } catch { /* over */ } }
+    player.current?.ctx.close().catch(() => undefined); player.current = null; setPlaying(null); setNow(null)
+  }
   const playTransition = (i: number): Promise<void> => run(async () => {
     if (playing === i) { stop(); return }
     stop()
     setBusy(tr('Preparing the transition…')); await later()
-    const a = await renderChain(await songBuffer(songs[i].path), chainOf(songs[i].path))
-    const b = await renderChain(await songBuffer(songs[i + 1].path), chainOf(songs[i + 1].path))
-    const sr = a.sampleRate
-    const tail = Math.min(a.length, Math.round(8 * sr)), head = Math.min(b.length, Math.round(8 * sr)), gap = Math.round(album.gapSec * sr)
-    const out = new AudioBuffer({ numberOfChannels: 2, length: tail + gap + head, sampleRate: sr })
-    for (let c = 0; c < 2; c++) {
-      out.copyToChannel(a.getChannelData(c).subarray(a.length - tail), c, 0)
-      out.copyToChannel(b.getChannelData(c).subarray(0, head), c, tail + gap)
-    }
+    const durA = (await songBuffer(songs[i].path)).duration
+    const a = await renderPart(songs[i].path, Math.max(0, durA - 8), 8)
+    const b = await renderPart(songs[i + 1].path, 0, 8)
+    const sr = a.sampleRate, gap = Math.round(album.gapSec * sr)
+    const out = new AudioBuffer({ numberOfChannels: 2, length: a.length + gap + b.length, sampleRate: sr })
+    for (let c = 0; c < 2; c++) { out.copyToChannel(a.getChannelData(c), c, 0); out.copyToChannel(b.getChannelData(c), c, a.length + gap) }
     const ctx = new AudioContext({ sampleRate: sr })
     const src = ctx.createBufferSource(); src.buffer = out; src.connect(ctx.destination)
-    src.onended = () => { if (player.current?.src === src) stop() }
-    src.start(); player.current = { ctx, src }; setPlaying(i)
+    src.onended = () => { if (player.current?.srcs.includes(src)) stop() }
+    src.start(); player.current = { ctx, srcs: [src] }; setPlaying(i)
   })
+
+  // the whole album in the app: song after song through their chains, with the pauses. Each song is rendered while
+  // the one before plays, so it starts on time; a song can be chosen to start from.
+  const [now, setNow] = useState<number | null>(null)
+  const playAlbum = async (from = 0): Promise<void> => {
+    if (playing === -1) { stop(); return }
+    stop(); setError(null); stopRef.current = false
+    const ctx = new AudioContext({ sampleRate: 48000 })
+    const me = { ctx, srcs: [] as AudioBufferSourceNode[] }
+    player.current = me; setPlaying(-1)
+    let at = ctx.currentTime + 0.3
+    try {
+      for (let i = from; i < songs.length; i++) {
+        if (player.current !== me) return
+        if (i === from) { setBusy(trf('Preparing {name}…', { name: songs[i].name })); await later() }
+        const buf = await renderChain(await songBuffer(songs[i].path), chainOf(songs[i].path))
+        if (i === from) setBusy(null)
+        if (player.current !== me) return
+        const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination)
+        const start = Math.max(at, ctx.currentTime + 0.05)
+        src.start(start); me.srcs.push(src)
+        const idx = i
+        setTimeout(() => { if (player.current === me) setNow(idx) }, Math.max(0, (start - ctx.currentTime) * 1000))
+        src.onended = () => { src.buffer = null; if (idx === songs.length - 1 && player.current === me) stop() }
+        at = start + buf.duration + album.gapSec
+      }
+    } catch (e) { setError((e as Error).message); stop() }
+    setBusy(null)
+  }
 
   // export: every song through its chain as "01 - Title", and the whole album as one file if wanted
   const [whole, setWhole] = useState(true)
@@ -195,7 +241,7 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
             return (
               <React.Fragment key={s.path}>
                 <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(140px, 1.4fr) 2fr 150px 86px', gap: 8, alignItems: 'center', fontSize: 12 }}>
-                  <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>{String(i + 1).padStart(2, '0')}</span>
+                  <span style={{ color: now === i ? 'var(--accent-light)' : 'var(--text-muted)', fontWeight: 700, cursor: 'pointer' }} title={tr('Play the album from this song')} onClick={() => void playAlbum(i)}>{now === i ? '♪' : String(i + 1).padStart(2, '0')}</span>
                   <span className="truncate" style={{ cursor: 'pointer', textDecoration: 'underline dotted' }} title={tr('Open this song on its own (its chain, editing, meters)')} onClick={() => onOpenSong(s)}>{s.name}</span>
                   <div style={{ position: 'relative', height: 16, background: 'var(--bg-tertiary)', borderRadius: 4 }} title={m ? trf('Before {b} LUFS · after {a} LUFS', { b: m.before.toFixed(1), a: m.after.toFixed(1) }) : tr('Not measured yet')}>
                     {m && <div style={{ position: 'absolute', left: 0, top: 3, height: 4, width: bar(m.before), background: '#6b7280', borderRadius: 2 }} />}
@@ -211,7 +257,10 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
                 </div>
                 {i < songs.length - 1 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 36, fontSize: 11, color: 'var(--text-muted)' }}>
-                    <span style={{ flex: 0, whiteSpace: 'nowrap' }}>↓ {trf('{s} s pause', { s: album.gapSec })}</span>
+                    <span style={{ whiteSpace: 'nowrap' }}>↓ {tr('Pause')}</span>
+                    <select value={String(album.gapSec)} onChange={(e) => setAlbum({ gapSec: Number(e.target.value) })} title={tr('Silence between the songs (the same for the whole album)')} style={{ fontSize: 10.5, padding: '0 2px' }}>
+                      {[0, 0.5, 1, 1.5, 2, 3, 4, 5, 8].map((v) => <option key={v} value={String(v)}>{v} s</option>)}
+                    </select>
                     <button className="btn btn-ghost" style={{ fontSize: 10.5, padding: '1px 8px' }} disabled={!!busy && playing !== i} onClick={() => void playTransition(i)}>
                       {playing === i ? '■' : '▶'} {tr('Hear the transition')}
                     </button>
@@ -237,6 +286,7 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
 
       {songs.length > 0 && (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" disabled={!!busy && playing !== -1} onClick={() => void playAlbum(0)}>{playing === -1 ? `■ ${tr('Stop the album')}` : `▶ ${tr('Hear the album')}`}</button>
           <button className="btn btn-ghost" disabled={!!busy} onClick={() => void run(async () => { await measureAll() })}>{tr('Measure')}</button>
           <button className="btn btn-primary" disabled={!!busy || songs.length < 2} onClick={() => void evenOut()}>{tr('Even out the album')}</button>
           <span style={{ width: 1, height: 20, background: 'var(--border)' }} />

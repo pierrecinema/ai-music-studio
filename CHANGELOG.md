@@ -3,6 +3,17 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.97.2
+
+### New
+
+- **Album: hear the whole album in the app**: *▶ Hear the album* plays all songs through their chains with the pauses between them (the next song is prepared while one plays); a click on a song's number plays the album from there.
+- **Album: the pause is set right at each transition** (0 to 8 seconds).
+
+### Fixed
+
+- **Album: "Hear the transition" took very long with long songs** (and locked the page meanwhile): only the seconds that are heard are rendered now, so it starts in a moment. Measurements stay when you switch to a song and back.
+
 ## 0.97.1
 
 ### New

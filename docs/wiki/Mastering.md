@@ -89,7 +89,7 @@ Switch the page from *One song* to **💿 Album** to master an album or EP as a 
 1. **+ Add songs…** (or **+ All open songs**) and put them in order with ▲ ▼; × takes a song off the album. A click on a name opens that song on its own page (its chain, editing, meters).
 2. Choose the loudness target (Streaming −14 LUFS …). **Measure** shows every song's loudness before (grey) and after its chain (green: on target), with the target as a line.
 3. **Even out the album**: every song gets the same loudness (its own chain's *Louder* is set, in two rounds because of the limiter). *Quiet songs may stay a little quieter* keeps part of the difference, like a ballad on a real album (never louder than the target + 1 LU). *Even out lows and highs too* moves each song's EQ low and high shelf half way to the album's average (at most 3 dB).
-4. **Pause between songs** (seconds) and **▶ Hear the transition**: the last 8 seconds of a song, the pause and the first 8 seconds of the next.
+4. **Pause** (chosen at any transition, 0 to 8 s, the same for the whole album) and **▶ Hear the transition**: the last 8 seconds of a song, the pause and the first 8 seconds of the next. **▶ Hear the album** plays all songs through their chains with the pauses; a click on a song's number plays from there.
 5. **Export the album…**: choose a folder; every song is written as "01 - Title" in the formats of the song export, with album, artist and track number in the tags. *Also the whole album as one file* adds one file of all songs with their pauses.
 
 ## Reference match

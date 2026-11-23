@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.5
+
+### New
+
+- **Any input device per audio track**: the input list of an audio track (next to its volume) now also offers every input device Windows knows (microphones, line inputs, audio interfaces, USB devices), each with In 1+2, In 1 or In 2. A device chosen there applies to that track only; *Settings → Audio* stays the default.
+
 ## 0.98.4
 
 ### New

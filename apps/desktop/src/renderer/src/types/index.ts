@@ -40,6 +40,7 @@ export interface Track {
   height?: number             // height of the track in the Studio (pixels), dragged at its lower edge
   armed?: boolean             // armed for recording (red button): recording goes to this track
   input?: 'stereo' | 'in1' | 'in2'   // audio tracks: what is recorded of the audio interface (see audio/recInput.ts)
+  inputDevice?: string        // audio tracks: the input device (unset: the one of Settings → Audio)
 }
 
 // automated parameters: volume and pan of the track, and the send level to each return track ("send:<id>")

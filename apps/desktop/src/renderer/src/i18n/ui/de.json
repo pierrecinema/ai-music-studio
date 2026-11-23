@@ -2059,5 +2059,10 @@
  "Recording input: In 1+2 (stereo), or In 1 / In 2 as mono (a microphone on one input of the interface)": "Aufnahme-Eingang: In 1+2 (Stereo), oder In 1 / In 2 als Mono (ein Mikrofon an einem Eingang des Interfaces)",
  "Stereo: inputs 1 and 2 (left and right)": "Stereo: Eingänge 1 und 2 (links und rechts)",
  "Mono: input 1 (left channel), e.g. a microphone on input 1": "Mono: Eingang 1 (linker Kanal), z. B. ein Mikrofon an Eingang 1",
- "Mono: input 2 (right channel), e.g. a microphone or guitar on input 2": "Mono: Eingang 2 (rechter Kanal), z. B. ein Mikrofon oder eine Gitarre an Eingang 2"
+ "Mono: input 2 (right channel), e.g. a microphone or guitar on input 2": "Mono: Eingang 2 (rechter Kanal), z. B. ein Mikrofon oder eine Gitarre an Eingang 2",
+ "Input device": "Eingangsgerät",
+ "Device not connected": "Gerät nicht verbunden",
+ "Settings → Audio": "Einstellungen → Audio",
+ "Recording input": "Aufnahme-Eingang",
+ "No input device is chosen: pick one in the input list of the track (next to its volume) or in Settings → Audio.": "Kein Eingangsgerät gewählt: wähle eins in der Eingangsliste der Spur (neben der Lautstärke) oder unter Einstellungen → Audio."
 }

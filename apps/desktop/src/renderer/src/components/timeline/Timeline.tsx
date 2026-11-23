@@ -21,7 +21,8 @@ import { Popover, type PopoverSpec } from './Popover'
 import { AutomationHeader, AutomationLane, FxHeader, FxLane, MasterFxBar, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
 import { ChannelTab } from './ChannelTab'
 import { LiveTake } from './LiveTake'
-import { REC_INPUTS, canRecordAudio } from '../../audio/recInput'
+import { canRecordAudio } from '../../audio/recInput'
+import { TrackInput } from './TrackInput'
 import { tr, trf } from '../../i18n/tr'
 import { parseMidi, writeMidi } from '../../lib/midiFile'
 import {
@@ -685,14 +686,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
             <button onClick={(e) => { e.stopPropagation(); removeTrack(track.id) }} style={{ ...tinyBtn, color: 'var(--text-muted)' }} title={tr('Delete track (Ctrl+Z brings it back)')}>×</button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-            {canRecordAudio(track) && (
-              // what this track records of the audio interface: stereo (In 1+2) or one input as mono
-              <select value={track.input ?? 'stereo'} onClick={(e) => e.stopPropagation()} onChange={(e) => updateTrack(track.id, { input: e.target.value as Track['input'] })}
-                title={tr('Recording input: In 1+2 (stereo), or In 1 / In 2 as mono (a microphone on one input of the interface)')}
-                style={{ fontSize: 9.5, padding: '0 2px', height: 17, maxWidth: 52, background: 'var(--bg-primary)', color: track.armed ? '#fca5a5' : 'var(--text-secondary)', border: '1px solid var(--border-mid)', borderRadius: 3 }}>
-                {REC_INPUTS.map((o) => <option key={o.id} value={o.id} title={tr(o.title)}>{o.label}</option>)}
-              </select>
-            )}
+            {canRecordAudio(track) && <TrackInput track={track} />}
             <input type="range" min={0} max={1} step={0.01} value={track.volume} title={tr('Volume')} onClick={(e) => e.stopPropagation()}
               onChange={(e) => updateTrack(track.id, { volume: parseFloat(e.target.value) })} style={{ width: 62, accentColor: track.color }} />
             {returns.map((r, k) => (

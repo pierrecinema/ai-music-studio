@@ -32,7 +32,7 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 ### New in 0.98 (release candidate): easy first install
 
 - **Setup assistant on the first start**: it checks the computer (graphics card, memory, free space) and installs *Recommended*, *Everything* or *Studio only* with one click, with clear progress and the time left. No Python to install by hand: the app sets up its own when needed.
-- **0.98.4, recording in the Studio**: arm a track (red ●), see the take grow while you record, choose the input per audio track (In 1+2 stereo, In 1 or In 2 mono), and MIDI recording without crackles.
+- **0.98.4–0.98.5, recording in the Studio**: arm a track (red ●), see the take grow while you record, choose the input device and input per audio track (In 1+2 stereo, In 1 or In 2 mono), and MIDI recording without crackles.
 - 0.97: album mastering with a professional album player; 0.96: 39 built-in singing voices with styles and rap.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 

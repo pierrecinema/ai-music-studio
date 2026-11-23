@@ -258,6 +258,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const loadingAudio = useAudioStore((s) => s.loading)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lanesRef = useRef<HTMLDivElement>(null)
+  const [cutRange, setCutRange] = useState<{ a: number; b: number; top: number; bottom: number } | null>(null)   // the scissors' range while dragging
+  const [cutOut, setCutOut] = useState<string[] | null>(null)                                                    // the clips just cut out (Delete / Keep)
   // the visible screen span of the lanes, for the waveforms (updated on scroll, zoom and resize, once per frame)
   const [viewport, setViewport] = useState<{ left: number; right: number; x: number } | null>(null)
   useEffect(() => {
@@ -302,6 +304,13 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const bpm = project.bpm || 120
   const beatWidth = BEAT_WIDTH * zoom
   const totalBeats = Math.max(128, Math.ceil(projectEndBeat(project)) + 32, Math.ceil(project.loop?.end ?? 0) + 16)
+  // zoomed out all the way, the whole song and a few bars after its end fit on the screen (also a long song)
+  const fitZoom = (): number => {
+    const w = (viewport ? viewport.right - viewport.left : 1200) - HEADER_WIDTH - 20
+    const beats = Math.max(16, Math.ceil(projectEndBeat(project)) + 16)
+    return Math.max(0.01, Math.min(1, w / (beats * BEAT_WIDTH)))
+  }
+  const minZoom = Math.min(0.25, fitZoom())
   // free = Alt held, or Snap is off; zoomed in the grid is magnetic (edit/grid.ts snapDrag): fine moves between lines
   const snap = (b: number, free: boolean): number => snapDrag(b, free, beatWidth)
   const rows = useMemo(() => buildRows(project), [project])
@@ -472,14 +481,25 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
     const x0 = e.clientX - rect.left
     const y0 = e.clientY - rect.top
     let moved = false
+    // the tracks under the range, and the range as it will be cut (on the grid): shown over the whole track height
+    const span = (x1: number, y1: number, alt: boolean): { a: number; b: number; ids: string[]; top: number; bottom: number } => {
+      const a = Math.max(0, snap(Math.min(x0, x1) / beatWidth, alt))
+      const b = snap(Math.max(x0, x1) / beatWidth, alt)
+      const [ya, yb] = [Math.min(y0, y1), Math.max(y0, y1)]
+      const ids: string[] = []; let top = Infinity; let bottom = -Infinity
+      rows.forEach((r, i) => { if (r.kind === 'track' && tops[i + 1] > ya && tops[i] <= yb) { ids.push(r.track.id); top = Math.min(top, tops[i]); bottom = Math.max(bottom, tops[i + 1]) } })
+      return { a, b, ids, top: Number.isFinite(top) ? top : ya, bottom: Number.isFinite(bottom) ? bottom : yb }
+    }
     trackPointer((ev) => {
       const x1 = ev.clientX - rect.left
       const y1 = ev.clientY - rect.top
       if (!moved && Math.abs(x1 - x0) < 4) return
       moved = true
-      setFrame({ x0, y0, x1, y1 })
+      const sp = span(x1, y1, ev.altKey)
+      setCutRange({ a: sp.a, b: sp.b, top: sp.top, bottom: sp.bottom })
     }, (ev) => {
-      setFrame(null)
+      setCutRange(null)
+      ;(document.activeElement as HTMLElement | null)?.blur?.()      // the keys (Delete) go to the Studio
       const st = useProjectStore.getState()
       if (!moved) {
         if (!on) return
@@ -489,14 +509,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         useUIStore.getState().setTool('pointer')
         return
       }
-      const x1 = ev.clientX - rect.left
-      const y1 = ev.clientY - rect.top
-      const a = Math.max(0, snap(Math.min(x0, x1) / beatWidth, ev.altKey))
-      const b = snap(Math.max(x0, x1) / beatWidth, ev.altKey)
+      const { a, b, ids: trackIds } = span(ev.clientX - rect.left, ev.clientY - rect.top, ev.altKey)
       if (b - a < 1e-6) { useUIStore.getState().setTool('pointer'); return }
-      const [ya, yb] = [Math.min(y0, y1), Math.max(y0, y1)]
-      const trackIds: string[] = []
-      rows.forEach((r, i) => { if (r.kind === 'track' && tops[i + 1] >= ya && tops[i] <= yb) trackIds.push(r.track.id) })
       const cutAt = (trackId: string, at: number): void => {
         const t = useProjectStore.getState().project.tracks.find((x) => x.id === trackId)
         const c = t?.clips.find((x) => at > x.startTime + 1e-6 && at < x.startTime + x.duration - 1e-6)
@@ -505,7 +519,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
       for (const id of trackIds) { cutAt(id, a); cutAt(id, b) }
       const inside = useProjectStore.getState().project.tracks.filter((t) => trackIds.includes(t.id))
         .flatMap((t) => t.clips.filter((c) => c.startTime >= a - 1e-6 && c.startTime + c.duration <= b + 1e-6).map((c) => c.id))
-      if (inside.length) { selectClips(inside); setMessage(trf('Cut out: {n} clip(s), selected (move them, Delete removes them).', { n: inside.length })) }
+      if (inside.length) { selectClips(inside); setCutOut(inside) }
       useUIStore.getState().setTool('pointer')
     })
   }
@@ -562,7 +576,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const onWheel = (e: React.WheelEvent): void => {
     if (!e.ctrlKey) return
     e.preventDefault()
-    setZoom(Math.min(MAX_ZOOM, Math.max(0.25, +(zoom * (e.deltaY < 0 ? 1.15 : 0.87)).toFixed(3))))
+    setZoom(Math.min(MAX_ZOOM, Math.max(minZoom, +(zoom * (e.deltaY < 0 ? 1.15 : 0.87)).toFixed(4))))
   }
 
   // with a panel below (mixer, piano roll, ...) the Studio takes the rest of the height; the line between them moves it
@@ -852,12 +866,21 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         {loadingAudio && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>{tr('Reading audio files…')}</span>}
         {(message ?? notice) && <span style={{ fontSize: 11, color: 'var(--yellow)', maxWidth: 520, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={message ?? notice ?? ''}>{message ?? notice}</span>}
         <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{tr('Zoom')}</span>
-        <input type="range" min={0.25} max={MAX_ZOOM} step={0.05} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 70, accentColor: 'var(--accent)' }} />
+        <input type="range" min={minZoom} max={MAX_ZOOM} step={0.01} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 70, accentColor: 'var(--accent)' }} />
+        <button className="btn btn-ghost" style={{ ...tb, padding: '2px 7px' }} title={tr('Show the whole song (and a few bars after its end)')} onClick={() => { setZoom(fitZoom()); if (scrollRef.current) scrollRef.current.scrollLeft = 0 }}>⤢</button>
       </div>
 
       {showMasterFx && <MasterFxBar />}
       {selectedAudioClip && <ClipInspector trackId={selectedAudioClip.trackId} clip={selectedAudioClip.clip} bpm={bpm} warpEdit={warpClip === selectedAudioClip.clip.id}
         onWarpEdit={(on) => setWarpClip(on ? selectedAudioClip.clip.id : null)} />}
+      {cutOut && cutOut.some((id) => project.tracks.some((t) => t.clips.some((c) => c.id === id))) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px', borderBottom: '1px solid var(--border)', background: 'rgba(250,204,21,0.12)', fontSize: 12, color: 'var(--text-primary)' }}>
+          <b>✂ {trf('Cut out: {n} clip(s), selected.', { n: cutOut.length })}</b>
+          <button className="btn btn-primary" style={{ fontSize: 11, padding: '2px 10px', background: 'var(--red)', borderColor: 'var(--red)' }} onClick={() => { useProjectStore.getState().removeClips(cutOut); setCutOut(null) }}>{tr('Delete it')}</button>
+          <button className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 10px' }} onClick={() => setCutOut(null)}>{tr('Keep it (move it by dragging)')}</button>
+          <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{tr('Or press Delete.')}</span>
+        </div>
+      )}
       {selectedClipIds.length > 1 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 10px', borderBottom: '1px solid var(--border)', background: 'var(--bg-panel)', fontSize: 11, color: 'var(--text-secondary)' }}>
           <b style={{ color: 'var(--text-primary)' }}>{selectedClipIds.length} {tr('clips selected')}</b>
@@ -918,6 +941,12 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
               {loop && <div style={{ position: 'absolute', left: loop.start * beatWidth, width: (loop.end - loop.start) * beatWidth, top: 0, height: '100%', background: loop.enabled ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'rgba(148,163,184,0.05)', borderLeft: '1px solid color-mix(in srgb, var(--accent) 50%, transparent)', borderRight: '1px solid color-mix(in srgb, var(--accent) 50%, transparent)' }} />}
               {(project.markers ?? []).map((m) => <div key={m.id} style={{ position: 'absolute', left: m.beat * beatWidth, top: 0, width: 1, height: '100%', background: 'rgba(234,179,8,0.35)' }} />)}
             </div>
+            {cutRange && (
+              <div style={{ position: 'absolute', left: HEADER_WIDTH + cutRange.a * beatWidth, top: lanesTop + cutRange.top, width: Math.max(1, (cutRange.b - cutRange.a) * beatWidth), height: cutRange.bottom - cutRange.top,
+                border: '2px dashed #facc15', background: 'rgba(250,204,21,0.18)', zIndex: 9, pointerEvents: 'none', boxSizing: 'border-box', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#facc15', background: 'rgba(0,0,0,0.55)', padding: '0 5px', borderRadius: 3, marginTop: 2 }}>✂</span>
+              </div>
+            )}
             {frame && (
               <div style={{ position: 'absolute', left: HEADER_WIDTH + Math.min(frame.x0, frame.x1), top: lanesTop + Math.min(frame.y0, frame.y1), width: Math.abs(frame.x1 - frame.x0), height: Math.abs(frame.y1 - frame.y0), border: '1px solid var(--accent-light)', background: 'color-mix(in srgb, var(--accent) 12%, transparent)', zIndex: 8, pointerEvents: 'none' }} />
             )}

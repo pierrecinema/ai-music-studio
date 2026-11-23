@@ -1929,5 +1929,10 @@
  "Sing is grey: choose a voice first.": "„Singen“ ist grau: Wähle zuerst eine Stimme.",
  "My singing → MIDI melody (Vocal Editor)": "Mein Gesang → MIDI-Melodie (Vocal Editor)",
  "Scissors: click a clip to cut it there, or drag over a range (also over several tracks) to cut it out as its own clip. On the grid; Alt: exactly. Afterwards the pointer is back.": "Schere: Klick auf einen Clip schneidet ihn dort, oder über einen Bereich ziehen (auch über mehrere Spuren), um ihn als eigenen Clip herauszuschneiden. Im Raster; Alt: genau. Danach ist wieder der Zeiger aktiv.",
- "Cut out: {n} clip(s), selected (move them, Delete removes them).": "Herausgeschnitten: {n} Clip(s), ausgewählt (verschieben, Entf löscht sie)."
+ "Cut out: {n} clip(s), selected (move them, Delete removes them).": "Herausgeschnitten: {n} Clip(s), ausgewählt (verschieben, Entf löscht sie).",
+ "Cut out: {n} clip(s), selected.": "Herausgeschnitten: {n} Clip(s), ausgewählt.",
+ "Delete it": "Löschen",
+ "Keep it (move it by dragging)": "Behalten (zum Verschieben ziehen)",
+ "Or press Delete.": "Oder Entf drücken.",
+ "Show the whole song (and a few bars after its end)": "Ganzen Song zeigen (und ein paar Takte nach dem Ende)"
 }

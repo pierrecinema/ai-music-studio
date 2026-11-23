@@ -161,9 +161,11 @@ export function Ruler({ beatWidth, totalBeats, popover }: { beatWidth: number; t
           const sig = `${b.num}/${b.den}`
           const show = sig !== prevSig
           prevSig = sig
+          // zoomed far out, only every 2nd, 4th, 8th … bar gets its number, so the numbers do not run into each other
+          const every = Math.pow(2, Math.max(0, Math.ceil(Math.log2(24 / Math.max(1, b.num * beatWidth)))))
           return (
-            <div key={b.index} style={{ position: 'absolute', left: b.beat * beatWidth, top: 0, height: '100%', display: 'flex', alignItems: 'center', paddingLeft: 4, borderLeft: '1px solid var(--border)', pointerEvents: 'none' }}>
-              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{b.index + 1}</span>
+            <div key={b.index} style={{ position: 'absolute', left: b.beat * beatWidth, top: 0, height: '100%', display: 'flex', alignItems: 'center', paddingLeft: 4, borderLeft: b.index % every === 0 ? '1px solid var(--border)' : 'none', pointerEvents: 'none' }}>
+              {b.index % every === 0 && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{b.index + 1}</span>}
               {show && <span style={{ fontSize: 9, color: 'var(--accent-light)', marginLeft: 4 }}>{sig}</span>}
             </div>
           )

@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.97.6
+
+### Fixed
+
+- **Album player still took about 20 seconds to start**: before the first sound it read every song of the album completely (for the lengths and waveforms), after every start of the app. Now the lengths come from the file headers in a moment, the waveforms are made in the background (paused while the album plays) and kept for the next time, and a song is never read twice at the same time.
+
 ## 0.97.5
 
 ### Fixed

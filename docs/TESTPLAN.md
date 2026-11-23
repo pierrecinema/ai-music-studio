@@ -775,14 +775,14 @@ Auf dem zweiten PC: den Installer 0.98.3 (oder neuer) von GitHub laden und von H
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 52.1 | Installer ausführen, App starten | Statt Willkommensfenster: **Einrichtung** mit Schritten links (Dein Computer · Paket · Installation · Fertig) | | | 0.98.0 |
-| 52.2 | Schritt „Dein Computer“ | Grafikkarte, Prozessor, Arbeitsspeicher, freier Speicher und Python stimmen | | | 0.98.0 |
-| 52.3 | **Weiter** → Pakete | Drei Karten: Empfohlen (Bester Start), Alles, Nur Studio, je mit Größe | | | 0.98.0 |
-| 52.4 | **Empfohlen** → **Jetzt installieren** | Fortschritt in %, „Schritt x von y“, Zeit und Restzeit; bei fehlendem Python zuerst „Python (für die App)“ | | | 0.98.0 |
-| 52.5 | **Details anzeigen** | Das Log läuft mit | | | 0.98.0 |
-| 52.6 | Warten bis fertig | „Fertig“ mit Häkchen; danach unten „KI-Backend bereit“ | | | 0.98.0 |
-| 52.7 | Stem Splitter: einen Song teilen | Stems kommen (auf der NVIDIA-Karte schnell) | | | 0.98.0 |
-| 52.8 | Einstellungen → KI-Engines → **Einrichtungs-Assistent** | Der Assistent öffnet sich wieder | | | 0.98.0 |
-| 52.9 | Optional: Paket **Alles** | Musik-KI, Sänger, KI-Instrumente werden installiert (auch ohne Git) | | | 0.98.0 |
-| 52.10 | Deinstallieren (Version 0.98.3 oder neuer; auch bei Installation „für alle Benutzer“) | Frage „Auch die KI-Engines … entfernen?“ (Englisch und Deutsch); „Ja“ entfernt sie, „Nein“ lässt sie | | | 0.98.1 |
+| 52.1 | Installer ausführen, App starten | Statt Willkommensfenster: **Einrichtung** mit Schritten links (Dein Computer · Paket · Installation · Fertig) | ✅ | 0.98.3 | 0.98.0 |
+| 52.2 | Schritt „Dein Computer“ | Grafikkarte, Prozessor, Arbeitsspeicher, freier Speicher und Python stimmen | ✅ | 0.98.3 | 0.98.0 |
+| 52.3 | **Weiter** → Pakete | Drei Karten: Empfohlen (Bester Start), Alles, Nur Studio, je mit Größe | ✅ | 0.98.3 | 0.98.0 |
+| 52.4 | **Empfohlen** → **Jetzt installieren** | Fortschritt in %, „Schritt x von y“, Zeit und Restzeit; bei fehlendem Python zuerst „Python (für die App)“ | ✅ | 0.98.3 | 0.98.0 |
+| 52.5 | **Details anzeigen** | Das Log läuft mit | ✅ | 0.98.3 | 0.98.0 |
+| 52.6 | Warten bis fertig | „Fertig“ mit Häkchen; danach unten „KI-Backend bereit“ | ✅ | 0.98.3 | 0.98.0 |
+| 52.7 | Stem Splitter: einen Song teilen | Stems kommen (auf der NVIDIA-Karte schnell) | ✅ | 0.98.3 | 0.98.0 |
+| 52.8 | Einstellungen → KI-Engines → **Einrichtungs-Assistent** | Der Assistent öffnet sich wieder | ✅ | 0.98.3 | 0.98.0 |
+| 52.9 | Optional: Paket **Alles** | Musik-KI, Sänger, KI-Instrumente werden installiert (auch ohne Git) | ✅ | 0.98.3 | 0.98.0 |
+| 52.10 | Deinstallieren (Version 0.98.3 oder neuer; auch bei Installation „für alle Benutzer“) | Frage „Auch die KI-Engines … entfernen?“ (Englisch und Deutsch); „Ja“ entfernt sie, „Nein“ lässt sie | ✅ | 0.98.3 | 0.98.1 |
 

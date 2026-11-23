@@ -7,7 +7,9 @@ on its GitHub release page, so every version needs a `## <version>` section here
 
 ### New
 
-- **Vocal Editor: every voice in every style, to hear at once**: under the styles, *▶ Pop ▶ Rock ▶ Ballad ▶ Soul* play the chosen voice singing the same line in each style (finished recordings, no computing), so you hear the difference before you sing.
+- **Album player redesigned**: a time ruler, every song as a block with its real waveform and title, the playing song highlighted, the pauses as dark gaps (hover one: "hear the transition", click it to play from 8 seconds before the end into the next song), a large time display and the current track. Click anywhere in a song to play from there.
+- **Vocal Editor: every voice in every style, to hear at once**: under the styles, *▶ Pop ▶ Rock ▶ Ballad ▶ Soul* play the chosen voice singing the same line in each style (finished recordings, no computing).
+- **Mastering: example song**: *♪ Example song* opens an unmastered song (made with ACE-Step 1.5) to try the presets and compare Before / After without a song of your own.
 
 ## 0.97.3
 

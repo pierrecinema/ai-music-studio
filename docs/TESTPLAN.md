@@ -755,4 +755,6 @@ Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein l
 |---|---|---|---|---|---|
 | 50.1 | Vocal Editor → Eingebaute Stimmen → eine Stimme wählen | Unter den Stilen „{Name} in jedem Stil: ▶ Pop ▶ Rock ▶ Ballade ▶ Soul“ | | | 0.97.4 |
 | 50.2 | Die vier nacheinander anklicken | Dieselbe Zeile, hörbar anders gesungen und mit anderem Klang | | | 0.97.4 |
+| 50.3 | Mastering → **♪ Beispiel-Song** | Ein leiser, ungemasterter Song öffnet sich; Presets laden, Vorher / Nachher vergleichen | | | 0.97.4 |
+| 50.4 | Album: neuer Player | Zeitlineal, Wellenform je Song, laufender Song farbig; Maus über eine Pause: „Übergang anhören“, Klick spielt ihn | | | 0.97.4 |
 

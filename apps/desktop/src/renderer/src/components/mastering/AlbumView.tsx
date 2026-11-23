@@ -2,7 +2,7 @@
 // together (loudness and, gently, lows and highs), the transitions heard with the pause between the songs, and all
 // exported at once (numbered files, and the whole album as one file if wanted). Every song keeps its own chain,
 // which can still be changed on the song's own page.
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { api } from '../../lib/api'
 import { defaultChain, renderChain, TARGETS, type Chain } from '../../audio/master/chain'
 import { analyze } from '../../audio/master/dsp'
@@ -12,6 +12,7 @@ import { encodeWavFloat } from '../../audio/wav'
 import { useMasteringStore, type MasterFile } from '../../stores/mastering.store'
 import { chansOf, decodeFile, editsByPath } from './masterFiles'
 import { loadOutput } from './MasterOutput'
+import { AlbumPlayer } from './AlbumPlayer'
 import { tr, trf } from '../../i18n/tr'
 
 const AUDIO = /\.(wav|mp3|flac|ogg|opus|m4a|aac|aif|aiff)$/i
@@ -29,6 +30,23 @@ async function songBuffer(path: string): Promise<AudioBuffer> {
   const buf = new AudioBuffer({ numberOfChannels: 2, length: Math.max(1, ch[0].length), sampleRate: original.sampleRate })
   buf.copyToChannel(ch[0] as Float32Array<ArrayBuffer>, 0); buf.copyToChannel(ch[1] as Float32Array<ArrayBuffer>, 1)
   return buf
+}
+
+// the waveform of each song for the album player (max of |sample| in n parts), kept while the app runs
+const peakCache = new Map<string, Float32Array>()
+function peaksOf(b: AudioBuffer, n: number): Float32Array {
+  const l = b.getChannelData(0), r = b.numberOfChannels > 1 ? b.getChannelData(1) : l
+  const out = new Float32Array(n)
+  const per = b.length / n
+  let max = 1e-6
+  for (let i = 0; i < n; i++) {
+    let m = 0
+    const a = Math.floor(i * per), z = Math.min(b.length, Math.floor((i + 1) * per))
+    for (let k = a; k < z; k += 4) { const v = Math.max(Math.abs(l[k]), Math.abs(r[k])); if (v > m) m = v }
+    out[i] = m; if (m > max) max = m
+  }
+  for (let i = 0; i < n; i++) out[i] /= max
+  return out
 }
 
 // the last few decoded songs, so the player does not decode a song again for every piece
@@ -146,10 +164,21 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
   const totalLen = songs.length ? starts[songs.length - 1] + lens[songs.length - 1] : 0
   const [pos, setPos] = useState(0)
   const now = player.current ? songs.findIndex((_, i) => pos >= starts[i] && pos < starts[i] + lens[i]) : -1
+  const [peaks, setPeaks] = useState<Record<string, Float32Array>>(() => Object.fromEntries(peakCache))
+  const [loadingWave, setLoadingWave] = useState(false)
+  // the songs' lengths and waveforms (each song decoded once; the waveforms are kept while the app runs)
   const knowLengths = async (): Promise<number[]> => {
     const out: Record<string, number> = { ...durs }
-    for (const s of songs) if (!out[s.path]) out[s.path] = measures[s.path]?.seconds ?? (await cachedSong(s.path)).duration
-    setDurs(out)
+    const need = songs.filter((s) => !out[s.path] || !peakCache.has(s.path))
+    if (need.length) setLoadingWave(true)
+    try {
+      for (const s of need) {
+        const b = await cachedSong(s.path)
+        out[s.path] = b.duration
+        if (!peakCache.has(s.path)) peakCache.set(s.path, peaksOf(b, 1200))
+      }
+    } finally { setLoadingWave(false) }
+    setDurs(out); setPeaks(Object.fromEntries(peakCache))
     return songs.map((s) => out[s.path])
   }
   const stop = (): void => {
@@ -195,6 +224,7 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
       }
     } catch (e) { setError((e as Error).message); stop() }
   }
+  useEffect(() => { if (songs.length) void knowLengths() }, [songs.map((x) => x.path).join('|')])  // eslint-disable-line react-hooks/exhaustive-deps
   const togglePlay = (): void => { if (player.current) stop(); else void playFrom(pos >= totalLen - 0.5 ? 0 : pos) }
   const toTransition = (i: number): void => { void playFrom(starts[i + 1] - album.gapSec - 8) }
 
@@ -253,34 +283,11 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
       </div>
 
       {songs.length > 0 && (
-        // the album player: one timeline of the whole album; click to jump, ⇄ marks to hear a transition
-        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <button className="btn btn-ghost" style={{ fontSize: 12, padding: '3px 9px' }} title={tr('Previous song')} onClick={() => { const i = Math.max(0, (now >= 0 ? now : songs.findIndex((_, k) => pos < starts[k] + lens[k])) - (pos - (starts[Math.max(0, now)] ?? 0) > 3 ? 0 : 1)); void playFrom(starts[i] ?? 0) }}>⏮</button>
-            <button className="btn btn-primary" style={{ fontSize: 13, padding: '4px 16px' }} onClick={togglePlay}>{playing === -1 ? '■' : '▶'} {playing === -1 ? tr('Stop') : tr('Hear the album')}</button>
-            <button className="btn btn-ghost" style={{ fontSize: 12, padding: '3px 9px' }} title={tr('Next song')} onClick={() => { const i = Math.min(songs.length - 1, (now >= 0 ? now : songs.findIndex((_, k) => pos < starts[k])) + 1); void playFrom(starts[i] ?? 0) }}>⏭</button>
-            <span style={{ fontSize: 12, fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)', marginLeft: 6 }}>{clock(pos)} / {totalLen ? clock(totalLen) : '–'}</span>
-            {now >= 0 && <span className="truncate" style={{ fontSize: 12, color: 'var(--accent-light)', maxWidth: 360 }}>♪ {String(now + 1).padStart(2, '0')} {songs[now]?.name}</span>}
-          </div>
-          <div onClick={(e) => { const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); const run = (): void => { void playFrom(((e.clientX - r.left) / r.width) * totalLen) }; if (totalLen) run(); else void knowLengths().then(() => undefined) }}
-            title={totalLen ? tr('Click to play from there') : tr('Click to read the songs\' lengths')}
-            style={{ position: 'relative', height: 40, background: 'var(--bg-tertiary)', borderRadius: 6, cursor: 'pointer', overflow: 'hidden' }}>
-            {totalLen > 0 && songs.map((s, i) => (
-              <React.Fragment key={s.path}>
-                <div style={{ position: 'absolute', left: `${(starts[i] / totalLen) * 100}%`, width: `${(lens[i] / totalLen) * 100}%`, top: 4, bottom: 4, borderRadius: 4,
-                  background: now === i ? 'color-mix(in srgb, var(--accent) 45%, transparent)' : i % 2 ? 'rgba(148,163,184,0.22)' : 'rgba(148,163,184,0.32)', display: 'flex', alignItems: 'center', paddingLeft: 6, overflow: 'hidden' }}>
-                  <span style={{ fontSize: 10.5, whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{String(i + 1).padStart(2, '0')} {s.name}</span>
-                </div>
-                {i < songs.length - 1 && (
-                  <button className="btn" title={trf('Hear the transition {a} → {b}', { a: i + 1, b: i + 2 })} onClick={(e) => { e.stopPropagation(); toTransition(i) }}
-                    style={{ position: 'absolute', left: `calc(${((starts[i] + lens[i] + album.gapSec / 2) / totalLen) * 100}% - 9px)`, top: 11, width: 18, height: 18, padding: 0, fontSize: 10, borderRadius: 9, background: '#facc15', color: '#111', border: 'none', zIndex: 2 }}>⇄</button>
-                )}
-              </React.Fragment>
-            ))}
-            {totalLen > 0 && <div style={{ position: 'absolute', left: `${(pos / totalLen) * 100}%`, top: 0, bottom: 0, width: 2, background: '#fff', zIndex: 3, pointerEvents: 'none' }} />}
-            {!totalLen && <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--text-muted)' }}>{tr('Press ▶ or click here: the album appears as one timeline')}</span>}
-          </div>
-        </div>
+        <AlbumPlayer names={songs.map((x) => x.name)} lens={lens} starts={starts} total={totalLen} gap={album.gapSec} pos={pos}
+          playing={playing === -1} now={now} peaks={songs.map((x) => peaks[x.path] ?? null)} loading={loadingWave}
+          onSeek={(t) => void playFrom(t)} onTransition={toTransition} onToggle={togglePlay} onLoad={() => void knowLengths()}
+          onPrev={() => { const cur = now >= 0 ? now : Math.max(0, songs.findIndex((_, k) => pos < starts[k] + lens[k])); const i = pos - starts[cur] > 3 ? cur : Math.max(0, cur - 1); void playFrom(starts[i] ?? 0) }}
+          onNext={() => { const cur = now >= 0 ? now : songs.findIndex((_, k) => pos < starts[k]) - 1; void playFrom(starts[Math.min(songs.length - 1, cur + 1)] ?? 0) }} />
       )}
 
       {songs.length === 0 ? (

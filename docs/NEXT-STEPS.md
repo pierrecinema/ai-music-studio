@@ -1,6 +1,6 @@
 # Next steps and working notes
 
-Kept for the next working session (also read by Claude: see CLAUDE.md). State: version 0.60.5, 2026-11-18.
+Kept for the next working session (also read by Claude: see CLAUDE.md). State: version 0.98.6, 2026-11-23.
 
 ## Where things are
 
@@ -27,6 +27,21 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 ## Tonight / next session
 
 0. Plan to 1.0: `docs/ROADMAP-1.0.md`. Testing goes by `docs/TESTPLAN.md` (German checklist, the owner fills in results; fix ❌ first).
+
+### Road to 1.0 (owner, 23.11.2026): in this order
+
+1. **0.98.6: test it** (test plan section 53: 53.2, 53.9–53.11; 53.4/53.5 need the PC with a microphone; 53.7/53.8
+   the YouTube user tests MIDI recording; 52.9 optional, package "Everything").
+2. **0.99.0: layout changes.** Ask the owner first which changes (screens, looks, what bothers them); design like
+   professional audio software (see "Talking with the owner"), check every screen in the browser preview.
+3. **RC 1.0** (release candidate): only fixes after 0.99; full pass through the open test plan on both PCs.
+4. **New screenshots** for README and wiki (rack look, the final 1.0 layout).
+5. **New promo video** (scripts and earlier versions on the branch `promo`; v4 was the last one) with the owner's
+   sounds, plus a new YouTube text.
+6. After 1.0: Linux version (AppImage), the posts in forums and blogs (list below), SignPath reapplication.
+
+Still open from earlier: the YouTube user's results for MIDI recording (53.7/53.8) and the music generation (he tests
+after his trip); the plugin-host crash on the first scan still lacks a user log; an own-voice prompt for SoulX.
 
 1. Go through feedback: Reddit and YouTube comments, GitHub issues and stars. Fix what is needed first.
 2. Write the posts (tone of each community, say openly that the owner is the developer, read each place's

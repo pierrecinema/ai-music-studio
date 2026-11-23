@@ -5,7 +5,7 @@ import { getStatus, installGroups, cancelInstall } from './engines'
 import { listLoras, importLora, removeLora, deleteLora, LORA_DIR, type LoraEntry } from './loras'
 import { clearCache, deleteModel, diskSpace, getOverview, moveModels } from './models'
 import { MODEL_SUBDIRS, modelsDir, writeSettings, type ModelId } from './settings'
-import { join, resolve } from 'path'
+import { dirname, join, resolve } from 'path'
 import { downloadFile, fetchAdapterConfig, listFiles, parseRepo, searchRepos } from './huggingface'
 import * as fs from 'fs'
 
@@ -33,11 +33,28 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
 
   ipcMain.handle('engines:status', () => getStatus(serverManager.isReady()))
   // set by the installer on a new installation (not an update): the setup assistant opens once, then the mark goes
+  // a new installation: the installer's mark in userData, or a new installation id next to the app
   ipcMain.handle('setup:pending', () => {
+    let pending = false
     const f = join(app.getPath('userData'), 'setup-pending')
-    if (!fs.existsSync(f)) return false
-    try { fs.rmSync(f, { force: true }) } catch { /* read-only: it shows again next time */ }
-    return true
+    if (fs.existsSync(f)) {
+      pending = true
+      try { fs.rmSync(f, { force: true }) } catch { /* read-only: it shows again next time */ }
+    }
+    try {
+      const idFile = join(dirname(app.getPath('exe')), 'install-id')
+      const seenFile = join(app.getPath('userData'), 'install-id-seen')
+      if (fs.existsSync(idFile)) {
+        const id = fs.readFileSync(idFile, 'utf8').trim()
+        const seen = fs.existsSync(seenFile) ? fs.readFileSync(seenFile, 'utf8').trim() : ''
+        if (id && id !== seen) {
+          pending = true
+          fs.mkdirSync(app.getPath('userData'), { recursive: true })
+          fs.writeFileSync(seenFile, id)
+        }
+      }
+    } catch { /* no id: nothing to compare */ }
+    return pending
   })
   ipcMain.handle('engines:cancel', () => cancelInstall())
   ipcMain.handle('engines:install', async (e, groups: string[], torchVariant: string) => {

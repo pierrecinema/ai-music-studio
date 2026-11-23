@@ -29,7 +29,12 @@ export function Welcome(): React.ReactElement | null {
     void (async () => {
       const fresh = await window.api.engines?.setupPending?.().catch(() => false)
       if (!fresh && decided) return
-      const st = await window.api.engines?.status?.().catch(() => null)
+      // after a new installation the status must come, so try a few times
+      let st: EngineStatus | null = null
+      for (let k = 0; k < (fresh ? 5 : 1) && !st; k++) {
+        if (k) await new Promise((r) => setTimeout(r, 1500))
+        st = (await window.api.engines?.status?.().catch(() => null)) ?? null
+      }
       if (st && (fresh || !st.venvReady)) { setSetup(st); try { localStorage.setItem(SEEN, '1') } catch { /* storage */ } setOpen(false) }
     })()
     return () => window.removeEventListener(OPEN_SETUP_EVENT, open)

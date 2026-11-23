@@ -216,7 +216,7 @@ def run_split(req: StemSplitRequest, report=lambda pct, text=None: None, job: di
             if "libtorchaudio" in str(e) or "torchaudio" in str(e) and isinstance(e, OSError):
                 raise HTTPException(500, "Stem separation failed: PyTorch and torchaudio on this PC do not fit together "
                                          "(an update of another package changed PyTorch). Repair it once: Settings → AI "
-                                         "Engines → tick \"Stem Splitter (Demucs)\" → Install selected. "
+                                         "Engines → tick \"Stem separation (Demucs)\" → Install selected. "
                                          f"({type(e).__name__}: {e})")
             raise HTTPException(500, f"Stem separation failed: {type(e).__name__}: {e}")
     finally:

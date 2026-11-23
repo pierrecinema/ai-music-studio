@@ -2064,5 +2064,7 @@
  "Device not connected": "Gerät nicht verbunden",
  "Settings → Audio": "Einstellungen → Audio",
  "Recording input": "Aufnahme-Eingang",
- "No input device is chosen: pick one in the input list of the track (next to its volume) or in Settings → Audio.": "Kein Eingangsgerät gewählt: wähle eins in der Eingangsliste der Spur (neben der Lautstärke) oder unter Einstellungen → Audio."
+ "No input device is chosen: pick one in the input list of the track (next to its volume) or in Settings → Audio.": "Kein Eingangsgerät gewählt: wähle eins in der Eingangsliste der Spur (neben der Lautstärke) oder unter Einstellungen → Audio.",
+ "Windows does not let the app use the microphone or audio input. The Windows settings open: Privacy & security → Microphone → switch on \"Microphone access\" and \"Let desktop apps access your microphone\", then record again.": "Windows lässt die App nicht aufs Mikrofon oder den Audio-Eingang zugreifen. Die Windows-Einstellungen öffnen sich: Datenschutz und Sicherheit → Mikrofon → „Mikrofonzugriff“ und „Desktop-Apps Zugriff auf das Mikrofon erlauben“ einschalten, dann erneut aufnehmen.",
+ "No input device found: connect a microphone or audio interface, or pick another device in the input list of the track.": "Kein Eingangsgerät gefunden: schließe ein Mikrofon oder Audio-Interface an, oder wähle in der Eingangsliste der Spur ein anderes Gerät."
 }

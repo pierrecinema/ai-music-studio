@@ -1138,6 +1138,12 @@ export async function startRecording(): Promise<string | null> {
     recStream = await navigator.mediaDevices.getUserMedia({ audio: { ...inputConstraints(target?.inputDevice), channelCount: { ideal: 2 } } })
   } catch (e) {
     useAudioStore.setState({ isRecording: false })
+    // "Permission denied by system": Windows' privacy settings block the microphone for desktop apps
+    if ((e as Error).name === 'NotAllowedError') {
+      void window.api.shell?.openProject?.('micPrivacy')
+      return 'Windows does not let the app use the microphone or audio input. The Windows settings open: Privacy & security → Microphone → switch on "Microphone access" and "Let desktop apps access your microphone", then record again.'
+    }
+    if ((e as Error).name === 'NotFoundError') return 'No input device found: connect a microphone or audio interface, or pick another device in the input list of the track.'
     return `No microphone access: ${(e as Error).message}`
   }
   const c = ensureContext()

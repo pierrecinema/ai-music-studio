@@ -66,6 +66,7 @@ Right-click a track header, or click the colour strip at its left: pick a colour
 **Audio:** on an audio track the same buttons record from the microphone or audio interface. In a loop, every pass becomes a take in its own lane (**T** on the track shows them); click a take to use it.
 **Arm a track:** the red **●** in a track header arms it (one track at a time): the recording goes to that track, audio or MIDI, whichever track is selected. While recording, the armed track has a red frame and the take grows on it as a red clip with the input's waveform.
 **Input (audio tracks):** the small list next to the volume slider chooses the input device of the track (*Settings → Audio*, or any microphone, line input, audio interface or USB device) and which of its inputs: **In 1+2** (stereo), **In 1** or **In 2** (mono). A device chosen here applies to this track only. A microphone or guitar on one input of a stereo interface belongs on **In 1** / **In 2**: it is then recorded in the middle (pan it with the track's pan) instead of on one side.
+**"Permission denied by system"**: Windows blocks the microphone for desktop apps. The app opens *Windows Settings → Privacy & security → Microphone*: switch on *Microphone access* and *Let desktop apps access your microphone*, then record again.
 ## Warp markers
 Right-click → *Edit warp markers*: double-click the waveform to set a marker, drag it onto another beat (the audio between is stretched without changing the pitch), Alt+click deletes it.
 

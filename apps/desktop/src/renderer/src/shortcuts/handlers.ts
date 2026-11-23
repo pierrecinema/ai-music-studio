@@ -6,6 +6,7 @@ import type { Note, Track } from '../types'
 import { markStep, redo, undo } from './history'
 import { isPlaying, pause, play, stop } from '../audio/engine'
 import { startAnyRecording } from '../audio/midiRecord'
+import { tr } from '../i18n/tr'
 import { masterPlayer } from '../audio/master/player'
 import { newProject, openProject, saveProject, saveProjectAs } from '../project/io'
 import { narrowerGrid, nudgeStep, snapStep, tripletToggle, widerGrid } from '../edit/grid'
@@ -133,7 +134,7 @@ const HANDLERS: Record<string, () => void> = {
   'transport.toStart': () => stop(),
   'transport.record': () => {
     if (useAudioStore.getState().isRecording) pause()
-    else void startAnyRecording().then((problem) => { if (problem) window.alert(problem) })
+    else void startAnyRecording().then((problem) => { if (problem) window.alert(tr(problem)) })
   },
   'transport.metronome': () => useAudioStore.getState().toggleMetronome(),
   'transport.loop': () => toggleLoop(),

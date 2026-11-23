@@ -108,7 +108,7 @@ declare global {
         remove: (id?: string) => Promise<boolean>
         onProgress: (cb: (p: { id?: string; text: string; pct?: number }) => void) => () => void
       }
-      shell: { openPath: (path: string) => Promise<void>; openProject: (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions' | 'donate') => Promise<void> }
+      shell: { openPath: (path: string) => Promise<void>; openProject: (page: 'home' | 'releases' | 'issues' | 'newIssue' | 'discussions' | 'donate' | 'micPrivacy') => Promise<void> }
       project: {
         openDialog: () => Promise<{ path: string; text: string } | null>
         read: (path: string) => Promise<string>

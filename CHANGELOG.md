@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.6
+
+### Fixed
+
+- **Recording failed with "Permission denied by system"**: Windows blocked the microphone for desktop apps. The app now explains it and opens the right Windows settings page (Privacy & security → Microphone), where "Microphone access" and "Let desktop apps access your microphone" are switched on. Without any input device it says so and points to the track's input list.
+
 ## 0.98.5
 
 ### New

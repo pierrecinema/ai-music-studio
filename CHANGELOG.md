@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.96.6
+
+### New
+
+- **Scissors range is clear now**: while you drag, the range that will be cut shows in yellow over the whole track height (on the grid); after cutting, a bar asks **Delete it** or **Keep it** (Delete also works).
+- **Zoomed out all the way, the whole song fits**, with a few bars after its end, also for long songs; the new ⤢ button next to the zoom shows the whole song at once. Bar numbers thin out when zoomed far out.
+
 ## 0.96.5
 
 ### Fixed

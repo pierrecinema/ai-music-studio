@@ -699,3 +699,12 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 | 44.1 | Einstellungen → KI-Engines → „Stem separation (Demucs)“ ankreuzen → Ausgewählte installieren | Im Log steht am Ende „PyTorch check: …“ mit den Versionen | | | 0.96.5 |
 | 44.2 | Stem Splitter: einen Song teilen | Stems kommen ohne Fehler | | | 0.96.5 |
 
+## 45. Neu in 0.96.6: Schere deutlicher, ganzer Song beim Herauszoomen
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 45.1 | ✂ über einen Teil eines Audio-Clips ziehen | Beim Ziehen ein gelber Bereich über die ganze Spurhöhe, genau dort, wo geschnitten wird | | | 0.96.6 |
+| 45.2 | Loslassen | Leiste „Herausgeschnitten … Löschen / Behalten“; **Löschen** entfernt genau den gelben Teil | | | 0.96.6 |
+| 45.3 | Nochmal schneiden, dann **Entf** drücken | Der herausgeschnittene Teil wird gelöscht | | | 0.96.6 |
+| 45.4 | Ganz herauszoomen (Regler ganz links) oder **⤢** | Der ganze Song ist zu sehen und ein paar Takte danach; Taktzahlen überlappen nicht | | | 0.96.6 |
+

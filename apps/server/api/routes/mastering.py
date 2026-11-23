@@ -83,6 +83,37 @@ async def export_master(req: ExportRequest):
     return {"results": results}
 
 
+class AlbumJoinRequest(BaseModel):
+    sources: list[str]              # the mastered songs (float WAVs), in album order
+    gapSec: float = 2.0
+    folder: str
+    name: str
+    outputs: list[ExportOut]
+    dither: bool = True
+    meta: dict = {}
+
+
+@router.post("/album-join")
+async def album_join(req: AlbumJoinRequest):
+    """the whole album as one file: the mastered songs with pauses between them, in the chosen formats"""
+    missing = [s for s in req.sources if not os.path.exists(s)]
+    if missing:
+        raise HTTPException(400, f"File not found: {missing[0]}")
+    import asyncio
+    from services.master_export import export, join_album
+    tmp = os.path.join(tempfile.gettempdir(), f"album-{uuid.uuid4().hex[:8]}.wav")
+    try:
+        await asyncio.to_thread(join_album, req.sources, max(0.0, min(10.0, req.gapSec)), tmp)
+        results = await asyncio.to_thread(export, tmp, req.folder, req.name, [o.model_dump() for o in req.outputs],
+                                          req.dither, req.meta, None)
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+    return {"results": results}
+
+
 @router.get("/formats")
 async def formats():
     from services.master_export import FORMATS, ffmpeg_exe

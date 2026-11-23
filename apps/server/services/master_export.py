@@ -130,7 +130,7 @@ def tag(path: Path, fmt: str, meta: dict, cover: str | None) -> None:
     if not meta and not pic:
         return
     if fmt in ("mp3", "wav", "aiff"):
-        from mutagen.id3 import APIC, COMM, ID3, TALB, TDRC, TIT2, TPE1, TSRC
+        from mutagen.id3 import APIC, COMM, ID3, TALB, TDRC, TIT2, TPE1, TRCK, TSRC
         if fmt == "mp3":
             try:
                 tags = ID3(str(path))
@@ -143,7 +143,7 @@ def tag(path: Path, fmt: str, meta: dict, cover: str | None) -> None:
             if f.tags is None:
                 f.add_tags()
             tags = f.tags
-        for key, frame in (("title", TIT2), ("artist", TPE1), ("album", TALB), ("year", TDRC), ("isrc", TSRC)):
+        for key, frame in (("title", TIT2), ("artist", TPE1), ("album", TALB), ("year", TDRC), ("isrc", TSRC), ("track", TRCK)):
             if key in meta:
                 tags.add(frame(encoding=3, text=meta[key]))
         if "comment" in meta:
@@ -164,7 +164,7 @@ def tag(path: Path, fmt: str, meta: dict, cover: str | None) -> None:
         else:
             from mutagen.oggopus import OggOpus
             f = OggOpus(str(path))
-        names = {"title": "TITLE", "artist": "ARTIST", "album": "ALBUM", "year": "DATE", "isrc": "ISRC", "comment": "COMMENT"}
+        names = {"title": "TITLE", "artist": "ARTIST", "album": "ALBUM", "year": "DATE", "isrc": "ISRC", "comment": "COMMENT", "track": "TRACKNUMBER"}
         for k, v in meta.items():
             if k in names:
                 f[names[k]] = v
@@ -184,6 +184,8 @@ def tag(path: Path, fmt: str, meta: dict, cover: str | None) -> None:
         for k, v in meta.items():
             if k in names:
                 f[names[k]] = [v]
+        if meta.get("track", "").isdigit():
+            f["trkn"] = [(int(meta["track"]), 0)]
         if "isrc" in meta:
             f["----:com.apple.iTunes:ISRC"] = [MP4FreeForm(meta["isrc"].encode("utf-8"))]
         if pic:
@@ -223,3 +225,24 @@ def export(source: str, folder: str, name: str, outputs: list[dict], dither: boo
                 os.unlink(dest)
             results.append({"format": fmt, "error": str(e)})
     return results
+
+
+def join_album(sources: list[str], gap_s: float, dest: str) -> str:
+    """The songs of an album one after the other, with gap_s seconds of silence between them, as one float WAV
+    (written song by song, so only one song is in memory at a time). Returns dest."""
+    import numpy as np
+    import soundfile as sf
+    if not sources:
+        raise ValueError("No songs.")
+    sr = sf.info(sources[0]).samplerate
+    with sf.SoundFile(dest, "w", samplerate=sr, channels=2, subtype="FLOAT") as out:
+        for i, src in enumerate(sources):
+            data, r = sf.read(src, dtype="float32", always_2d=True)
+            if r != sr:
+                raise ValueError(f"{src}: sample rate {r} differs from {sr}")
+            if data.shape[1] == 1:
+                data = np.repeat(data, 2, axis=1)
+            out.write(data[:, :2])
+            if i < len(sources) - 1 and gap_s > 0:
+                out.write(np.zeros((int(round(gap_s * sr)), 2), np.float32))
+    return dest

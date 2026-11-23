@@ -302,6 +302,37 @@ function groupArgs(group: string, torchVariant: string): string[] | null {
   }
 }
 
+/** a pip constraints file that keeps the installed torch and torchaudio exactly as they are (null if none) */
+async function torchConstraints(): Promise<string | null> {
+  const r = await capture(venvPython(), ['-c', 'import importlib.metadata as m\nfor p in ("torch", "torchaudio"):\n    try: print(f"{p}=={m.version(p)}")\n    except Exception: pass'], 30000)
+  const pins = r.out.split(/\r?\n/).map((l) => l.trim()).filter((l) => /^torch(audio)?==/.test(l))
+  if (!pins.length) return null
+  const f = join(venvDir(), 'torch-constraints.txt')
+  writeFileSync(f, pins.join('\n') + '\n')
+  return f
+}
+
+/** PyTorch and torchaudio load together? If torchaudio does not load (it was built for another PyTorch: "Could not
+ *  load this library: libtorchaudio.pyd"), both are installed again as one matching pair from the same index. */
+async function checkTorch(torchVariant: string, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
+  const probe = (): ReturnType<typeof capture> => capture(venvPython(), ['-c', 'import torch, torchaudio; print("TORCH-OK", torch.__version__, torchaudio.__version__, torch.cuda.is_available())'], 120000)
+  let r = await probe()
+  if (/TORCH-OK/.test(r.out)) { log(`PyTorch check: ${r.out.split(/\r?\n/).find((l) => l.includes('TORCH-OK'))?.replace('TORCH-OK', '').trim()}`); return { ok: true } }
+  if (!/No module named 'torch'/.test(r.out)) {
+    log('PyTorch and torchaudio do not fit together: installing them again as a matching pair.')
+    const tags = torchVariant === 'cuda' ? await cudaIndexes() : [null]
+    for (const tag of tags) {
+      const args = tag ? torchArgs('cuda', tag) : torchArgs(torchVariant)
+      if (await run(venvPython(), ['-m', 'pip', 'install', '--force-reinstall', '--no-deps', ...args], log) !== 0) continue
+      r = await probe()
+      if (/TORCH-OK/.test(r.out)) { log('PyTorch repaired.'); return { ok: true } }
+    }
+    log(r.out.split(/\r?\n/).slice(-6).join('\n'))
+    return { ok: false, error: 'PyTorch and torchaudio could not be repaired (see log). Stem splitting will not work until they are.' }
+  }
+  return { ok: true }
+}
+
 async function venvPythonMinor(): Promise<number | null> {
   const r = await capture(venvPython(), ['--version'], 10000)
   const m = /Python 3\.(\d+)/.exec(r.out)
@@ -666,7 +697,10 @@ export async function installGroups(
         code = await run(venvPython(), ['-m', 'pip', 'install', ...torchArgs('cpu')], log)
       }
     } else {
-      code = await run(venvPython(), ['-m', 'pip', 'install', ...args], log)
+      // every package after PyTorch keeps the installed PyTorch (some ask for "torch" and pip would otherwise pull
+      // a different build from PyPI: then torchaudio no longer matches and stem splitting fails to load it)
+      const cons = g !== 'torch' && g !== 'core' ? await torchConstraints() : null
+      code = await run(venvPython(), ['-m', 'pip', 'install', ...(cons ? ['-c', cons] : []), ...args], log)
     }
     if (code === 0 && g === 'basicpitch') {
       code = await run(venvPython(), ['-m', 'pip', 'install', '--no-deps', 'basic-pitch'], log)
@@ -681,6 +715,11 @@ export async function installGroups(
       }
       continue
     }
+  }
+  // PyTorch and torchaudio must fit together (and to the card): check, and repair once if they do not
+  if (groups.includes('torch') || groups.includes('demucs') || hasVenv()) {
+    const r = await checkTorch(torchVariant, log)
+    if (!r.ok) { failed.push('torch'); log(r.error ?? 'PyTorch does not work') }
   }
   if (groups.includes('gpuamd')) {
     log('=== gpuamd (graphics card support for AMD and Intel) ===')

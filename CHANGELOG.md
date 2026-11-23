@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.96.5
+
+### Fixed
+
+- **Stem splitting failed with "Could not load this library: libtorchaudio.pyd"** (reported on GitHub): a later package could replace PyTorch with another build, so torchaudio no longer fitted. Installing engines now keeps the installed PyTorch, checks at the end that PyTorch and torchaudio load together, and installs them again as a matching pair if not. The error now says how to repair it: Settings → AI Engines → tick "Stem separation (Demucs)" → Install selected.
+
 ## 0.96.4
 
 ### New

@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.97.0
+
+### New
+
+- **Album mastering**: the Mastering page has a new **💿 Album** view for an album or EP. Put the songs in order, **measure** them all (loudness before and after, with the target), and **even out the album**: every song is made equally loud (quiet songs like a ballad may stay a little quieter), and its lows and highs are gently brought towards the album's average. Each song keeps its own chain, which can still be changed on its page. **Hear the transitions** with the pause between the songs, and **export the album** at once: numbered files ("01 - Title") with album, artist and track number in the tags, and if wanted the whole album as one file.
+
 ## 0.96.6
 
 ### New

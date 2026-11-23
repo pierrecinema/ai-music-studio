@@ -16,33 +16,25 @@ import { MasterEdit } from './MasterEdit'
 import { MasterFader } from './MasterFader'
 import { applyEdits, type EditOp } from '../../audio/master/edit'
 import { tr } from '../../i18n/tr'
+import { chansOf, decodeFile, editsByPath } from './masterFiles'
+import { AlbumView } from './AlbumView'
 
-// edits of each open song (this session): the original file is never changed
-const editsByPath = new Map<string, { ops: EditOp[]; redo: EditOp[] }>()
 
 // Mastering workspace: drop or open a song, hear it through the chain (A/B with the original at the same loudness),
 // see every measurement before and after, and export it in any format. Processing runs in the app's audio engine
 // (AudioWorklets), live while playing and offline for the export: the file sounds exactly like the preview.
 
-const SR = 48000                                     // the processing rate; the export converts to the chosen rate
 const AUDIO = /\.(wav|mp3|flac|ogg|opus|m4a|aac|aif|aiff)$/i
 
-async function decodeFile(path: string): Promise<AudioBuffer> {
-  const bytes: Uint8Array = await window.api.fs.readFile(path)
-  const ctx = new OfflineAudioContext(2, 1, SR)
-  const buf = await ctx.decodeAudioData(new Uint8Array(bytes).buffer)
-  if (buf.numberOfChannels >= 2) return buf
-  const st = new AudioBuffer({ numberOfChannels: 2, length: buf.length, sampleRate: buf.sampleRate })   // mono → both sides
-  st.copyToChannel(buf.getChannelData(0), 0); st.copyToChannel(buf.getChannelData(0), 1)
-  return st
-}
 
-const chansOf = (b: AudioBuffer): Float32Array[] => [b.getChannelData(0), b.getChannelData(1)]
 const later = (): Promise<void> => new Promise((r) => setTimeout(r, 30))   // let the page paint "measuring…" first
 const clock = (t: number): string => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`
 
 export function Mastering(): React.ReactElement {
   const { files, current, recent, chain, open, close, select, setChain } = useMasteringStore()
+  // one song, or the whole album (AlbumView): remembered
+  const [mode, setModeState] = useState<'song' | 'album'>(() => { try { return localStorage.getItem('ams-master-mode') === 'album' ? 'album' : 'song' } catch { return 'song' } })
+  const setMode = (m: 'song' | 'album'): void => { setModeState(m); try { localStorage.setItem('ams-master-mode', m) } catch { /* storage unavailable */ } }
   const chatOpen = useUIStore((s) => s.chatOpen)
   const [original, setOriginal] = useState<AudioBuffer | null>(null)
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null)
@@ -239,6 +231,13 @@ export function Mastering(): React.ReactElement {
       {/* files */}
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
         <span style={{ fontSize: 15, fontWeight: 700, marginRight: 6 }}>{tr('Mastering')}</span>
+        <span style={{ display: 'inline-flex', border: '1px solid var(--border-mid)', borderRadius: 6, overflow: 'hidden', marginRight: 6 }}>
+          {(['song', 'album'] as const).map((m) => (
+            <button key={m} className="btn" style={{ borderRadius: 0, fontSize: 11, padding: '3px 12px', background: mode === m ? 'var(--accent)' : 'var(--bg-elevated)', color: '#fff' }} onClick={() => setMode(m)}>
+              {m === 'song' ? tr('One song') : `💿 ${tr('Album')}`}
+            </button>
+          ))}
+        </span>
         {files.map((f) => (
           <span key={f.path} title={f.path} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '3px 4px 3px 10px', borderRadius: 6, cursor: 'pointer',
             background: f.path === current ? 'var(--accent-dim)' : 'var(--bg-tertiary)', border: `1px solid ${f.path === current ? 'var(--accent)' : 'var(--border-subtle)'}` }}
@@ -259,7 +258,8 @@ export function Mastering(): React.ReactElement {
         )}
       </div>
 
-      {!current && (
+      {mode === 'album' && <AlbumView target={target} onTarget={(id) => { setTarget(id); try { localStorage.setItem('ams-master-target', id) } catch { /* storage unavailable */ } }} onOpenSong={(f) => { open(f); setMode('song') }} />}
+      {mode === 'song' && !current && (
         <div style={{ border: '2px dashed var(--border-mid)', borderRadius: 12, padding: 40, textAlign: 'center', color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.7 }}>
           {tr('Drag a song here from the Explorer, or press')} <b>{tr('Open…')}</b>.<br />
           {tr('From the')} <b>{tr('Library')}</b>, <b>{tr('Create music')}</b> {tr('and the')} <b>{tr('Studio')}</b> {tr('(File → Send song to Mastering) a song comes here with one click.')}
@@ -268,7 +268,7 @@ export function Mastering(): React.ReactElement {
       {error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
       {loading && <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{tr('Opening')} {name}…</div>}
 
-      {buffer && (
+      {mode === 'song' && buffer && (
         <>
           {/* transport */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

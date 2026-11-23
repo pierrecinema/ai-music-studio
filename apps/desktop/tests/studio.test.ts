@@ -14,6 +14,8 @@ import { autoStructure } from '../src/renderer/src/lib/lyrics'
 import { installProgress, rapLyrics } from '../src/renderer/src/lib/singer'
 import { snapDrag } from '../src/renderer/src/edit/grid'
 import { cleanPlugins } from '../src/renderer/src/lib/pluginList'
+import { adjustChain, albumFileName, planLoudness, planTone, toneOf } from '../src/renderer/src/audio/master/album'
+import { defaultChain } from '../src/renderer/src/audio/master/chain'
 import { measureBalance, PROFILES, suggest, bassWidth } from '../src/renderer/src/audio/master/assistant'
 import { defaultChain } from '../src/renderer/src/audio/master/chain'
 import { applyEdits, applyOp, copyPart, fadeShape } from '../src/renderer/src/audio/master/edit'
@@ -539,6 +541,25 @@ check('search by stem name and several words', matchesQuery(stemT, 'vocals midni
 
 // ── plugin search: empty entries do not break the list ──
 check('plugins: null and nameless entries are left out', cleanPlugins([null, { id: 'a', name: 'Dexed' }, { id: 'b' }, 'x', { id: 'c', name: '' }]).map((p) => p.id).join() === 'a' && cleanPlugins(null).length === 0)
+
+// ── album mastering ──
+{
+  const d = planLoudness([-20, -14, -26], [-12, -10, -18], -14, 0)
+  check('album: every song to the target (keep 0)', d.map((x) => Math.round(x)).join() === '-2,-4,4', d.join())
+  const k = planLoudness([-20, -14, -26], [-14, -14, -14], -14, 0.5)
+  check('album: a quiet song stays a little quieter, a loud one at most +1 LU', Math.round(k[2]) === -3 && k[1] <= 1 && Math.abs(k[0]) < 1e-9, k.join())
+  const t = planTone([{ low: -10, high: -20 }, { low: -14, high: -26 }])
+  check('album: tone half way to the average', t[0].low === -1 && t[1].low === 1 && t[0].high === -1.5 && t[1].high === 1.5, JSON.stringify(t))
+  const c = adjustChain(defaultChain(), 2.5, 1, -1)
+  const eq = c.slots.find((s) => s.type === 'eq') as { p: { lowG: number; highG: number } }
+  check('album: chain adjusted (Louder, EQ shelves)', c.louderDb === 2.5 && eq.p.lowG === 1 && eq.p.highG === -1)
+  const sr = 48000; const n = sr
+  const lowSine = new Float32Array(n).map((_, i) => Math.sin(2 * Math.PI * 60 * i / sr))
+  const hiSine = new Float32Array(n).map((_, i) => Math.sin(2 * Math.PI * 9000 * i / sr))
+  const a1 = toneOf([lowSine, lowSine], sr), a2 = toneOf([hiSine, hiSine], sr)
+  check('album: tone measures lows and highs', a1.low > a2.low + 10 && a2.high > a1.high + 10, JSON.stringify([a1, a2]))
+  check('album: file names', albumFileName(0, 'Intro') === '01 - Intro' && albumFileName(11, 'X') === '12 - X')
+}
 
 // ── the singer: installation progress, rap lyrics ──
 {

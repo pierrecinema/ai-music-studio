@@ -7,6 +7,17 @@ import { useUIStore } from './ui.store'
 
 export interface MasterFile { path: string; name: string }
 
+// an album: its songs in order, the pause between them, and how it is evened out
+export interface AlbumSettings {
+  songs: MasterFile[]
+  gapSec: number                  // silence between the songs (s)
+  keep: number                    // 0..0.5: how much quieter a quiet song (a ballad) may stay
+  tone: boolean                   // also even out lows and highs (gently)
+  title: string                   // the album's name (file name and tag)
+  artist: string
+}
+const defaultAlbum = (): AlbumSettings => ({ songs: [], gapSec: 2, keep: 0.3, tone: true, title: '', artist: '' })
+
 interface MasteringState {
   files: MasterFile[]             // open files (tabs)
   current: string | null          // path of the shown file
@@ -15,6 +26,9 @@ interface MasteringState {
   presets: Record<string, Chain>  // the user's own presets
   chains: Record<string, Chain>   // the chain of each song (by path): opening a song again brings it back
   markers: Record<string, Array<{ t: number; name: string }>>
+  album: AlbumSettings
+  setAlbum: (a: Partial<AlbumSettings>) => void
+  setChainFor: (path: string, c: Chain) => void
   setMarkers: (path: string, m: Array<{ t: number; name: string }>) => void
   open: (f: MasterFile) => void
   close: (path: string) => void
@@ -36,6 +50,9 @@ export const useMasteringStore = create<MasteringState>()(
       presets: {},
       chains: {},
       markers: {},
+      album: defaultAlbum(),
+      setAlbum: (a) => set((s) => ({ album: { ...s.album, ...a } })),
+      setChainFor: (path, c) => set((s) => ({ chains: { ...s.chains, [path]: c }, chain: s.current === path ? c : s.chain })),
       setMarkers: (path, m) => set((s) => ({ markers: { ...s.markers, [path]: m } })),
       open: (f) => {
         const file = { path: f.path, name: f.name || nameOf(f.path) }
@@ -58,7 +75,7 @@ export const useMasteringStore = create<MasteringState>()(
     {
       name: 'ams-mastering',
       version: 1,
-      partialize: (s) => ({ files: s.files, current: s.current, recent: s.recent, chain: s.chain, presets: s.presets, chains: s.chains, markers: s.markers }),
+      partialize: (s) => ({ files: s.files, current: s.current, recent: s.recent, chain: s.chain, presets: s.presets, chains: s.chains, markers: s.markers, album: s.album }),
     },
   ),
 )

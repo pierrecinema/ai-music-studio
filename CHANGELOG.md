@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.97.3
+
+### New
+
+- **Album player**: the album appears as one timeline (all songs and pauses). **Click anywhere** to play from there, ⏮ ⏭ jump between songs, and the yellow **⇄** marks (or *Hear the transition* in the list) play each transition from 8 seconds before the end of a song into the next. It plays through each song's chain and starts at once, also with long songs, because it renders just ahead of what is heard.
+
 ## 0.97.2
 
 ### New

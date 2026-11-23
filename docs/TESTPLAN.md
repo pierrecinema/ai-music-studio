@@ -740,3 +740,12 @@ Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein l
 | 48.4 | Auf die Nummer eines Songs klicken (z. B. 03) | Album spielt ab diesem Song | | | 0.97.2 |
 | 48.5 | **Messen** | Knopf ist bedienbar, Balken erscheinen; nach Wechsel zu „Ein Song“ und zurück sind sie noch da | | | 0.97.2 |
 
+## 49. Neu in 0.97.3: Album-Player mit Zeitleiste
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 49.1 | Album: **▶ Album anhören** | Zeitleiste mit allen Songs und Pausen, weiße Abspiellinie läuft, Zeit läuft mit | | | 0.97.3 |
+| 49.2 | In die Zeitleiste klicken (z. B. Mitte von Song 3) | Spielt sofort ab dort | | | 0.97.3 |
+| 49.3 | Gelbes **⇄** zwischen zwei Songs klicken | Spielt ab 8 s vor dem Ende, durch die Pause in den nächsten Song | | | 0.97.3 |
+| 49.4 | **⏮ / ⏭** | Springt zum vorherigen / nächsten Song | | | 0.97.3 |
+

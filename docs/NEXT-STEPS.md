@@ -16,6 +16,13 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 ## Talking with the owner
 
 - Always in German, informal: **du**, never Sie (owner, 22.11.2026). Code, docs and commits stay in English.
+- **Professional design from the first version** (owner, 23.11.2026): every new screen, panel or control is designed like
+  professional audio software (WaveLab, Ozone, Ableton, Cubase) right away, not as a plain first draft: clear layout,
+  real waveforms and meters where they help, a proper transport with a large time display, no playful markers (e.g. no
+  coloured dots as buttons). Check the look in the browser preview (`pnpm preview:browser`, Playwright screenshot)
+  before releasing.
+- Things that wait (loading, rendering) show it at once (spinner / "Preparing…") and stay stoppable; a second click
+  must never restart the work.
 
 ## Tonight / next session
 

@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.97.5
+
+### Fixed
+
+- **Album player: play and stop took up to 20 seconds**: ■ now stops at once (also while the first piece is still being prepared, which used to start it again), the play button shows a spinner and "Preparing…", the sound starts with a short first piece, and the next song is read in advance so the change of song does not wait.
+
 ## 0.97.4
 
 ### New

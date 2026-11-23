@@ -18,6 +18,7 @@ export interface AlbumPlayerProps {
   gap: number
   pos: number
   playing: boolean
+  starting?: boolean                   // the first piece is being prepared
   now: number                          // the song playing (-1: none)
   peaks: Array<Float32Array | null>    // each song's waveform (0..1), any resolution
   loading: boolean
@@ -119,13 +120,14 @@ export function AlbumPlayer(p: AlbumPlayerProps): React.ReactElement {
       {/* transport */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button style={btn} title={tr('Previous song')} onClick={p.onPrev}>⏮</button>
-        <button style={{ ...btn, width: 42, height: 42, borderRadius: 21, background: 'var(--accent)', border: 'none', color: '#fff', fontSize: 16 }} title={p.playing ? tr('Stop') : tr('Hear the album')} onClick={p.onToggle}>{p.playing ? '■' : '▶'}</button>
+        <button style={{ ...btn, width: 42, height: 42, borderRadius: 21, background: 'var(--accent)', border: 'none', color: '#fff', fontSize: 16 }} title={p.playing ? tr('Stop') : tr('Hear the album')} onClick={p.onToggle}>{p.starting ? <span className="ams-spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'ams-spin 0.8s linear infinite' }} /> : p.playing ? '■' : '▶'}</button>
+        <style>{'@keyframes ams-spin { to { transform: rotate(360deg) } }'}</style>
         <button style={btn} title={tr('Next song')} onClick={p.onNext}>⏭</button>
         <div style={{ marginLeft: 8, padding: '4px 12px', background: '#05080c', border: '1px solid #1f2a37', borderRadius: 6, fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontVariantNumeric: 'tabular-nums', color: '#7dd3fc', fontSize: 18, letterSpacing: '0.04em' }}>
           {clock(p.pos)}<span style={{ color: '#3b5068', fontSize: 13 }}> / {clock(p.total)}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, marginLeft: 6 }}>
-          <span style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{p.now >= 0 ? trf('Track {n} of {total}', { n: p.now + 1, total: p.names.length }) : trf('{n} songs', { n: p.names.length })}</span>
+          <span style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{p.starting ? tr('Preparing…') : p.now >= 0 ? trf('Track {n} of {total}', { n: p.now + 1, total: p.names.length }) : trf('{n} songs', { n: p.names.length })}</span>
           <span className="truncate" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', maxWidth: 420 }}>{p.now >= 0 ? p.names[p.now] : '—'}</span>
         </div>
       </div>

@@ -344,6 +344,13 @@ export function CreateMusic(): React.ReactElement {
 
   const set = useCallback(<K extends keyof MusicParams>(k: K, v: MusicParams[K]) =>
     setP((s) => ({ ...s, [k]: v })), [])
+  // from the Library ("Use again in Create music"): the song's prompt and lyrics are filled in
+  const prefill = useUIStore((s) => s.createPrefill)
+  useEffect(() => {
+    if (!prefill) return
+    useUIStore.getState().setCreatePrefill(null)
+    setP((s) => ({ ...s, prompt: prefill.prompt || s.prompt, lyrics: prefill.lyrics ?? s.lyrics }))
+  }, [prefill])
 
   const refreshLoras = useCallback(async () => {
     const l = await window.api.loras.list()

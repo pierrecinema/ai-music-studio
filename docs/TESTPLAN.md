@@ -722,3 +722,11 @@ Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein l
 | 46.6 | Pause auf 3 s, **▶ Übergang anhören** | Ende des Songs, 3 s Stille, Anfang des nächsten | | | 0.97.0 |
 | 46.7 | **Album exportieren…**, Ordner wählen, „ganzes Album als eine Datei“ an | „01 - Titel“ usw. im Ordner, plus „… (ganzes Album)“; Tags mit Album und Tracknummer | | | 0.97.0 |
 
+## 47. Neu in 0.97.1: Prompt und Text in der Bibliothek
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 47.1 | Bibliothek → bei einem erzeugten Song **📝 Prompt & Text** | Prompt (Stil) und Liedtext klappen auf, mit Modell, Seed, BPM | | | 0.97.1 |
+| 47.2 | **Kopieren** beim Text, in einen Editor einfügen | Der ganze Text ist da | | | 0.97.1 |
+| 47.3 | **In Create music wiederverwenden** | Create music öffnet sich, Prompt und Text sind eingetragen | | | 0.97.1 |
+

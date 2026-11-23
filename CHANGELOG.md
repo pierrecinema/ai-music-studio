@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.97.1
+
+### New
+
+- **Library: prompt and lyrics of a song with one click**: *📝 Prompt & lyrics* shows the prompt (style) and the lyrics a song was made with, each with a *Copy* button, and *Use again in Create music* opens Create music with them filled in, for a new version.
+
 ## 0.97.0
 
 ### New

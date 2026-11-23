@@ -67,7 +67,8 @@ export function Mastering(): React.ReactElement {
     let gone = false
     setBuffer(null); setOriginal(null); setAfter(null); setABefore(null); setAAfter(null); setError(null); afterFor.current = null
     void masterPlayer.load(null)
-    if (!current) return
+    // in the album view the single song is not opened (that cost time and memory); it opens when you switch back
+    if (!current || mode === 'album') return
     setEdits(editsByPath.get(current) ?? { ops: [], redo: [] })
     setLoading(true)
     ;(async () => {
@@ -82,7 +83,7 @@ export function Mastering(): React.ReactElement {
       }
     })()
     return () => { gone = true }
-  }, [current])
+  }, [current, mode])
 
   // the edited song: the original with every edit step applied; played, measured and exported
   useEffect(() => {
@@ -177,6 +178,14 @@ export function Mastering(): React.ReactElement {
     e.preventDefault(); setDropping(false)
     const paths = [...e.dataTransfer.files].filter((f) => AUDIO.test(f.name)).map((f) => (f as File & { path?: string }).path).filter((p): p is string => !!p)
     if (!paths.length) { setError(tr('Drop audio files (WAV, MP3, FLAC, OGG, M4A, AIFF).')); return }
+    if (mode === 'album') {
+      // on the album: the songs are added at its end, in the order they were dropped
+      const st = useMasteringStore.getState()
+      const have = new Set(st.album.songs.map((x) => x.path))
+      const nameOf = (p: string): string => (p.split(/[\\/]/).pop() ?? p).replace(/\.[a-z0-9]+$/i, '')
+      st.setAlbum({ songs: [...st.album.songs, ...paths.filter((p) => !have.has(p)).map((p) => ({ path: p, name: nameOf(p) }))] })
+      return
+    }
     for (const p of paths) open({ path: p, name: '' })
   }
 
@@ -224,7 +233,7 @@ export function Mastering(): React.ReactElement {
       onDrop={onDrop}>
       {dropping && (
         <div style={{ position: 'absolute', inset: 8, border: '2px dashed var(--accent)', borderRadius: 12, background: 'color-mix(in srgb, var(--accent) 12%, transparent)', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, pointerEvents: 'none' }}>
-          {tr('Release to open in Mastering')}
+          {mode === 'album' ? tr('Release to add the songs to the album') : tr('Release to open in Mastering')}
         </div>
       )}
 
@@ -238,6 +247,7 @@ export function Mastering(): React.ReactElement {
             </button>
           ))}
         </span>
+        {mode === 'song' && (<>
         {files.map((f) => (
           <span key={f.path} title={f.path} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '3px 4px 3px 10px', borderRadius: 6, cursor: 'pointer',
             background: f.path === current ? 'var(--accent-dim)' : 'var(--bg-tertiary)', border: `1px solid ${f.path === current ? 'var(--accent)' : 'var(--border-subtle)'}` }}
@@ -256,6 +266,7 @@ export function Mastering(): React.ReactElement {
             {recent.map((r) => <option key={r.path} value={r.path}>{r.name}</option>)}
           </select>
         )}
+        </>)}
       </div>
 
       {mode === 'album' && <AlbumView target={target} onTarget={(id) => { setTarget(id); try { localStorage.setItem('ams-master-target', id) } catch { /* storage unavailable */ } }} onOpenSong={(f) => { open(f); setMode('song') }} />}
@@ -265,7 +276,7 @@ export function Mastering(): React.ReactElement {
           {tr('From the')} <b>{tr('Library')}</b>, <b>{tr('Create music')}</b> {tr('and the')} <b>{tr('Studio')}</b> {tr('(File → Send song to Mastering) a song comes here with one click.')}
         </div>
       )}
-      {error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
+      {mode === 'song' && error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}
       {loading && <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{tr('Opening')} {name}…</div>}
 
       {mode === 'song' && buffer && (

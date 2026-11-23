@@ -760,3 +760,12 @@ Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein l
 | 50.5 | Album-Player: ▶, dann gleich ■ | ▶ zeigt sofort einen drehenden Kreis und „Wird vorbereitet …“; ■ stoppt sofort; der Ton kommt nach wenigen Sekunden | | | 0.97.5 |
 | 50.6 | App neu starten, Album öffnen, sofort ▶ | Ton nach wenigen Sekunden (nicht 20); Wellenformen erscheinen nach und nach, beim nächsten Öffnen sofort | | | 0.97.6 |
 
+## 51. Neu in 0.97.7: Songs ins Album ziehen
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 51.1 | Album-Ansicht | Oben nur „Mastering · Ein Song / Album“, keine Song-Reiter mehr | | | 0.97.7 |
+| 51.2 | Audiodateien aus dem Explorer auf die Album-Ansicht ziehen | „Loslassen, um die Songs zum Album hinzuzufügen“; danach am Ende der Liste | | | 0.97.7 |
+| 51.3 | Einen Song an den ⋮⋮ fassen und an eine andere Stelle ziehen | Lila Linie zeigt die Stelle; Reihenfolge und Zeitleiste ändern sich | | | 0.97.7 |
+| 51.4 | Unten „4 Songs · …“ | Zeigt die richtige Gesamtlänge (z. B. 24:53) | | | 0.97.7 |
+

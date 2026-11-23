@@ -3,6 +3,16 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.97.7
+
+### New
+
+- **Album: drag songs in**: drop audio files from the Explorer onto the album view and they are added at its end; drag a song in the list (⋮⋮) to another place to change the order.
+
+### Changed
+
+- **Album view is tidier**: the song tabs, *Open…*, *Example song* and *Recent…* of the single-song view no longer show above the album (the songs are in the album list), and the single song is not loaded in the background while the album view is open (faster, less memory). The album's total length is shown correctly.
+
 ## 0.97.6
 
 ### Fixed

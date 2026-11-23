@@ -692,3 +692,10 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 | 43.5 | Stil **Rap**: die Rap-Beispiele anklicken | Jedes Beispiel spielt sofort | | | 0.96.4 |
 | 43.6 | App schließen, gleich wieder per Doppelklick starten (Desktop und an die Taskleiste angeheftet), mehrmals | Ein Klick reicht, das Fenster erscheint jedes Mal | | | 0.96.4 |
 
+## 44. Neu in 0.96.5: PyTorch / torchaudio passen zusammen
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 44.1 | Einstellungen → KI-Engines → „Stem separation (Demucs)“ ankreuzen → Ausgewählte installieren | Im Log steht am Ende „PyTorch check: …“ mit den Versionen | | | 0.96.5 |
+| 44.2 | Stem Splitter: einen Song teilen | Stems kommen ohne Fehler | | | 0.96.5 |
+

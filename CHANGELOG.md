@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.97.4
+
+### New
+
+- **Vocal Editor: every voice in every style, to hear at once**: under the styles, *▶ Pop ▶ Rock ▶ Ballad ▶ Soul* play the chosen voice singing the same line in each style (finished recordings, no computing), so you hear the difference before you sing.
+
 ## 0.97.3
 
 ### New

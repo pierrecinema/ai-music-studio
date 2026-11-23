@@ -689,4 +689,6 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 | 43.2 | ✂ über zwei Spuren hinweg ziehen | Auf beiden Spuren wird der Bereich herausgeschnitten | | | 0.96.4 |
 | 43.3 | ✂ einmal klicken (ohne Ziehen) | Schnitt an der Stelle, danach wieder Zeiger | | | 0.96.4 |
 | 43.4 | Rechtsklick auf eine Gesangsaufnahme → **Mein Gesang → MIDI-Melodie (Vocal Editor)** | Vocal Editor öffnet sich, nach Sekunden neue Spur „Meine Melodie (MIDI)“ | | | 0.96.4 |
+| 43.5 | Stil **Rap**: die Rap-Beispiele anklicken | Jedes Beispiel spielt sofort | | | 0.96.4 |
+| 43.6 | App schließen, gleich wieder per Doppelklick starten (Desktop und an die Taskleiste angeheftet), mehrmals | Ein Klick reicht, das Fenster erscheint jedes Mal | | | 0.96.4 |
 

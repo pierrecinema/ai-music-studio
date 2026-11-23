@@ -14,6 +14,7 @@ let mainWindow: BrowserWindow | null = null
 // Closing the window first asks the page whether the project has unsaved changes (Save / Don't save / Cancel).
 // A quit started by the app itself (update install) closes without asking.
 let allowClose = false
+let quitting: ReturnType<typeof setTimeout> | null = null   // the app is closing (hard exit planned)
 const serverManager = new ServerManager()
 
 function createWindow(): void {
@@ -56,9 +57,18 @@ function createWindow(): void {
 
   // back from a plugin window or another program: the page gets the keyboard (text fields typed nothing otherwise)
   mainWindow.on('focus', () => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.focus() })
-  mainWindow.on('ready-to-show', () => {
-    mainWindow!.show()
-  })
+  // Show the window as soon as it is ready. "ready-to-show" did not always come (seen on Windows when the app was
+  // started again right after closing it): the app ran without a window until it was started a second time. So the
+  // window is also shown when the page has loaded, and after a few seconds at the latest.
+  const reveal = (): void => {
+    const w = mainWindow
+    if (!w || w.isDestroyed() || w.isVisible()) return
+    w.show()
+    w.focus()
+  }
+  mainWindow.once('ready-to-show', reveal)
+  mainWindow.webContents.once('did-finish-load', reveal)
+  setTimeout(reveal, 4000)
 
   // Right-click on text: Copy / Cut / Paste / Select all. The app menu is removed (it owned shortcuts the
   // Studio needs), and Electron shows no context menu by itself, so log texts could not be copied at all.
@@ -96,9 +106,12 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', () => {
     // the app was still running without a window (it had not quit completely): open the window again
     if (!mainWindow || mainWindow.isDestroyed()) {
+      // also while it is closing: stop the planned exit and open the window again
+      if (quitting) { clearTimeout(quitting); quitting = null }
       if (app.isReady()) { allowClose = false; if (!serverManager.isReady()) void serverManager.start(); createWindow() }
       return
     }
+    if (!mainWindow.isVisible()) mainWindow.show()
     if (mainWindow.isMinimized()) mainWindow.restore()
     mainWindow.show()
     mainWindow.focus()
@@ -153,9 +166,11 @@ app.whenReady().then(async () => {
 // running in the background (seen in the Task Manager) kept the next start from opening any window.
 app.on('window-all-closed', async () => {
   if (process.platform === 'darwin') { await serverManager.stop(); return }
-  const hard = setTimeout(() => app.exit(0), 8000)
-  hard.unref?.()
+  quitting = setTimeout(() => app.exit(0), 8000)
+  quitting.unref?.()
   try { stopPluginHost() } catch { /* already gone */ }
   await Promise.race([serverManager.stop().catch(() => undefined), new Promise((r) => setTimeout(r, 5000))])
+  // started again while it was closing (a double-click on the icon): the new window stays, the app goes on
+  if (BrowserWindow.getAllWindows().length) { if (quitting) clearTimeout(quitting); quitting = null; return }
   app.quit()
 })

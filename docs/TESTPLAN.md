@@ -796,7 +796,7 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 53.2 | Eine andere Spur auswählen, Aufnahme (● oben oder Strg+R) | Aufgenommen wird auf der scharfen Spur, nicht auf der ausgewählten | ✅ | | 0.98.4 |
 | 53.3 | Während der Aufnahme schauen | Auf der Spur wächst ein roter Clip „Aufnahme…“ mit der Wellenform des Eingangs | ✅ | | 0.98.4 |
 | 53.4 | Neben dem Lautstärke-Regler **In 1** wählen (Mikro an Eingang 1), aufnehmen | Die Aufnahme ist mono und klingt in der Mitte, nicht nur links oder rechts | ✅ | | 0.98.4 |
-| 53.5 | **In 2** (Mikro/Gitarre an Eingang 2) | Wie 53.4, mit Eingang 2 | | Pendent: andere Hardware mit Mikrofon | 0.98.4 |
+| 53.5 | **In 2** (Mikro/Gitarre an Eingang 2) | Wie 53.4, mit Eingang 2 | ✅ | | 0.98.4 |
 | 53.6 | **In 1+2** | Stereo wie bisher | ✅ | | 0.98.4 |
 | 53.7 | MIDI-Spur scharf machen, mit dem MIDI-Keyboard aufnehmen (Puffer 256 oder 512) | Keine Aussetzer und kein Knacken beim Spielen; die Noten erscheinen im Clip | | User testet | 0.98.4 |
 | 53.8 | MIDI-Aufnahme in einer Loop | Ab dem nächsten Durchlauf hört man die eben gespielten Noten | | User testet | 0.98.4 |

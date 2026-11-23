@@ -30,7 +30,7 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ### Road to 1.0 (owner, 23.11.2026): in this order
 
-1. **0.98.6: tested** (53.2, 53.4, 53.9–53.11 passed; open: 53.5 (In 2) on the PC with a microphone; 53.7/53.8
+1. **0.98.6: tested** (53.2, 53.4, 53.9–53.11 passed; 53.5 passed too; 53.7/53.8
    the YouTube user tests MIDI recording; 52.9 package "Everything" passed).
 2. **0.99.0: layout changes** (next session, 24.11.2026). Ask the owner first which changes (screens, looks, what bothers them); design like
    professional audio software (see "Talking with the owner"), check every screen in the browser preview.

@@ -30,7 +30,7 @@ async function songBuffer(path: string): Promise<AudioBuffer> {
   return buf
 }
 
-export function AlbumView({ target, onOpenSong }: { target: string; onOpenSong: (f: MasterFile) => void }): React.ReactElement {
+export function AlbumView({ target, onTarget, onOpenSong }: { target: string; onTarget: (id: string) => void; onOpenSong: (f: MasterFile) => void }): React.ReactElement {
   const album = useMasteringStore((s) => s.album)
   const setAlbum = useMasteringStore((s) => s.setAlbum)
   const chains = useMasteringStore((s) => s.chains)
@@ -174,6 +174,9 @@ export function AlbumView({ target, onOpenSong }: { target: string; onOpenSong: 
           <b style={{ fontSize: 14 }}>{tr('Album')}</b>
           <input value={album.title} onChange={(e) => setAlbum({ title: e.target.value })} placeholder={tr('Album title')} style={{ width: 200 }} />
           <input value={album.artist} onChange={(e) => setAlbum({ artist: e.target.value })} placeholder={tr('Artist')} style={{ width: 160 }} />
+          <select value={target} onChange={(e) => onTarget(e.target.value)} title={tr('The loudness the album is evened out to')} style={{ fontSize: 11 }}>
+            {TARGETS.map((t) => <option key={t.id} value={t.id}>{tr(t.label)}</option>)}
+          </select>
           <span style={{ flex: 1 }} />
           <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => void addFiles()}>{tr('+ Add songs…')}</button>
           {files.length > 0 && <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => add(files)}>{tr('+ All open songs')}</button>}

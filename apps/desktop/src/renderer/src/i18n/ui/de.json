@@ -1970,5 +1970,6 @@
  "target {t}": "Ziel {t}",
  "whole album": "ganzes Album",
  "{n} songs": "{n} Songs",
- "{s} s pause": "{s} s Pause"
+ "{s} s pause": "{s} s Pause",
+ "The loudness the album is evened out to": "Die Lautheit, auf die das Album angeglichen wird"
 }

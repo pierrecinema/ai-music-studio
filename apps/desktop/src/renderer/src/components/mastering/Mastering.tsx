@@ -258,7 +258,7 @@ export function Mastering(): React.ReactElement {
         )}
       </div>
 
-      {mode === 'album' && <AlbumView target={target} onOpenSong={(f) => { open(f); setMode('song') }} />}
+      {mode === 'album' && <AlbumView target={target} onTarget={(id) => { setTarget(id); try { localStorage.setItem('ams-master-target', id) } catch { /* storage unavailable */ } }} onOpenSong={(f) => { open(f); setMode('song') }} />}
       {mode === 'song' && !current && (
         <div style={{ border: '2px dashed var(--border-mid)', borderRadius: 12, padding: 40, textAlign: 'center', color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.7 }}>
           {tr('Drag a song here from the Explorer, or press')} <b>{tr('Open…')}</b>.<br />

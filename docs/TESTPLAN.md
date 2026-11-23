@@ -708,3 +708,17 @@ Vorbereitung: eine MIDI-Spur mit einer kurzen Melodie (8–16 Noten), Text „He
 | 45.3 | Nochmal schneiden, dann **Entf** drücken | Der herausgeschnittene Teil wird gelöscht | | | 0.96.6 |
 | 45.4 | Ganz herauszoomen (Regler ganz links) oder **⤢** | Der ganze Song ist zu sehen und ein paar Takte danach; Taktzahlen überlappen nicht | | | 0.96.6 |
 
+## 46. Neu in 0.97.0: Album-Mastering
+
+Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein leiser, ein lauter).
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 46.1 | Mastering → oben **💿 Album** | Album-Ansicht mit Titel, Künstler, Ziel-Lautheit | | | 0.97.0 |
+| 46.2 | **+ Songs hinzufügen…**, 3–4 Songs wählen, mit ▲ ▼ ordnen | Songs nummeriert 01, 02 …; Reihenfolge ändert sich | | | 0.97.0 |
+| 46.3 | **Messen** | Je Song ein grauer (vorher) und ein farbiger Balken (nachher), Linie für das Ziel, LUFS und Länge | | | 0.97.0 |
+| 46.4 | **Album angleichen** | Fortschritt; danach liegen alle Songs am Ziel (grün), ein leiser etwas darunter | | | 0.97.0 |
+| 46.5 | Auf einen Songnamen klicken | Der Song öffnet sich einzeln mit seiner (angepassten) Kette | | | 0.97.0 |
+| 46.6 | Pause auf 3 s, **▶ Übergang anhören** | Ende des Songs, 3 s Stille, Anfang des nächsten | | | 0.97.0 |
+| 46.7 | **Album exportieren…**, Ordner wählen, „ganzes Album als eine Datei“ an | „01 - Titel“ usw. im Ordner, plus „… (ganzes Album)“; Tags mit Album und Tracknummer | | | 0.97.0 |
+

@@ -44,6 +44,10 @@ The single packages can also be installed in **[[Settings]] → AI Engines**: ti
 
 Models are downloaded on first use (several GB, once). Where they are stored: [[Settings]] → Models.
 
+## Uninstall
+
+Windows → Settings → Apps → AI Music Studio → Uninstall. The uninstaller asks whether the **AI engines, the downloaded AI models and the settings** should go too (several GB). *Yes*: the next installation starts like the very first one, with the setup assistant. *No*: they stay, and a new installation uses them right away. Your songs and projects always stay. Updates never ask and never remove anything.
+
 ## Updates
 
 The app checks for new versions at start and every few hours and installs them with one click (bottom right, or [[Settings]] → Updates). The app closes, installs and starts again by itself.

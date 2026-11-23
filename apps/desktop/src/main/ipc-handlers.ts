@@ -208,6 +208,8 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
   // the project's own GitHub pages (About, star, issues, releases) and its donation page: nothing else
   ipcMain.handle('shell:open-project', (_, page: string) => {
     if (page === 'donate') { void shell.openExternal(DONATE_URL); return }
+    // Windows blocks the microphone for desktop apps: its privacy page, where it is allowed
+    if (page === 'micPrivacy') { if (process.platform === 'win32') void shell.openExternal('ms-settings:privacy-microphone'); return }
     const pages: Record<string, string> = {
       home: '', releases: '/releases', issues: '/issues', newIssue: '/issues/new', discussions: '/discussions'
     }

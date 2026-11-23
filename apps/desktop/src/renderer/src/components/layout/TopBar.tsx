@@ -104,7 +104,7 @@ export function TopBar(): React.ReactElement {
   const toggleRecord = async (): Promise<void> => {
     if (isRecording) { pause(); return }
     const problem = await startAnyRecording()                    // MIDI on a MIDI track / in the Piano Roll
-    if (problem) window.alert(problem)
+    if (problem) window.alert(tr(problem))
   }
 
   return (

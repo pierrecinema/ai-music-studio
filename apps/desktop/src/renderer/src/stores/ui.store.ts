@@ -24,6 +24,8 @@ interface UIState {
   snap: boolean         // snap to the grid while moving, trimming and drawing
   tool: 'pointer' | 'scissors'   // the Studio's tool: select and move, or cut clips with a click
   singingToMidi: boolean          // the Vocal Editor turns the selected audio clip into a melody when it opens
+  createPrefill: { prompt: string; lyrics: string; seed: number | null } | null   // Create music opens with these (from the Library)
+  setCreatePrefill: (p: { prompt: string; lyrics: string; seed: number | null } | null) => void
   setSingingToMidi: (on: boolean) => void
   libraryTab: 'tracks' | 'stems' | 'samples'   // open tab of the Library (other views can open it on a tab)
   panelHeight: number   // the panel under the Studio (mixer, piano roll, ...): drag its top edge
@@ -76,11 +78,13 @@ export const useUIStore = create<UIState>()(
       snap: true,
       tool: 'pointer',
       singingToMidi: false,
+      createPrefill: null,
 
       setGrid: (grid) => set({ grid }),
       toggleSnap: () => set((s) => ({ snap: !s.snap })),
       setTool: (tool) => set({ tool }),
       setSingingToMidi: (singingToMidi) => set({ singingToMidi }),
+      setCreatePrefill: (createPrefill) => set({ createPrefill }),
       chatOpen: true,
       setChatOpen: (chatOpen) => set({ chatOpen }),
       setShortcutPreset: (shortcutPreset) => set({ shortcutPreset }),

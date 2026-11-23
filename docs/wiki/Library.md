@@ -31,3 +31,7 @@ Your sample folders (nothing is copied, the files stay where they are).
 - Tempo is read from the name ("130 bpm"); **BPM?** measures it.
 - **Studio: synced** puts the sample at the playhead on a new track and stretches it to the project tempo (pitch stays). **Studio: as is** puts it in unchanged. One-shots (under 1 second) are never stretched.
 - **+ Library** copies it into *My tracks* (searchable, with tags, exportable).
+
+## Prompt and lyrics of a song
+
+*📝 Prompt & lyrics* under a song shows the prompt (style) and the lyrics it was made with. *Copy* puts either on the clipboard; *Use again in Create music* opens Create music with both filled in, to make a new version.

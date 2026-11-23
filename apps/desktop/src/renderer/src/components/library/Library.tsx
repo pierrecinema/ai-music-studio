@@ -40,6 +40,8 @@ export function Library(): React.ReactElement {
   const tab = useUIStore((s) => s.libraryTab)                       // kept in the store: Stem Splitter opens the Stems tab
   const setTab = useUIStore((s) => s.setLibraryTab)
   const [editTags, setEditTags] = useState<string | null>(null)
+  const [details, setDetails] = useState<string | null>(null)        // the track whose prompt and lyrics are shown
+  const [copied, setCopied] = useState<string | null>(null)
   const [exporting, setExporting] = useState<{ title: string; items: Array<{ path: string; name: string }> } | null>(null)
   const [aligning, setAligning] = useState<string | null>(null)       // a track id, or 'all'
   const [confirmAll, setConfirmAll] = useState(false)
@@ -265,6 +267,9 @@ export function Library(): React.ReactElement {
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', paddingLeft: 50 }}>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Rename this song')} onClick={() => setRenaming(t.id)}>{tr('Rename')}</button>
           <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Tags: genre, mood or anything you want to search for')} onClick={() => setEditTags(t.id)}>{tr('Tags')}</button>
+          {(t.prompt || t.lyrics) && (
+            <button className={`btn ${details === t.id ? 'btn-primary' : 'btn-ghost'}`} style={{ fontSize: 11 }} title={tr('Show the prompt and the lyrics this song was made with')} onClick={() => setDetails(details === t.id ? null : t.id)}>📝 {tr('Prompt & lyrics')}</button>
+          )}
           {t.original ? (
             <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={aligning !== null} title={tr('Undo the cut: put the untouched file back')}
               onClick={() => { stopIfPlaying(t.id); void act(() => api.library.restore(t.id)).then(() => setNotice(trf('"{name}": the original is back.', { name: t.title }))) }}>{tr('Restore original')}</button>
@@ -290,6 +295,28 @@ export function Library(): React.ReactElement {
             <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setConfirmId(t.id)}>{tr('Delete')}</button>
           )}
         </div>
+        {details === t.id && (
+          // the prompt and lyrics the song was made with: to read, copy, or make a new song from them
+          <div style={{ marginLeft: 50, display: 'grid', gridTemplateColumns: t.lyrics ? '1fr 1fr' : '1fr', gap: 10 }}>
+            {[['Prompt (style)', t.prompt], ...(t.lyrics ? [['Lyrics', t.lyrics]] : [])].map(([label, text]) => (
+              <div key={label} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: 10, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <b style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}>{tr(label)}</b>
+                  <button className="btn btn-ghost" style={{ fontSize: 10.5, padding: '1px 8px' }} disabled={!text}
+                    onClick={() => { void navigator.clipboard.writeText(text).then(() => { setCopied(`${t.id}:${label}`); setTimeout(() => setCopied(null), 1500) }) }}>
+                    {copied === `${t.id}:${label}` ? `✓ ${tr('Copied')}` : tr('Copy')}
+                  </button>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-primary)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 260, overflow: 'auto', userSelect: 'text', lineHeight: 1.45 }}>{text || '—'}</div>
+              </div>
+            ))}
+            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 11, color: 'var(--text-muted)' }}>
+              <span>{ENGINE[t.engine] ?? (t.engine || t.source)}{t.seed ? ` · seed ${t.seed}` : ''}{t.bpm ? ` · ${Math.round(t.bpm)} BPM` : ''}</span>
+              <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Open Create music with this prompt and these lyrics, to make a new version')}
+                onClick={() => { useUIStore.getState().setCreatePrefill({ prompt: t.prompt, lyrics: t.lyrics, seed: t.seed ?? null }); setActiveView('create') }}>✦ {tr('Use again in Create music')}</button>
+            </div>
+          </div>
+        )}
         {/* while it plays: the real waveform, click or drag to jump */}
         {playing === t.id && <WaveformSeek fileKey={t.path} bytes={playBytes} audio={audio.current} />}
       </div>

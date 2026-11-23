@@ -1971,5 +1971,11 @@
  "whole album": "ganzes Album",
  "{n} songs": "{n} Songs",
  "{s} s pause": "{s} s Pause",
- "The loudness the album is evened out to": "Die Lautheit, auf die das Album angeglichen wird"
+ "The loudness the album is evened out to": "Die Lautheit, auf die das Album angeglichen wird",
+ "Prompt & lyrics": "Prompt & Text",
+ "Show the prompt and the lyrics this song was made with": "Prompt und Liedtext anzeigen, mit denen dieser Song gemacht wurde",
+ "Prompt (style)": "Prompt (Stil)",
+ "Copied": "Kopiert",
+ "Open Create music with this prompt and these lyrics, to make a new version": "Create music mit diesem Prompt und diesem Text öffnen, für eine neue Version",
+ "Use again in Create music": "In Create music wiederverwenden"
 }

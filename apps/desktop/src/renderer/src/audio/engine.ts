@@ -1133,9 +1133,9 @@ export async function startRecording(): Promise<string | null> {
     useProjectStore.getState().updateTrack(trackId!, { armed: true })
   }
   try {
-    if (audioSettings().inputId === 'none') { useAudioStore.setState({ isRecording: false }); return 'No input device is chosen: Settings → Audio → Audio input device.' }
-    // both channels of the interface, so a track can take input 1 or input 2 as mono (Settings → Audio: the device)
-    recStream = await navigator.mediaDevices.getUserMedia({ audio: { ...inputConstraints(), channelCount: { ideal: 2 } } })
+    if (!target?.inputDevice && audioSettings().inputId === 'none') { useAudioStore.setState({ isRecording: false }); return 'No input device is chosen: pick one in the input list of the track (next to its volume) or in Settings → Audio.' }
+    // both channels of the device, so a track can take input 1 or input 2 as mono; the track's own device first
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: { ...inputConstraints(target?.inputDevice), channelCount: { ideal: 2 } } })
   } catch (e) {
     useAudioStore.setState({ isRecording: false })
     return `No microphone access: ${(e as Error).message}`

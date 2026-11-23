@@ -124,9 +124,11 @@ export async function listDevices(): Promise<Devices> {
 }
 
 /** the microphone of the recording, as chosen in Settings → Audio */
-export function inputConstraints(): MediaTrackConstraints {
+export function inputConstraints(device?: string): MediaTrackConstraints {
   const c: MediaTrackConstraints = { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
-  if (current.inputId && current.inputId !== 'none') c.deviceId = { exact: current.inputId }
+  // a track's own input device (its input list in the Studio) comes before the one of Settings → Audio
+  const id = device || current.inputId
+  if (id && id !== 'none') c.deviceId = { exact: id }
   return c
 }
 

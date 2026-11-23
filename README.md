@@ -85,6 +85,18 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 <img src="docs/screenshots/studio.png" alt="Studio in the Hardware rack look" width="100%">
 **The same Studio in the Hardware rack look** – the selected track's effects (EQ, compressor, reverb) as rack modules with knobs at the right.
 
+<img src="docs/screenshots/studio-tools.png" alt="Studio tools" width="100%">
+**Studio tools** – pointer, scissors (click to cut, drag to cut out a range over several tracks) and the grid magnet; zoom up to 16× with a magnetic grid for lining up beats.
+
+<img src="docs/screenshots/vocal-editor.png" alt="Vocal Editor" width="100%">
+**Vocal Editor** – 39 built-in voices with names sing your MIDI melody and lyrics; click a voice to hear it, hear it in every style (Pop, Rock, Ballad, Soul) and pick the style, whose way of singing and effects go onto the new vocal track. Rap by the AI singer.
+
+<img src="docs/screenshots/album-mastering.png" alt="Album mastering" width="100%">
+**Album mastering** – the songs of an album on one timeline with their waveforms: measure, even out loudness and tone, hear the transitions and export everything at once.
+
+<img src="docs/screenshots/setup-assistant.png" alt="Setup assistant" width="100%">
+**Setup assistant** – on the first start: checks the computer, offers *Recommended*, *Everything* or *Studio only*, and installs with one click (it sets up its own Python if needed).
+
 <img src="docs/screenshots/create-studio.png" alt="Create music" width="100%">
 **Create music** – describe the style, write lyrics, pick a model and make a song or a seamless loop (1–16 bars). Simple and Studio mode.
 
@@ -118,7 +130,7 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 | | |
 |---|---|
 | <img src="docs/screenshots/piano-roll.png" alt="Piano Roll" width="100%"><br>**Piano Roll** – draw, move and quantize MIDI notes | <img src="docs/screenshots/mixer.png" alt="Mixer" width="100%"><br>**Mixer** – faders, pan, mute/solo, level meters, master |
-| <img src="docs/screenshots/vocal-editor.png" alt="Vocal Editor" width="100%"><br>**Vocal Editor** – voices and lyrics for AI singing (coming soon) | <img src="docs/screenshots/instruments.png" alt="AI Instruments" width="100%"><br>**AI Instruments** – instruments for MIDI tracks (coming soon) |
+| <img src="docs/screenshots/instruments.png" alt="AI Instruments" width="100%"><br>**AI Instruments** – song generator, band and orchestral AI instruments for MIDI tracks (click one to hear it) | <img src="docs/screenshots/mixer.png" alt="Mixer" width="100%"><br>**Mixer** – SSL-style channel strips |
 | <img src="docs/screenshots/stem-splitter.png" alt="Stem Splitter" width="100%"><br>**Stem Splitter** – vocals, drums, bass and more with Demucs | <img src="docs/screenshots/mastering-chain.png" alt="Mastering chain" width="100%"><br>**Mastering chain** – EQ, compressor, multiband, stereo, limiter with loudness target, master gain fader |
 | <img src="docs/screenshots/karaoke.png" alt="Karaoke Export" width="100%"><br>**Karaoke Export** – word timing, .lrc and lyric videos (coming soon) | <img src="docs/screenshots/video-composer.png" alt="Video Composer" width="100%"><br>**Video Composer** – music that follows the cuts of a video (coming soon) |
 | <img src="docs/screenshots/ai-chat.png" alt="AI Chat" width="100%"><br>**AI Chat** – Claude, ChatGPT, Gemini, Grok or a local model as a music assistant that can also make songs | <img src="docs/screenshots/settings-ai-engines.png" alt="Settings → AI Engines" width="100%"><br>**Settings → AI Engines** – install the local AI models with one click |

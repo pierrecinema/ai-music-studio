@@ -771,7 +771,7 @@ Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein l
 
 ## 52. Neu in 0.98.0: einfache Erstinstallation (Release Candidate)
 
-Auf dem zweiten PC: zuerst die App deinstallieren (Windows → Apps → AI Music Studio → Deinstallieren). Für einen echten Neustart zusätzlich den Ordner `%APPDATA%\desktop` umbenennen (z. B. in `desktop-alt`), dann werden auch die alten KI-Engines nicht gefunden. Danach den Installer 0.98.0 von GitHub laden und ausführen.
+Auf dem zweiten PC: die App deinstallieren (Windows → Einstellungen → Apps → AI Music Studio → Deinstallieren). Ab 0.98.1 fragt der Deinstaller, ob KI-Engines, Modelle und Einstellungen mit entfernt werden: **Ja** wählen. Danach den Installer von GitHub laden und ausführen.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
@@ -784,4 +784,5 @@ Auf dem zweiten PC: zuerst die App deinstallieren (Windows → Apps → AI Music
 | 52.7 | Stem Splitter: einen Song teilen | Stems kommen (auf der NVIDIA-Karte schnell) | | | 0.98.0 |
 | 52.8 | Einstellungen → KI-Engines → **Einrichtungs-Assistent** | Der Assistent öffnet sich wieder | | | 0.98.0 |
 | 52.9 | Optional: Paket **Alles** | Musik-KI, Sänger, KI-Instrumente werden installiert (auch ohne Git) | | | 0.98.0 |
+| 52.10 | Deinstallieren (Version 0.98.1 oder neuer) | Frage „Auch die KI-Engines … entfernen?“ (Englisch und Deutsch); „Ja“ entfernt sie, „Nein“ lässt sie | | | 0.98.1 |
 

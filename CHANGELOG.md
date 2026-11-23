@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.1
+
+### Changed
+
+- **Uninstalling asks whether to remove the AI engines, models and settings too**: answer *Yes* and the next installation starts like the very first one, with the setup assistant (nothing to delete by hand). Songs and projects always stay. Updates never ask and never remove anything.
+
 ## 0.98.0
 
 Release candidate: the first install is now easy.

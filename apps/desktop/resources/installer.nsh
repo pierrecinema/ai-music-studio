@@ -14,5 +14,20 @@
   WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "URLInfoAbout" "https://github.com/pierrecinema/ai-music-studio"
   WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "HelpLink" "https://github.com/pierrecinema/ai-music-studio#easy-windows-installation"
   WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "URLUpdateInfo" "https://github.com/pierrecinema/ai-music-studio/releases"
-  DetailPrint "AI Music Studio installed. For the AI features install Python 3.11 or 3.12, then open Settings > AI Engines."
+  DetailPrint "AI Music Studio installed. On the first start the setup assistant installs the AI features."
+!macroend
+
+; Uninstall: ask whether the AI engines, downloaded models and settings go too, so that a new installation starts like
+; the very first one (with the setup assistant). Never on an update (the old version is uninstalled silently then) and
+; "No" in a silent uninstall. The songs and projects (Music\AI Music Studio, Documents) always stay.
+!macro customUnInstall
+  ${ifNot} ${isUpdated}
+    MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 "Also remove the AI engines, the downloaded AI models and the settings of AI Music Studio (several GB)?$\r$\n$\r$\nYour songs and projects stay.$\r$\n$\r$\n---$\r$\n$\r$\nAuch die KI-Engines, die geladenen KI-Modelle und die Einstellungen von AI Music Studio entfernen (mehrere GB)?$\r$\n$\r$\nDeine Songs und Projekte bleiben erhalten." /SD IDNO IDNO keepData
+      DetailPrint "Removing the AI engines, models and settings..."
+      nsExec::Exec 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-Process python*,pythonw* -ErrorAction SilentlyContinue | Where-Object { $$_.Path -like \"*\desktop\*\" } | Stop-Process -Force"'
+      RMDir /r "$APPDATA\desktop"
+      RMDir /r "$PROFILE\.ai-music-studio\models"
+      RMDir /r "$PROFILE\.ai-music-studio\hf"
+    keepData:
+  ${endIf}
 !macroend

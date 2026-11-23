@@ -1994,5 +1994,8 @@
  "Track {n} of {total}": "Titel {n} von {total}",
  "Click: hear the transition {a} → {b}": "Klick: Übergang {a} → {b} anhören",
  "Reading the songs…": "Songs werden gelesen …",
- "Show the album as a timeline": "Album als Zeitleiste anzeigen"
+ "Show the album as a timeline": "Album als Zeitleiste anzeigen",
+ "Drag to change the order": "Ziehen, um die Reihenfolge zu ändern",
+ "Release to add the songs to the album": "Loslassen, um die Songs zum Album hinzuzufügen",
+ "No songs yet: drag audio files here from the Explorer, or press \"+ Add songs…\".": "Noch keine Songs: Audiodateien aus dem Explorer hierher ziehen oder „+ Songs hinzufügen…“ drücken."
 }

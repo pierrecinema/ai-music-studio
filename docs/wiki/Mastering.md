@@ -86,7 +86,7 @@ own chain under a name.
 
 Switch the page from *One song* to **💿 Album** to master an album or EP as a whole.
 
-1. **+ Add songs…** (or **+ All open songs**) and put them in order with ▲ ▼; × takes a song off the album. A click on a name opens that song on its own page (its chain, editing, meters).
+1. **Drag audio files** from the Explorer onto the album view, or **+ Add songs…** (or **+ All open songs**), and put them in order by dragging a song (⋮⋮) or with ▲ ▼; × takes a song off the album. A click on a name opens that song on its own page (its chain, editing, meters).
 2. Choose the loudness target (Streaming −14 LUFS …). **Measure** shows every song's loudness before (grey) and after its chain (green: on target), with the target as a line.
 3. **Even out the album**: every song gets the same loudness (its own chain's *Louder* is set, in two rounds because of the limiter). *Quiet songs may stay a little quieter* keeps part of the difference, like a ballad on a real album (never louder than the target + 1 LU). *Even out lows and highs too* moves each song's EQ low and high shelf half way to the album's average (at most 3 dB).
 4. **Pause** (chosen at any transition, 0 to 8 s, the same for the whole album) and **▶ Hear the transition**: the last 8 seconds of a song, the pause and the first 8 seconds of the next. The **album player** shows the album as one timeline: click anywhere to play from there, ⏮ ⏭ jump between songs, the yellow ⇄ marks play a transition; a click on a song's number plays from that song.

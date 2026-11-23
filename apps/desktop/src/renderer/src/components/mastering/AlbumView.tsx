@@ -121,6 +121,14 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
     const paths: string[] = await window.api.dialog.openAudio()
     add(paths.filter((p) => AUDIO.test(p)).map((p) => ({ path: p, name: (p.split(/[\\/]/).pop() ?? p).replace(/\.[a-z0-9]+$/i, '') })))
   }
+  // dragging a song in the list to another place
+  const [dragFrom, setDragFrom] = useState<number | null>(null)
+  const [dragOver, setDragOver] = useState<number | null>(null)
+  const moveTo = (from: number, to: number): void => {
+    if (from === to) return
+    const next = [...songs]; const [x] = next.splice(from, 1); next.splice(to > from ? to - 1 : to, 0, x)
+    setAlbum({ songs: next })
+  }
   const move = (i: number, d: number): void => {
     const j = i + d
     if (j < 0 || j >= songs.length) return
@@ -319,7 +327,7 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
   const lo = Math.min(tgt.lufs - 6, ...valid.map((x) => x.after), ...valid.map((x) => x.before))
   const hi = Math.max(tgt.lufs + 2, ...valid.map((x) => x.after))
   const bar = (v: number): string => `${Math.max(2, Math.min(100, ((v - lo) / (hi - lo)) * 100))}%`
-  const total = songs.reduce((a, s) => a + (measures[s.path]?.seconds ?? 0), 0) + Math.max(0, songs.length - 1) * album.gapSec
+  const total = totalLen
   const card: React.CSSProperties = { background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }
   const hint: React.CSSProperties = { fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.45 }
 
@@ -350,7 +358,7 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
 
       {songs.length === 0 ? (
         <div style={{ border: '2px dashed var(--border-mid)', borderRadius: 12, padding: 30, textAlign: 'center', color: 'var(--text-secondary)', fontSize: 13 }}>
-          {tr('No songs yet: press "+ Add songs…" or "+ All open songs".')}
+          {tr('No songs yet: drag audio files here from the Explorer, or press "+ Add songs…".')}
         </div>
       ) : (
         <div style={card}>
@@ -358,7 +366,15 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
             const m = measures[s.path]
             return (
               <React.Fragment key={s.path}>
-                <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(140px, 1.4fr) 2fr 150px 86px', gap: 8, alignItems: 'center', fontSize: 12 }}>
+                <div draggable
+                  onDragStart={(e) => { setDragFrom(i); e.dataTransfer.setData('text/ams-album-song', String(i)); e.dataTransfer.effectAllowed = 'move' }}
+                  onDragEnd={() => { setDragFrom(null); setDragOver(null) }}
+                  onDragOver={(e) => { if (!e.dataTransfer.types.includes('text/ams-album-song')) return; e.preventDefault(); e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setDragOver(e.clientY < r.top + r.height / 2 ? i : i + 1) }}
+                  onDrop={(e) => { if (!e.dataTransfer.types.includes('text/ams-album-song')) return; e.preventDefault(); e.stopPropagation(); if (dragFrom !== null && dragOver !== null) moveTo(dragFrom, dragOver); setDragFrom(null); setDragOver(null) }}
+                  title={tr('Drag to change the order')}
+                  style={{ display: 'grid', gridTemplateColumns: '14px 28px minmax(140px, 1.4fr) 2fr 150px 86px', gap: 8, alignItems: 'center', fontSize: 12, cursor: 'grab', opacity: dragFrom === i ? 0.45 : 1,
+                    boxShadow: dragOver === i ? 'inset 0 2px 0 var(--accent)' : dragOver === i + 1 && i === songs.length - 1 ? 'inset 0 -2px 0 var(--accent)' : undefined }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 12, lineHeight: 1, letterSpacing: '-2px' }}>⋮⋮</span>
                   <span style={{ color: now === i ? 'var(--accent-light)' : 'var(--text-muted)', fontWeight: 700, cursor: 'pointer' }} title={tr('Play the album from this song')} onClick={() => void playFrom(starts[i])}>{now === i ? '♪' : String(i + 1).padStart(2, '0')}</span>
                   <span className="truncate" style={{ cursor: 'pointer', textDecoration: 'underline dotted' }} title={tr('Open this song on its own (its chain, editing, meters)')} onClick={() => onOpenSong(s)}>{s.name}</span>
                   <div style={{ position: 'relative', height: 16, background: 'var(--bg-tertiary)', borderRadius: 4 }} title={m ? trf('Before {b} LUFS · after {a} LUFS', { b: m.before.toFixed(1), a: m.after.toFixed(1) }) : tr('Not measured yet')}>
@@ -374,7 +390,7 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
                   </span>
                 </div>
                 {i < songs.length - 1 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 36, fontSize: 11, color: 'var(--text-muted)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 58, fontSize: 11, color: 'var(--text-muted)' }}>
                     <span style={{ whiteSpace: 'nowrap' }}>↓ {tr('Pause')}</span>
                     <select value={String(album.gapSec)} onChange={(e) => setAlbum({ gapSec: Number(e.target.value) })} title={tr('Silence between the songs (the same for the whole album)')} style={{ fontSize: 10.5, padding: '0 2px' }}>
                       {[0, 0.5, 1, 1.5, 2, 3, 4, 5, 8].map((v) => <option key={v} value={String(v)}>{v} s</option>)}

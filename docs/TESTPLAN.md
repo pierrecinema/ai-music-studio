@@ -730,3 +730,13 @@ Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein l
 | 47.2 | **Kopieren** beim Text, in einen Editor einfügen | Der ganze Text ist da | | | 0.97.1 |
 | 47.3 | **In Create music wiederverwenden** | Create music öffnet sich, Prompt und Text sind eingetragen | | | 0.97.1 |
 
+## 48. Neu in 0.97.2: Album anhören, Pause am Übergang
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 48.1 | Album: bei „↓ Pause“ zwischen zwei Songs 3 s wählen | Alle Übergänge zeigen 3 s | | | 0.97.2 |
+| 48.2 | **▶ Übergang anhören** (auch bei langen Songs) | Startet nach wenigen Sekunden: Ende, 3 s Stille, Anfang des nächsten | | | 0.97.2 |
+| 48.3 | **▶ Album anhören** | Song 1 spielt (mit seiner Kette), danach Pause, dann Song 2 …; am laufenden Song steht ♪ | | | 0.97.2 |
+| 48.4 | Auf die Nummer eines Songs klicken (z. B. 03) | Album spielt ab diesem Song | | | 0.97.2 |
+| 48.5 | **Messen** | Knopf ist bedienbar, Balken erscheinen; nach Wechsel zu „Ein Song“ und zurück sind sie noch da | | | 0.97.2 |
+

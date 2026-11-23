@@ -1977,5 +1977,11 @@
  "Prompt (style)": "Prompt (Stil)",
  "Copied": "Kopiert",
  "Open Create music with this prompt and these lyrics, to make a new version": "Create music mit diesem Prompt und diesem Text öffnen, für eine neue Version",
- "Use again in Create music": "In Create music wiederverwenden"
+ "Use again in Create music": "In Create music wiederverwenden",
+ "Pause": "Pause",
+ "Silence between the songs (the same for the whole album)": "Stille zwischen den Songs (für das ganze Album gleich)",
+ "Play the album from this song": "Album ab diesem Song abspielen",
+ "Stop the album": "Album stoppen",
+ "Hear the album": "Album anhören",
+ "Preparing {name}…": "{name} wird vorbereitet …"
 }

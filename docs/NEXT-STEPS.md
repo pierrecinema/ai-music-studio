@@ -31,8 +31,8 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 ### Road to 1.0 (owner, 23.11.2026): in this order
 
 1. **0.98.6: tested** (53.2, 53.4, 53.9–53.11 passed; open: 53.5 (In 2) on the PC with a microphone; 53.7/53.8
-   the YouTube user tests MIDI recording; 52.9 optional, package "Everything").
-2. **0.99.0: layout changes.** Ask the owner first which changes (screens, looks, what bothers them); design like
+   the YouTube user tests MIDI recording; 52.9 package "Everything" passed).
+2. **0.99.0: layout changes** (next session, 24.11.2026). Ask the owner first which changes (screens, looks, what bothers them); design like
    professional audio software (see "Talking with the owner"), check every screen in the browser preview.
 3. **0.99.x: fix every open bug** (owner, 23.11.2026): all fixes go into 0.99.1, 0.99.2 … until the test plan has no ❌.
    Then **RC 1.0** (release candidate): full pass through the open test plan on both PCs, nothing new any more.

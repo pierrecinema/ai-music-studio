@@ -783,7 +783,7 @@ Auf dem zweiten PC: den Installer 0.98.3 (oder neuer) von GitHub laden und von H
 | 52.6 | Warten bis fertig | „Fertig“ mit Häkchen; danach unten „KI-Backend bereit“ | ✅ | 0.98.3 | 0.98.0 |
 | 52.7 | Stem Splitter: einen Song teilen | Stems kommen (auf der NVIDIA-Karte schnell) | ✅ | 0.98.3 | 0.98.0 |
 | 52.8 | Einstellungen → KI-Engines → **Einrichtungs-Assistent** | Der Assistent öffnet sich wieder | ✅ | 0.98.3 | 0.98.0 |
-| 52.9 | Optional: Paket **Alles** | Musik-KI, Sänger, KI-Instrumente werden installiert (auch ohne Git) | | | 0.98.0 |
+| 52.9 | Optional: Paket **Alles** | Musik-KI, Sänger, KI-Instrumente werden installiert (auch ohne Git) | ✅ | | 0.98.0 |
 | 52.10 | Deinstallieren (Version 0.98.3 oder neuer; auch bei Installation „für alle Benutzer“) | Frage „Auch die KI-Engines … entfernen?“ (Englisch und Deutsch); „Ja“ entfernt sie, „Nein“ lässt sie | ✅ | 0.98.3 | 0.98.1 |
 
 ## 53. Neu in 0.98.4: Aufnahme im Studio (Feedback eines Users)

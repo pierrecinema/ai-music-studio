@@ -15,7 +15,7 @@ No programming, no command line: just the installer.
 1. **Download** `AIMusicStudio-Setup-<version>.exe` from the **[latest release](https://github.com/pierrecinema/ai-music-studio/releases/latest)**.
 2. **Run it.** The first time, Windows shows a blue window *"Windows protected your PC"* (Microsoft Defender SmartScreen), because the installer is not code-signed yet and Windows does not know the publisher. It is not a virus warning: click **More info**, then **Run anyway**. Some antivirus programs ask as well.
 3. **Start AI Music Studio.** The Studio, piano roll, mixer and library work right away.
-4. **For the AI features** (songs, loops, stems, mastering): install [Python](https://www.python.org/downloads/) 3.11 or 3.12 once (tick *"Add python.exe to PATH"*), then in the app open **Settings → AI Engines** and click **Install selected**. The app sets everything up by itself and downloads the models (several GB, once).
+4. **For the AI features** (songs, loops, stems, mastering): on the first start the **setup assistant** checks your computer and installs a package with one click (*Recommended*, *Everything* or *Studio only*). Nothing to install by hand: if there is no fitting Python on the PC, the app sets up its own. The models download once (several GB).
 
 **Updates come automatically:** the app checks for new versions and installs them with one click (Settings → Updates). The SmartScreen warning only comes with the installer downloaded in the browser.
 
@@ -29,10 +29,10 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.97: album mastering
+### New in 0.98 (release candidate): easy first install
 
-- **Album mastering**: put the songs of an album or EP in order, even them out (equal loudness, gently matched lows and highs), hear the transitions and export everything at once, numbered and tagged, also as one file.
-- 0.96: 39 built-in singing voices with styles (Pop, Rock, Ballad, Soul) and rap; Studio tools (scissors, magnetic grid, zoom 16×).
+- **Setup assistant on the first start**: it checks the computer (graphics card, memory, free space) and installs *Recommended*, *Everything* or *Studio only* with one click, with clear progress and the time left. No Python to install by hand: the app sets up its own when needed.
+- 0.97: album mastering with a professional album player; 0.96: 39 built-in singing voices with styles and rap.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features

@@ -45,6 +45,11 @@ declare global {
   interface EngineStatus {
     pythonFound: boolean
     pythonVersion: string | null
+    pythonOk?: boolean
+    pythonBundled?: boolean
+    diskFreeGb?: number | null
+    ramGb?: number
+    cpu?: string
     venvReady: boolean
     installed: Record<string, boolean>
     gpu: 'nvidia' | 'amd' | 'none'

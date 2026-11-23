@@ -4,6 +4,10 @@ import { adoptRecovered, recoverableProject } from '../../project/io'
 import type { Project } from '../../types'
 import { useUIStore } from '../../stores/ui.store'
 import { tr } from '../../i18n/tr'
+import { SetupWizard } from './SetupWizard'
+
+/** opens the setup assistant (also from Settings → AI Engines) */
+export const OPEN_SETUP_EVENT = 'ams-open-setup'
 
 const SEEN = 'ams-welcome-seen'
 
@@ -13,6 +17,20 @@ export function Welcome(): React.ReactElement | null {
   const [rec, setRec] = useState<{ project: Project; mtime: number } | null>(null)
   const [cap, setCap] = useState<CapabilityReport | null>(null)
   const setActiveView = useUIStore((s) => s.setActiveView)
+  // the first start on a PC without the AI environment: the setup assistant instead of the welcome text
+  const [setup, setSetup] = useState<EngineStatus | null>(null)
+  useEffect(() => {
+    const open = (): void => { void window.api.engines.status().then(setSetup).catch(() => undefined) }
+    window.addEventListener(OPEN_SETUP_EVENT, open)
+    let decided = ''
+    try { decided = localStorage.getItem('ams-setup-done') ?? '' } catch { /* storage unavailable */ }
+    if (!decided) {
+      void window.api.engines?.status?.().then((st) => {
+        if (!st.venvReady) { setSetup(st); try { localStorage.setItem(SEEN, '1') } catch { /* storage */ } setOpen(false) }
+      }).catch(() => undefined)
+    }
+    return () => window.removeEventListener(OPEN_SETUP_EVENT, open)
+  }, [])
 
   useEffect(() => {
     let seen = false
@@ -29,6 +47,11 @@ export function Welcome(): React.ReactElement | null {
     return undefined
   }, [])
 
+  if (setup) {
+    return <SetupWizard status={setup}
+      onClose={() => { try { localStorage.setItem('ams-setup-done', 'later') } catch { /* storage */ } setSetup(null) }}
+      onFinish={(view) => { setSetup(null); setActiveView(view) }} />
+  }
   if (!open) return null
   const close = (): void => {
     try { localStorage.setItem(SEEN, '1') } catch { /* ignore */ }

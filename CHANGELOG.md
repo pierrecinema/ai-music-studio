@@ -3,6 +3,17 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.0
+
+Release candidate: the first install is now easy.
+
+### New
+
+- **Setup assistant on the first start**: instead of the welcome window, a setup assistant opens on a PC without the AI engines. It shows what the computer brings along (graphics card, processor, memory, free space, Python), offers three packages (*Recommended*, *Everything*, *Studio only*) with their size, warns before downloading if the drive is too full, and installs the chosen package with one click: each step, the percentage and the time left are shown, *Show details* opens the log, *Cancel* and *Try again* work at any time. Also in Settings → AI Engines → *Setup assistant* (it repairs a broken installation, too).
+- **No Python to install by hand**: if the PC has no Python 3.10 to 3.12 (none, or only a newer one such as 3.13), the app sets up its own Python 3.11: the official python.org installer, silently, only for this user, in the app's data folder.
+- **ACE-Step 1.5 without Git**: if Git is not installed, the music AI is fetched as a ZIP from GitHub instead.
+- NVIDIA graphics cards are used automatically (the CUDA build of PyTorch is chosen by the assistant).
+
 ## 0.97.7
 
 ### New

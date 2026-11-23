@@ -12,8 +12,16 @@ Only one window runs at a time: starting the app again brings the open window to
 
 The AI features (songs, loops, stems, mastering, Audio → MIDI) run in a Python environment that the app sets up by itself.
 
-1. Install **Python 3.11** (3.12 works too) from [python.org](https://www.python.org/downloads/) and tick **"Add python.exe to PATH"**, or run `winget install Python.Python.3.11`.
-2. In the app: **[[Settings]] → AI Engines**, tick the packages and click **Install selected**. The log below shows the progress; when it ends green, the AI backend restarts by itself.
+**On the first start the setup assistant opens** (also later: **[[Settings]] → AI Engines → Setup assistant**):
+
+1. **Your computer**: graphics card, processor, memory, free space and Python are checked.
+2. **Package**: *Recommended* (Studio, stems, Audio → MIDI, mastering, karaoke; about 5 GB, 8 GB with an NVIDIA card), *Everything* (also the music AI, the built-in singers, the AI instruments; about 25 GB) or *Studio only* (no AI, nothing to download). If the drive has too little free space, the assistant says so before anything is downloaded.
+3. **Installation**: one click; the progress shows each step, the percentage and the time left; *Show details* opens the full log. Finished parts are kept if it is interrupted; *Try again* goes on from there.
+4. **Ready**.
+
+**No Python to install by hand**: if the PC has no Python 3.10 to 3.12, the app sets up its own Python 3.11 (the official installer from python.org, silently, only for this user, in the app's data folder; nothing else on the PC is changed). A Python 3.10 to 3.12 that is already installed is used.
+
+The single packages can also be installed in **[[Settings]] → AI Engines**: tick them and click **Install selected**. At the end of every installation the app checks that PyTorch and torchaudio fit together and repairs them if not; the setup assistant also repairs a broken installation.
 
 | Package (as named in the app) | What for |
 |---|---|

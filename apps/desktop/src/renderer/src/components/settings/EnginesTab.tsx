@@ -59,6 +59,10 @@ export function EnginesTab(): React.ReactElement {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 12px', border: '1px solid var(--border-mid)', borderRadius: 8, background: 'var(--bg-secondary)', marginBottom: 12 }}>
+        <span style={{ fontSize: 12.5, color: 'var(--text-secondary)', flex: 1 }}>{tr('New here, or something does not work? The setup assistant installs a complete package with one click, and repairs a broken installation.')}</span>
+        <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={() => window.dispatchEvent(new CustomEvent('ams-open-setup'))}>{tr('Setup assistant')}</button>
+      </div>
       <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', borderBottom: '1px solid var(--border)', paddingBottom: 10 }}>
         {tr('AI Engines')}
       </div>

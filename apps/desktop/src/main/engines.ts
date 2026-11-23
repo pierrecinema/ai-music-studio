@@ -1,5 +1,7 @@
 import { spawn, execFile, ChildProcess } from 'child_process'
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'fs'
+import { createWriteStream, existsSync, mkdirSync, renameSync, rmSync, statfsSync, writeFileSync } from 'fs'
+import { tmpdir, totalmem, cpus } from 'os'
+import https from 'https'
 import { join } from 'path'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
@@ -8,6 +10,11 @@ import { modelsDir } from './settings'
 export interface EngineStatus {
   pythonFound: boolean
   pythonVersion: string | null
+  pythonOk: boolean                 // a Python 3.10 to 3.12 is there (the engines need one); else the app installs 3.11
+  pythonBundled: boolean            // the app's own Python 3.11 (installed by the app) is there
+  diskFreeGb: number | null         // free space on the drive of the app's data (engines and models go there)
+  ramGb: number
+  cpu: string
   venvReady: boolean
   installed: Record<string, boolean>
   gpu: 'nvidia' | 'amd' | 'none'
@@ -171,8 +178,73 @@ function capture(cmd: string, args: string[], timeout = 15000): Promise<{ code: 
   })
 }
 
+// The app's own Python 3.11: installed by the app itself (python.org installer, for this user only, no admin, not on
+// PATH) when the PC has no Python 3.10 to 3.12. All engines have packages for 3.11.
+const PY_VERSION = '3.11.9'
+export function bundledPythonDir(): string {
+  return join(app.getPath('userData'), 'python311')
+}
+export function bundledPython(): string {
+  return join(bundledPythonDir(), 'python.exe')
+}
+
+/** free space (GB) on the drive of the given folder (or of the app's data) */
+export function diskFreeGb(path = app.getPath('userData')): number | null {
+  try { const s = statfsSync(path); return Math.round((s.bavail * s.bsize) / 1e9 * 10) / 10 } catch { return null }
+}
+
+function download(url: string, dest: string, log: (l: string) => void, redirects = 5): Promise<void> {
+  return new Promise((resolve, reject) => {
+    https.get(url, { headers: { 'User-Agent': 'AI-Music-Studio' } }, (res) => {
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && redirects > 0) {
+        res.resume(); download(res.headers.location, dest, log, redirects - 1).then(resolve, reject); return
+      }
+      if (res.statusCode !== 200) { res.resume(); reject(new Error(`download failed (${res.statusCode})`)); return }
+      const total = Number(res.headers['content-length'] || 0)
+      let got = 0, lastPct = -1
+      const out = createWriteStream(dest)
+      res.on('data', (d: Buffer) => {
+        got += d.length
+        const pct = total ? Math.floor((got / total) * 100) : 0
+        if (pct !== lastPct && pct % 5 === 0) { lastPct = pct; log(`Downloading ${url.split('/').pop()}: ${pct}%|`) }
+      })
+      res.pipe(out)
+      out.on('finish', () => out.close(() => resolve()))
+      out.on('error', reject)
+    }).on('error', reject)
+  })
+}
+
+/** installs the app's own Python 3.11 (Windows): the official installer, silently, for this user, into the app's data */
+export async function installPython(log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
+  if (existsSync(bundledPython())) return { ok: true }
+  if (process.platform !== 'win32') return { ok: false, error: 'Install Python 3.11 with your package manager.' }
+  log(`Step: setting up Python ${PY_VERSION} for the app (about 25 MB, only once; nothing else on the PC is changed)`)
+  const exe = join(tmpdir(), `python-${PY_VERSION}-amd64.exe`)
+  try {
+    await download(`https://www.python.org/ftp/python/${PY_VERSION}/python-${PY_VERSION}-amd64.exe`, exe, log)
+  } catch (e) {
+    return { ok: false, error: `Python could not be downloaded (${(e as Error).message}). Check the internet connection and try again.` }
+  }
+  mkdirSync(bundledPythonDir(), { recursive: true })
+  const code = await run(exe, ['/quiet', 'InstallAllUsers=0', 'PrependPath=0', 'Include_launcher=0', 'InstallLauncherAllUsers=0', 'Include_test=0',
+    'Include_doc=0', 'Include_tcltk=0', 'Shortcuts=0', 'AssociateFiles=0', 'Include_pip=1', `TargetDir=${bundledPythonDir()}`], log)
+  try { rmSync(exe, { force: true }) } catch { /* temp file */ }
+  if (code !== 0 || !existsSync(bundledPython())) {
+    return { ok: false, error: `Python could not be installed (code ${code}). Install Python 3.11 from python.org and try again.` }
+  }
+  log(`Python ${PY_VERSION} is ready.`)
+  return { ok: true }
+}
+
 export async function findPython(): Promise<PythonCmd | null> {
-  // Prefer versions that have wheels for the ML packages; the newest Python often does not yet.
+  // The app's own Python first, then versions that have wheels for the ML packages; the newest Python often does not
+  // have them yet, so 3.13+ only comes last.
+  if (existsSync(bundledPython())) {
+    const r = await capture(bundledPython(), ['--version'], 8000)
+    const m = /Python (\d+\.\d+\.\d+)/.exec(r.out)
+    if (r.code === 0 && m) return { cmd: bundledPython(), args: [], version: m[1] }
+  }
   const candidates: Array<[string, string[]]> = [
     ['py', ['-3.11']], ['py', ['-3.12']], ['py', ['-3.10']], ['py', ['-3.13']],
     ['py', ['-3']], ['python', []], ['python3', []]
@@ -238,6 +310,7 @@ async function installedPackages(): Promise<Set<string>> {
 
 export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   const [py, have, gpu] = await Promise.all([findPython(), installedPackages(), detectGpu()])
+  const minor = py ? Number(py.version.split('.')[1]) : 0
   const installed: Record<string, boolean> = {}
   for (const [g, names] of Object.entries(GROUP_PROBE)) installed[g] = names.some((n) => have.has(n))
   installed.gpuamd = hasDml()
@@ -249,6 +322,11 @@ export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   return {
     pythonFound: py !== null,
     pythonVersion: py?.version ?? null,
+    pythonOk: !!py && minor >= 10 && minor <= 12,
+    pythonBundled: existsSync(bundledPython()),
+    diskFreeGb: diskFreeGb(),
+    ramGb: Math.round(totalmem() / 1e9),
+    cpu: cpus()[0]?.model?.trim() ?? '',
     venvReady: hasVenv(),
     installed,
     gpu,
@@ -436,12 +514,26 @@ async function installAce15(py: PythonCmd | null, torchVariant: string, log: (l:
   if (minor < 11 || minor > 12) {
     return { ok: false, error: `ACE-Step 1.5 needs Python 3.11 or 3.12 (found ${py.version}). Install Python 3.12 from python.org and try again.` }
   }
-  const git = await capture('git', ['--version'], 8000)
-  if (git.code !== 0) return { ok: false, error: 'Git is needed once to fetch ACE-Step 1.5. Install Git and try again.' }
   if (!existsSync(join(ace15Repo(), 'acestep', 'inference.py'))) {
     mkdirSync(join(ace15Repo(), '..'), { recursive: true })
-    if (await run('git', ['clone', '--depth', '1', 'https://github.com/ACE-Step/ACE-Step-1.5.git', ace15Repo()], log) !== 0) {
-      return { ok: false, error: 'Could not fetch ACE-Step 1.5 from GitHub.' }
+    const git = await capture('git', ['--version'], 8000)
+    if (git.code === 0) {
+      if (await run('git', ['clone', '--depth', '1', 'https://github.com/ACE-Step/ACE-Step-1.5.git', ace15Repo()], log) !== 0) {
+        return { ok: false, error: 'Could not fetch ACE-Step 1.5 from GitHub.' }
+      }
+    } else {
+      // no Git on this PC: the project as a ZIP from GitHub, unpacked with Windows' own tar (no Git needed)
+      log('Git is not installed: fetching ACE-Step 1.5 as a ZIP instead.')
+      const zip = join(tmpdir(), 'ace-step-1.5.zip')
+      try { await download('https://codeload.github.com/ACE-Step/ACE-Step-1.5/zip/refs/heads/main', zip, log) } catch (e) {
+        return { ok: false, error: `Could not fetch ACE-Step 1.5 from GitHub (${(e as Error).message}).` }
+      }
+      const parent = join(ace15Repo(), '..')
+      if (await run('tar', ['-xf', zip, '-C', parent], log) !== 0) return { ok: false, error: 'Could not unpack ACE-Step 1.5.' }
+      try { rmSync(zip, { force: true }) } catch { /* temp */ }
+      const unpacked = join(parent, 'ACE-Step-1.5-main')
+      if (existsSync(unpacked)) { try { rmSync(ace15Repo(), { recursive: true, force: true }) } catch { /* none */ } ; renameSync(unpacked, ace15Repo()) }
+      if (!existsSync(join(ace15Repo(), 'acestep'))) return { ok: false, error: 'ACE-Step 1.5 was unpacked, but its files are not where expected.' }
     }
   }
   if (!existsSync(ace15Python())) {
@@ -637,8 +729,14 @@ export async function installGroups(
   torchVariant: string,
   log: (l: string) => void
 ): Promise<{ ok: boolean; error?: string }> {
-  const py = await findPython()
+  let py = await findPython()
   pkgCache = null
+  // no Python 3.10 to 3.12 on the PC: the app sets up its own Python 3.11 first (nothing to do by hand)
+  if (process.platform === 'win32' && (!py || Number(py.version.split('.')[1]) > 12 || Number(py.version.split('.')[1]) < 10)) {
+    const r = await installPython(log)
+    if (r.ok) py = await findPython()
+    else if (!py) return { ok: false, error: r.error }
+  }
 
   // the singer alone: only its own environment, the AI backend's environment stays as it is (the backend keeps running)
   if (groups.length && groups.every((g) => g === 'singer')) {

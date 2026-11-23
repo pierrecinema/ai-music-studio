@@ -769,3 +769,19 @@ Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein l
 | 51.3 | Einen Song an den ⋮⋮ fassen und an eine andere Stelle ziehen | Lila Linie zeigt die Stelle; Reihenfolge und Zeitleiste ändern sich | | | 0.97.7 |
 | 51.4 | Unten „4 Songs · …“ | Zeigt die richtige Gesamtlänge (z. B. 24:53) | | | 0.97.7 |
 
+## 52. Neu in 0.98.0: einfache Erstinstallation (Release Candidate)
+
+Auf dem zweiten PC: zuerst die App deinstallieren (Windows → Apps → AI Music Studio → Deinstallieren). Für einen echten Neustart zusätzlich den Ordner `%APPDATA%\desktop` umbenennen (z. B. in `desktop-alt`), dann werden auch die alten KI-Engines nicht gefunden. Danach den Installer 0.98.0 von GitHub laden und ausführen.
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 52.1 | Installer ausführen, App starten | Statt Willkommensfenster: **Einrichtung** mit Schritten links (Dein Computer · Paket · Installation · Fertig) | | | 0.98.0 |
+| 52.2 | Schritt „Dein Computer“ | Grafikkarte, Prozessor, Arbeitsspeicher, freier Speicher und Python stimmen | | | 0.98.0 |
+| 52.3 | **Weiter** → Pakete | Drei Karten: Empfohlen (Bester Start), Alles, Nur Studio, je mit Größe | | | 0.98.0 |
+| 52.4 | **Empfohlen** → **Jetzt installieren** | Fortschritt in %, „Schritt x von y“, Zeit und Restzeit; bei fehlendem Python zuerst „Python (für die App)“ | | | 0.98.0 |
+| 52.5 | **Details anzeigen** | Das Log läuft mit | | | 0.98.0 |
+| 52.6 | Warten bis fertig | „Fertig“ mit Häkchen; danach unten „KI-Backend bereit“ | | | 0.98.0 |
+| 52.7 | Stem Splitter: einen Song teilen | Stems kommen (auf der NVIDIA-Karte schnell) | | | 0.98.0 |
+| 52.8 | Einstellungen → KI-Engines → **Einrichtungs-Assistent** | Der Assistent öffnet sich wieder | | | 0.98.0 |
+| 52.9 | Optional: Paket **Alles** | Musik-KI, Sänger, KI-Instrumente werden installiert (auch ohne Git) | | | 0.98.0 |
+

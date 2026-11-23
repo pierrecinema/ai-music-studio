@@ -12,7 +12,7 @@ Only one window runs at a time: starting the app again brings the open window to
 
 The AI features (songs, loops, stems, mastering, Audio → MIDI) run in a Python environment that the app sets up by itself.
 
-**On the first start the setup assistant opens** (also later: **[[Settings]] → AI Engines → Setup assistant**):
+**After every new installation the setup assistant opens on the first start** (not after updates; also later: **[[Settings]] → AI Engines → Setup assistant**). If the AI engines are already on the PC, it checks them and repairs what is missing:
 
 1. **Your computer**: graphics card, processor, memory, free space and Python are checked.
 2. **Package**: *Recommended* (Studio, stems, Audio → MIDI, mastering, karaoke; about 5 GB, 8 GB with an NVIDIA card), *Everything* (also the music AI, the built-in singers, the AI instruments; about 25 GB) or *Studio only* (no AI, nothing to download). If the drive has too little free space, the assistant says so before anything is downloaded.

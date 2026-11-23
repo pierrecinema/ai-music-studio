@@ -14,6 +14,13 @@
   WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "URLInfoAbout" "https://github.com/pierrecinema/ai-music-studio"
   WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "HelpLink" "https://github.com/pierrecinema/ai-music-studio#easy-windows-installation"
   WriteRegStr SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "URLUpdateInfo" "https://github.com/pierrecinema/ai-music-studio/releases"
+  ; a new installation (not an update): the app opens the setup assistant on its next start, whatever is on the PC
+  ${ifNot} ${isUpdated}
+    CreateDirectory "$APPDATA\desktop"
+    FileOpen $0 "$APPDATA\desktop\setup-pending" w
+    FileWrite $0 "1"
+    FileClose $0
+  ${endIf}
   DetailPrint "AI Music Studio installed. On the first start the setup assistant installs the AI features."
 !macroend
 

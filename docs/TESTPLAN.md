@@ -771,7 +771,7 @@ Vorbereitung: 3–4 Songs (WAV/MP3), am besten unterschiedlich laut (z. B. ein l
 
 ## 52. Neu in 0.98.0: einfache Erstinstallation (Release Candidate)
 
-Auf dem zweiten PC: die App deinstallieren (Windows → Einstellungen → Apps → AI Music Studio → Deinstallieren). Ab 0.98.1 fragt der Deinstaller, ob KI-Engines, Modelle und Einstellungen mit entfernt werden: **Ja** wählen. Danach den Installer von GitHub laden und ausführen.
+Auf dem zweiten PC: den Installer 0.98.2 (oder neuer) von GitHub laden und ausführen. Ab 0.98.2 öffnet jede neue Installation (kein Update) beim ersten Start den Einrichtungs-Assistenten, auch wenn noch alte KI-Engines auf dem PC sind. Für einen ganz frischen Test vorher deinstallieren und bei der Frage „Auch die KI-Engines … entfernen?“ **Ja** wählen (der Deinstaller ab 0.98.1 fragt das).
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|

@@ -87,6 +87,7 @@ declare global {
         onProgress: (cb: (p: { received: number; total: number }) => void) => () => void
       }
       engines: {
+        setupPending?: () => Promise<boolean>
         status: () => Promise<EngineStatus>
         install: (groups: string[], torchVariant: string) => Promise<{ ok: boolean; error?: string }>
         cancel: () => Promise<void>

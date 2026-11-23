@@ -22,13 +22,16 @@ export function Welcome(): React.ReactElement | null {
   useEffect(() => {
     const open = (): void => { void window.api.engines.status().then(setSetup).catch(() => undefined) }
     window.addEventListener(OPEN_SETUP_EVENT, open)
+    // the setup assistant opens after a new installation (the installer leaves a mark), and on a PC without the AI
+    // environment until it was done or put off
     let decided = ''
     try { decided = localStorage.getItem('ams-setup-done') ?? '' } catch { /* storage unavailable */ }
-    if (!decided) {
-      void window.api.engines?.status?.().then((st) => {
-        if (!st.venvReady) { setSetup(st); try { localStorage.setItem(SEEN, '1') } catch { /* storage */ } setOpen(false) }
-      }).catch(() => undefined)
-    }
+    void (async () => {
+      const fresh = await window.api.engines?.setupPending?.().catch(() => false)
+      if (!fresh && decided) return
+      const st = await window.api.engines?.status?.().catch(() => null)
+      if (st && (fresh || !st.venvReady)) { setSetup(st); try { localStorage.setItem(SEEN, '1') } catch { /* storage */ } setOpen(false) }
+    })()
     return () => window.removeEventListener(OPEN_SETUP_EVENT, open)
   }, [])
 

@@ -56,7 +56,7 @@ async function cachedSong(path: string): Promise<AudioBuffer> {
   if (hit) { songCache.delete(path); songCache.set(path, hit); return hit }
   const b = await songBuffer(path)
   songCache.set(path, b)
-  while (songCache.size > 3) songCache.delete(songCache.keys().next().value as string)
+  while (songCache.size > 4) songCache.delete(songCache.keys().next().value as string)
   return b
 }
 
@@ -183,11 +183,17 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
   }
   const stop = (): void => {
     for (const x of player.current?.srcs ?? []) { try { x.stop() } catch { /* over */ } }
-    player.current?.ctx.close().catch(() => undefined); player.current = null; setPlaying(null)
+    player.current?.ctx.close().catch(() => undefined); player.current = null; setPlaying(null); setStarting(false)
   }
+  const [starting, setStarting] = useState(false)
   const playFrom = async (t: number): Promise<void> => {
     stop(); setError(null)
+    // the player exists at once, so ■ stops it immediately also while the first piece is still being prepared
+    const ctx = new AudioContext({ sampleRate: 48000 })
+    const me = { ctx, srcs: [] as AudioBufferSourceNode[] }
+    player.current = me; setPlaying(-1); setStarting(true); setPos(Math.max(0, t))
     const L = await knowLengths()
+    if (player.current !== me) return
     const S: number[] = []
     L.reduce((acc, l, i) => { S[i] = acc; return acc + l + (i < L.length - 1 ? album.gapSec : 0) }, 0)
     const total = S[L.length - 1] + L[L.length - 1]
@@ -195,32 +201,37 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
     let si = S.findIndex((st, i) => t < st + L[i] + (i < L.length - 1 ? album.gapSec : 0))
     if (si < 0) si = L.length - 1
     let so = Math.max(0, t - S[si])
-    const ctx = new AudioContext({ sampleRate: 48000 })
-    const me = { ctx, srcs: [] as AudioBufferSourceNode[] }
-    player.current = me; setPlaying(-1); setPos(t)
-    const begin = ctx.currentTime + 0.25
-    let at = begin
-    if (so >= L[si]) { at += S[si] + L[si] + album.gapSec - t; si++; so = 0 }      // started in a pause
+    setPos(t)
+    let begin = -1                                      // when the first piece starts (set when it is scheduled)
+    let at = 0
+    let lead = 0
+    if (so >= L[si]) { lead = S[si] + L[si] + album.gapSec - t; si++; so = 0 }      // started in a pause
     const tick = window.setInterval(() => {
       if (player.current !== me) { window.clearInterval(tick); return }
+      if (begin < 0) return
       const p = t + Math.max(0, ctx.currentTime - begin)
       setPos(p)
       if (p >= total) { window.clearInterval(tick); stop() }
     }, 150)
     try {
-      const CHUNK = 12
+      // a short first piece, so the sound starts quickly; then longer pieces, rendered while the music plays
+      let chunk = 3
       while (player.current === me && si < L.length) {
-        while (player.current === me && at - ctx.currentTime > 20) await new Promise((r) => setTimeout(r, 300))
+        while (player.current === me && begin >= 0 && at - ctx.currentTime > 20) await new Promise((r) => setTimeout(r, 300))
         if (player.current !== me) break
-        const buf = await renderPart(songs[si].path, so, CHUNK)
+        const buf = await renderPart(songs[si].path, so, chunk)
         if (player.current !== me) break
         const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination)
+        if (begin < 0) { begin = ctx.currentTime + 0.05; at = begin + lead; setStarting(false) }
         const when = Math.max(at, ctx.currentTime + 0.02)
         src.start(when); me.srcs.push(src)
         src.onended = () => { src.buffer = null; me.srcs.splice(me.srcs.indexOf(src), 1) }
         at = when + buf.duration
-        so += CHUNK
+        so += chunk
+        chunk = 12
         if (so >= L[si] - 1e-3) { at += album.gapSec; si++; so = 0 }
+        // the next song is read in advance, so the change of song does not wait for it
+        if (si + 1 < L.length && so > 0) void cachedSong(songs[si + 1].path)
       }
     } catch (e) { setError((e as Error).message); stop() }
   }
@@ -284,7 +295,7 @@ export function AlbumView({ target, onTarget, onOpenSong }: { target: string; on
 
       {songs.length > 0 && (
         <AlbumPlayer names={songs.map((x) => x.name)} lens={lens} starts={starts} total={totalLen} gap={album.gapSec} pos={pos}
-          playing={playing === -1} now={now} peaks={songs.map((x) => peaks[x.path] ?? null)} loading={loadingWave}
+          playing={playing === -1} starting={starting} now={now} peaks={songs.map((x) => peaks[x.path] ?? null)} loading={loadingWave}
           onSeek={(t) => void playFrom(t)} onTransition={toTransition} onToggle={togglePlay} onLoad={() => void knowLengths()}
           onPrev={() => { const cur = now >= 0 ? now : Math.max(0, songs.findIndex((_, k) => pos < starts[k] + lens[k])); const i = pos - starts[cur] > 3 ? cur : Math.max(0, cur - 1); void playFrom(starts[i] ?? 0) }}
           onNext={() => { const cur = now >= 0 ? now : songs.findIndex((_, k) => pos < starts[k]) - 1; void playFrom(starts[Math.min(songs.length - 1, cur + 1)] ?? 0) }} />

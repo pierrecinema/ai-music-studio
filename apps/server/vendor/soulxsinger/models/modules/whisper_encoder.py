@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 import torch
@@ -18,8 +19,11 @@ class WhisperEncoder():
         self,
         device: Optional[str] = None,
     ) -> None:
-        self.fe = WhisperFeatureExtractor.from_pretrained("openai/whisper-base")
-        self.model = WhisperModel.from_pretrained("openai/whisper-base")
+        # AI Music Studio: whisper-base is installed as plain files (no symlinked Hugging Face cache on Windows)
+        local = os.environ.get("AMS_WHISPER_DIR", "")
+        source = local if local and os.path.exists(os.path.join(local, "config.json")) else "openai/whisper-base"
+        self.fe = WhisperFeatureExtractor.from_pretrained(source)
+        self.model = WhisperModel.from_pretrained(source)
         self.model = self.model.to(device or ("cuda" if torch.cuda.is_available() else "cpu"))
 
     def encode(

@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.8
+
+### Fixed
+
+- **Installing the singer failed on Windows** with "Done, but these packages failed: singer" (WinError 1314): a part of it (whisper-base) was stored with symbolic links, which Windows allows only with admin rights or developer mode. It is now stored as plain files. Pressing *Install* again keeps the 2.8 GB singer model; singers installed before keep working without installing again.
+
 ## 0.98.7
 
 ### Fixed

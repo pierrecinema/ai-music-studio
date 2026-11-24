@@ -102,7 +102,11 @@ export function singerModels(): string {
 }
 
 export function hasSinger(): boolean {
-  return existsSync(singerPython()) && existsSync(join(singerModels(), 'SoulX-Singer', 'model.pt'))
+  // whisper-base as plain files (since 0.98.8), or in the Hugging Face cache of an earlier install (that one worked
+  // where Windows allowed symbolic links: it must not ask those users to install again)
+  const whisper = existsSync(join(singerModels(), 'whisper-base', 'config.json')) ||
+    existsSync(join(singerModels(), 'hf', 'hub', 'models--openai--whisper-base'))
+  return existsSync(singerPython()) && existsSync(join(singerModels(), 'SoulX-Singer', 'model.pt')) && whisper
 }
 
 export function hasDr(): boolean {
@@ -499,7 +503,9 @@ async function installSinger(py: PythonCmd | null, torchVariant: string, log: (l
     'from huggingface_hub import hf_hub_download, snapshot_download',
     'm = sys.argv[1]',
     "hf_hub_download('Soul-AILab/SoulX-Singer', 'model.pt', local_dir=os.path.join(m, 'SoulX-Singer'))",
-    "snapshot_download('openai/whisper-base', allow_patterns=['*.json', '*.txt', '*.safetensors'])",
+    // plain files in models/soulx-singer/whisper-base: the Hugging Face cache needs symbolic links, which Windows
+    // refuses without admin rights or developer mode ("WinError 1314"); that made the singer install fail
+    "snapshot_download('openai/whisper-base', allow_patterns=['*.json', '*.txt', '*.safetensors'], local_dir=os.path.join(m, 'whisper-base'))",
     "print('models ready')",
   ].join('\n')
   if (await run(singerPython(), ['-c', script, models], log, { HF_HOME: join(models, 'hf'), HF_HUB_ENABLE_HF_TRANSFER: '0' }) !== 0) {

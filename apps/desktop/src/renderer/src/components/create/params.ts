@@ -1,6 +1,7 @@
 export interface MusicParams {
   engine: string
   compute: 'auto' | 'gpu' | 'cpu'
+  precision?: 'auto' | 'bf16' | 'fp32'   // ACE-Step: number format (older graphics cards always fp32)
   title: string
   prompt: string
   lyrics: string
@@ -68,6 +69,7 @@ export const LAYERS: Array<{ key: LayerKey; label: string }> = [
 export const DEFAULT_PARAMS: MusicParams = {
   engine: 'ace-step',
   compute: 'auto',
+  precision: 'auto',
   title: '',
   prompt: '',
   lyrics: '',
@@ -155,6 +157,7 @@ export function toRequest(p: MusicParams): Record<string, unknown> {
   return {
     engine: p.engine,
     compute: p.compute,
+    precision: p.precision ?? 'auto',
     title: p.title,
     prompt: p.prompt,
     lyrics: p.lyrics,

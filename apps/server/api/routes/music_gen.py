@@ -19,6 +19,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from services.resource_profile import get_resources, resources
+from services.precision import ace_dtype, is_dtype_error
 
 router = APIRouter()
 
@@ -214,6 +215,7 @@ class Dcw(BaseModel):
 
 class GenerateMusicRequest(BaseModel):
     compute: str = "auto"                   # auto | gpu | cpu
+    precision: str = "auto"                 # auto | bf16 | fp32 (ACE-Step; older graphics cards always fp32)
     engine: str = "ace-step"                # ace-step | musicgen-small | musicgen-medium | musicgen-large
     # song
     title: str = ""
@@ -292,23 +294,36 @@ def _silent_wav(path: str, seconds: int) -> None:
         w.writeframes(b"\x00\x00" * 2 * 44100 * min(seconds, 30))
 
 
-def _get_pipeline():
-    global _pipeline
-    if _pipeline is not None:
+_pipeline_dtype = ""
+
+
+def _get_pipeline(choice: str = "auto", force_fp32: bool = False):
+    """The ACE-Step pipeline in the number format this PC computes (services/precision.py); loaded again when that
+    format changes (Precision in Create, or the automatic switch to float32 after an error of an older card)."""
+    global _pipeline, _pipeline_dtype
+    import torch
+    res = resources()
+    on_gpu = torch.cuda.is_available()
+    want = "float32" if force_fp32 else ace_dtype(on_gpu, res.half_precision, res.ram_gb, choice)
+    if _pipeline is not None and _pipeline_dtype == want:
         return _pipeline
+    if _pipeline is not None:
+        _pipeline = None
+        import gc
+        gc.collect()
+        if on_gpu:
+            torch.cuda.empty_cache()
     import acestep.pipeline_ace_step as _mod  # type: ignore
     from acestep.pipeline_ace_step import ACEStepPipeline  # type: ignore
 
     _mod.tqdm = _tracked          # live step counter for the UI
 
-    res = resources()
-    import torch
-    on_gpu = torch.cuda.is_available()
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    _pipeline_dtype = want
     _pipeline = ACEStepPipeline(
         checkpoint_dir=str(MODEL_DIR),
-        # On a CPU the 3.5B model needs 14 GB in float32 but only 7 GB in bfloat16: small PCs must use bfloat16.
-        dtype="bfloat16" if (res.half_precision if on_gpu else res.ram_gb < 16) else "float32",
+        # bfloat16 only where it is computed (RTX 30 and newer, or a processor with little RAM), else float32
+        dtype=want,
         torch_compile=False,
         cpu_offload=res.cpu_offload and on_gpu,      # offloading means GPU <-> RAM; pointless on a CPU
         overlapped_decode=res.low_memory,
@@ -1203,7 +1218,7 @@ def _run_engine_job(job_id: str, req: GenerateMusicRequest) -> None:
             _stage(job, "load", "Loading the music model. The first time it is downloaded (several GB), "
                                 "this can take many minutes.")
             try:
-                pipe = _get_pipeline()
+                pipe = _get_pipeline(req.precision)
             except ModuleNotFoundError as e:
                 if (e.name or "").split(".")[0] != "acestep":
                     job.update(status="error", warnings=warnings,
@@ -1233,7 +1248,19 @@ def _run_engine_job(job_id: str, req: GenerateMusicRequest) -> None:
                     else:
                         kwargs = _engine_kwargs(pipe, req, duration, seed, lora_path, lora_weight, wav,
                                                 warnings if i == 0 else [])
-                        pipe(**kwargs)
+                        try:
+                            pipe(**kwargs)
+                        except Exception as e:
+                            # an older graphics card cannot compute bfloat16 (CUBLAS_STATUS_NOT_SUPPORTED, "unable to
+                            # find an engine"): load the model in float32 and render this song again
+                            if not is_dtype_error(e) or _pipeline_dtype == "float32":
+                                raise
+                            warnings.append("This graphics card cannot compute bfloat16: the music model now runs "
+                                            "in float32 (more memory, same sound).")
+                            _stage(job, "load", "Loading the music model again in float32 for this graphics card")
+                            pipe = _get_pipeline(req.precision, force_fp32=True)
+                            kwargs = _engine_kwargs(pipe, req, duration, seed, lora_path, lora_weight, wav, [])
+                            pipe(**kwargs)
                     _stage(job, "finish", f"{label}saving and converting")
                     final = _finalize(wav, req, warnings if i == 0 else [])
                 except Exception as e:  # model / out-of-memory errors

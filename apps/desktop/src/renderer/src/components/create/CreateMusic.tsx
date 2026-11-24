@@ -600,6 +600,15 @@ export function CreateMusic(): React.ReactElement {
                   <option value="cpu">{tr("Compute: processor only")}</option>
                 </select>
               )}
+              {p.engine === 'ace-step' && (
+                // the number format: bf16 needs an RTX 30 or newer; older cards (GTX 900/1000/1600, RTX 20) use fp32
+                <select value={p.precision ?? 'auto'} onChange={(e) => set('precision', e.target.value as MusicParams['precision'])} style={{ ...full, marginTop: 6 }}
+                  title={tr('bf16 needs less memory but only RTX 30 cards and newer compute it; older cards always use fp32')}>
+                  <option value="auto">{tr('Precision: automatic (bf16 on RTX 30 and newer, else fp32)')}</option>
+                  <option value="bf16">{tr('Precision: bf16 (less memory, RTX 30 and newer)')}</option>
+                  <option value="fp32">{tr('Precision: fp32 (any graphics card, more memory)')}</option>
+                </select>
+              )}
               {(() => {
                 const cur = engines.find((e) => e.id === p.engine)
                 if (!cur) return null

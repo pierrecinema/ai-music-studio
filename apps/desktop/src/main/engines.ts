@@ -102,8 +102,11 @@ export function singerModels(): string {
 }
 
 export function hasSinger(): boolean {
-  return existsSync(singerPython()) && existsSync(join(singerModels(), 'SoulX-Singer', 'model.pt')) &&
-    existsSync(join(singerModels(), 'whisper-base', 'config.json'))
+  // whisper-base as plain files (since 0.98.8), or in the Hugging Face cache of an earlier install (that one worked
+  // where Windows allowed symbolic links: it must not ask those users to install again)
+  const whisper = existsSync(join(singerModels(), 'whisper-base', 'config.json')) ||
+    existsSync(join(singerModels(), 'hf', 'hub', 'models--openai--whisper-base'))
+  return existsSync(singerPython()) && existsSync(join(singerModels(), 'SoulX-Singer', 'model.pt')) && whisper
 }
 
 export function hasDr(): boolean {

@@ -813,3 +813,11 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 54.3 | Mit „fp32“ einen Song erzeugen | Läuft (braucht mehr Speicher, evtl. langsamer) | | User testet (Owner hat keine NVIDIA-Karte) | 0.98.7 |
 | 54.4 | User mit GTX 980: einen Song erzeugen (Einfach und Studio) | Kein CUBLAS- oder „unable to find an engine“-Fehler mehr; der Song wird fertig | | User testet (Owner hat keine NVIDIA-Karte) | 0.98.7 |
 
+## 55. Neu in 0.98.8: Sänger-Installation unter Windows (WinError 1314)
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 55.1 | PC mit schon installiertem Sänger: nach dem Update Vocal Editor öffnen | Der Sänger ist da, keine neue Installation nötig; Singen geht | | | 0.98.8 |
+| 55.2 | Laptop, wo die Sänger-Installation mit „failed: singer“ endete: Einstellungen → KI-Engines → Sänger installieren | Läuft durch bis „models ready“; das 2,8-GB-Modell wird nicht nochmal geladen | | | 0.98.8 |
+| 55.3 | Danach im Vocal Editor singen lassen | Die Stimme singt | | | 0.98.8 |
+

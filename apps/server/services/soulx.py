@@ -244,7 +244,8 @@ class Worker:
             return "The singer is not installed yet (Vocal Editor → Install the singer)."
         if not model or not os.path.exists(os.path.join(model, "SoulX-Singer", "model.pt")):
             return "The singer's model is missing: install the singer again."
-        if not os.path.exists(os.path.join(model, "whisper-base", "config.json")):
+        if not os.path.exists(os.path.join(model, "whisper-base", "config.json")) and \
+                not os.path.isdir(os.path.join(model, "hf", "hub", "models--openai--whisper-base")):
             return "A part of the singer (whisper-base) is missing: press Install the singer again (the 2.8 GB model is kept)."
         return None
 

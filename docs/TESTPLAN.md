@@ -817,7 +817,7 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 55.1 | PC mit schon installiertem Sänger: nach dem Update Vocal Editor öffnen | Der Sänger ist da, keine neue Installation nötig; Singen geht | | | 0.98.8 |
-| 55.2 | Laptop, wo die Sänger-Installation mit „failed: singer“ endete: Einstellungen → KI-Engines → Sänger installieren | Läuft durch bis „models ready“; das 2,8-GB-Modell wird nicht nochmal geladen | | | 0.98.8 |
-| 55.3 | Danach im Vocal Editor singen lassen | Die Stimme singt | | | 0.98.8 |
+| 55.1 | PC mit schon installiertem Sänger: nach dem Update Vocal Editor öffnen | Der Sänger ist da, keine neue Installation nötig; Singen geht | ✅ | | 0.98.8 |
+| 55.2 | Laptop, wo die Sänger-Installation mit „failed: singer“ endete: Einstellungen → KI-Engines → Sänger installieren | Läuft durch bis „models ready“; das 2,8-GB-Modell wird nicht nochmal geladen | ✅ | | 0.98.8 |
+| 55.3 | Danach im Vocal Editor singen lassen | Die Stimme singt | ✅ | | 0.98.8 |
 

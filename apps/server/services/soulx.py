@@ -244,13 +244,16 @@ class Worker:
             return "The singer is not installed yet (Vocal Editor → Install the singer)."
         if not model or not os.path.exists(os.path.join(model, "SoulX-Singer", "model.pt")):
             return "The singer's model is missing: install the singer again."
+        if not os.path.exists(os.path.join(model, "whisper-base", "config.json")):
+            return "A part of the singer (whisper-base) is missing: press Install the singer again (the 2.8 GB model is kept)."
         return None
 
     def _start(self, report) -> None:
         if self.proc and self.proc.poll() is None:
             return
         env = {**os.environ, "PYTHONUTF8": "1", "PYTHONPATH": str(SERVER / "vendor"),
-               "HF_HOME": os.path.join(os.environ["AMS_SINGER_MODELS"], "hf"), "HF_HUB_OFFLINE": "1"}
+               "HF_HOME": os.path.join(os.environ["AMS_SINGER_MODELS"], "hf"), "HF_HUB_OFFLINE": "1",
+               "AMS_WHISPER_DIR": os.path.join(os.environ["AMS_SINGER_MODELS"], "whisper-base")}
         report(1, "Loading the singer (once, up to a few minutes)")
         self.proc = subprocess.Popen([os.environ["AMS_SINGER_PYTHON"], "-u", str(Path(__file__).with_name("soulx_worker.py")),
                                       os.environ["AMS_SINGER_MODELS"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE,

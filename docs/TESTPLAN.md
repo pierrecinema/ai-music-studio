@@ -808,7 +808,7 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 54.1 | Create: Musikmodell ACE-Step | Darunter die Auswahl **Genauigkeit**: automatisch / bf16 / fp32 | | | 0.98.7 |
+| 54.1 | Create: Musikmodell ACE-Step | Darunter die Auswahl **Genauigkeit**: automatisch / bf16 / fp32 | ✅ | | 0.98.7 |
 | 54.2 | Auf deiner NVIDIA-Karte einen Song mit „automatisch“ erzeugen | Läuft wie bisher | | User testet (Owner hat keine NVIDIA-Karte) | 0.98.7 |
 | 54.3 | Mit „fp32“ einen Song erzeugen | Läuft (braucht mehr Speicher, evtl. langsamer) | | User testet (Owner hat keine NVIDIA-Karte) | 0.98.7 |
 | 54.4 | User mit GTX 980: einen Song erzeugen (Einfach und Studio) | Kein CUBLAS- oder „unable to find an engine“-Fehler mehr; der Song wird fertig | | User testet (Owner hat keine NVIDIA-Karte) | 0.98.7 |

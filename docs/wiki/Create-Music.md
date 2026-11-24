@@ -14,6 +14,7 @@ Make songs and loops with AI on your own PC. Two modes at the top: **Simple** (s
 | DiffRhythm 1.2 (experimental) | songs with vocals in one step, NVIDIA 8 GB+ only |
 
 - **Compute:** automatic, graphics card or processor (for models that can use the graphics card).
+- **Precision** (ACE-Step): *automatic* uses bf16 on NVIDIA RTX 30 cards and newer and fp32 on older ones (GTX 900 / 1000 / 1600, RTX 20), which cannot compute bf16. *fp32* works on every card but needs more memory. If an older card still fails with a bf16 error, the app loads the model again in fp32 by itself.
 - **Title** and **Style:** describe genre, mood, instruments, tempo. ✨ lets the AI improve the style text.
 - **Tags:** for searching in the [[Library]] later (separate with commas).
 

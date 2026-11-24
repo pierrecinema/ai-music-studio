@@ -3,6 +3,16 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.7
+
+### Fixed
+
+- **Music generation failed on older NVIDIA cards** (GTX 900 / 1000 / 1600, RTX 20) with "CUBLAS_STATUS_NOT_SUPPORTED (CUDA_R_16BF)" or "GET was unable to find an engine to execute this computation": these cards cannot compute bfloat16, which ACE-Step used on cards with little memory. Older cards now use float32 automatically, and if such an error still comes, the app loads the model again in float32 and renders the song again.
+
+### New
+
+- **Precision** in Create (under the music model, ACE-Step): automatic, bf16 (less memory, RTX 30 and newer) or fp32 (any graphics card).
+
 ## 0.98.6
 
 ### Fixed

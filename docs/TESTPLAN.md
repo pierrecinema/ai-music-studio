@@ -803,3 +803,13 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 53.9 | Audio-Spur: die Eingangsliste neben dem Lautstärke-Regler öffnen | Oben „Settings → Audio (…)“, darunter jedes Eingangsgerät (Mikrofon, Line-In, Interface, USB) mit In 1+2 / In 1 / In 2; ein gewähltes Gerät hat einen farbigen Rahmen und gilt nur für diese Spur | ✅ | | 0.98.5 |
 | 53.10 | Ein Gerät wählen, aufnehmen | Aufgenommen wird von diesem Gerät, auch wenn in Settings → Audio kein Eingang oder ein anderer gewählt ist | ✅ | | 0.98.5 |
 | 53.11 | Windows: Datenschutz → Mikrofon → „Desktop-Apps Zugriff erlauben“ aus, dann aufnehmen | Meldung auf Deutsch, die Windows-Seite „Mikrofon“ öffnet sich; nach dem Einschalten klappt die Aufnahme | ✅ | | 0.98.6 |
+
+## 54. Neu in 0.98.7: ältere NVIDIA-Karten (Feedback eines Users, GTX 980)
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 54.1 | Create: Musikmodell ACE-Step | Darunter die Auswahl **Genauigkeit**: automatisch / bf16 / fp32 | | | 0.98.7 |
+| 54.2 | Auf deiner NVIDIA-Karte einen Song mit „automatisch“ erzeugen | Läuft wie bisher | | | 0.98.7 |
+| 54.3 | Mit „fp32“ einen Song erzeugen | Läuft (braucht mehr Speicher, evtl. langsamer) | | | 0.98.7 |
+| 54.4 | User mit GTX 980: einen Song erzeugen (Einfach und Studio) | Kein CUBLAS- oder „unable to find an engine“-Fehler mehr; der Song wird fertig | | | 0.98.7 |
+

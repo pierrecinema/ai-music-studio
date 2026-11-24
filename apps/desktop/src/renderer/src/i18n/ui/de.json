@@ -2066,5 +2066,9 @@
  "Recording input": "Aufnahme-Eingang",
  "No input device is chosen: pick one in the input list of the track (next to its volume) or in Settings → Audio.": "Kein Eingangsgerät gewählt: wähle eins in der Eingangsliste der Spur (neben der Lautstärke) oder unter Einstellungen → Audio.",
  "Windows does not let the app use the microphone or audio input. The Windows settings open: Privacy & security → Microphone → switch on \"Microphone access\" and \"Let desktop apps access your microphone\", then record again.": "Windows lässt die App nicht aufs Mikrofon oder den Audio-Eingang zugreifen. Die Windows-Einstellungen öffnen sich: Datenschutz und Sicherheit → Mikrofon → „Mikrofonzugriff“ und „Desktop-Apps Zugriff auf das Mikrofon erlauben“ einschalten, dann erneut aufnehmen.",
- "No input device found: connect a microphone or audio interface, or pick another device in the input list of the track.": "Kein Eingangsgerät gefunden: schließe ein Mikrofon oder Audio-Interface an, oder wähle in der Eingangsliste der Spur ein anderes Gerät."
+ "No input device found: connect a microphone or audio interface, or pick another device in the input list of the track.": "Kein Eingangsgerät gefunden: schließe ein Mikrofon oder Audio-Interface an, oder wähle in der Eingangsliste der Spur ein anderes Gerät.",
+ "bf16 needs less memory but only RTX 30 cards and newer compute it; older cards always use fp32": "bf16 braucht weniger Speicher, aber nur Karten ab RTX 30 rechnen es; ältere Karten nutzen immer fp32",
+ "Precision: automatic (bf16 on RTX 30 and newer, else fp32)": "Genauigkeit: automatisch (bf16 ab RTX 30, sonst fp32)",
+ "Precision: bf16 (less memory, RTX 30 and newer)": "Genauigkeit: bf16 (weniger Speicher, ab RTX 30)",
+ "Precision: fp32 (any graphics card, more memory)": "Genauigkeit: fp32 (jede Grafikkarte, mehr Speicher)"
 }

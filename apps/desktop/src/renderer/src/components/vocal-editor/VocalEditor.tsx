@@ -16,6 +16,10 @@ import { insertDefaults } from '../../audio/fx'
 import { nanoid } from 'nanoid'
 import { installProgress, rapLyrics, STAGE_TEXT } from '../../lib/singer'
 import { minLength, snapBeat } from '../../edit/grid'
+import { create } from 'zustand'
+import { useBeatMatch } from '../../beatmatch/store'
+
+const useVocalJob = create<{ busy: { text: string; pct: number } | null; error: string | null; notice: string | null }>(() => ({ busy: null, error: null, notice: null }))
 
 interface BuiltinVoice { id: string; name: string; singer?: string; styles?: Record<string, string>; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
 
@@ -103,9 +107,13 @@ export function VocalEditor(): React.ReactElement {
   const [text, setText] = useState('')
   const [steps, setSteps] = useState(20)
   const [vibrato, setVibrato] = useState(0.25)
-  const [busy, setBusy] = useState<{ text: string; pct: number } | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  // the work in progress, its result and errors live outside the page: singing goes on (and its track arrives in the
+  // Studio) when the page is left meanwhile, and the progress is still shown when it is opened again (owner: after
+  // leaving the page while it sang, no vocals arrived)
+  const busy = useVocalJob((s) => s.busy), error = useVocalJob((s) => s.error), notice = useVocalJob((s) => s.notice)
+  const setBusy = (b: { text: string; pct: number } | null): void => useVocalJob.setState({ busy: b })
+  const setError = (e: string | null): void => useVocalJob.setState({ error: e })
+  const setNotice = (n: string | null): void => useVocalJob.setState({ notice: n })
   const [aiVoice, setAiVoice] = useState('female')
   const [aiStyle, setAiStyle] = useState('pop')
   const alive = useRef(true)
@@ -189,7 +197,6 @@ export function VocalEditor(): React.ReactElement {
   const poll = async (get: () => Promise<{ status: string; progress: number; text: string; error?: string | null }>): Promise<boolean> => {
     for (;;) {
       await new Promise((r) => setTimeout(r, 800))
-      if (!alive.current) return false
       let j
       try { j = await get() } catch { continue }
       setBusy({ text: j.text, pct: j.progress })
@@ -267,6 +274,7 @@ export function VocalEditor(): React.ReactElement {
     const p = useProjectStore.getState().project
     const beats = (seconds * p.bpm) / 60
     st.addClip(id, { startTime: startBeat, duration: beats, audioFile: file, name })
+    useBeatMatch.getState().setNotice(trf('New vocal track in the Studio: {name}', { name }))   // also seen when the page was left
   }
 
   const singDiffSinger = async (): Promise<void> => {
@@ -356,7 +364,6 @@ export function VocalEditor(): React.ReactElement {
       setBusy({ text: tr('The AI singer starts (this takes minutes on a CPU)…'), pct: 0 })
       for (;;) {
         await new Promise((r) => setTimeout(r, 2000))
-        if (!alive.current) return
         const j = useMusicJob.getState().job
         if (!j || j.id !== jobId) continue
         const pct = j.step_total ? Math.round(((j.step ?? 0) / j.step_total) * 100) : 0

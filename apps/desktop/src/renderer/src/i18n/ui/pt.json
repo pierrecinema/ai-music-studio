@@ -2114,5 +2114,6 @@
  "Style effects": "Efeitos do estilo",
  "The AI backend is starting…": "O motor de IA está iniciando…",
  "Clear voice": "Clara",
- "Drag: move (up / down: pitch), right edge: length · click: change the syllable": "Arraste: mover (cima / baixo: altura), borda direita: duração · clique: mudar a sílaba"
+ "Drag: move (up / down: pitch), right edge: length · click: change the syllable": "Arraste: mover (cima / baixo: altura), borda direita: duração · clique: mudar a sílaba",
+ "New vocal track in the Studio: {name}": "Nova faixa vocal no Studio: {name}"
 }

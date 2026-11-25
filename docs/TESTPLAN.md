@@ -957,3 +957,4 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 67.5 | Am rechten Rand eines Blocks ziehen | Note wird länger / kürzer | | | 0.99.10 |
 | 67.6 | Einen Block nur anklicken, Silbe ändern, Enter | Silbe ist geändert (auch in der Piano-Roll) | | | 0.99.10 |
 | 67.7 | DiffSinger: „Stimme importieren…“ wenn gerade **nicht** gesungen wird | Knopf ist bedienbar, Dateidialog öffnet sich | | | 0.99.10 |
+| 67.8 | Singen drücken, gleich ins Studio wechseln, warten | Wenn fertig: neue Gesangsspur im Studio, oben im Studio die Meldung „Neue Gesangsspur …“; zurück im Vocal Editor sieht man den Fortschritt, solange es läuft | | | 0.99.10 |

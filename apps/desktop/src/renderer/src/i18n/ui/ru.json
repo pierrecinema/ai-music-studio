@@ -2131,5 +2131,6 @@
  "Style effects": "Эффекты стиля",
  "The AI backend is starting…": "ИИ-бэкенд запускается…",
  "Clear voice": "Чистый",
- "Drag: move (up / down: pitch), right edge: length · click: change the syllable": "Тяните: сдвинуть (вверх / вниз: высота), правый край: длина · щелчок: изменить слог"
+ "Drag: move (up / down: pitch), right edge: length · click: change the syllable": "Тяните: сдвинуть (вверх / вниз: высота), правый край: длина · щелчок: изменить слог",
+ "New vocal track in the Studio: {name}": "Новая вокальная дорожка в Студии: {name}"
 }

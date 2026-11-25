@@ -2166,5 +2166,6 @@
  "Style effects": "Stil-Effekte",
  "The AI backend is starting…": "Das KI-Backend startet …",
  "Clear voice": "Klar",
- "Drag: move (up / down: pitch), right edge: length · click: change the syllable": "Ziehen: verschieben (hoch / runter: Tonhöhe), rechter Rand: Länge · Klick: Silbe ändern"
+ "Drag: move (up / down: pitch), right edge: length · click: change the syllable": "Ziehen: verschieben (hoch / runter: Tonhöhe), rechter Rand: Länge · Klick: Silbe ändern",
+ "New vocal track in the Studio: {name}": "Neue Gesangsspur im Studio: {name}"
 }

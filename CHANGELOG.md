@@ -11,6 +11,7 @@ on its GitHub release page, so every version needs a `## <version>` section here
 
 ### Fixed
 
+- **Vocal Editor, vocals lost when leaving the page**: leaving the Vocal Editor while it sang stopped waiting for the result, so no vocal track arrived. Singing now goes on in the background, the track arrives in the Studio (the Studio says so), and the progress is shown again when the page is opened.
 - **Vocal Editor, level in the display**: it showed movement the whole time while the singer worked, the same as while a voice played. Now it shows the real level of the voice you listen to; while the singer works, a calm light runs across it instead.
 
 ## 0.99.9

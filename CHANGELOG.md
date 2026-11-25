@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.5
+
+### Fixed
+
+- **Waveforms right away**: with a song already in the project, the waveforms in the Studio appeared only after pressing Play (or after a long wait). The audio files are now read as soon as the Studio shows them; until then the clip says so.
+
 ## 0.99.4
 
 ### Changed

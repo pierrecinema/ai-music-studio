@@ -296,7 +296,7 @@ function SingerVoiceSelect({ value, onChange }: { value: string; onChange: (v: s
 
 export function CreateMusic(): React.ReactElement {
   const [p, setP] = useState<MusicParams>(DEFAULT_PARAMS)
-  const [mode, setMode] = useState<'simple' | 'studio'>('studio')
+  const [mode, setModeRaw] = useState<'simple' | 'studio' | 'loop'>('studio')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [engine, setEngine] = useState<EngineState | null>(null)
   const [engineError, setEngineError] = useState('')
@@ -333,6 +333,13 @@ export function CreateMusic(): React.ReactElement {
 
   const set = useCallback(<K extends keyof MusicParams>(k: K, v: MusicParams[K]) =>
     setP((s) => ({ ...s, [k]: v })), [])
+  // Loop is a mode of its own (one of our main functions): it makes loops, instrumental by default; the other modes
+  // make songs
+  const setMode = (m: 'simple' | 'studio' | 'loop'): void => {
+    setModeRaw(m)
+    if (m === 'loop') setP((s) => ({ ...s, loop: true, instrumental: s.loop ? s.instrumental : true, acapella: false, bpm: s.bpm || '120' }))
+    else setP((s) => (s.loop ? { ...s, loop: false } : s))
+  }
   // from the Library ("Use again in Create music"): the song's prompt and lyrics are filled in
   const prefill = useUIStore((s) => s.createPrefill)
   useEffect(() => {
@@ -510,7 +517,8 @@ export function CreateMusic(): React.ReactElement {
   }
 
   const unusedLoras = loras.filter((l) => !(l.id in p.selectedLoras))
-  const studio = mode === 'studio'
+  const studio = mode !== 'simple'          // the loop mode has all settings of the studio mode
+  const loopMode = mode === 'loop'
 
   const cur = engines.find((e) => e.id === p.engine)
   const statusColor = !online ? 'var(--orange)' : engine === 'ready' ? 'var(--green)' : engine === 'broken' ? 'var(--red)' : engine === 'missing' ? 'var(--yellow)' : 'var(--text-secondary)'
@@ -542,7 +550,9 @@ export function CreateMusic(): React.ReactElement {
             style={{ fontSize: 11, color: 'var(--orange)', whiteSpace: 'nowrap' }}>● {tr('Low-memory mode')}</span>
         )}
         <div style={{ marginLeft: 'auto' }}>
-          <MiniSeg value={mode} onChange={(v) => setMode(v as 'simple' | 'studio')} options={[['simple', tr("Simple")], ['studio', tr("Studio")]]} />
+          <MiniSeg value={mode} onChange={(v) => setMode(v as 'simple' | 'studio' | 'loop')}
+            options={[['simple', tr("Simple")], ['studio', tr("Studio")], ['loop', `⟳ ${tr("Loops")}`]]}
+            title={tr("Simple and Studio make songs; Loops makes loops of exactly 1 to 16 bars that repeat without a gap")} />
         </div>
       </div>
       {engineProblem && engine !== 'checking' && (
@@ -661,13 +671,22 @@ export function CreateMusic(): React.ReactElement {
             )}
             {studio && (
               <>
+                {loopMode ? (
+                  <RackRow k={tr("Loop length")} title={tr("Makes a loop of exactly the chosen bars, starting on beat 1. Copies placed one after the other in the Studio (Ctrl+D) play endlessly without a gap or a click.")}>
+                    <MiniSeg value={String(p.loopBars)} onChange={(v) => set('loopBars', Number(v))}
+                      options={[['1', '1'], ['2', '2'], ['4', '4'], ['8', '8'], ['16', '16']]} />
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr('bars')}</span>
+                  </RackRow>
+                ) : (
                 <RackRow k={tr("Length")} title={tr("Empty fields are decided by the model. Auto length is 60 s.")}>
                   <input type="number" min={5} max={maxDur} value={p.loop ? '' : p.duration} placeholder={p.loop ? tr("loop") : tr("Auto")}
                     disabled={p.loop} onChange={(e) => set('duration', e.target.value)} style={{ ...lcdBox, width: 74 }} />
                   <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr('s')}{!p.loop && Number(p.duration) > 0 ? ` · ${mmss(Number(p.duration))}` : ''}</span>
                 </RackRow>
+                )}
                 <RackRow k={tr("Tempo · Key")}>
-                  <input type="number" min={30} max={300} value={p.bpm} placeholder={tr("BPM")} onChange={(e) => set('bpm', e.target.value)} style={{ ...lcdBox, width: 66 }} />
+                  <input type="number" min={30} max={300} value={p.bpm} placeholder={loopMode ? '120' : tr("BPM")} onChange={(e) => set('bpm', e.target.value)} style={{ ...lcdBox, width: 66 }}
+                    title={loopMode ? tr("The loop keeps the tempo the model really played; in the Studio it is stretched to the project tempo, so every copy is exactly the chosen bars long.") : undefined} />
                   <Select value={p.key} onChange={(v) => set('key', v)} options={KEYS} placeholder={tr("Key: auto")} />
                 </RackRow>
                 <RackRow k={tr("Time")}>
@@ -684,13 +703,6 @@ export function CreateMusic(): React.ReactElement {
                   </>
                 )}
               </>
-            )}
-            <RackRow k={tr("Loop")} title={tr("Makes a loop of exactly the chosen bars, starting on beat 1. Copies placed one after the other in the Studio (Ctrl+D) play endlessly without a gap or a click.")}>
-              <MiniSeg value={p.loop ? String(p.loopBars) : 'off'} onChange={(v) => { if (v === 'off') set('loop', false); else { set('loop', true); set('loopBars', Number(v)) } }}
-                options={[['off', tr('Off')], ['1', '1'], ['2', '2'], ['4', '4'], ['8', '8'], ['16', '16']]} />
-            </RackRow>
-            {p.loop && !studio && (
-              <RackRow k={tr("BPM")}><input type="number" min={30} max={300} value={p.bpm} placeholder="120" onChange={(e) => set('bpm', e.target.value)} style={{ ...lcdBox, width: 66 }} /></RackRow>
             )}
             <RackRow k={tr("Steps")} title={tr("More steps are slower and usually cleaner. Turbo models need only about 8.")}>
               <input type="range" min={4} max={100} step={1} value={p.steps} onChange={(e) => set('steps', Number(e.target.value))} style={{ flex: 1, accentColor: 'var(--accent)' }} />

@@ -831,5 +831,5 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 56.4 | Eine Frau (z. B. Anna) wählen, Song mit Text erzeugen | Nach dem Rendern: „Anna sings: Separating the vocals … / Changing the voice …“; am Ende singt Anna, Text und Melodie wie vom Musikmodell | ✅ | | 0.98.9 |
 | 56.5 | Einen Mann (z. B. Carlos) wählen, Song erzeugen | Das Musikmodell singt mit Männerstimme, danach klingt es nach Carlos (natürlich, nicht künstlich) | ✅ | | 0.98.9 |
 | 56.6 | Instrumentaler Song mit gewählter Stimme | Kein Fehler: der Song bleibt instrumental | ✅ | | 0.98.9 |
-| 56.7 | Setup-Assistent → Paket **Alles** | Zeigt „Songs, gesungen von den eingebauten Stimmen“, etwa 25 GB | | | 0.98.9 |
+| 56.7 | Setup-Assistent → Paket **Alles** | Zeigt „Songs, gesungen von den eingebauten Stimmen“, etwa 25 GB | ✅ | | 0.98.9 |
 

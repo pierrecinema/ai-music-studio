@@ -2100,5 +2100,11 @@
  "Click a track to see its details here.": "Cliquez sur une piste pour voir ici ses détails.",
  "The songs are stretched to the new tempo; until then the old tempo plays on.": "Les morceaux sont étirés au nouveau tempo ; d’ici là l’ancien tempo continue.",
  "Adjusting to the new tempo…": "Adaptation au nouveau tempo…",
- "Drag: height of the details · double-click: normal height": "Glisser : hauteur des détails · double-clic : hauteur normale"
+ "Drag: height of the details · double-click: normal height": "Glisser : hauteur des détails · double-clic : hauteur normale",
+ "Keys left": "Touches à gauche",
+ "Keys below": "Touches en bas",
+ "View: keys on the left (time to the right) or the keyboard across the bottom (the notes come down onto the keys)": "Vue : touches à gauche (temps vers la droite) ou clavier en bas (les notes descendent vers les touches)",
+ "Draw": "Dessiner",
+ "Select": "Sélection",
+ "Erase": "Effacer"
 }

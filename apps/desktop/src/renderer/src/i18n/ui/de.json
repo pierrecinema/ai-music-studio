@@ -2121,5 +2121,10 @@
  "Loops": "Loops",
  "Simple and Studio make songs; Loops makes loops of exactly 1 to 16 bars that repeat without a gap": "Einfach und Studio machen Songs; Loops macht Loops von genau 1 bis 16 Takten, die sich ohne Lücke wiederholen",
  "The loop keeps the tempo the model really played; in the Studio it is stretched to the project tempo, so every copy is exactly the chosen bars long.": "Der Loop behält das Tempo, das das Modell wirklich gespielt hat; im Studio wird er auf das Projekttempo gestreckt, so ist jede Kopie genau so viele Takte lang wie gewählt.",
- "Loop length": "Loop-Länge"
+ "Loop length": "Loop-Länge",
+ "No answer from the AI backend for a minute ({m}). Please start it again.": "Seit einer Minute keine Antwort vom KI-Backend ({m}). Bitte starte es erneut.",
+ "Not measured yet": "Noch nicht gemessen",
+ "Plays your MIDI notes like a real musician: violin, viola, cello, double bass, flute, oboe, clarinet, saxophone, bassoon, trumpet, horn, trombone, tuba, with vibrato, bowing and breath. Runs on the processor, no graphics card needed. Needs Python 3.10 or 3.11.": "Spielt deine MIDI-Noten wie ein echter Musiker: Geige, Bratsche, Cello, Kontrabass, Flöte, Oboe, Klarinette, Saxofon, Fagott, Trompete, Horn, Posaune, Tuba, mit Vibrato, Bogenführung und Atem. Läuft auf dem Prozessor, keine Grafikkarte nötig. Braucht Python 3.10 oder 3.11.",
+ "The AI backend was restarted, so this conversion was lost. Please start it again.": "Das KI-Backend wurde neu gestartet, deshalb ging diese Umwandlung verloren. Bitte starte sie erneut.",
+ "Generator": "Generator"
 }

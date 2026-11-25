@@ -1,12 +1,24 @@
 # AI Instruments
 
-Musicians for your song (menu **🎻 AI Instruments**, new in 0.80). Since 0.83 the page looks like a rack of plugin devices, each with a coloured stripe; the drummer shows its pattern as a step grid, bass player and guitarist a mini piano roll, all updated as you turn the knobs:
+Musicians for your song (menu **🎻 AI Instruments**, new in 0.80).
+
+## The stage (0.99.11)
+
+The musicians stand on a lit **stage**: **Composer** (song generator), **Drummer**, **Bass player**, **Guitarist**, **Orchestra** and **AI soloist** (text instrument). Those already in your song glow and say *● in your song*. **Click a musician** and their desk opens below:
+
+- **left:** who they are and what each control does (ⓘ);
+- **middle:** their own device (each with its own look);
+- **right:** **▶ Preview** (hear it before it goes into the song: the band the first 4 bars, the composer the chorus, the orchestra a demo of the instrument, the AI soloist the notes it will play), **▶ The whole band** (drums, bass and guitar together), **✦ 3 ideas** (three suggestions, each with ▶ to listen and *Take* to use it), **+ Add to the song** and, for the band, **✦ Add and AI render (real sound)**: the part is added and the music AI (ACE-Step) plays it as a real-sounding recording on a new audio track; the MIDI track is muted (minutes without an NVIDIA card; the progress stays under the buttons and it goes on when you leave the page).
+
+The settings of each musician are kept while you look at another one.
+
+The devices: the drummer shows its pattern as a step grid, bass player and guitarist a mini piano roll, all updated as you turn the knobs:
 turn a **knob** by dragging it up or down (Shift: finer, mouse wheel, arrow keys; double-click: back to its default),
 step through an **LCD** with ◀ ▶ or click it for the list. With the AI assistant closed the page uses the whole width.
 
 ## Sound packs: real instruments (every PC)
 
-The song generator, the band and every MIDI track sound much better with the **sound packs**: recorded instruments instead of the simple synthesizer. Install them once in [[Settings]] → *Audio* → *Sound packs* (or with **Install** at the top of this page while none is installed): **Salamander Grand Piano** (concert grand, 22 MB), **VSCO-2 Orchestra** (strings and brass, about 330 MB), **MuseScore General** (48 MB) and **GeneralUser GS** (28 MB). The best installed pack plays each instrument; the instrument list in the Studio shows which one. The song generator then picks a band for each genre (for example funk: clavinet, slap bass, brass section; jazz: alto sax, upright bass, piano, jazz kit; ballad: piano, strings, brushes) and sets a first mix: levels per part and a little room reverb. Any track can switch to another instrument in the Studio: *Channel → Instrument*.
+The song generator, the band and every MIDI track sound much better with the **sound packs**: recorded instruments instead of the simple synthesizer. Install them once in [[Settings]] → *Audio* → *Sound packs* (or with **Install** at the top of this page while none is installed): **Band** (a recorded drum kit with soft and hard hits, electric bass, electric, acoustic and nylon guitar: the AI band plays them, about 47 MB), **Salamander Grand Piano** (concert grand, 22 MB), **VSCO-2 Orchestra** (strings and brass, about 330 MB), **MuseScore General** (48 MB) and **GeneralUser GS** (28 MB). The best installed pack plays each instrument; the instrument list in the Studio shows which one. The song generator then picks a band for each genre (for example funk: clavinet, slap bass, brass section; jazz: alto sax, upright bass, piano, jazz kit; ballad: piano, strings, brushes) and sets a first mix: levels per part and a little room reverb. Any track can switch to another instrument in the Studio: *Channel → Instrument*.
 
 ## Song generator (0.81, every PC)
 

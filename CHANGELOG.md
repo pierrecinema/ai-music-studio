@@ -3,6 +3,14 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.11
+
+### New
+
+- **AI Instruments on a stage**: the musicians (composer, drummer, bass player, guitarist, orchestra, AI soloist) stand on a lit stage; a click opens their desk: who they are and what every control does, their own device, and on the right **▶ Preview** (hear it before it goes into the song), **▶ The whole band**, **✦ 3 ideas** (listen and take one), **+ Add to the song**.
+- **AI render for the band**: *Add and AI render (real sound)* adds the part and lets the music AI (ACE-Step) play it as a real-sounding recording on a new audio track (minutes without an NVIDIA card; it goes on when the page is left).
+- **Sound pack "Band"**: a recorded drum kit (soft and hard hits, hi-hats that cut each other), electric bass, electric, acoustic and nylon guitar (free: CC0 and MIT). Install it once in Settings → Audio → Sound packs; the drummer, bass player and guitarist then play it instead of the General MIDI sounds.
+
 ## 0.99.10
 
 ### Changed

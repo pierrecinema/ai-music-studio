@@ -1,7 +1,8 @@
 // Sound packs: real recorded instruments played by a small sampler. MIDI tracks with a built-in sound or a pack
 // program play them when a pack is installed (Settings → Audio → Sound packs); without one the old synthesizer plays.
 //   GeneralUser GS (SoundFont 2) and MuseScore General (SoundFont 3: Ogg Vorbis samples): every GM instrument
-//   Salamander Grand Piano (MP3) and VSCO-2 orchestra (WAV): multisampled instruments, used first where they exist
+//   Salamander Grand Piano (MP3), VSCO-2 orchestra (WAV) and Band (FLAC drums, MP3 bass and guitars): multisampled
+//   instruments, used first where they exist
 //
 // Each note is one or two AudioBufferSourceNodes (the zones that match key and velocity) with the zone's tuning,
 // loop, volume envelope, low-pass filter and pan. Works the same in live playback and in the offline export.
@@ -179,7 +180,54 @@ export function buildMultiBank(id: string, files: string[]): SoundBank {
     const brass = [...trombone.filter((s) => s.root < 53), ...horn.filter((s) => s.root >= 53)]
     if (brass.length) multiPreset(bank, 'VSCO Brass section', 61, brass, { release: 0.3 })
   }
+  if (id === 'band') {
+    // tonejs names: As1.mp3 = A#1 (scientific pitch, middle C = C4), one velocity layer
+    const notes = (folder: string): MultiSample[] => files.filter((f) => f.startsWith(folder + '/')).map((f) => {
+      const m = f.match(/\/([A-G])(s?)(\d)\.mp3$/); const root = m ? noteNumber(`${m[1]}${m[2] ? '#' : ''}${m[3]}`) : null
+      return m && root !== null ? { file: f, root, layer: 1 } : null
+    }).filter(Boolean) as MultiSample[]
+    const bass = notes('bass'), egtr = notes('egtr'), agtr = notes('agtr'), ngtr = notes('ngtr')
+    if (bass.length) { multiPreset(bank, 'Electric bass (finger)', 33, bass, { release: 0.25 }); multiPreset(bank, 'Electric bass (pick)', 34, bass, { release: 0.2 }) }
+    if (egtr.length) { multiPreset(bank, 'Electric guitar (clean)', 27, egtr, { release: 0.35 }); multiPreset(bank, 'Electric guitar (jazz)', 26, egtr, { release: 0.4 }) }
+    if (agtr.length) multiPreset(bank, 'Acoustic guitar (steel)', 25, agtr, { release: 0.45 })
+    if (ngtr.length) multiPreset(bank, 'Acoustic guitar (nylon)', 24, ngtr, { release: 0.45 })
+    drumKit(bank, files)
+  }
   return bank
+}
+
+/** a General MIDI drum kit (bank 128) from one-shot samples: each key plays its own sample unpitched, soft and hard
+ *  hits as two velocity layers; the hi-hats cut each other */
+function drumKit(bank: SoundBank, files: string[]): void {
+  const has = (n: string): string | null => files.find((f) => f === `drums/${n}.flac`) ?? null
+  // GM key -> [soft sample, hard sample]
+  const MAP: Array<[number[], string, string, number?]> = [
+    [[35, 36], 'drum_bass_soft', 'drum_bass_hard'], [[38, 40], 'drum_snare_soft', 'drum_snare_hard'], [[37, 39], 'drum_snare_soft', 'drum_snare_soft'],
+    [[42], 'drum_cymbal_closed', 'drum_cymbal_closed', 1], [[44], 'drum_cymbal_pedal', 'drum_cymbal_pedal', 1], [[46], 'drum_cymbal_open', 'drum_cymbal_open', 1],
+    [[41, 43], 'drum_tom_lo_soft', 'drum_tom_lo_hard'], [[45, 47], 'drum_tom_mid_soft', 'drum_tom_mid_hard'], [[48, 50], 'drum_tom_hi_soft', 'drum_tom_hi_hard'],
+    [[49, 57, 52], 'drum_cymbal_hard', 'drum_cymbal_hard'], [[51, 53, 59], 'drum_cymbal_soft', 'drum_cymbal_soft'], [[55], 'drum_splash_soft', 'drum_splash_hard'], [[56], 'drum_cowbell', 'drum_cowbell'],
+  ]
+  const zones: Zone[] = []
+  const sampleOf = (file: string, root: number): number => {
+    let idx = bank.samples.findIndex((x) => x.file === file)
+    if (idx < 0) { idx = bank.samples.length; bank.samples.push({ name: file, start: 0, end: 0, loopStart: 0, loopEnd: 0, rate: 0, root, correction: 0, type: 1, file }) }
+    return idx
+  }
+  for (const [keys, soft, hard, cls] of MAP) {
+    for (const key of keys) {
+      for (const [file, velLo, velHi] of [[has(soft), 1, 80], [has(hard) ?? has(soft), 81, 127]] as Array<[string | null, number, number]>) {
+        if (!file) continue
+        // gen 58: the key plays the sample at its own pitch; 38: a long release (the hit rings out); 57: exclusive class
+        const gen = new Map<number, number>([[58, key], [38, Math.round(1200 * Math.log2(1.5))], [48, 0], [33, -12000], [34, -12000], [35, -12000], [36, -12000], [37, 0]])
+        if (cls) gen.set(57, cls)
+        zones.push({ keyLo: key, keyHi: key, velLo, velHi, sample: sampleOf(file, key), gen, add: new Map() })
+      }
+    }
+  }
+  if (!zones.length) return
+  const p: Sf2Preset = { name: 'Band drum kit', bank: 128, program: 0, zones, owner: bank }
+  bank.presets.set('128:0', p)
+  bank.names.push({ bank: 128, program: 0, name: 'Band drum kit' })
 }
 
 // ── the loaded banks ──────────────────────────────────────────────────────────────
@@ -295,9 +343,9 @@ export async function prepareSounds(programs: Array<number | null>): Promise<voi
 const tc = (t: number | undefined, dflt = -12000): number => Math.pow(2, (t ?? dflt) / 1200)        // timecents -> s
 const val = (z: Zone, op: number, dflt = 0): number => (z.gen.get(op) ?? dflt) + (z.add.get(op) ?? 0)
 
-// Which pack plays a program first: the multisampled packs where they have the instrument, then MuseScore General,
+// Which pack plays a program first: the multisampled packs (piano, orchestra, band) where they have the instrument, then MuseScore General,
 // then GeneralUser GS
-const ORDER = ['salamander', 'vsco', 'musescore', 'generaluser']
+const ORDER = ['salamander', 'vsco', 'band', 'musescore', 'generaluser']
 /** the preset for a General MIDI program (0-127) or a drum kit (128+), from the best installed pack */
 export function presetFor(program: number): Sf2Preset | null {
   for (const id of [...ORDER, ...banks.keys()]) {

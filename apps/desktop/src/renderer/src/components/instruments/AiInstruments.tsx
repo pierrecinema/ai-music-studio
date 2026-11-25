@@ -21,6 +21,7 @@ import { GENRES, SECTION_LABEL, generateSong, type Mode } from '../../lib/songge
 import { Fader, G, LedDot, Meter, RollView, SkinKnob, VuMeter } from './gear'
 import type { Track } from '../../types'
 import { tr, trf } from '../../i18n/tr'
+import { ActBtn, Desk, Ideas, MUSICIANS, RenderState, StageView, aiRender, previewFile, previewParts, useAceStatus, usePreviewKey, type MemberId, type PreviewPart } from './Stage'
 
 const KEY_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const COL = { song: '#a855f7', drums: '#f43f5e', bass: '#3b82f6', guitar: '#f59e0b', band: '#fb7185', orch: '#22c55e', text: '#38bdf8' }
@@ -178,7 +179,26 @@ function SongGenerator(): React.ReactElement {
     setNotice(trf('The song is in the Studio from bar {bar}: {n} MIDI tracks, {bars} bars. Every part can be edited in the Piano Roll and played by any instrument.', { bar: start / 4 + 1, n: song.parts.length, bars: song.bars }))
   }
 
+  const playing = usePreviewKey()
+  const chorusParts = (sg: typeof song): PreviewPart[] => {
+    const ch = sg.sections.find((x) => x.kind === 'chorus' || x.kind === 'drop') ?? sg.sections[0]
+    const b0 = (ch?.bar ?? 0) * 4
+    return sg.parts.map((p) => ({ notes: p.notes.filter((n) => n.startTime >= b0).map((n) => ({ ...n, startTime: n.startTime - b0 })), sound: p.sound, program: p.program }))
+  }
+  type SIdea = { genre: string; take: number; label: string }
+  const [ideas, setIdeas] = useState<SIdea[]>([])
+  const makeIdeas = (): void => setIdeas([0, 1, 2].map((i) => { const gg = i === 0 ? g : rnd(GENRES); const t = Math.floor(Math.random() * 90) + 2; return { genre: gg.id, take: t, label: `${tr(gg.label)} · ${trf('Take {n}', { n: t })}` } }))
+  const ideaSong = (i: SIdea): typeof song => { const gg = GENRES.find((x) => x.id === i.genre)!; return generateSong({ genre: gg.id, key, mode: gg.mode, bpm: gg.bpm, seed: i.take, parts }) }
   return (
+    <Desk m={MUSICIANS[0]} hints={['Genre: the kind of song', 'Key and Major / Minor: the scale', 'Tempo: beats per minute', 'Take: another version of the same song', 'The switches below: which parts are made']}
+      actions={<>
+        <ActBtn kind="play" onClick={() => void previewParts('song', chorusParts(song), 32)} title={tr('Hear the chorus of this song (8 bars)')}>{playing === 'song' ? '■ ' : '▶ '}{tr('Preview')}</ActBtn>
+        <ActBtn kind="ai" onClick={makeIdeas} title={tr('Three songs to listen to: take the one you like')}>✦ {tr('3 ideas')}</ActBtn>
+        <Ideas ideas={ideas} label={(i) => i.label} playingKey={playing} onHear={(i, k) => void previewParts(k, chorusParts(ideaSong(i)), 32)}
+          onTake={(i) => { const gg = GENRES.find((x) => x.id === i.genre)!; setGenre(gg.id); setMode(gg.mode); setBpm(gg.bpm); setTake(i.take) }} />
+        <ActBtn kind="add" onClick={make} disabled={!song.parts.length}>+ {tr('Create the song in the Studio')}</ActBtn>
+        {notice && <span style={{ fontSize: 11, color: '#86efac' }}>{notice}</span>}
+      </>}>
     <section style={{ flexShrink: 0, borderRadius: 10, overflow: 'hidden', border: '1px solid #8c939c', boxShadow: '0 10px 24px rgba(0,0,0,0.45)', fontFamily: G.font }}
       title={tr('A whole song as MIDI: chords, melody, keys, bass, drums and guitar, with intro, verse, chorus and bridge.')}>
       <div style={{ background: 'linear-gradient(180deg, #f4f5f7 0%, #e3e6ea 100%)', padding: '14px 20px 16px', display: 'grid', gridTemplateColumns: '230px 1fr 230px', gap: 18, alignItems: 'center' }}>
@@ -221,9 +241,9 @@ function SongGenerator(): React.ReactElement {
         <span style={{ width: 1, alignSelf: 'stretch', background: '#b4bac2' }} />
         <LedRow label={tr('Tempo')} on={setTempo} set={setSetTempo} color={CYAN} light title={tr('Set the project tempo')} />
         <LedRow label={tr('Markers')} on={markers} set={setMarkers} color={CYAN} light title={tr('Markers for the parts')} />
-        {notice && <span style={{ fontSize: 11.5, color: '#155e75', flex: 1, minWidth: 260 }}>{notice}</span>}
       </div>
     </section>
+    </Desk>
   )
 }
 
@@ -283,7 +303,11 @@ function RackUnit({ edge, logo, sub, children, side, onAdd, addLabel }: { edge: 
 
 const lightLabel: React.CSSProperties = { fontFamily: G.font, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#2d3138' }
 
-function Band(): React.ReactElement {
+type BandMember = 'drums' | 'bass' | 'guitar'
+const rnd = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)]
+const r2 = (lo: number, hi: number): number => Math.round((lo + Math.random() * (hi - lo)) * 100) / 100
+
+function Band({ only }: { only: BandMember }): React.ReactElement {
   const project = useProjectStore((s) => s.project)
   const bpb = project.timeSignature?.[0] || 4
   const midiTracks = project.tracks.filter((t) => t.type === 'midi' && !isDrums(t) && notesOf(t).length)
@@ -320,7 +344,60 @@ function Band(): React.ReactElement {
   const done = (what: string): void => setNotice(trf('{what} is in the Studio: a new MIDI track at bar {bar}. Change its sound with KA → Instrument in its track (any VST instrument too).', { what, bar: startBar }))
   const ORANGE = '#f28b20', BLUE = '#2f9be8', PURPLE = '#a78bfa'
 
+  // ── the helps on the right: preview, ideas, add, AI render ──
+  const playing = usePreviewKey()
+  const ace = useAceStatus()
+  const key = `band-${only}`
+  const partFor = (m: BandMember, d = drum, b = bass, g = gtr, sd = seed): PreviewPart => {
+    const o = { ...opts, seed: sd }
+    if (m === 'drums') return { notes: drummer({ ...o, style: d.style, intensity: d.intensity, fills: d.fills, humanize: d.humanize, swing: d.swing }), sound: 'drums' }
+    if (m === 'bass') return { notes: chords.length ? bassist({ ...o, style: b.style, intensity: b.intensity, chords, humanize: b.humanize, swing: d.swing }) : [], sound: b.style === '808' ? '808' : 'bass' }
+    return { notes: chords.length ? guitarist({ ...o, style: g.style, intensity: g.intensity, chords, humanize: g.humanize, swing: d.swing }) : [], sound: g.distorted ? 'eguitar' : 'guitar' }
+  }
+  const previewBeats = Math.min(beats, bpb * 4)
+  type Idea = { drum?: typeof drum; bass?: typeof bass; gtr?: typeof gtr; seed: number; label: string }
+  const [ideas, setIdeas] = useState<Idea[]>([])
+  useEffect(() => setIdeas([]), [only])
+  const makeIdeas = (): void => {
+    setIdeas([0, 1, 2].map(() => {
+      const sd = Math.floor(Math.random() * 1000) + 2
+      if (only === 'drums') { const st = rnd(DRUM_STYLES); const d = { ...drum, style: st.id, intensity: r2(0.35, 0.9), swing: /hiphop|funk|shuffle|jazz/.test(st.id) ? r2(0.2, 0.5) : 0, fills: rnd([4, 8] as const) }; return { drum: d, seed: sd, label: `${tr(st.label)} · ${pct(d.intensity)} %` } }
+      if (only === 'bass') { const st = rnd(BASS_STYLES); const b = { ...bass, style: st.id, intensity: r2(0.35, 0.9) }; return { bass: b, seed: sd, label: `${tr(st.label)} · ${pct(b.intensity)} %` } }
+      const st = rnd(GUITAR_STYLES); const g = { ...gtr, style: st.id, distorted: !!st.distorted, intensity: r2(0.35, 0.9) }; return { gtr: g, seed: sd, label: `${tr(st.label)} · ${pct(g.intensity)} %` }
+    }))
+  }
+  const ideaPart = (i: Idea): PreviewPart => partFor(only, i.drum ?? drum, i.bass ?? bass, i.gtr ?? gtr, i.seed)
+  const takeIdea = (i: Idea): void => { if (i.drum) setDrum(i.drum); if (i.bass) setBass(i.bass); if (i.gtr) setGtr(i.gtr); setSeed(i.seed) }
+  const addMember = (): string | null => {
+    if (only !== 'drums' && !needChords()) return null
+    if (only === 'drums') addDrums(); else if (only === 'bass') addBass(); else addGuitar()
+    done(tr(only === 'drums' ? 'Drummer' : only === 'bass' ? 'Bass player' : 'Guitarist'))
+    const ts = useProjectStore.getState().project.tracks
+    return ts[ts.length - 1]?.id ?? null
+  }
+  const renderPrompt = only === 'drums' ? `${tr(DRUM_STYLES.find((d) => d.id === drum.style)!.label)} drum kit, real drummer`
+    : only === 'bass' ? `electric bass guitar, ${tr(BASS_STYLES.find((d) => d.id === bass.style)!.label)}`
+      : `${gtr.distorted ? 'overdriven electric guitar' : 'electric guitar'}, ${tr(GUITAR_STYLES.find((d) => d.id === gtr.style)!.label)}`
+  const actions = (
+    <>
+      <ActBtn kind="play" onClick={() => void previewParts(key, [partFor(only)], previewBeats)} title={tr('Hear this musician with the settings in the middle (the first 4 bars)')}>{playing === key ? '■ ' : '▶ '}{tr('Preview')}</ActBtn>
+      <ActBtn onClick={() => void previewParts('band-all', [partFor('drums'), partFor('bass'), partFor('guitar')], previewBeats)} title={tr('Drummer, bass player and guitarist together')}>{playing === 'band-all' ? '■ ' : '▶ '}{tr('The whole band')}</ActBtn>
+      <ActBtn kind="ai" onClick={makeIdeas} title={tr('Three other ways to play it: listen, then take the one you like')}>✦ {tr('3 ideas')}</ActBtn>
+      <Ideas ideas={ideas} label={(i) => i.label} playingKey={playing} onHear={(i, k) => void previewParts(k, [ideaPart(i)], previewBeats)} onTake={takeIdea} />
+      <ActBtn kind="add" onClick={() => { addMember() }} title={tr('A new MIDI track in the Studio, played by the sound pack (or any instrument you choose)')}>+ {tr('Add to the song')}</ActBtn>
+      <ActBtn kind="ai" disabled={!ace?.ace} onClick={() => { const id = addMember(); if (id) void aiRender(key, id, renderPrompt) }}
+        title={ace?.ace ? tr('Adds the part and lets the music AI play it as a real-sounding recording') : tr('ACE-Step is not installed: Settings → AI Engines → "Music generator (ACE-Step)".')}>✦ {tr('Add and AI render (real sound)')}</ActBtn>
+      {ace?.ace && !ace.cuda && <span style={{ fontSize: 10.5, color: '#fbbf24' }}>{tr('AI render without an NVIDIA card: several minutes per part.')}</span>}
+      <RenderState k={key} />
+    </>
+  )
+  const member = MUSICIANS.find((x) => x.id === only)!
+  const hints = only === 'drums' ? ['Style: the kind of groove', 'Intensity: quiet and sparse … full and busy', 'Swing: straight … shuffle', 'Feel: exact … loose, like a person', 'Fills: a drum fill every 4 or 8 bars']
+    : only === 'bass' ? ['Style: how the bass plays the chords', 'Intensity: few notes … many notes', 'Feel: exact … loose', '808: a deep electronic bass']
+      : ['Style: strumming, picking or riffs', 'Intensity: soft … hard', 'Drive: a distorted rock sound']
+
   return (
+    <Desk m={member} hints={['The chords come from your song (or type them above).', ...hints]} actions={actions}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flexShrink: 0 }}>
       {/* the drummer: a dark synth with a green pattern display and operator panels; the chords and the band live here */}
       <section style={{ background: '#232529', border: '1px solid #111', borderRadius: 8, overflow: 'hidden', boxShadow: '0 10px 24px rgba(0,0,0,0.45)', fontFamily: G.font }}
@@ -344,6 +421,7 @@ function Band(): React.ReactElement {
               : <span style={{ color: '#fbbf24', fontFamily: G.font }}>{src === 'song' ? tr('There is no MIDI track with notes in the project yet: write notes, use the song generator, or type the chords.') : tr('No chords yet')}</span>}
             {bad.length > 0 && <span style={{ color: '#fbbf24', fontFamily: G.font }}>{trf('Not understood: {list}', { list: bad.join(', ') })}</span>}
           </div>
+          {only === 'drums' && <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.1em' }}>{tr('Drummer').toUpperCase()}</span>
             <select value={drum.style} onChange={(e) => setDrum({ ...drum, style: e.target.value as DrumStyle })} style={{ background: '#0b120d', color: '#7ee787', border: '1px solid #000', borderRadius: 3, fontFamily: G.mono, fontSize: 12, height: 28, padding: '0 6px', lineHeight: '26px' }}>
@@ -369,11 +447,12 @@ function Band(): React.ReactElement {
               <SkinKnob skin="lab" label={tr('Length')} value={bars} min={1} max={64} step={1} def={8} onChange={setBars} format={(v) => String(Math.round(v))} size={44} color="#38bdf8" />
             </LabPanel>
           </div>
+          </>}
         </div>
       </section>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
         {/* bass player: light rack effect with an orange edge */}
-        <RackUnit edge={ORANGE} logo="BASS" sub={tr('Bass player')} addLabel={tr('Add')} onAdd={() => { if (needChords()) { addBass(); done(tr('Bass player')) } }}
+        {only === 'bass' && <RackUnit edge={ORANGE} logo="BASS" sub={tr('Bass player')} addLabel={tr('Add')} onAdd={() => { if (needChords()) { addBass(); done(tr('Bass player')) } }}
           side={<>
             <div style={{ alignSelf: 'stretch', background: '#1a1206', border: '1px solid #000', borderRadius: 3, padding: 2 }}><RollView notes={bassNotes} color={ORANGE} height={54} /></div>
             <SkinKnob skin="silver" label="" value={bass.intensity} min={0} max={1} def={0.5} onChange={(v) => setBass({ ...bass, intensity: v })} format={pct} size={58} title={tr('Intensity')} />
@@ -393,9 +472,9 @@ function Band(): React.ReactElement {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}><span style={lightLabel}>808</span>
               <LedDot on={bass.style === '808'} set={(v) => setBass({ ...bass, style: v ? '808' : 'eighths' })} color={ORANGE} light title={tr('808 bass')} /></div>
           </div>
-        </RackUnit>
+        </RackUnit>}
         {/* guitarist: light rack effect with a blue edge and a VU meter */}
-        <RackUnit edge={BLUE} logo="GUITAR" sub={tr('Guitarist')} addLabel={tr('Add')} onAdd={() => { if (needChords()) { addGuitar(); done(tr('Guitarist')) } }}
+        {only === 'guitar' && <RackUnit edge={BLUE} logo="GUITAR" sub={tr('Guitarist')} addLabel={tr('Add')} onAdd={() => { if (needChords()) { addGuitar(); done(tr('Guitarist')) } }}
           side={<>
             <VuMeter value={gtr.intensity} label={gtr.distorted ? 'DRIVE' : 'CLEAN'} />
             <SkinKnob skin="silver" label="" value={gtr.intensity} min={0} max={1} def={0.5} onChange={(v) => setGtr({ ...gtr, intensity: v })} format={pct} size={58} title={tr('Intensity')} />
@@ -414,10 +493,11 @@ function Band(): React.ReactElement {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}><span style={lightLabel}>{tr('Drive')}</span>
               <LedDot on={gtr.distorted} set={(v) => setGtr({ ...gtr, distorted: v })} color={BLUE} light title={tr('Distorted guitar')} /></div>
           </div>
-        </RackUnit>
+        </RackUnit>}
       </div>
       {notice && <div style={{ fontSize: 11.5, color: G.dim }}>{notice}</div>}
     </div>
+    </Desk>
   )
 }
 
@@ -488,7 +568,22 @@ function Orchestra({ preset }: { preset: string }): React.ReactElement {
   const busy = !!job && (job.status === 'queued' || job.status === 'running')
   const cats = [...new Set(list.map((i) => i.category))]
   const CY = '#38bdf8'
+  const playingKey = usePreviewKey()
+  type OIdea = { inst: AiInstrument; ex: typeof ex; label: string }
+  const [ideas, setIdeas] = useState<OIdea[]>([])
+  const makeIdeas = (): void => setIdeas([0, 1, 2].map(() => {
+    const i = rnd(list.filter((x) => x.demo) .length ? list.filter((x) => x.demo) : list)
+    const e = { ...ex, vibrato: r2(0.6, 1.6), dynamics: r2(0.7, 1.5), brightness: r2(0.7, 1.4) }
+    return { inst: i, ex: e, label: `${tr(i.name)} · ${tr('Vibrato')} ${pct(e.vibrato)} %` }
+  }))
   return (
+    <Desk m={MUSICIANS[4]} hints={['Instrument: who plays your MIDI track', 'Vibrato, Dynamics, Brightness, Attack: how it is played', 'Players: more than one for chords', 'Transpose: higher or lower by semitones', 'Runs on the processor, a minute or two']}
+      actions={<>
+        <ActBtn kind="play" disabled={!current?.demo} onClick={() => current?.demo && void previewFile(`orch-${current.id}`, current.demo)} title={tr('Hear this instrument (a short demo)')}>{playingKey === `orch-${current?.id}` ? '■ ' : '▶ '}{tr('Preview')}</ActBtn>
+        <ActBtn kind="ai" onClick={makeIdeas} title={tr('Three instruments with a way of playing: listen, then take one')}>✦ {tr('3 ideas')}</ActBtn>
+        <Ideas ideas={ideas} label={(i) => i.label} playingKey={playingKey} onHear={(i, k) => { if (i.inst.demo) void previewFile(k, i.inst.demo) }} onTake={(i) => { setInst(i.inst.id); setEx(i.ex) }} />
+        <ActBtn kind="add" disabled={!track || busy || !status?.ddsp} onClick={() => void run()} title={tr('The AI plays your MIDI track with this instrument: a new audio track in the Studio')}>✦ {tr('Render to a new track')}</ActBtn>
+      </>}>
     <section style={{ flexShrink: 0, borderRadius: 6, overflow: 'hidden', border: '1px solid #0a1220', boxShadow: '0 10px 24px rgba(0,0,0,0.5)', fontFamily: G.font,
       background: 'repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 3px), linear-gradient(180deg, #2a3c55 0%, #1b2a3f 100%)' }}
       title={tr('A MIDI track played by AI like a real musician (MIDI-DDSP): bow, breath, vibrato. On the processor.')}>
@@ -543,6 +638,7 @@ function Orchestra({ preset }: { preset: string }): React.ReactElement {
         {error && <div style={{ fontSize: 11.5, color: '#fbbf24' }}>{error}</div>}
       </div>
     </section>
+    </Desk>
   )
 }
 
@@ -591,7 +687,17 @@ function TextInstrument({ preset }: { preset: string }): React.ReactElement {
   }
   const running = !!job && (job.status === 'queued' || job.status === 'running')
   const busy = !!stage || running
+  const playingKey = usePreviewKey()
+  const [ideas, setIdeas] = useState<string[]>([])
+  const guide = (): PreviewPart[] => track ? [{ notes: notesOf(track).map((n) => ({ pitch: n.pitch, startTime: n.start - partOf(project, track).from, duration: n.duration, velocity: n.velocity })), sound: track.sound, program: track.program }] : []
   return (
+    <Desk m={MUSICIANS[5]} hints={['MIDI track: the notes that are played', 'The text field: any instrument or style, in words', 'Follow the notes: free … close to your notes', 'Fast with an NVIDIA card, slow without']}
+      actions={<>
+        <ActBtn kind="play" disabled={!track} onClick={() => void previewParts('solo-guide', guide(), 16)} title={tr('Hear the notes it will play (with the track’s own sound)')}>{playingKey === 'solo-guide' ? '■ ' : '▶ '}{tr('Hear the notes')}</ActBtn>
+        <ActBtn kind="ai" onClick={() => setIdeas([...COVER_IDEAS].sort(() => Math.random() - 0.5).slice(0, 3))} title={tr('Three instruments to try')}>✦ {tr('3 ideas')}</ActBtn>
+        {ideas.length > 0 && <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>{ideas.map((c) => <button key={c} onClick={() => setStyle(c)} style={{ border: '1px solid #ffffff33', borderRadius: 999, padding: '3px 9px', fontSize: 11, cursor: 'pointer', background: style === c ? '#db2777' : 'transparent', color: '#fff' }}>{c}</button>)}</div>}
+        <ActBtn kind="add" disabled={!track || busy || !status?.ace} onClick={() => void run()} title={tr('The music AI plays your MIDI track in this sound: a new audio track in the Studio')}>✦ {tr('Render to a new track')}</ActBtn>
+      </>}>
     <section style={{ flexShrink: 0, borderRadius: 10, overflow: 'hidden', border: '1px solid #000', boxShadow: '0 10px 24px rgba(0,0,0,0.5)', fontFamily: G.font, background: 'linear-gradient(180deg, #2b3138 0%, #1c2127 100%)' }}
       title={tr('Describe any instrument or style: ACE-Step plays your MIDI track with it. Fast with an NVIDIA card.')}>
       <div style={{ padding: '14px 18px', display: 'grid', gridTemplateColumns: '1fr auto', gap: 18, alignItems: 'center' }}>
@@ -623,26 +729,42 @@ function TextInstrument({ preset }: { preset: string }): React.ReactElement {
         {error && <span style={{ fontSize: 11.5, color: '#fbbf24' }}>{error}</span>}
       </div>
     </section>
+    </Desk>
   )
 }
 
 export function AiInstruments(): React.ReactElement {
   const preset = useUIStore((s) => s.aiTrackId) ?? ''
   const bpm = useProjectStore((s) => s.project.bpm)
+  const tracks = useProjectStore((s) => s.project.tracks)
+  const [who, setWho] = useState<MemberId>(preset ? 'orchestra' : 'drums')
+  const [bandMember, setBandMember] = useState<BandMember>('drums')
+  const pick = (m: MemberId): void => { setWho(m); if (m === 'drums' || m === 'bass' || m === 'guitar') setBandMember(m) }
+  useEffect(() => () => { void import('../../audio/engine').then((m) => m.stopPreview()) }, [])
+  const audioAi = tracks.filter((t) => t.type !== 'midi' && /\(AI\)/.test(t.name))
+  const lit: Partial<Record<MemberId, boolean>> = {
+    composer: tracks.some((t) => t.name.startsWith(tr('Melody'))),
+    drums: tracks.some((t) => t.type === 'midi' && t.sound === 'drums'),
+    bass: tracks.some((t) => t.type === 'midi' && (t.sound === 'bass' || t.sound === '808')),
+    guitar: tracks.some((t) => t.type === 'midi' && (t.sound === 'guitar' || t.sound === 'eguitar')),
+    orchestra: audioAi.some((t) => ORCHESTRA.some((o) => t.name.startsWith(tr(o.name)))),
+    soloist: audioAi.some((t) => !ORCHESTRA.some((o) => t.name.startsWith(tr(o.name)))),
+  }
+  const band = who === 'drums' || who === 'bass' || who === 'guitar'
   return (
     <div style={{ padding: 14, overflowY: 'auto', height: '100%', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 14,
       background: 'radial-gradient(ellipse at 30% 0%, #23262d 0%, #141519 60%)', fontFamily: G.font }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexShrink: 0, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 15, color: G.text, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 300 }}><b style={{ fontWeight: 800 }}>AI</b> {tr('Instruments')}</span>
         <span style={{ fontSize: 11, color: G.faint }}>{trf('Tempo {bpm} BPM: the parts are made for the tempo of the project.', { bpm: Math.round(bpm) })}</span>
       </div>
+      <StageView who={who} setWho={pick} lit={lit} />
       <SoundPackCard compact />
-      <SongGenerator />
-      <Band />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(520px, 1fr))', gap: 14, flexShrink: 0 }}>
-        <Orchestra preset={preset} />
-        <TextInstrument preset={preset} />
-      </div>
+      {/* every desk stays mounted (its settings are kept while another musician is open) */}
+      <div style={{ display: who === 'composer' ? 'block' : 'none' }}><SongGenerator /></div>
+      <div style={{ display: band ? 'block' : 'none' }}><Band only={bandMember} /></div>
+      <div style={{ display: who === 'orchestra' ? 'block' : 'none' }}><Orchestra preset={preset} /></div>
+      <div style={{ display: who === 'soloist' ? 'block' : 'none' }}><TextInstrument preset={preset} /></div>
     </div>
   )
 }

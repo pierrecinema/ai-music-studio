@@ -958,3 +958,20 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 67.6 | Einen Block nur anklicken, Silbe ändern, Enter | Silbe ist geändert (auch in der Piano-Roll) | | | 0.99.10 |
 | 67.7 | DiffSinger: „Stimme importieren…“ wenn gerade **nicht** gesungen wird | Knopf ist bedienbar, Dateidialog öffnet sich | | | 0.99.10 |
 | 67.8 | Singen drücken, gleich ins Studio wechseln, warten | Wenn fertig: neue Gesangsspur im Studio, oben im Studio die Meldung „Neue Gesangsspur …“; zurück im Vocal Editor sieht man den Fortschritt, solange es läuft | | | 0.99.10 |
+
+## 68. Neu in 0.99.11: KI-Instrumente auf der Bühne, Klang-Paket „Band“, KI-Rendern
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 68.1 | KI-Instrumente öffnen | Bühne mit Komponist, Schlagzeuger, Bassist, Gitarrist, Orchester, KI-Solist; wer schon im Song ist, leuchtet | | | 0.99.11 |
+| 68.2 | Einen Musiker anklicken | Unten links: wer er ist und was jeder Regler macht (ⓘ); Mitte sein Gerät; rechts die Knöpfe | | | 0.99.11 |
+| 68.3 | Einstellungen → Audio → Klang-Pakete: **Band** installieren | Lädt etwa 47 MB, danach installiert | | | 0.99.11 |
+| 68.4 | Schlagzeuger / Bassist / Gitarrist: **▶ Vorhören** | Die ersten 4 Takte sind zu hören (mit „Band“: echtes Schlagzeug, E-Bass, Gitarre); nochmal klicken stoppt | | | 0.99.11 |
+| 68.5 | **▶ Die ganze Band** | Alle drei zusammen | | | 0.99.11 |
+| 68.6 | **✦ 3 Ideen**, je ▶ anhören, **Nehmen** | Drei andere Spielweisen; Nehmen stellt das Gerät so ein | | | 0.99.11 |
+| 68.7 | **+ In den Song einfügen** | Neue MIDI-Spur im Studio, der Musiker leuchtet auf der Bühne | | | 0.99.11 |
+| 68.8 | **✦ Einfügen und KI-Rendern (echter Klang)** | Fortschritt unter den Knöpfen; am Ende neue Audiospur „… (AI)“, die MIDI-Spur ist stumm | | Dauer ohne NVIDIA notieren | 0.99.11 |
+| 68.9 | Komponist: ▶ Vorhören, ✦ 3 Ideen, Song im Studio anlegen | Refrain zu hören; Ideen anhören und nehmen; Song kommt ins Studio | | | 0.99.11 |
+| 68.10 | Orchester: ▶ Vorhören, ✦ 3 Ideen, Auf neue Spur rendern | Hörprobe des Instruments; Ideen; Rendern wie bisher | | | 0.99.11 |
+| 68.11 | KI-Solist: ▶ Noten anhören, ✦ 3 Ideen, Rendern | Noten der Spur zu hören; Ideen setzen das Textfeld; Rendern wie bisher | | | 0.99.11 |
+| 68.12 | Zwischen Musikern wechseln | Einstellungen bleiben erhalten | | | 0.99.11 |

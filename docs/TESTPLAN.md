@@ -923,10 +923,10 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 65.1 | Piano-Roll öffnen, oben rechts **🎹 Tasten unten** | Tastatur waagrecht unten wie ein Klavier, die Noten stehen darüber und laufen von oben auf die Tasten zu; Taktanfang unten | | | 0.99.8 |
-| 65.2 | Mit Zeichnen klicken, eine Note oben am Rand länger ziehen, Noten verschieben (hoch/runter = Zeit, seitlich = Tonhöhe) | Wirkt wie in der normalen Ansicht | | | 0.99.8 |
-| 65.3 | Auswählen: Rahmen ziehen; Löschen-Werkzeug | Rahmen wählt die Noten darin; Löschen entfernt Noten | | | 0.99.8 |
-| 65.4 | Auf die Tasten unten klicken; ● Rec und auf den Tasten spielen | Man hört die Töne; bei der Aufnahme werden sie Noten | | | 0.99.8 |
-| 65.5 | Abspielen | Die Abspiellinie läuft nach oben, gespielte Noten leuchten auf den Tasten | | | 0.99.8 |
-| 65.6 | Zurück auf **Tasten links**, App neu starten | Normale Ansicht; die gewählte Ansicht bleibt nach Neustart | | | 0.99.8 |
-| 65.7 | Studio: MIDI-Spur anklicken, unten in der Piano-Roll umschalten | Geht dort genauso | | | 0.99.8 |
+| 65.1 | Piano-Roll öffnen, oben rechts **🎹 Tasten unten** | Tastatur waagrecht unten wie ein Klavier, die Noten stehen darüber und laufen von oben auf die Tasten zu; Taktanfang unten | OK | | 0.99.8 |
+| 65.2 | Mit Zeichnen klicken, eine Note oben am Rand länger ziehen, Noten verschieben (hoch/runter = Zeit, seitlich = Tonhöhe) | Wirkt wie in der normalen Ansicht | OK | | 0.99.8 |
+| 65.3 | Auswählen: Rahmen ziehen; Löschen-Werkzeug | Rahmen wählt die Noten darin; Löschen entfernt Noten | OK | | 0.99.8 |
+| 65.4 | Auf die Tasten unten klicken; ● Rec und auf den Tasten spielen | Man hört die Töne; bei der Aufnahme werden sie Noten | OK | | 0.99.8 |
+| 65.5 | Abspielen | Die Abspiellinie läuft nach oben, gespielte Noten leuchten auf den Tasten | OK | | 0.99.8 |
+| 65.6 | Zurück auf **Tasten links**, App neu starten | Normale Ansicht; die gewählte Ansicht bleibt nach Neustart | OK | | 0.99.8 |
+| 65.7 | Studio: MIDI-Spur anklicken, unten in der Piano-Roll umschalten | Geht dort genauso | OK | | 0.99.8 |

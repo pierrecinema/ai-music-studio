@@ -28,6 +28,13 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 0. Plan to 1.0: `docs/ROADMAP-1.0.md`. Testing goes by `docs/TESTPLAN.md` (German checklist, the owner fills in results; fix ❌ first).
 
+### Vocal Editor voices in Create (owner, 25.11.2026): built in 0.98.9
+
+Own dropdown "Singer (Vocal Editor)". Voice exchange with Seed-VC (GPL-3, pinned commit in engines.ts SEEDVC_COMMIT,
+f0 model, runs in the singer's venv, `services/seedvc_worker.py`, `services/revoice.py`). The music model is asked for
+a singer of the same sex (a woman turned into a man sounded artificial, owner). A first try with faster-whisper words +
+SoulX re-singing was dropped: sung words were recognised badly.
+
 ### Road to 1.0 (owner, 23.11.2026): in this order
 
 1. **0.98.6: tested** (53.2, 53.4, 53.9–53.11 passed; 53.5 passed too; 53.7/53.8

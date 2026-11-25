@@ -817,7 +817,19 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 55.1 | PC mit schon installiertem Sänger: nach dem Update Vocal Editor öffnen | Der Sänger ist da, keine neue Installation nötig; Singen geht | | | 0.98.8 |
-| 55.2 | Laptop, wo die Sänger-Installation mit „failed: singer“ endete: Einstellungen → KI-Engines → Sänger installieren | Läuft durch bis „models ready“; das 2,8-GB-Modell wird nicht nochmal geladen | | | 0.98.8 |
-| 55.3 | Danach im Vocal Editor singen lassen | Die Stimme singt | | | 0.98.8 |
+| 55.1 | PC mit schon installiertem Sänger: nach dem Update Vocal Editor öffnen | Der Sänger ist da, keine neue Installation nötig; Singen geht | ✅ | | 0.98.8 |
+| 55.2 | Laptop, wo die Sänger-Installation mit „failed: singer“ endete: Einstellungen → KI-Engines → Sänger installieren | Läuft durch bis „models ready“; das 2,8-GB-Modell wird nicht nochmal geladen | ✅ | | 0.98.8 |
+| 55.3 | Danach im Vocal Editor singen lassen | Die Stimme singt | ✅ | | 0.98.8 |
+
+## 56. Neu in 0.98.9: Songs mit den Stimmen aus dem Vocal Editor
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 56.1 | Create (Studio-Modus), nicht instrumental | Eigene Auswahlliste **Sänger (Vocal Editor)** unter Männlich / Weiblich; ohne Installation: „Nicht installiert: Einstellungen → KI-Engines → Stimmumwandlung“ | | | 0.98.9 |
+| 56.2 | Einstellungen → KI-Engines → **Stimmumwandlung** installieren | Läuft durch (Pakete, Seed-VC, Modelle etwa 2,4 GB); ist der Sänger nicht da, wird er zuerst installiert | | | 0.98.9 |
+| 56.3 | Create neu öffnen, Liste aufklappen | „Keiner: das Musikmodell singt“, darunter Gruppen Frauen und Männer mit allen Stimmen | | | 0.98.9 |
+| 56.4 | Eine Frau (z. B. Anna) wählen, Song mit Text erzeugen | Nach dem Rendern: „Anna sings: Separating the vocals … / Changing the voice …“; am Ende singt Anna, Text und Melodie wie vom Musikmodell | | | 0.98.9 |
+| 56.5 | Einen Mann (z. B. Carlos) wählen, Song erzeugen | Das Musikmodell singt mit Männerstimme, danach klingt es nach Carlos (natürlich, nicht künstlich) | | | 0.98.9 |
+| 56.6 | Instrumentaler Song mit gewählter Stimme | Kein Fehler: der Song bleibt instrumental | | | 0.98.9 |
+| 56.7 | Setup-Assistent → Paket **Alles** | Zeigt „Songs, gesungen von den eingebauten Stimmen“, etwa 25 GB | | | 0.98.9 |
 

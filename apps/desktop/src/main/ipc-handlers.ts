@@ -62,7 +62,7 @@ export function registerIpcHandlers(serverManager: ServerManager): void {
     const log = (line: string) => win?.webContents.send('engines:log', line)
     // the singer has its own environment: the AI backend keeps running while it installs, and restarts only
     // afterwards (to find it); everything else changes the backend's environment, so the backend stops first
-    const own = groups.every((g) => g === 'singer')
+    const own = groups.every((g) => g === 'singer' || g === 'voicechange')
     if (!own) await serverManager.stop()
     const result = await installGroups(groups, torchVariant, log)
     log(result.ok ? 'Done. Restarting the AI backend…' : `Failed: ${result.error}`)

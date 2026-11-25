@@ -12,6 +12,7 @@ export interface MusicParams {
   loopBars: number
   language: string
   voice: 'any' | 'male' | 'female'
+  singerVoice?: string      // a voice of the Vocal Editor: the finished song is sung again with it ('' = the model's own)
   duration: string          // '' = auto
   bpm: string
   key: string
@@ -80,6 +81,7 @@ export const DEFAULT_PARAMS: MusicParams = {
   loopBars: 4,
   language: 'English',
   voice: 'any',
+  singerVoice: '',
   duration: '',
   bpm: '',
   key: '',
@@ -168,6 +170,7 @@ export function toRequest(p: MusicParams): Record<string, unknown> {
     loop_bars: p.loopBars,
     language: p.language,
     voice: p.voice,
+    singer_voice: p.singerVoice ?? '',
     duration: int(p.duration, 5, 600),
     bpm: int(p.bpm, 30, 300),
     key: p.key || null,

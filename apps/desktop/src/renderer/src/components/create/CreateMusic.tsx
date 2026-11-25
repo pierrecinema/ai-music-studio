@@ -305,6 +305,32 @@ function ProgressPanel({ job }: { job: MusicJob }): React.ReactElement {
   )
 }
 
+// A voice of the Vocal Editor for the whole song (its own compact list, apart from Male / Female): the music model
+// makes the song, then the built-in singer sings it again with this voice (services/revoice.py)
+interface SingerVoice { id: string; name: string; singer?: string; gender: string; description: string }
+function SingerVoiceSelect({ value, onChange }: { value: string; onChange: (v: string) => void }): React.ReactElement | null {
+  const [list, setList] = useState<{ voices: SingerVoice[]; convert?: string | null } | null>(null)
+  useEffect(() => { api.singer.builtin().then((b) => setList(b as { voices: SingerVoice[]; convert?: string | null })).catch(() => setList(null)) }, [])
+  if (!list || !list.voices.length) return null
+  const missing = list.convert ?? null                   // the voice exchange is not installed
+  const label = (v: SingerVoice): string => `${v.singer ?? v.name}${v.id.endsWith('-2') ? ' 2' : ''} · ${v.description}`
+  const groups: Array<['female' | 'male', string]> = [['female', tr('Women')], ['male', tr('Men')]]
+  return (
+    <div>
+      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={!!missing && !value} style={{ width: '100%' }}
+        title={missing ? tr(missing) : tr('The music model makes the song with a singer of the same sex, then its vocals are turned into this voice (a few minutes more per song)')}>
+        <option value="">{missing ? tr('Not installed: Settings → AI Engines → Voice exchange') : tr('None: the music model sings')}</option>
+        {groups.map(([g, name]) => (
+          <optgroup key={g} label={name}>
+            {list.voices.filter((v) => v.gender === g).map((v) => <option key={v.id} value={v.id} disabled={!!missing}>{label(v)}</option>)}
+          </optgroup>
+        ))}
+      </select>
+      {value && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr('The song is made with a singer of the same sex, then sung in this voice.')}</span>}
+    </div>
+  )
+}
+
 export function CreateMusic(): React.ReactElement {
   const [p, setP] = useState<MusicParams>(DEFAULT_PARAMS)
   const [mode, setMode] = useState<'simple' | 'studio'>('studio')
@@ -687,6 +713,9 @@ export function CreateMusic(): React.ReactElement {
                   <Field name={tr("Voice")}>
                     <Segmented value={p.voice} onChange={(v) => set('voice', v)}
                       options={[{ value: 'any', label: tr("Any") }, { value: 'male', label: tr("Male") }, { value: 'female', label: tr("Female") }]} />
+                  </Field>
+                  <Field name={tr("Singer (Vocal Editor)")}>
+                    <SingerVoiceSelect value={p.singerVoice ?? ''} onChange={(v) => set('singerVoice', v)} />
                   </Field>
                 </>
               )}

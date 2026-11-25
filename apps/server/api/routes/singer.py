@@ -310,7 +310,9 @@ async def examples():
 @router.get("/builtin")
 async def builtin():
     from services import soulx
-    return {"voices": soulx.voices(), "problem": soulx.worker.available()}
+    from services.revoice import Converter
+    # convert: whether a song can be sung by these voices in Create (the voice exchange, Seed-VC)
+    return {"voices": soulx.voices(), "problem": soulx.worker.available(), "convert": Converter.available()}
 
 
 class BuiltinRequest(BaseModel):

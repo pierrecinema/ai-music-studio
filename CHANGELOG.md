@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.98.9
+
+### New
+
+- **Songs sung by the voices of the Vocal Editor**: Create has a new list "Singer (Vocal Editor)" with the built-in voices (women and men). The music model makes the song with a singer of the same sex, then the vocals are separated from the music and turned into the chosen voice (voice exchange with Seed-VC, GPL-3: words, melody and timing stay as sung) and mixed back at the same level. A few minutes more per song.
+- **Voice exchange** in Settings → AI Engines (about 2.4 GB; installs the singer too) and in the setup assistant's package *Everything*.
+
 ## 0.98.8
 
 ### Fixed

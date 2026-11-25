@@ -1,6 +1,13 @@
 # Create Music ✨
 
-Make songs and loops with AI on your own PC. Two modes at the top: **Simple** (style, lyrics, Create) and **Studio** (all settings). Every result is saved to the [[Library]] at once.
+Make songs and loops with AI on your own PC. Two modes at the top right: **Simple** (style, lyrics, Create) and **Studio** (all settings). Every result is saved to the [[Library]] at once.
+
+## The page
+- **Header:** the music model and its state (green dot: ready), Simple / Studio.
+- **Song** (left): title, tags for the Library, the style, genre suggestions and the **lyrics editor** with line numbers (section lines such as [Verse] in colour). Above it: *With music / Instrumental / A cappella*, 🎤 voice preview, ✦ auto structure, ✨ AI lyrics. Below it: buttons that insert a section at the cursor.
+- **Parameters** (right): model, compute, precision, length, tempo and key, time, language, voice, singer, loop, steps, takes (songs × variations × queue) and seed. Everything rarely changed (LoRA, source and reference, language model and rendering settings, output) is under **Advanced**.
+- **Takes** (below): every song of this session as a row with its waveform (click to play from there), its name (click to rename), seed, and → Studio, Master, Stems, → MIDI. A song being made shows its stages, the time left and what the computer is doing.
+- **Render bar** (bottom): **Create** (while making: **Stop**), where the songs go (*Library only* or *New track(s) in the Studio*) and the progress.
 
 ## Song
 - **Music model:** the AI model, each rated for your PC (runs well / slow here / not possible):

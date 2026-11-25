@@ -825,11 +825,25 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 56.1 | Create (Studio-Modus), nicht instrumental | Eigene Auswahlliste **Sänger (Vocal Editor)** unter Männlich / Weiblich; ohne Installation: „Nicht installiert: Einstellungen → KI-Engines → Stimmumwandlung“ | | | 0.98.9 |
-| 56.2 | Einstellungen → KI-Engines → **Stimmumwandlung** installieren | Läuft durch (Pakete, Seed-VC, Modelle etwa 2,4 GB); ist der Sänger nicht da, wird er zuerst installiert | | | 0.98.9 |
-| 56.3 | Create neu öffnen, Liste aufklappen | „Keiner: das Musikmodell singt“, darunter Gruppen Frauen und Männer mit allen Stimmen | | | 0.98.9 |
-| 56.4 | Eine Frau (z. B. Anna) wählen, Song mit Text erzeugen | Nach dem Rendern: „Anna sings: Separating the vocals … / Changing the voice …“; am Ende singt Anna, Text und Melodie wie vom Musikmodell | | | 0.98.9 |
-| 56.5 | Einen Mann (z. B. Carlos) wählen, Song erzeugen | Das Musikmodell singt mit Männerstimme, danach klingt es nach Carlos (natürlich, nicht künstlich) | | | 0.98.9 |
-| 56.6 | Instrumentaler Song mit gewählter Stimme | Kein Fehler: der Song bleibt instrumental | | | 0.98.9 |
-| 56.7 | Setup-Assistent → Paket **Alles** | Zeigt „Songs, gesungen von den eingebauten Stimmen“, etwa 25 GB | | | 0.98.9 |
+| 56.1 | Create (Studio-Modus), nicht instrumental | Eigene Auswahlliste **Sänger (Vocal Editor)** unter Männlich / Weiblich; ohne Installation: „Nicht installiert: Einstellungen → KI-Engines → Stimmumwandlung“ | ✅ | | 0.98.9 |
+| 56.2 | Einstellungen → KI-Engines → **Stimmumwandlung** installieren | Läuft durch (Pakete, Seed-VC, Modelle etwa 2,4 GB); ist der Sänger nicht da, wird er zuerst installiert | ✅ | | 0.98.9 |
+| 56.3 | Create neu öffnen, Liste aufklappen | „Keiner: das Musikmodell singt“, darunter Gruppen Frauen und Männer mit allen Stimmen | ✅ | | 0.98.9 |
+| 56.4 | Eine Frau (z. B. Anna) wählen, Song mit Text erzeugen | Nach dem Rendern: „Anna sings: Separating the vocals … / Changing the voice …“; am Ende singt Anna, Text und Melodie wie vom Musikmodell | ✅ | | 0.98.9 |
+| 56.5 | Einen Mann (z. B. Carlos) wählen, Song erzeugen | Das Musikmodell singt mit Männerstimme, danach klingt es nach Carlos (natürlich, nicht künstlich) | ✅ | | 0.98.9 |
+| 56.6 | Instrumentaler Song mit gewählter Stimme | Kein Fehler: der Song bleibt instrumental | ✅ | | 0.98.9 |
+| 56.7 | Setup-Assistent → Paket **Alles** | Zeigt „Songs, gesungen von den eingebauten Stimmen“, etwa 25 GB | ✅ | | 0.98.9 |
+
+## 57. Neu in 0.99.0: Create im neuen Layout
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 57.1 | Create öffnen | Oben „Create“, Modell mit Statuspunkt, rechts Simple / Studio; links „Song“, rechts „Parameter“, unten „Takes“ und der Render-Balken mit dem großen Erstellen-Knopf | | | 0.99.0 |
+| 57.2 | Text eingeben | Zeilennummern links, [Verse] / [Chorus] farbig; die Knöpfe unten fügen Abschnitte an der Cursorstelle ein | | | 0.99.0 |
+| 57.3 | Mit Musik / Instrumental / A cappella umschalten | Instrumental blendet den Text aus; A cappella wie bisher | | | 0.99.0 |
+| 57.4 | Parameter: Länge, Tempo, Tonart, Stimme, Sänger, Loop, Schritte, Takes, Seed | Alles kompakt rechts; „Erweitert ▾“ öffnet LoRA, Quelle/Referenz, Feineinstellungen, Ausgabe | | | 0.99.0 |
+| 57.5 | Einen Song erzeugen | Oben in den Takes eine Zeile „Neuer Take“ mit Stufen, Prozent und Restzeit; unten der Fortschrittsbalken; der Knopf wird zu „Stopp“ | | | 0.99.0 |
+| 57.6 | Fertigen Take anhören | Wellenform erscheint; Play / Pause; Klick in die Wellenform spielt ab dort; Name umbenennen geht | | | 0.99.0 |
+| 57.7 | → Studio, Mastern, Stems, → MIDI, ⋯ | Funktionieren wie bisher (⋯ öffnet die Datei) | | | 0.99.0 |
+| 57.8 | Simple-Modus | Nur Modell, Loop, Schritte; Text und Stil links bleiben | | | 0.99.0 |
+| 57.9 | Alle Looks (Rack, Dunkel, Hell, Swiss, Konsole) | Sieht in jedem Look sauber aus | | | 0.99.0 |
 

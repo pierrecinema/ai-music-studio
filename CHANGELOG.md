@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.0
+
+### Changed
+
+- **Create has a new, more professional layout**: the song (title, style, a lyrics editor with line numbers and coloured sections) on the left, a compact parameter column on the right (model, length, tempo and key, voice, singer, loop, steps, takes, seed; the rare settings under *Advanced*), the songs below as **takes** with their waveform (click to play), and a fixed render bar with Create / Stop, the destination and the progress. Explanations moved into tooltips.
+
 ## 0.98.9
 
 ### New

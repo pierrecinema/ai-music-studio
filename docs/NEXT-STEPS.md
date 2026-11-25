@@ -39,7 +39,7 @@ SoulX re-singing was dropped: sung words were recognised badly.
 
 1. **0.98.6: tested** (53.2, 53.4, 53.9–53.11 passed; 53.5 passed too; 53.7/53.8
    the YouTube user tests MIDI recording; 52.9 package "Everything" passed).
-2. **0.99.0: layout changes**: go through **every menu item one by one** with the owner (owner, 24.11.2026); start when the YouTube user reports back (53.7/53.8, 54.2–54.4) or on 25.11.2026. Ask the owner first which changes (screens, looks, what bothers them); design like
+2. **0.99.x: layout changes**: go through **every menu item one by one** with the owner (owner, 24.11.2026); Create done in 0.99.0 (mock-up approved 25.11.), next: Library, Studio, …; start when the YouTube user reports back (53.7/53.8, 54.2–54.4) or on 25.11.2026. Ask the owner first which changes (screens, looks, what bothers them); design like
    professional audio software (see "Talking with the owner"), check every screen in the browser preview.
 3. **0.99.x: fix every open bug** (owner, 23.11.2026): all fixes go into 0.99.1, 0.99.2 … until the test plan has no ❌.
    Then **RC 1.0** (release candidate): full pass through the open test plan on both PCs, nothing new any more.

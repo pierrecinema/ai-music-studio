@@ -151,17 +151,17 @@ export function StageView({ who, setWho, lit }: { who: MemberId; setWho: (m: Mem
  *  and Preview / Ideas / Add / AI render (right) */
 export function Desk({ m, hints, children, actions }: { m: Musician; hints: string[]; children: React.ReactNode; actions: React.ReactNode }): React.ReactElement {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(190px, 230px) minmax(0, 1fr) minmax(220px, 260px)', gap: 14, alignItems: 'start' }}>
-      <div style={{ borderRadius: 12, padding: 14, background: `linear-gradient(170deg, ${m.color}44, #15131c 70%)`, border: `1px solid ${m.color}66`, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <span style={{ fontSize: 40 }}>{m.emoji}</span>
-        <b style={{ fontSize: 17, color: '#fff' }}>{tr(m.name)}</b>
-        <span style={{ fontSize: 12, color: '#e5e7eb', lineHeight: 1.4 }}>{tr(m.what)}</span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 300px) minmax(0, 1fr)', gap: 12, alignItems: 'stretch' }}>
+        <div style={{ borderRadius: 12, padding: 14, background: `linear-gradient(170deg, ${m.color}44, #15131c 70%)`, border: `1px solid ${m.color}66`, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><span style={{ fontSize: 34 }}>{m.emoji}</span><b style={{ fontSize: 17, color: '#fff' }}>{tr(m.name)}</b></div>
+          <span style={{ fontSize: 12, color: '#e5e7eb', lineHeight: 1.4 }}>{tr(m.what)}</span>
           {hints.map((h) => <span key={h} style={{ fontSize: 11, color: '#cbd5e1', lineHeight: 1.35 }}>ⓘ {tr(h)}</span>)}
         </div>
+        {/* the helps: always in view, right under the stage */}
+        <div style={{ borderRadius: 12, padding: 12, background: '#15131c', border: '1px solid #2a2240', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-start', alignContent: 'flex-start' }}>{actions}</div>
       </div>
       <div style={{ minWidth: 0 }}>{children}</div>
-      <div style={{ borderRadius: 12, padding: 12, background: '#15131c', border: '1px solid #2a2240', display: 'flex', flexDirection: 'column', gap: 8 }}>{actions}</div>
     </div>
   )
 }
@@ -179,14 +179,14 @@ export function ActBtn({ children, onClick, kind = 'plain', disabled, title }: {
 export function Ideas<T>({ ideas, label, onHear, onTake, playingKey }: { ideas: T[]; label: (i: T) => string; onHear: (i: T, k: string) => void; onTake: (i: T) => void; playingKey: string | null }): React.ReactElement | null {
   if (!ideas.length) return null
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flexBasis: '100%' }}>
       {ideas.map((i, n) => {
         const k = `idea-${n}-${label(i)}`
         return (
           <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 6px', borderRadius: 8, background: '#ffffff0a', border: '1px solid #ffffff14' }}>
             <button onClick={() => onHear(i, k)} title={tr('Listen')} style={{ border: 'none', width: 24, height: 24, borderRadius: '50%', cursor: 'pointer', background: playingKey === k ? '#db2777' : '#ffffff22', color: '#fff', fontSize: 10 }}>{playingKey === k ? '■' : '▶'}</button>
             <span style={{ flex: 1, fontSize: 11.5, color: '#e5e7eb', minWidth: 0 }}>{label(i)}</span>
-            <button onClick={() => onTake(i)} style={{ border: '1px solid #ffffff33', borderRadius: 999, padding: '2px 8px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: '#fff' }}>{tr('Take')}</button>
+            <button onClick={() => onTake(i)} style={{ border: '1px solid #ffffff33', borderRadius: 999, padding: '2px 8px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: '#fff' }}>{tr('Use it')}</button>
           </div>
         )
       })}
@@ -199,7 +199,7 @@ export function RenderState({ k }: { k: string }): React.ReactElement | null {
   const j = useAiRender((s) => s.jobs[k])
   if (!j) return null
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexBasis: '100%' }}>
       {!j.done && !j.error && <div style={{ height: 6, borderRadius: 3, background: '#ffffff14', overflow: 'hidden' }}><div style={{ width: `${Math.max(4, j.pct)}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #db2777)' }} /></div>}
       <span style={{ fontSize: 11, color: j.error ? '#fbbf24' : j.done ? '#86efac' : '#cbd5e1' }}>{j.text}</span>
     </div>

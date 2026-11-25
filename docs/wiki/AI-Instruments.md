@@ -6,9 +6,9 @@ Musicians for your song (menu **🎻 AI Instruments**, new in 0.80).
 
 The musicians stand on a lit **stage**: **Composer** (song generator), **Drummer**, **Bass player**, **Guitarist**, **Orchestra** and **AI soloist** (text instrument). Those already in your song glow and say *● in your song*. **Click a musician** and their desk opens below:
 
-- **left:** who they are and what each control does (ⓘ);
-- **middle:** their own device (each with its own look);
-- **right:** **▶ Preview** (hear it before it goes into the song: the band the first 4 bars, the composer the chorus, the orchestra a demo of the instrument, the AI soloist the notes it will play), **▶ The whole band** (drums, bass and guitar together), **✦ 3 ideas** (three suggestions, each with ▶ to listen and *Take* to use it), **+ Add to the song** and, for the band, **✦ Add and AI render (real sound)**: the part is added and the music AI (ACE-Step) plays it as a real-sounding recording on a new audio track; the MIDI track is muted (minutes without an NVIDIA card; the progress stays under the buttons and it goes on when you leave the page).
+- **top left:** who they are and what each control does (ⓘ);
+- **below:** their own device (each with its own look);
+- **top right:** **▶ Preview** (hear it before it goes into the song: the band the first 4 bars, the composer the chorus, the orchestra a demo of the instrument, the AI soloist the notes it will play), **▶ The whole band** (drums, bass and guitar together), **✦ 3 ideas** (three suggestions, each with ▶ to listen and *Take* to use it), **+ Add to the song** and, for the band, **✦ Add and AI render (real sound)**: the part is added and the music AI (ACE-Step) plays it as a real-sounding recording on a new audio track; the MIDI track is muted (minutes without an NVIDIA card; the progress stays under the buttons and it goes on when you leave the page).
 
 The settings of each musician are kept while you look at another one.
 

@@ -950,14 +950,14 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 67.1 | Eine Stimmen-Kachel anklicken (es wird gerade nicht gesungen) | Der Pegel im Display folgt dem Ton der Hörprobe (laut = hoch, Pausen = tief), stoppt mit der Hörprobe | | | 0.99.10 |
-| 67.2 | Während gesungen wird | Im Display läuft ein ruhiges lila Licht hin und her (kein Pegel) | | | 0.99.10 |
+| 67.1 | Eine Stimmen-Kachel anklicken (es wird gerade nicht gesungen) | Der Pegel im Display folgt dem Ton der Hörprobe (laut = hoch, Pausen = tief), stoppt mit der Hörprobe | OK | | 0.99.10 |
+| 67.2 | Während gesungen wird | Im Display läuft ein ruhiges lila Licht hin und her (kein Pegel) | OK | OK – Stopp fehlte → 0.99.12 | 0.99.10 |
 | 67.3 | Einen Notenblock festhalten und seitlich ziehen | Note wandert in der Zeit, im Raster; mit Alt frei | | | 0.99.10 |
-| 67.4 | Einen Notenblock hoch / runter ziehen | Tonhöhe ändert sich, man hört die neue Note | | | 0.99.10 |
-| 67.5 | Am rechten Rand eines Blocks ziehen | Note wird länger / kürzer | | | 0.99.10 |
-| 67.6 | Einen Block nur anklicken, Silbe ändern, Enter | Silbe ist geändert (auch in der Piano-Roll) | | | 0.99.10 |
-| 67.7 | DiffSinger: „Stimme importieren…“ wenn gerade **nicht** gesungen wird | Knopf ist bedienbar, Dateidialog öffnet sich | | | 0.99.10 |
-| 67.8 | Singen drücken, gleich ins Studio wechseln, warten | Wenn fertig: neue Gesangsspur im Studio, oben im Studio die Meldung „Neue Gesangsspur …“; zurück im Vocal Editor sieht man den Fortschritt, solange es läuft | | | 0.99.10 |
+| 67.4 | Einen Notenblock hoch / runter ziehen | Tonhöhe ändert sich, man hört die neue Note | OK | | 0.99.10 |
+| 67.5 | Am rechten Rand eines Blocks ziehen | Note wird länger / kürzer | OK | | 0.99.10 |
+| 67.6 | Einen Block nur anklicken, Silbe ändern, Enter | Silbe ist geändert (auch in der Piano-Roll) | OK | | 0.99.10 |
+| 67.7 | DiffSinger: „Stimme importieren…“ wenn gerade **nicht** gesungen wird | Knopf ist bedienbar, Dateidialog öffnet sich | OK | | 0.99.10 |
+| 67.8 | Singen drücken, gleich ins Studio wechseln, warten | Wenn fertig: neue Gesangsspur im Studio, oben im Studio die Meldung „Neue Gesangsspur …“; zurück im Vocal Editor sieht man den Fortschritt, solange es läuft | OK | | 0.99.10 |
 
 ## 68. Neu in 0.99.11: KI-Instrumente auf der Bühne, Klang-Paket „Band“, KI-Rendern
 
@@ -966,12 +966,25 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 68.1 | KI-Instrumente öffnen | Bühne mit Komponist, Schlagzeuger, Bassist, Gitarrist, Orchester, KI-Solist; wer schon im Song ist, leuchtet | | | 0.99.11 |
 | 68.2 | Einen Musiker anklicken | Unten links: wer er ist und was jeder Regler macht (ⓘ); Mitte sein Gerät; rechts die Knöpfe | | | 0.99.11 |
 | 68.3 | Einstellungen → Audio → Klang-Pakete: **Band** installieren | Lädt etwa 47 MB, danach installiert | | | 0.99.11 |
-| 68.4 | Schlagzeuger / Bassist / Gitarrist: **▶ Vorhören** | Die ersten 4 Takte sind zu hören (mit „Band“: echtes Schlagzeug, E-Bass, Gitarre); nochmal klicken stoppt | | | 0.99.11 |
-| 68.5 | **▶ Die ganze Band** | Alle drei zusammen | | | 0.99.11 |
-| 68.6 | **✦ 3 Ideen**, je ▶ anhören, **Nehmen** | Drei andere Spielweisen; Nehmen stellt das Gerät so ein | | | 0.99.11 |
-| 68.7 | **+ In den Song einfügen** | Neue MIDI-Spur im Studio, der Musiker leuchtet auf der Bühne | | | 0.99.11 |
-| 68.8 | **✦ Einfügen und KI-Rendern (echter Klang)** | Fortschritt unter den Knöpfen; am Ende neue Audiospur „… (AI)“, die MIDI-Spur ist stumm | | Dauer ohne NVIDIA notieren | 0.99.11 |
+| 68.4 | Schlagzeuger / Bassist / Gitarrist: **▶ Vorhören** | Die ersten 4 Takte sind zu hören (mit „Band“: echtes Schlagzeug, E-Bass, Gitarre); nochmal klicken stoppt | | kein Ton → 0.99.12 | 0.99.11 |
+| 68.5 | **▶ Die ganze Band** | Alle drei zusammen | | Knopf nicht gesehen → 0.99.12 (Knöpfe oben) | 0.99.11 |
+| 68.6 | **✦ 3 Ideen**, je ▶ anhören, **Nehmen** | Drei andere Spielweisen; Nehmen stellt das Gerät so ein | | nicht gesehen → 0.99.12 | 0.99.11 |
+| 68.7 | **+ In den Song einfügen** | Neue MIDI-Spur im Studio, der Musiker leuchtet auf der Bühne | | nicht gesehen → 0.99.12 | 0.99.11 |
+| 68.8 | **✦ Einfügen und KI-Rendern (echter Klang)** | Fortschritt unter den Knöpfen; am Ende neue Audiospur „… (AI)“, die MIDI-Spur ist stumm | | nichts im Studio → 0.99.12 | 0.99.11 |
 | 68.9 | Komponist: ▶ Vorhören, ✦ 3 Ideen, Song im Studio anlegen | Refrain zu hören; Ideen anhören und nehmen; Song kommt ins Studio | | | 0.99.11 |
 | 68.10 | Orchester: ▶ Vorhören, ✦ 3 Ideen, Auf neue Spur rendern | Hörprobe des Instruments; Ideen; Rendern wie bisher | | | 0.99.11 |
 | 68.11 | KI-Solist: ▶ Noten anhören, ✦ 3 Ideen, Rendern | Noten der Spur zu hören; Ideen setzen das Textfeld; Rendern wie bisher | | | 0.99.11 |
 | 68.12 | Zwischen Musikern wechseln | Einstellungen bleiben erhalten | | | 0.99.11 |
+
+## 69. Neu in 0.99.12: Vorhören mit Ton, Knöpfe oben, Stopp im Vocal Editor
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 69.1 | KI-Instrumente, Schlagzeuger anklicken | Gleich unter der Bühne: links die Erklärung, rechts die Knöpfe Vorhören, Die ganze Band, 3 Ideen, In den Song einfügen, Einfügen und KI-Rendern; das Gerät darunter | | | 0.99.12 |
+| 69.2 | Schlagzeuger / Bassist / Gitarrist: ▶ Vorhören | Man hört die ersten 4 Takte (mit dem Paket „Band“: echtes Schlagzeug, Bass, Gitarre) | | | 0.99.12 |
+| 69.3 | ▶ Die ganze Band | Alle drei zusammen | | | 0.99.12 |
+| 69.4 | ✦ 3 Ideen, ▶ anhören, Nehmen | Drei Spielweisen, Nehmen stellt das Gerät so ein | | | 0.99.12 |
+| 69.5 | + In den Song einfügen | Neue MIDI-Spur im Studio | | | 0.99.12 |
+| 69.6 | ✦ Einfügen und KI-Rendern | Fortschritt unter den Knöpfen, am Ende neue Audiospur „… (AI)“ | | Dauer notieren; Knopf grau = ACE-Step nicht installiert | 0.99.12 |
+| 69.7 | Vocal Editor: Singen, dann ■ Stopp | Hört auf, Meldung „Gestoppt.“, keine neue Spur | | | 0.99.12 |
+| 69.8 | KI-Solist: ▶ Noten anhören | Man hört die Noten der Spur | | | 0.99.12 |

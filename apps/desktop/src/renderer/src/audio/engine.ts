@@ -1341,6 +1341,9 @@ export async function renderClips(project: Project, clips: Clip[], fromBeat: num
 export async function renderMidiGuide(project: Project, track: Track, fromBeat: number, toBeat: number): Promise<AudioBuffer> {
   const solo: Track = { ...track, instrument: undefined, fx: [], sends: {}, automation: {}, volume: 1, pan: 0, muted: false, soloed: false, parentId: undefined }
   const p: Project = { ...project, tracks: [solo], returns: [], masterFx: [] }
+  // the sound-pack samples must be decoded before the offline render (else the notes stay silent: previews and the
+  // AI render's guide were silent with the Band, MuseScore or orchestra packs)
+  await prepareSounds([programOf(solo)])
   const sr = 44100
   const seconds = beatToSec(p, toBeat) - beatToSec(p, fromBeat) + 1
   const off = new OfflineAudioContext(2, Math.max(1, Math.ceil(seconds * sr)), sr)

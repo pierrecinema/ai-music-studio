@@ -33,6 +33,9 @@ The in-app update only sees **releases**, not commits: without step 3 the app sa
 Read `docs/NEXT-STEPS.md` at the start of a session: what is planned next (feedback, posts in forums and blogs),
 open technical items and how the owner likes to work.
 
+Redesigns (standing instruction from the owner, 25.11.2026): before a page or function is redesigned, show the owner
+**5 different modern layout proposals** as pictures (mock-ups), then build the one they choose.
+
 ## Wiki
 
 The GitHub wiki is generated from `docs/wiki` (workflow `Publish wiki` on every push to `main`). When a menu or

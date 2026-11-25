@@ -2123,5 +2123,12 @@
  "View: keys on the left (time to the right) or the keyboard across the bottom (the notes come down onto the keys)": "Вид: клавиши слева (время вправо) или клавиатура внизу (ноты опускаются на клавиши)",
  "Draw": "Рисовать",
  "Select": "Выделить",
- "Erase": "Стереть"
+ "Erase": "Стереть",
+ "Best quality": "Лучшее качество",
+ "best quality": "лучшее качество",
+ "Melody and lyrics": "Мелодия и текст",
+ "Singer ready": "Певец готов",
+ "Style effects": "Эффекты стиля",
+ "The AI backend is starting…": "ИИ-бэкенд запускается…",
+ "Clear voice": "Чистый"
 }

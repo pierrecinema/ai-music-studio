@@ -2,6 +2,14 @@
 
 A melody of a MIDI track is sung with your lyrics. Write the melody in the [[Piano Roll]] (one note per syllable), or turn a sung line into MIDI with [[Audio to MIDI]], then open *Vocal Editor* in the sidebar.
 
+## The page
+
+- **At the top:** *Melody* (the MIDI track that is sung) and *Singer* (built-in voices, DiffSinger voice or AI singer).
+- **The display:** the chosen voice and style (for example *ANNA · POP*), with gender, kind of voice, the number of notes, the language and the quality; the level moves while a voice plays or the singer works. Next to it the **style** buttons (Pop, Rock, Ballad, Soul, Rap), *Style effects*, *Best quality* and *▶ {voice} in this style* (for a DiffSinger voice: the voice, import, delete, quality, vibrato; for the AI singer: male / female and a style text).
+- **The voices** as tiles (built-in voices), filtered by *All / Female / Male* and *All / Clear / With vibrato / Powerful*; a click chooses a voice and plays it, a second click stops.
+- **Melody and lyrics:** the notes as blocks (higher notes higher, bars numbered), each with its syllable written on it: click a syllable to correct it. Below: the language and the lyrics field (the lyrics go onto the notes by themselves while you type; ⟳ puts them on again). *My singing (Studio clip) → MIDI*, *A recording file → MIDI* and *Piano Roll ↗* are in its header.
+- **On the right:** *🎤 Sing* with its progress, and why it is grey when something is missing.
+
 ## Sing the melody yourself
 
 Record yourself on an audio track in the [[Studio]], select the clip and press *My singing (Studio clip) → MIDI* (or choose a recording file). The melody lands on a new MIDI track, in the project tempo from where the clip starts, ready for lyrics and *Sing* or for the [[Piano Roll]].

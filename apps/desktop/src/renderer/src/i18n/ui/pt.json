@@ -2106,5 +2106,12 @@
  "View: keys on the left (time to the right) or the keyboard across the bottom (the notes come down onto the keys)": "Visão: teclas à esquerda (tempo para a direita) ou teclado embaixo (as notas descem até as teclas)",
  "Draw": "Desenhar",
  "Select": "Selecionar",
- "Erase": "Apagar"
+ "Erase": "Apagar",
+ "Best quality": "Melhor qualidade",
+ "best quality": "melhor qualidade",
+ "Melody and lyrics": "Melodia e letra",
+ "Singer ready": "Cantor pronto",
+ "Style effects": "Efeitos do estilo",
+ "The AI backend is starting…": "O motor de IA está iniciando…",
+ "Clear voice": "Clara"
 }

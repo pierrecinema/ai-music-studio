@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.9
+
+### Changed
+
+- **A new Vocal Editor**: a display at the top shows the chosen voice and style (with a level while a voice plays or sings), the styles and switches next to it; all voices as tiles with filters (female / male, clear / vibrato / powerful); the melody as note blocks with the syllables written right on them (click to correct), the lyrics below, and Sing with its progress on the right. Melody and singer are chosen at the top.
+
 ## 0.99.8
 
 ### New

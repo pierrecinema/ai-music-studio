@@ -930,3 +930,18 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 65.5 | Abspielen | Die Abspiellinie läuft nach oben, gespielte Noten leuchten auf den Tasten | OK | | 0.99.8 |
 | 65.6 | Zurück auf **Tasten links**, App neu starten | Normale Ansicht; die gewählte Ansicht bleibt nach Neustart | OK | | 0.99.8 |
 | 65.7 | Studio: MIDI-Spur anklicken, unten in der Piano-Roll umschalten | Geht dort genauso | OK | | 0.99.8 |
+
+## 66. Neu in 0.99.9: Vocal Editor im neuen Layout
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 66.1 | Vocal Editor öffnen | Oben Titel, Status „Sänger bereit“, rechts Melodie und Sänger; darunter das Display (z. B. ANNA · POP) und die Stil-Knöpfe | | | 0.99.9 |
+| 66.2 | Stimmen als Kacheln, Filter Weiblich / Männlich und Klar / Mit Vibrato / Kraftvoll | Die Kacheln passen zum Filter | | | 0.99.9 |
+| 66.3 | Eine Kachel anklicken, nochmal anklicken | Stimme gewählt, Hörprobe spielt (Pegel im Display bewegt sich), zweiter Klick stoppt | | | 0.99.9 |
+| 66.4 | Stil wechseln, „▶ … in jedem Stil“ | Display zeigt den Stil; die Hörprobe im Stil spielt | | | 0.99.9 |
+| 66.5 | Text ins Textfeld schreiben | Nach einem Moment stehen die Silben auf den Notenblöcken | | | 0.99.9 |
+| 66.6 | Eine Silbe direkt auf einem Notenblock ändern | Wird übernommen (auch in der Piano-Roll sichtbar) | | | 0.99.9 |
+| 66.7 | Singen | Fortschritt rechts, dann neue Gesangsspur im Studio | | | 0.99.9 |
+| 66.8 | Sänger oben auf DiffSinger / KI-Sänger umstellen | Rechts neben dem Display die passenden Einstellungen; Singen geht | | | 0.99.9 |
+| 66.9 | Mein Gesang → MIDI, Piano Roll ↗ | Wie bisher | | | 0.99.9 |
+| 66.10 | Alle Looks | Sieht sauber aus | | | 0.99.9 |

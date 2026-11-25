@@ -873,3 +873,23 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 60.3 | Einen fertigen Take unten aus „Takes“ auf Quell-Track oder Klang-Referenz ziehen | Der Take wird übernommen (zum Covern oder als Referenz) | | | 0.99.3 |
 | 60.4 | Eine Nicht-Audio-Datei (z. B. .txt) hineinziehen | Rote Meldung „Audiodateien hier ablegen …“, das Feld bleibt wie es war | | | 0.99.3 |
 | 60.5 | Klick auf das Feld | Öffnet wie bisher den Dateidialog | | | 0.99.3 |
+
+## 61. Neu in 0.99.4: Studio im neuen Layout
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 61.1 | Studio öffnen | Eine Werkzeugleiste in Gruppen: + Spur ▾, Audio importieren, ↖ ✂ 🧲, Raster/Quantisieren, ⟳ Loop, Punch-in/-out, ♩ Einzähler, + Marker, Tempo, Zoom − + ⤢, Master-FX, Exportieren, ⋯ | | | 0.99.4 |
+| 61.2 | **+ Spur ▾**: Audiospur, MIDI-Spur, Return-Spur Hall / Delay | Jeweils die richtige Spur kommt dazu | | | 0.99.4 |
+| 61.3 | **⋯** oben rechts: Kanal, Alle synchronisieren, Beat-Match | Kanal-Ansicht geht auf/zu; Sync und Beat-Match wie bisher | | | 0.99.4 |
+| 61.4 | Spurkopf: ● M S klicken | ● rot = scharf, M orange = stumm, S blau = solo | | | 0.99.4 |
+| 61.5 | Fader ziehen, Doppelklick | Wert in dB daneben; Doppelklick = −1,9 dB | | | 0.99.4 |
+| 61.6 | Pan-Regler nach oben/unten ziehen, Doppelklick | Panorama ändert sich hörbar; Doppelklick = Mitte | | | 0.99.4 |
+| 61.7 | **⋯** im Spurkopf | Menü mit Umbenennen, Effekte, Kanal, Automation, (Takes), Farbe, Löschen | | | 0.99.4 |
+| 61.8 | Clips ansehen | Titelleiste in Spurfarbe, darunter Noten bzw. Wellenform | | | 0.99.4 |
+| 61.9 | Audio-Clip, stark hineinzoomen (Strg + Mausrad, mehrmals +) | Die Wellenform bleibt fein wie im Mastering, bis zu einzelnen Schwingungen; keine Blöcke | | | 0.99.4 |
+| 61.10 | Detailbereich unten: MIDI-Clip anklicken | Links Instrument, Ausgang, Farbe; Mitte die Noten; „In der Piano-Roll öffnen“ geht | | | 0.99.4 |
+| 61.11 | Detailbereich: Audio-Clip anklicken | Mitte Gain, Tempo, SYNC, MASTER, Fades, WARP und die Wellenform | | | 0.99.4 |
+| 61.12 | Detailbereich rechts: + Effekt…, ein/aus, × | Effekt kommt dazu, lässt sich umgehen und löschen | | | 0.99.4 |
+| 61.13 | ▾ im Detailbereich, dann ▴ Details | Klappt zu und wieder auf, bleibt nach Neustart so | | | 0.99.4 |
+| 61.14 | Piano-Roll oder Mixer unten öffnen | Statt des Detailbereichs das gewohnte Fenster; Audio-Clip-Werkzeuge oben | | | 0.99.4 |
+| 61.15 | Alle Looks | Sieht in Rack, Dunkel, Hell, Swiss, Konsole sauber aus | | | 0.99.4 |

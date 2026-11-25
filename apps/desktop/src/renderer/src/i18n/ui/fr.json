@@ -2113,5 +2113,7 @@
  "Singer ready": "Chanteur prêt",
  "Style effects": "Effets du style",
  "The AI backend is starting…": "Le moteur IA démarre…",
- "Clear voice": "Claire"
+ "Clear voice": "Claire",
+ "Drag: move (up / down: pitch), right edge: length · click: change the syllable": "Glisser : déplacer (haut / bas : hauteur), bord droit : durée · clic : changer la syllabe",
+ "New vocal track in the Studio: {name}": "Nouvelle piste vocale dans le Studio : {name}"
 }

@@ -986,6 +986,20 @@ function startPreviewAt(c: AudioContext, offset: number): void {
   previewStarted = c.currentTime - at
 }
 
+/** the level (0..1) of the preview where it plays now, 0 when nothing plays: for level displays */
+export function previewLevel(): number {
+  if (!previewing || !previewBuf || !ctx) return 0
+  const t = ctx.currentTime - previewStarted
+  const sr = previewBuf.sampleRate
+  const a = Math.max(0, Math.floor(t * sr)), b = Math.min(previewBuf.length, a + Math.floor(sr * 0.04))
+  let m = 0
+  for (let c = 0; c < Math.min(2, previewBuf.numberOfChannels); c++) {
+    const d = previewBuf.getChannelData(c)
+    for (let i = a; i < b; i += 4) { const v = Math.abs(d[i]); if (v > m) m = v }
+  }
+  return Math.min(1, m)
+}
+
 // plays a file through the master; with `sourceBpm` it is stretched to the project tempo first
 export async function previewSample(path: string, sourceBpm?: number): Promise<{ seconds: number; ended: Promise<void>; buffer: AudioBuffer } | null> {
   stopPreview()

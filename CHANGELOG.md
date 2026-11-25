@@ -3,6 +3,17 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.10
+
+### Changed
+
+- **Vocal Editor, melody**: the notes can be held and dragged: sideways in time (on the grid, Alt: free), up and down in pitch (you hear the new note), at the right edge for the length. A click without dragging opens the syllable to correct it.
+
+### Fixed
+
+- **Vocal Editor, vocals lost when leaving the page**: leaving the Vocal Editor while it sang stopped waiting for the result, so no vocal track arrived. Singing now goes on in the background, the track arrives in the Studio (the Studio says so), and the progress is shown again when the page is opened.
+- **Vocal Editor, level in the display**: it showed movement the whole time while the singer worked, the same as while a voice played. Now it shows the real level of the voice you listen to; while the singer works, a calm light runs across it instead.
+
 ## 0.99.9
 
 ### Changed

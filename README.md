@@ -32,7 +32,7 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 ### New in 0.98 (release candidate): easy first install
 
 - **Setup assistant on the first start**: it checks the computer (graphics card, memory, free space) and installs *Recommended*, *Everything* or *Studio only* with one click, with clear progress and the time left. No Python to install by hand: the app sets up its own when needed.
-- **0.99.9, a new Vocal Editor**: a display with the voice and style, all voices as tiles, the melody with its syllables right on the notes.
+- **0.99.9–0.99.10, a new Vocal Editor**: a display with the voice and style, all voices as tiles, the melody with its syllables right on the notes (drag the notes to move them).
 - **0.99.4–0.99.8, a new Studio**: the Piano Roll right under the tracks (keys on the left, or a keyboard below with the notes coming down), toolbar in groups, clearer track headers (● M S, fader in dB, pan), coloured clips, a detail area for track, clip and effects, and waveforms as detailed as in Mastering at every zoom, shown as soon as the Studio opens.
 - **0.99.3, drag and drop in Create**: drag an audio file or a finished take onto the source track or the timbre reference.
 - **0.99.0, a new Create page**: song and lyrics editor on the left, parameters on the right, takes with waveforms below, a fixed render bar.

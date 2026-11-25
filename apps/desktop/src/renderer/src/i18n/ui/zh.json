@@ -2113,5 +2113,7 @@
  "Singer ready": "歌手就绪",
  "Style effects": "风格效果",
  "The AI backend is starting…": "AI 后端正在启动…",
- "Clear voice": "清亮"
+ "Clear voice": "清亮",
+ "Drag: move (up / down: pitch), right edge: length · click: change the syllable": "拖动：移动（上下：音高），右边缘：时值 · 单击：修改音节",
+ "New vocal track in the Studio: {name}": "Studio 中的新人声轨：{name}"
 }

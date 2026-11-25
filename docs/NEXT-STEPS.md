@@ -28,6 +28,16 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 0. Plan to 1.0: `docs/ROADMAP-1.0.md`. Testing goes by `docs/TESTPLAN.md` (German checklist, the owner fills in results; fix ❌ first).
 
+### Work in progress: Vocal Editor voices in Create (owner, 25.11.2026)
+
+A list under Male / Female in Create (grouped women / men) to have the finished song sung by a built-in voice.
+Built but switched off (`REVOICE_READY = false` in CreateMusic.tsx): `services/revoice.py` (Demucs → faster-whisper
+words → pYIN → SoulX) and `singer_voice` in music_gen. Test on an ACE-Step song: whisper recognises sung words badly
+and with the lyrics as prompt it invents repeated lines, so the new voice sang in the wrong places. Next idea: singing
+voice conversion with Seed-VC (GPL-3, f0 model `DiT_seed_v2_uvit_whisper_base_f0_44k`, reference = the voice's
+prompt.wav): no text needed. Running it in the cloud session was blocked (third-party code plus model downloads);
+waiting for the owner's decision.
+
 ### Road to 1.0 (owner, 23.11.2026): in this order
 
 1. **0.98.6: tested** (53.2, 53.4, 53.9–53.11 passed; 53.5 passed too; 53.7/53.8

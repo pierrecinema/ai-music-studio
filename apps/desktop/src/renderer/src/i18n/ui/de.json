@@ -2070,5 +2070,10 @@
  "bf16 needs less memory but only RTX 30 cards and newer compute it; older cards always use fp32": "bf16 braucht weniger Speicher, aber nur Karten ab RTX 30 rechnen es; ältere Karten nutzen immer fp32",
  "Precision: automatic (bf16 on RTX 30 and newer, else fp32)": "Genauigkeit: automatisch (bf16 ab RTX 30, sonst fp32)",
  "Precision: bf16 (less memory, RTX 30 and newer)": "Genauigkeit: bf16 (weniger Speicher, ab RTX 30)",
- "Precision: fp32 (any graphics card, more memory)": "Genauigkeit: fp32 (jede Grafikkarte, mehr Speicher)"
+ "Precision: fp32 (any graphics card, more memory)": "Genauigkeit: fp32 (jede Grafikkarte, mehr Speicher)",
+ "Women": "Frauen",
+ "Men": "Männer",
+ "The music model makes the song, then the built-in singer sings it again with this voice (takes a few minutes more; needs the Stem Splitter and the karaoke engine too)": "Das Musikmodell macht den Song, danach singt ihn der eingebaute Sänger mit dieser Stimme neu (dauert ein paar Minuten länger; braucht auch den Stem Splitter und die Karaoke-Erkennung)",
+ "Singer from the Vocal Editor: not installed": "Sänger aus dem Vocal Editor: nicht installiert",
+ "Singer: the music model’s own voice": "Sänger: die eigene Stimme des Musikmodells"
 }

@@ -216,6 +216,7 @@ class Dcw(BaseModel):
 class GenerateMusicRequest(BaseModel):
     compute: str = "auto"                   # auto | gpu | cpu
     precision: str = "auto"                 # auto | bf16 | fp32 (ACE-Step; older graphics cards always fp32)
+    singer_voice: str = ""                  # a voice of the Vocal Editor: the song is sung again with it (services/revoice.py)
     engine: str = "ace-step"                # ace-step | musicgen-small | musicgen-medium | musicgen-large
     # song
     title: str = ""
@@ -432,6 +433,19 @@ def _wav_seconds(path: str) -> float | None:
 
 
 _start_info: dict[str, dict] = {}      # final file -> what the start alignment found (tempo, first beat)
+
+
+def _revoice(job: dict, wav: str, req: GenerateMusicRequest, label: str, warnings: list[str]) -> str:
+    """The song sung again with a voice of the Vocal Editor. If that fails, the song stays as the model sang it."""
+    from services import revoice
+    name = revoice.voice_name(req.singer_voice)
+    try:
+        revoice.revoice(wav, req.singer_voice, req.lyrics, 32,
+                        lambda p, t: _stage(job, "finish", f"{label}{name} sings: {t} ({int(p)}%)"),
+                        lambda: bool(job.get("cancel")))
+    except Exception as e:  # noqa: BLE001
+        warnings.append(f"The song could not be sung again by {name}: {e} The song keeps the voice of the music model.")
+    return wav
 
 
 def _finalize(wav_path: str, req: GenerateMusicRequest, warnings: list[str]) -> str:
@@ -859,6 +873,8 @@ def _run_dr_job(job_id: str, req: GenerateMusicRequest) -> None:
                         on_stage=lambda st, tx: _stage(job, st, f"{label}{tx}"),
                         on_step=lambda d, t: _stage(job, "render", f"{label}composing the song", d, t),
                         on_proc=lambda pr: _procs.__setitem__(job_id, pr))
+                    if req.singer_voice and not req.instrumental and pipe is not None and not req.preview:
+                        wav = _revoice(job, wav, req, label, warnings)
                     _stage(job, "finish", f"{label}saving and converting")
                     final = _finalize(wav, req, warnings if i == 0 else [])
                 except Exception as e:
@@ -1126,6 +1142,8 @@ def _run_ace15_job(job_id: str, req: GenerateMusicRequest) -> None:
                 _stage(job, "finish", f"{label(i)}saving and converting")
                 if not req.fade_out:
                     _fade_end(wav, ACE15_FADE)
+                if req.singer_voice and not req.instrumental and not req.preview:
+                    _revoice(job, wav, req, label(i), warnings)
                 final = _finalize(wav, req, warnings if i == 0 else [])
                 results.append({"seed": seeds[i], "duration": round(secs, 1), **_keep(final, req, seeds[i], secs, "ace-step-1.5")})
                 job["progress"] = {"done": i + 1, "total": total}

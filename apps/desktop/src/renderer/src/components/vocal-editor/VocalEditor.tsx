@@ -15,6 +15,7 @@ import type { InsertFx, InsertType, Note, Track } from '../../types'
 import { insertDefaults } from '../../audio/fx'
 import { nanoid } from 'nanoid'
 import { installProgress, rapLyrics, STAGE_TEXT } from '../../lib/singer'
+import { minLength, snapBeat } from '../../edit/grid'
 
 interface BuiltinVoice { id: string; name: string; singer?: string; styles?: Record<string, string>; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
 
@@ -423,7 +424,7 @@ export function VocalEditor(): React.ReactElement {
                 {[engine === 'builtin' && bv ? `${tr(bv.gender === 'male' ? 'Male' : 'Female')} · ${tr(KINDS.find(([k]) => k === (bv.kind ?? 'clear'))?.[1] ?? '')}` : engineName, trf('{n} notes', { n: melody.length }), lang.toUpperCase() || '–', engine === 'builtin' && natural ? tr('best quality') : ''].filter(Boolean).join(' · ')}
               </div>
             </div>
-            <Meter on={!!playing || !!busy} />
+            <Meter playing={!!playing} working={!!busy} />
           </div>
           <div style={{ ...card, padding: 12, justifyContent: 'center', gap: 8 }}>
             {engine === 'builtin' && (
@@ -592,26 +593,45 @@ function Seg<T extends string>({ value, onChange, items }: { value: T; onChange:
   )
 }
 
-/** a level display in the LCD: moves while a voice plays or the singer works */
-function Meter({ on }: { on: boolean }): React.ReactElement {
-  const [t, setT] = useState(0)
+/** the level display in the LCD: the real level of the voice that plays (its history scrolls from right to left);
+ *  while the singer works (nothing plays) a calm light runs across instead, so the two are not mixed up */
+function Meter({ playing, working }: { playing: boolean; working: boolean }): React.ReactElement {
+  const [bars, setBars] = useState<number[]>(() => new Array(16).fill(0))
+  const [tick, setTick] = useState(0)
   useEffect(() => {
-    if (!on) return undefined
-    const id = window.setInterval(() => setT((n) => n + 1), 120)
-    return () => window.clearInterval(id)
-  }, [on])
+    if (!playing && !working) { setBars(new Array(16).fill(0)); return undefined }
+    let raf = 0, last = 0
+    let level: (() => number) | null = null
+    void import('../../audio/engine').then((m) => { level = m.previewLevel })
+    const loop = (now: number): void => {
+      if (now - last > 60) {
+        last = now
+        if (playing) { const v = level ? level() : 0; setBars((b) => [...b.slice(1), v]) } else setTick((n) => n + 1)
+      }
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
+  }, [playing, working])
   return (
-    <span style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'flex-end', height: 44, flexShrink: 0 }}>
-      {Array.from({ length: 16 }, (_, i) => {
-        const h = on ? 8 + Math.abs(Math.sin(i * 1.3 + t * 0.7)) * 34 : 6 + (i % 3) * 2
-        return <span key={i} style={{ width: 5, height: h, borderRadius: 2, background: on && i < 12 ? '#22d3ee' : '#334155', transition: 'height 0.1s' }} />
+    <span style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'flex-end', height: 44, flexShrink: 0 }} title={working && !playing ? tr('Singing…') : undefined}>
+      {bars.map((v, i) => {
+        const run = !playing && working
+        const lit = run && Math.abs(i - (tick % 22 - 3)) <= 1
+        const h = playing ? 4 + Math.min(1, v * 1.6) * 40 : run ? (lit ? 14 : 6) : 6 + (i % 3) * 2
+        const col = playing ? (v > 0.85 ? '#facc15' : '#22d3ee') : lit ? '#a78bfa' : '#334155'
+        return <span key={i} style={{ width: 5, height: h, borderRadius: 2, background: col, transition: 'height 0.06s' }} />
       })}
     </span>
   )
 }
 
-/** the melody as note blocks (pitch up, time to the right), each with its syllable to correct right on it */
+/** the melody as note blocks (pitch up, time to the right). Hold a note and drag it: sideways = time (on the grid,
+ *  Alt: free), up / down = pitch, at its right edge = length. A click without dragging opens its syllable. */
 function MelodyLane({ melody, color, onLyric }: { melody: SungNote[]; color: string; onLyric: (m: SungNote, lyric: string) => void }): React.ReactElement {
+  const box = useRef<HTMLDivElement>(null)
+  const [editing, setEditing] = useState<string | null>(null)
+  const [held, setHeld] = useState<string | null>(null)
   if (!melody.length) return <div style={{ ...hint, padding: 16, minHeight: 160 }}>{tr('The notes of the melody appear here.')}</div>
   const first = Math.floor(melody[0].beat / 4) * 4
   const last = Math.max(...melody.map((m) => m.beat + m.note.duration))
@@ -619,11 +639,49 @@ function MelodyLane({ melody, color, onLyric }: { melody: SungNote[]; color: str
   const lo = Math.min(...melody.map((m) => m.note.pitch)), hi = Math.max(...melody.map((m) => m.note.pitch))
   const span = Math.max(6, hi - lo)
   const H = 190, NH = 22
+  const pxPerPitch = (H - NH - 16) / span
   const x = (b: number): string => `${(b / beats) * 100}%`
   const y = (p: number): number => 8 + ((hi - p) / span) * (H - NH - 16)
+  const grab = (e: React.PointerEvent, m: SungNote): void => {
+    if (e.button !== 0 || editing === m.note.id) return
+    e.preventDefault()
+    const rect = box.current!.getBoundingClientRect()
+    const pxPerBeat = rect.width / beats
+    const el = e.currentTarget as HTMLElement
+    const resize = e.clientX > el.getBoundingClientRect().right - 7
+    const x0 = e.clientX, y0 = e.clientY, orig = { ...m.note }
+    let moved = false
+    setHeld(m.note.id)
+    void import('../../audio/engine').then((eng) => { const t = useProjectStore.getState().project.tracks.find((tt) => tt.id === m.trackId); if (t) void eng.previewNote(orig.pitch, orig.velocity, t) })
+    {
+      let lastPitch = orig.pitch
+      const move = (ev: PointerEvent): void => {
+        const dx = ev.clientX - x0, dy = ev.clientY - y0
+        if (!moved && Math.abs(dx) + Math.abs(dy) < 4) return
+        moved = true
+        const st = useProjectStore.getState()
+        if (resize) {
+          st.updateNote(m.trackId, m.clipId, orig.id, { duration: Math.max(minLength(), snapBeat(orig.duration + dx / pxPerBeat, ev.altKey)) })
+        } else {
+          const pitch = Math.max(0, Math.min(127, orig.pitch - Math.round(dy / pxPerPitch)))
+          st.updateNote(m.trackId, m.clipId, orig.id, { startTime: Math.max(0, snapBeat(orig.startTime + dx / pxPerBeat, ev.altKey)), pitch })
+          if (pitch !== lastPitch) {
+            lastPitch = pitch
+            void import('../../audio/engine').then((eng) => { const t = st.project.tracks.find((tt) => tt.id === m.trackId); if (t) void eng.previewNote(pitch, orig.velocity, t) })
+          }
+        }
+      }
+      const up = (): void => {
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up)
+        setHeld(null)
+        if (!moved) setEditing(orig.id)                 // a click: change the syllable
+      }
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
+    }
+  }
   return (
     <div style={{ overflowX: 'auto', background: '#0f1318' }}>
-      <div style={{ position: 'relative', width: '100%', minWidth: beats * 36, height: H }}>
+      <div ref={box} style={{ position: 'relative', width: '100%', minWidth: beats * 36, height: H, userSelect: 'none' }}>
         {Array.from({ length: beats + 1 }, (_, i) => (
           <div key={i} style={{ position: 'absolute', left: x(i), top: 0, bottom: 0, width: 1, background: (first + i) % 4 === 0 ? '#2a3340' : '#1b2129' }}>
             {(first + i) % 4 === 0 && <span style={{ position: 'absolute', left: 3, top: 2, fontSize: 9, color: '#4b5563' }}>{(first + i) / 4 + 1}</span>}
@@ -631,12 +689,25 @@ function MelodyLane({ melody, color, onLyric }: { melody: SungNote[]; color: str
         ))}
         {melody.map((m) => {
           const hold = m.note.lyric === '+'
+          const ed = editing === m.note.id
           return (
-            <div key={m.note.id} title={`${noteName(m.note.pitch)} · ${trf('bar {bar}', { bar: Math.floor(m.beat / 4) + 1 })}`}
+            <div key={m.note.id} onPointerDown={(e) => grab(e, m)}
+              title={`${noteName(m.note.pitch)} · ${trf('bar {bar}', { bar: Math.floor(m.beat / 4) + 1 })} · ${tr('Drag: move (up / down: pitch), right edge: length · click: change the syllable')}`}
               style={{ position: 'absolute', left: `calc(${x(m.beat - first)} + 1px)`, top: y(m.note.pitch), width: `calc(${x(m.note.duration)} - 3px)`, minWidth: 18, height: NH, borderRadius: 4,
-                background: hold ? `${color}88` : color, border: `1px solid ${m.note.lyric ? '#ffffffaa' : '#ffffff33'}`, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-              <input value={m.note.lyric ?? ''} onChange={(e) => onLyric(m, e.target.value)} placeholder="–"
-                style={{ all: 'unset', width: '100%', padding: '0 5px', fontSize: 11.5, fontWeight: 700, color: '#fff', textShadow: '0 1px 2px #0008', cursor: 'text' }} />
+                background: hold ? `${color}88` : color, border: `1px solid ${ed || held === m.note.id ? '#fff' : m.note.lyric ? '#ffffffaa' : '#ffffff33'}`,
+                boxShadow: held === m.note.id ? '0 0 0 2px #ffffff55' : undefined, display: 'flex', alignItems: 'center', overflow: 'hidden',
+                cursor: ed ? 'text' : held === m.note.id ? 'grabbing' : 'grab', zIndex: ed ? 3 : 1 }}>
+              {ed ? (
+                <input autoFocus defaultValue={m.note.lyric ?? ''} placeholder="–"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onChange={(e) => onLyric(m, e.target.value)}
+                  onBlur={() => setEditing(null)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); setEditing(null) } e.stopPropagation() }}
+                  style={{ all: 'unset', width: '100%', padding: '0 5px', fontSize: 11.5, fontWeight: 700, color: '#fff', background: '#0008', userSelect: 'text', cursor: 'text' }} />
+              ) : (
+                <span style={{ padding: '0 5px', fontSize: 11.5, fontWeight: 700, color: '#fff', textShadow: '0 1px 2px #0008', whiteSpace: 'nowrap', pointerEvents: 'none' }}>{m.note.lyric || '–'}</span>
+              )}
+              <span style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 6, cursor: 'ew-resize' }} />
             </div>
           )
         })}

@@ -935,13 +935,25 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 66.1 | Vocal Editor öffnen | Oben Titel, Status „Sänger bereit“, rechts Melodie und Sänger; darunter das Display (z. B. ANNA · POP) und die Stil-Knöpfe | | | 0.99.9 |
-| 66.2 | Stimmen als Kacheln, Filter Weiblich / Männlich und Klar / Mit Vibrato / Kraftvoll | Die Kacheln passen zum Filter | | | 0.99.9 |
-| 66.3 | Eine Kachel anklicken, nochmal anklicken | Stimme gewählt, Hörprobe spielt (Pegel im Display bewegt sich), zweiter Klick stoppt | | | 0.99.9 |
+| 66.1 | Vocal Editor öffnen | Oben Titel, Status „Sänger bereit“, rechts Melodie und Sänger; darunter das Display (z. B. ANNA · POP) und die Stil-Knöpfe | OK | | 0.99.9 |
+| 66.2 | Stimmen als Kacheln, Filter Weiblich / Männlich und Klar / Mit Vibrato / Kraftvoll | Die Kacheln passen zum Filter | OK | | 0.99.9 |
+| 66.3 | Eine Kachel anklicken, nochmal anklicken | Stimme gewählt, Hörprobe spielt (Pegel im Display bewegt sich), zweiter Klick stoppt | | Pegel lief dauernd (weil gleichzeitig gesungen wurde) → 0.99.10, Test 67.1 | 0.99.9 |
 | 66.4 | Stil wechseln, „▶ … in jedem Stil“ | Display zeigt den Stil; die Hörprobe im Stil spielt | | | 0.99.9 |
-| 66.5 | Text ins Textfeld schreiben | Nach einem Moment stehen die Silben auf den Notenblöcken | | | 0.99.9 |
-| 66.6 | Eine Silbe direkt auf einem Notenblock ändern | Wird übernommen (auch in der Piano-Roll sichtbar) | | | 0.99.9 |
+| 66.5 | Text ins Textfeld schreiben | Nach einem Moment stehen die Silben auf den Notenblöcken | OK | | 0.99.9 |
+| 66.6 | Eine Silbe direkt auf einem Notenblock ändern | Wird übernommen (auch in der Piano-Roll sichtbar) | | Note ließ sich nicht festhalten → 0.99.10, Test 67.2 | 0.99.9 |
 | 66.7 | Singen | Fortschritt rechts, dann neue Gesangsspur im Studio | | | 0.99.9 |
-| 66.8 | Sänger oben auf DiffSinger / KI-Sänger umstellen | Rechts neben dem Display die passenden Einstellungen; Singen geht | | | 0.99.9 |
-| 66.9 | Mein Gesang → MIDI, Piano Roll ↗ | Wie bisher | | | 0.99.9 |
-| 66.10 | Alle Looks | Sieht sauber aus | | | 0.99.9 |
+| 66.8 | Sänger oben auf DiffSinger / KI-Sänger umstellen | Rechts neben dem Display die passenden Einstellungen; Singen geht | | Import grau, weil gleichzeitig gesungen wurde (so gewollt) | 0.99.9 |
+| 66.9 | Mein Gesang → MIDI, Piano Roll ↗ | Wie bisher | OK | | 0.99.9 |
+| 66.10 | Alle Looks | Sieht sauber aus | OK | | 0.99.9 |
+
+## 67. Neu in 0.99.10: Vocal Editor – Noten ziehen, echter Pegel
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 67.1 | Eine Stimmen-Kachel anklicken (es wird gerade nicht gesungen) | Der Pegel im Display folgt dem Ton der Hörprobe (laut = hoch, Pausen = tief), stoppt mit der Hörprobe | | | 0.99.10 |
+| 67.2 | Während gesungen wird | Im Display läuft ein ruhiges lila Licht hin und her (kein Pegel) | | | 0.99.10 |
+| 67.3 | Einen Notenblock festhalten und seitlich ziehen | Note wandert in der Zeit, im Raster; mit Alt frei | | | 0.99.10 |
+| 67.4 | Einen Notenblock hoch / runter ziehen | Tonhöhe ändert sich, man hört die neue Note | | | 0.99.10 |
+| 67.5 | Am rechten Rand eines Blocks ziehen | Note wird länger / kürzer | | | 0.99.10 |
+| 67.6 | Einen Block nur anklicken, Silbe ändern, Enter | Silbe ist geändert (auch in der Piano-Roll) | | | 0.99.10 |
+| 67.7 | DiffSinger: „Stimme importieren…“ wenn gerade **nicht** gesungen wird | Knopf ist bedienbar, Dateidialog öffnet sich | | | 0.99.10 |

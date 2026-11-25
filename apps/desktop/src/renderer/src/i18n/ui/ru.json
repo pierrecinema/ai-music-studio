@@ -2130,5 +2130,6 @@
  "Singer ready": "Певец готов",
  "Style effects": "Эффекты стиля",
  "The AI backend is starting…": "ИИ-бэкенд запускается…",
- "Clear voice": "Чистый"
+ "Clear voice": "Чистый",
+ "Drag: move (up / down: pitch), right edge: length · click: change the syllable": "Тяните: сдвинуть (вверх / вниз: высота), правый край: длина · щелчок: изменить слог"
 }

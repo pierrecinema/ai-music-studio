@@ -16,7 +16,7 @@ const PIANO_WIDTH = 56
 const BEAT_WIDTH = 80
 const TOTAL_PITCHES = 128
 const EDGE = 6
-const VEL_HEIGHT = 96          // the velocity lane below the notes
+const VEL_FULL = 96            // the velocity lane below the notes (smaller in the Studio's detail area)
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const BLACK_NOTES = [1, 3, 6, 8, 10]
 
@@ -33,7 +33,9 @@ interface NoteDrag {
   group?: Map<string, Note>     // several selected notes move together
 }
 
-export function PianoRoll(): React.ReactElement {
+/** compact: inside the Studio's detail area (smaller toolbar and velocity lane) */
+export function PianoRoll({ compact = false }: { compact?: boolean } = {}): React.ReactElement {
+  const VEL_HEIGHT = compact ? 48 : VEL_FULL
   const project = useProjectStore((s) => s.project)
   const selectedTrackId = useProjectStore((s) => s.selectedTrackId)
   const selectedClipId = useProjectStore((s) => s.selectedClipId)
@@ -277,13 +279,13 @@ export function PianoRoll(): React.ReactElement {
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
-        <GridControls />
+        <GridControls compact={compact} />
         <button title={tr('Record MIDI (Ctrl+R): the song plays, and what you play on the keyboard on the left or on a MIDI keyboard becomes notes. Press again (or Space) to stop.')}
           onClick={() => { if (recording) pause(); else void startMidiRecording() }}
           style={{ padding: '3px 10px', borderRadius: 4, border: `1px solid ${recording ? 'var(--red)' : 'var(--border)'}`, background: recording ? 'var(--red)' : 'var(--bg-primary)', color: recording ? 'white' : 'var(--red)', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
           ● {recording ? tr('Recording…') : tr('Rec')}
         </button>
-        <button title={tr('Save this clip as a MIDI file (.mid) for other programs')} disabled={!clip}
+        {!compact && <><button title={tr('Save this clip as a MIDI file (.mid) for other programs')} disabled={!clip}
           onClick={() => { if (clip) void exportMidiClip(track.id, clip.id) }}
           style={{ padding: '3px 10px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11, whiteSpace: 'nowrap' }}>
           {tr('Export .mid')}
@@ -292,11 +294,11 @@ export function PianoRoll(): React.ReactElement {
           onClick={() => { void pickAndImport({ startBeat: 0 }) }}
           style={{ padding: '3px 10px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11, whiteSpace: 'nowrap' }}>
           {tr('Import .mid…')}
-        </button>
+        </button></>}
         {midiInputs > 0 && <span style={{ fontSize: 10, color: 'var(--green)' }} title={tr('MIDI keyboards found')}>🎹 {midiInputs}</span>}
-        <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
+        {!compact && <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
           {clip ? `${track.name} · ${clip.name ?? 'clip'} · ${notes.length} notes${sel.size > 1 ? ` · ${sel.size} selected` : ''}` : tr('No clip yet: click in the grid to create one')}
-        </span>
+        </span>}
         {clip && (() => {
           const chosen = notes.filter((n) => sel.has(n.id))
           const none = !chosen.length
@@ -319,8 +321,8 @@ export function PianoRoll(): React.ReactElement {
           )
         })()}
         <div style={{ flex: 1 }} />
-        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr('Zoom')}</span>
-        <input type="range" min={0.25} max={4} step={0.25} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 80, accentColor: 'var(--accent)' }} />
+        {!compact && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr('Zoom')}</span>}
+        <input type="range" min={0.25} max={4} step={0.25} value={zoom} title={tr('Zoom')} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: compact ? 60 : 80, accentColor: 'var(--accent)' }} />
         <span style={{ fontSize: 11, color: 'var(--text-secondary)', width: 28 }}>{zoom}x</span>
       </div>
 

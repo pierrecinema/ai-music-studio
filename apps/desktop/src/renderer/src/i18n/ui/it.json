@@ -2099,5 +2099,6 @@
  "Hide settings": "Nascondi impostazioni",
  "Click a track to see its details here.": "Fai clic su una traccia per vederne qui i dettagli.",
  "The songs are stretched to the new tempo; until then the old tempo plays on.": "I brani vengono adattati al nuovo tempo; nel frattempo continua il tempo precedente.",
- "Adjusting to the new tempo…": "Adattamento al nuovo tempo…"
+ "Adjusting to the new tempo…": "Adattamento al nuovo tempo…",
+ "Drag: height of the details · double-click: normal height": "Trascina: altezza dei dettagli · doppio clic: altezza normale"
 }

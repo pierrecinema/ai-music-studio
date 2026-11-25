@@ -22,7 +22,11 @@ One row, the functions in groups (on a narrow window it wraps):
 | **⋯** | **Channel** (the channel tab of the selected track: colour, volume, pan, mute/solo, the **instrument** of a MIDI track, effects, sends, group, automation, meter), **Sync all to … BPM** / **Sync N selected** (brings all audio, or the selected clips together, in time with the master BPM: [[Beat Matching and Sync]]), **Beat match…** (measures the selected audio clip and offers to sync it) |
 
 ## Detail area
-Under the tracks (when no Piano Roll or Mixer is open below): **Track** (instrument of a MIDI track, recording input of an audio track, output, colour), **Clip** (the notes of the selected MIDI clip on a small piano-roll grid, *Open in the Piano Roll*; for an audio clip its tools — gain, song tempo, SYNC, MASTER, fades, WARP — and its waveform) and **Effects (inserts)** of the track (on / off, × remove, *+ Effect…*, a VST plugin's name opens its window, *Settings* opens the effects lane). **▾** folds it away, **▴ Details** brings it back.
+Under the tracks (when no Piano Roll or Mixer panel is open below):
+- **A MIDI track:** on the left the track (instrument, output, colour) and its effects; on the right the **Piano Roll** itself, for the selected clip (draw, select, erase, grid, quantize, ● Rec, velocity; *Export / Import .mid* are in the full Piano Roll).
+- **An audio track:** **Track** (recording input, output, colour), **Clip** (gain, song tempo, SYNC, MASTER, fades, WARP and the waveform) and **Effects (inserts)** (on / off, × remove, *+ Effect…*, a VST plugin's name opens its window, *Settings* opens the effects lane).
+
+**▾** folds it away, **▴ Details** brings it back; drag its upper edge for more or less height (double-click: normal height).
 
 ## Tracks and clips
 - **Drag** clips to move them (also to another track), drag their edges to trim. **Drag a clip onto the dashed area under the last track** ("+ Drag a clip here for a new track"): a new track is made for it (audio or MIDI).

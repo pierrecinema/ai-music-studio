@@ -2116,5 +2116,6 @@
  "Hide settings": "Скрыть настройки",
  "Click a track to see its details here.": "Щёлкните дорожку, чтобы увидеть здесь её подробности.",
  "The songs are stretched to the new tempo; until then the old tempo plays on.": "Песни растягиваются под новый темп; до тех пор играет прежний темп.",
- "Adjusting to the new tempo…": "Подстройка под новый темп…"
+ "Adjusting to the new tempo…": "Подстройка под новый темп…",
+ "Drag: height of the details · double-click: normal height": "Тяните: высота подробностей · двойной щелчок: обычная высота"
 }

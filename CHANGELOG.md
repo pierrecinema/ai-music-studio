@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.7
+
+### Changed
+
+- **The Piano Roll in the Studio**: with a MIDI track selected, the detail area under the Studio shows the Piano Roll itself (draw, select, erase, grid, quantize, record, velocity), so notes are edited right there; the track's instrument, colour and effects are on the left. The detail area's height can be dragged at its upper edge.
+
 ## 0.99.6
 
 ### Fixed

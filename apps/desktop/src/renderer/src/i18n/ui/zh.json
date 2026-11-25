@@ -2099,5 +2099,6 @@
  "Hide settings": "隐藏设置",
  "Click a track to see its details here.": "点击轨道，在此查看其详情。",
  "The songs are stretched to the new tempo; until then the old tempo plays on.": "正在将歌曲拉伸到新速度；在此之前继续按旧速度播放。",
- "Adjusting to the new tempo…": "正在适应新速度…"
+ "Adjusting to the new tempo…": "正在适应新速度…",
+ "Drag: height of the details · double-click: normal height": "拖动：详情区域高度 · 双击：默认高度"
 }

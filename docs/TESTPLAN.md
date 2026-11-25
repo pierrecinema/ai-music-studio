@@ -923,10 +923,25 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 65.1 | Piano-Roll öffnen, oben rechts **🎹 Tasten unten** | Tastatur waagrecht unten wie ein Klavier, die Noten stehen darüber und laufen von oben auf die Tasten zu; Taktanfang unten | | | 0.99.8 |
-| 65.2 | Mit Zeichnen klicken, eine Note oben am Rand länger ziehen, Noten verschieben (hoch/runter = Zeit, seitlich = Tonhöhe) | Wirkt wie in der normalen Ansicht | | | 0.99.8 |
-| 65.3 | Auswählen: Rahmen ziehen; Löschen-Werkzeug | Rahmen wählt die Noten darin; Löschen entfernt Noten | | | 0.99.8 |
-| 65.4 | Auf die Tasten unten klicken; ● Rec und auf den Tasten spielen | Man hört die Töne; bei der Aufnahme werden sie Noten | | | 0.99.8 |
-| 65.5 | Abspielen | Die Abspiellinie läuft nach oben, gespielte Noten leuchten auf den Tasten | | | 0.99.8 |
-| 65.6 | Zurück auf **Tasten links**, App neu starten | Normale Ansicht; die gewählte Ansicht bleibt nach Neustart | | | 0.99.8 |
-| 65.7 | Studio: MIDI-Spur anklicken, unten in der Piano-Roll umschalten | Geht dort genauso | | | 0.99.8 |
+| 65.1 | Piano-Roll öffnen, oben rechts **🎹 Tasten unten** | Tastatur waagrecht unten wie ein Klavier, die Noten stehen darüber und laufen von oben auf die Tasten zu; Taktanfang unten | OK | | 0.99.8 |
+| 65.2 | Mit Zeichnen klicken, eine Note oben am Rand länger ziehen, Noten verschieben (hoch/runter = Zeit, seitlich = Tonhöhe) | Wirkt wie in der normalen Ansicht | OK | | 0.99.8 |
+| 65.3 | Auswählen: Rahmen ziehen; Löschen-Werkzeug | Rahmen wählt die Noten darin; Löschen entfernt Noten | OK | | 0.99.8 |
+| 65.4 | Auf die Tasten unten klicken; ● Rec und auf den Tasten spielen | Man hört die Töne; bei der Aufnahme werden sie Noten | OK | | 0.99.8 |
+| 65.5 | Abspielen | Die Abspiellinie läuft nach oben, gespielte Noten leuchten auf den Tasten | OK | | 0.99.8 |
+| 65.6 | Zurück auf **Tasten links**, App neu starten | Normale Ansicht; die gewählte Ansicht bleibt nach Neustart | OK | | 0.99.8 |
+| 65.7 | Studio: MIDI-Spur anklicken, unten in der Piano-Roll umschalten | Geht dort genauso | OK | | 0.99.8 |
+
+## 66. Neu in 0.99.9: Vocal Editor im neuen Layout
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 66.1 | Vocal Editor öffnen | Oben Titel, Status „Sänger bereit“, rechts Melodie und Sänger; darunter das Display (z. B. ANNA · POP) und die Stil-Knöpfe | | | 0.99.9 |
+| 66.2 | Stimmen als Kacheln, Filter Weiblich / Männlich und Klar / Mit Vibrato / Kraftvoll | Die Kacheln passen zum Filter | | | 0.99.9 |
+| 66.3 | Eine Kachel anklicken, nochmal anklicken | Stimme gewählt, Hörprobe spielt (Pegel im Display bewegt sich), zweiter Klick stoppt | | | 0.99.9 |
+| 66.4 | Stil wechseln, „▶ … in jedem Stil“ | Display zeigt den Stil; die Hörprobe im Stil spielt | | | 0.99.9 |
+| 66.5 | Text ins Textfeld schreiben | Nach einem Moment stehen die Silben auf den Notenblöcken | | | 0.99.9 |
+| 66.6 | Eine Silbe direkt auf einem Notenblock ändern | Wird übernommen (auch in der Piano-Roll sichtbar) | | | 0.99.9 |
+| 66.7 | Singen | Fortschritt rechts, dann neue Gesangsspur im Studio | | | 0.99.9 |
+| 66.8 | Sänger oben auf DiffSinger / KI-Sänger umstellen | Rechts neben dem Display die passenden Einstellungen; Singen geht | | | 0.99.9 |
+| 66.9 | Mein Gesang → MIDI, Piano Roll ↗ | Wie bisher | | | 0.99.9 |
+| 66.10 | Alle Looks | Sieht sauber aus | | | 0.99.9 |

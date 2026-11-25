@@ -2106,5 +2106,12 @@
  "View: keys on the left (time to the right) or the keyboard across the bottom (the notes come down onto the keys)": "视图：琴键在左（时间向右）或琴键横在底部（音符从上方落到琴键上）",
  "Draw": "绘制",
  "Select": "选择",
- "Erase": "擦除"
+ "Erase": "擦除",
+ "Best quality": "最佳质量",
+ "best quality": "最佳质量",
+ "Melody and lyrics": "旋律与歌词",
+ "Singer ready": "歌手就绪",
+ "Style effects": "风格效果",
+ "The AI backend is starting…": "AI 后端正在启动…",
+ "Clear voice": "清亮"
 }

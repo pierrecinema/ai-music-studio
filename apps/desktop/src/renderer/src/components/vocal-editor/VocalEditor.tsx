@@ -42,7 +42,7 @@ const voiceLabel = (v: BuiltinVoice): string => {
   const n = /^[fm](\d+)/.exec(v.id)?.[1] ?? ''
   return `${tr(v.gender === 'male' ? 'Male singer' : 'Female singer')} ${n}${v.id.endsWith('-2') ? ' (2)' : ''}`
 }
-const KINDS: Array<[string, string]> = [['clear', 'Clear'], ['vibrato', 'With vibrato'], ['power', 'Powerful']]
+const KINDS: Array<[string, string]> = [['clear', 'Clear voice'], ['vibrato', 'With vibrato'], ['power', 'Powerful']]
 const LANGS: Array<[string, string]> = [['en', 'English'], ['de', 'Deutsch'], ['es', 'Español'], ['', 'Phonemes / the voice’s own language']]
 const QUALITY: Array<[number, string]> = [[8, 'Fast (draft)'], [20, 'Normal'], [50, 'Best (slower)']]
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
@@ -75,6 +75,7 @@ export function VocalEditor(): React.ReactElement {
   const [natural, setNatural] = useState(true)
   const [style, setStyle] = useState<SingStyle>('pop')
   const [gender, setGender] = useState<'all' | 'female' | 'male'>('all')
+  const [kindFilter, setKindFilter] = useState<string>('all')
   const [autoFx, setAutoFx] = useState(true)
   const [playing, setPlaying] = useState<string | null>(null)
   // a click on a voice chooses it and plays its demo at once (a finished recording, nothing is computed);
@@ -376,212 +377,269 @@ export function VocalEditor(): React.ReactElement {
   singingRef.current = singingToMidi
   const ready = engine === 'builtin' ? !!bv && !offline && (style === 'rap' || !builtin?.problem) && melody.length > 0 : engine === 'diffsinger' ? !!voice && !voice.error && voice.vocoderInstalled && melody.length > 0 : melody.length > 0 && !!text.trim()
 
+  // ── layout "instrument" (owner's choice, 25.11.2026): a display with the voice and style, the voices as tiles,
+  // the melody with its syllables and the lyrics below, the Sing button on the right
+  const engineName = engine === 'builtin' ? tr('Built-in voices') : engine === 'diffsinger' ? tr('DiffSinger voice') : tr('AI singer (ACE-Step)')
+  const shownName = engine === 'builtin' ? (bv ? voiceLabel(bv) : '–') : engine === 'diffsinger' ? (voice?.name ?? '–') : tr(aiVoice === 'male' ? 'Male voice' : 'Female voice')
+  const shownStyle = engine === 'builtin' ? tr(STYLES.find(([k]) => k === style)?.[1] ?? '') : engine === 'ai' ? aiStyle : ''
+  const status = offline ? { c: '#facc15', t: tr('The AI backend is starting…') } : engine === 'builtin' && builtin?.problem ? { c: '#f59e0b', t: tr('Install the singer') } : { c: '#22c55e', t: tr('Singer ready') }
+  const tiles = (builtin?.voices ?? []).filter((v) => (gender === 'all' || v.gender === gender) && (kindFilter === 'all' || (v.kind ?? 'clear') === kindFilter))
+  const sing = (): void => void (engine === 'builtin' ? singBuiltin() : engine === 'diffsinger' ? singDiffSinger() : singAi())
+  const greyWhy = !melody.length ? tr('Sing is grey: there is no melody yet. Write notes on a MIDI track in the Piano Roll (or turn your singing into MIDI), then choose that track under Melody.')
+    : engine === 'builtin' && offline ? tr('Sing is grey: the AI backend is still starting.')
+    : engine === 'builtin' && builtin?.problem && style !== 'rap' ? tr('Sing is grey: install the singer first (button above).')
+    : engine === 'ai' && !text.trim() ? tr('Sing is grey: write the lyrics first.')
+    : tr('Sing is grey: choose a voice first.')
+
   return (
-    <div style={{ height: '100%', overflow: 'auto', padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>{tr('Vocal Editor')}</div>
-        <div style={hint}>{tr('A melody of a MIDI track is sung with your lyrics. Write the melody in the Piano Roll (or turn a sung line into MIDI with Audio → MIDI), then choose a voice here.')}</div>
+    <div style={{ height: '100%', overflow: 'auto', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)' }}>
+      {/* header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{tr('Vocal Editor')}</div>
+        <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 999, border: `1px solid ${status.c}66`, color: status.c }}>● {status.t}</span>
+        <span style={{ flex: 1 }} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-muted)' }}>{tr('Melody')}
+          {midiTracks.length ? (
+            <select value={track?.id ?? ''} onChange={(e) => setTrackId(e.target.value)} style={{ fontSize: 12 }}>
+              {midiTracks.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          ) : <span style={{ color: 'var(--yellow)' }}>{tr('No MIDI track with notes yet: write a melody in the Piano Roll first.')}</span>}
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-muted)' }}>{tr('Singer')}
+          <select value={engine} onChange={(e) => setEngine(e.target.value as typeof engine)} style={{ fontSize: 12 }}>
+            <option value="builtin">{tr('Built-in voices')}</option><option value="diffsinger">{tr('DiffSinger voice')}</option><option value="ai">{tr('AI singer (ACE-Step)')}</option>
+          </select>
+        </label>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 420px) 1fr', gap: 16, alignItems: 'start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={card}>
-            <div style={label}>{tr('Singer')}</div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {([['builtin', tr('Built-in voices')], ['diffsinger', tr('DiffSinger voice')], ['ai', tr('AI singer (ACE-Step)')]] as const).map(([k, l]) => (
-                <button key={k} className={`btn ${engine === k ? 'btn-primary' : 'btn-ghost'}`} style={{ flex: 1, fontSize: 12 }} onClick={() => setEngine(k)}>{l}</button>
-              ))}
+
+      <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* the display and the style */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 380px)', gap: 14 }}>
+          <div style={{ background: '#05080c', border: '1px solid #1f2a37', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 16, minHeight: 84 }}>
+            <Avatar id={engine === 'builtin' ? bv?.id ?? 'x' : engine} name={shownName} size={54} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 21, color: '#e0f2fe', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{shownName}{shownStyle ? ` · ${shownStyle}` : ''}</div>
+              <div style={{ fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 12, color: '#38bdf8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {[engine === 'builtin' && bv ? `${tr(bv.gender === 'male' ? 'Male' : 'Female')} · ${tr(KINDS.find(([k]) => k === (bv.kind ?? 'clear'))?.[1] ?? '')}` : engineName, trf('{n} notes', { n: melody.length }), lang.toUpperCase() || '–', engine === 'builtin' && natural ? tr('best quality') : ''].filter(Boolean).join(' · ')}
+              </div>
             </div>
+            <Meter on={!!playing || !!busy} />
+          </div>
+          <div style={{ ...card, padding: 12, justifyContent: 'center', gap: 8 }}>
             {engine === 'builtin' && (
               <>
-                <div style={hint}>{tr('The app’s own voices sing exactly your notes and lyrics. Runs on your processor: about a minute per 5 seconds of singing.')}</div>
-                {offline && <div style={{ ...hint, color: 'var(--yellow)' }}>{tr('The AI backend is starting… the voices appear in a moment.')}</div>}
-                {!offline && builtin?.problem ? (
-                  <div style={{ ...card, background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.4)' }}>
-                    <div style={hint}>{tr('The singer is installed once: about 4 GB (the singing model SoulX-Singer, Apache 2.0, and its own Python environment).')}</div>
-                    <button className="btn btn-primary" onClick={() => void installSinger()} disabled={!!busy}>{tr('Install the singer')}</button>
-                  </div>
-                ) : null}
-                <div style={label}>{tr('Style')}</div>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                   {STYLES.map(([k, l]) => (
-                    <button key={k} className={`btn ${style === k ? 'btn-primary' : 'btn-ghost'}`} style={{ flex: 1, fontSize: 12, padding: '5px 6px' }} onClick={() => setStyle(k)}>{tr(l)}</button>
+                    <button key={k} className={`btn ${style === k ? 'btn-primary' : 'btn-ghost'}`} style={{ flex: 1, fontSize: 12, padding: '5px 6px' }} onClick={() => setStyle(k)} title={tr(STYLES.find(([x]) => x === k)?.[2] ?? '')}>{tr(l)}</button>
                   ))}
                 </div>
-                {bv?.styles && Object.keys(bv.styles).length > 0 && (
-                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ ...hint, marginRight: 2 }}>{trf('{name} in each style:', { name: voiceLabel(bv) })}</span>
-                    {STYLES.filter(([k]) => bv.styles?.[k]).map(([k, l]) => {
-                      const key = `${bv.id}:${k}`
-                      return <button key={k} className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} onClick={() => listen(key, bv.styles?.[k])}>{playing === key ? '■' : '▶'} {tr(l)}</button>
-                    })}
-                  </div>
-                )}
-                <div style={hint}>{tr(STYLES.find(([k]) => k === style)?.[2] ?? '')}</div>
-                <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
-                  <input type="checkbox" checked={autoFx} onChange={(e) => setAutoFx(e.target.checked)} />{tr('Put the style’s effects on the new vocal track')}
-                </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ ...label, flex: 1 }}>{trf('Voice ({n})', { n: String(builtin?.voices.length ?? 0) })}</div>
-                  {([['all', 'All'], ['female', 'Female'], ['male', 'Male']] as const).map(([k, l]) => (
-                    <button key={k} className={`btn ${gender === k ? 'btn-primary' : 'btn-ghost'}`} style={{ fontSize: 11, padding: '3px 8px' }} onClick={() => setGender(k)}>{tr(l)}</button>
-                  ))}
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', fontSize: 11.5, color: 'var(--text-secondary)' }}>
+                  <label style={{ display: 'flex', gap: 5, alignItems: 'center' }} title={tr('Put the style’s effects on the new vocal track')}><input type="checkbox" checked={autoFx} onChange={(e) => setAutoFx(e.target.checked)} />{tr('Style effects')}</label>
+                  <label style={{ display: 'flex', gap: 5, alignItems: 'center' }} title={tr('Best quality (slower; off: about twice as fast)')}><input type="checkbox" checked={natural} onChange={(e) => setNatural(e.target.checked)} />{tr('Best quality')}</label>
+                  {bv?.styles?.[style] && (() => { const key = `${bv.id}:${style}`; return (
+                    <button className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 8px' }} onClick={() => listen(key, bv.styles?.[style])}>{playing === key ? '■' : '▶'} {trf('{name} in each style:', { name: voiceLabel(bv) }).replace(/:$/, '')} · {tr(STYLES.find(([k]) => k === style)?.[1] ?? '')}</button>) })()}
                 </div>
-                <div style={{ maxHeight: 340, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 2 }}>
-                  {KINDS.map(([kind, kl]) => {
-                    const list = (builtin?.voices ?? []).filter((v) => (v.kind ?? 'clear') === kind && (gender === 'all' || v.gender === gender))
-                    if (!list.length) return null
-                    return (
-                      <div key={kind} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tr(kl)} · {tr(list[0].description)}</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
-                          {list.map((v) => (
-                            <button key={v.id} className={`btn ${bv?.id === v.id ? 'btn-primary' : 'btn-ghost'}`} onClick={() => pickVoice(v)} style={{ textAlign: 'left', fontSize: 11.5, padding: '5px 7px' }} title={`${tr('Click: choose and listen (click again: stop)')}\n${v.credit}`}>
-                              {playing === v.id ? '■ ' : '▶ '}{voiceLabel(v)}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div style={hint}>{tr('Click a voice to hear it right away (a short song line in its typical style); click again to stop.')}</div>
-                <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
-                  <input type="checkbox" checked={natural} onChange={(e) => setNatural(e.target.checked)} />{tr('Best quality (slower; off: about twice as fast)')}
-                </label>
-                {style === 'rap' && rapEx.length > 0 && (
-                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ ...hint, marginRight: 2 }}>{tr('Rap examples:')}</span>
-                    {rapEx.map((x) => <button key={x.file} className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} onClick={() => listen(x.file, x.file)}>{playing === x.file ? '■' : '▶'} {tr(x.voice === 'male' ? 'Male' : 'Female')} · {x.bpm} BPM{x.language && x.language !== 'English' ? ` · ${tr(x.language)}` : ''}{/-2$/.test(x.name) ? ' 2' : ''}</button>)}
-                  </div>
-                )}
-                {style === 'rap' && <div style={hint}>{tr('Rap is made by the AI singer (ACE-Step 1.5, installed with the music AI); it takes a few minutes. The voice choice only decides male or female. The lyrics come from the lyrics field or, if it is empty, from the notes.')}</div>}
+                <div style={{ ...hint, fontSize: 11 }}>{tr(STYLES.find(([k]) => k === style)?.[2] ?? '')}</div>
               </>
             )}
-            {engine === 'builtin' ? null : engine === 'diffsinger' ? (
+            {engine === 'diffsinger' && (
               <>
-                <div style={hint}>{tr('Sings exactly your notes: pitch, timing and length. Needs a DiffSinger voicebank (OpenUtau format) that you download from its author and import here.')}</div>
                 {voices && voices.length > 0 ? (
                   <select value={voice?.id ?? ''} onChange={(e) => setVoiceId(e.target.value)}>
                     {voices.map((v) => <option key={v.id} value={v.id}>{v.name}{v.languages?.length ? ` (${v.languages.join(', ')})` : ''}{v.error ? ` – ${tr('broken')}` : ''}</option>)}
                   </select>
-                ) : (
-                  <div style={{ ...hint, color: 'var(--yellow)' }}>{tr('No voice yet. Search the web for "DiffSinger voicebank OpenUtau" (for example Nishiren for English, German, Spanish; Tiger for English, Spanish), download the .zip, read and accept its terms, then import it.')}</div>
-                )}
-                {voice?.error && <div style={{ ...hint, color: 'var(--red)' }}>{voice.error}</div>}
-                {voice && !voice.error && (
-                  <div style={hint}>
-                    {voice.author ? `${voice.author} · ` : ''}
-                    {tr('Models')}: {[voice.models?.duration && tr('timing'), voice.models?.pitch && tr('natural pitch'), voice.models?.variance && tr('expression')].filter(Boolean).join(', ') || tr('basic (timing and pitch from the notes)')}
-                  </div>
-                )}
-                {voice && !voice.error && !voice.vocoderInstalled && (
-                  <div style={{ ...card, background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.4)' }}>
-                    <div style={hint}>{trf('This voice needs the vocoder "{name}" (turns the voice model into sound), downloaded once.', { name: voice.vocoder ?? 'nsf_hifigan' })}</div>
-                    <div style={{ ...hint, fontSize: 10.5 }}>{voicesInfo?.vocoderLicence}</div>
-                    <button className="btn btn-primary" onClick={() => void installVocoder()} disabled={!!busy}>{tr('Install the vocoder')}</button>
-                  </div>
-                )}
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="btn btn-ghost" onClick={() => void importVoice()} disabled={!!busy}>{tr('Import a voice…')}</button>
-                  {voice && <button className="btn btn-ghost" onClick={() => void removeVoice()} disabled={!!busy}>{tr('Delete')}</button>}
+                ) : <div style={{ ...hint, color: 'var(--yellow)' }}>{tr('No voice yet. Search the web for "DiffSinger voicebank OpenUtau" (for example Nishiren for English, German, Spanish; Tiger for English, Spanish), download the .zip, read and accept its terms, then import it.')}</div>}
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button className="btn btn-ghost" style={{ fontSize: 11.5 }} onClick={() => void importVoice()} disabled={!!busy}>{tr('Import a voice…')}</button>
+                  {voice && <button className="btn btn-ghost" style={{ fontSize: 11.5 }} onClick={() => void removeVoice()} disabled={!!busy}>{tr('Delete')}</button>}
+                  <select value={steps} onChange={(e) => setSteps(Number(e.target.value))} style={{ fontSize: 11.5 }} title={tr('Quality')}>{QUALITY.map(([v, l]) => <option key={v} value={v}>{tr(l)}</option>)}</select>
+                  {!voice?.models?.pitch && <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11.5 }}>{tr('Vibrato')}<input type="range" min={0} max={0.8} step={0.05} value={vibrato} onChange={(e) => setVibrato(Number(e.target.value))} style={{ width: 80 }} /></label>}
                 </div>
-                {voice?.readme && (
-                  <details><summary style={{ ...hint, cursor: 'pointer' }}>{tr('Terms and notes of the voice (please read)')}</summary>
-                    <pre style={{ whiteSpace: 'pre-wrap', fontSize: 11, maxHeight: 220, overflow: 'auto', color: 'var(--text-secondary)' }}>{voice.readme}</pre></details>
-                )}
               </>
-            ) : (
+            )}
+            {engine === 'ai' && (
               <>
-                <div style={hint}>{tr('The music AI sings your lyrics a cappella in the tempo, key and length of the melody, in many languages. It does not follow every note: for that use a DiffSinger voice. Takes minutes on a CPU.')}</div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <select value={aiVoice} onChange={(e) => setAiVoice(e.target.value)} style={{ flex: 1 }}>
                     <option value="female">{tr('Female voice')}</option><option value="male">{tr('Male voice')}</option>
                   </select>
                   <input value={aiStyle} onChange={(e) => setAiStyle(e.target.value)} placeholder={tr('Style, e.g. soul, breathy')} style={{ flex: 1 }} />
                 </div>
+                <div style={{ ...hint, fontSize: 11 }}>{tr('The music AI sings your lyrics a cappella in the tempo, key and length of the melody, in many languages. It does not follow every note: for that use a DiffSinger voice. Takes minutes on a CPU.')}</div>
               </>
             )}
           </div>
+        </div>
 
-          <div style={card}>
-            <div style={label}>{tr('Melody')}</div>
-            {midiTracks.length ? (
-              <select value={track?.id ?? ''} onChange={(e) => setTrackId(e.target.value)}>
-                {midiTracks.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        {/* what the chosen singer needs first */}
+        {engine === 'builtin' && offline && <div style={{ ...hint, color: 'var(--yellow)' }}>{tr('The AI backend is starting… the voices appear in a moment.')}</div>}
+        {engine === 'builtin' && !offline && builtin?.problem && (
+          <div style={{ ...card, flexDirection: 'row', alignItems: 'center', background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.4)' }}>
+            <div style={{ ...hint, flex: 1 }}>{tr('The singer is installed once: about 4 GB (the singing model SoulX-Singer, Apache 2.0, and its own Python environment).')}</div>
+            <button className="btn btn-primary" onClick={() => void installSinger()} disabled={!!busy}>{tr('Install the singer')}</button>
+          </div>
+        )}
+        {engine === 'diffsinger' && voice?.error && <div style={{ ...hint, color: 'var(--red)' }}>{voice.error}</div>}
+        {engine === 'diffsinger' && voice && !voice.error && !voice.vocoderInstalled && (
+          <div style={{ ...card, flexDirection: 'row', alignItems: 'center', background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.4)' }}>
+            <div style={{ ...hint, flex: 1 }}>{trf('This voice needs the vocoder "{name}" (turns the voice model into sound), downloaded once.', { name: voice.vocoder ?? 'nsf_hifigan' })} <span style={{ fontSize: 10.5 }}>{voicesInfo?.vocoderLicence}</span></div>
+            <button className="btn btn-primary" onClick={() => void installVocoder()} disabled={!!busy}>{tr('Install the vocoder')}</button>
+          </div>
+        )}
+        {engine === 'diffsinger' && voice?.readme && (
+          <details><summary style={{ ...hint, cursor: 'pointer' }}>{tr('Terms and notes of the voice (please read)')}</summary>
+            <pre style={{ whiteSpace: 'pre-wrap', fontSize: 11, maxHeight: 220, overflow: 'auto', color: 'var(--text-secondary)' }}>{voice.readme}</pre></details>
+        )}
+
+        {/* the voices as tiles */}
+        {engine === 'builtin' && (builtin?.voices.length ?? 0) > 0 && (
+          <div style={{ ...card, padding: 0, gap: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+              <span style={{ ...label, flex: 1 }}>{trf('Voice ({n})', { n: String(builtin?.voices.length ?? 0) })}</span>
+              <Seg value={gender} onChange={setGender} items={[['all', tr('All')], ['female', tr('Female')], ['male', tr('Male')]]} />
+              <Seg value={kindFilter} onChange={setKindFilter} items={[['all', tr('All')], ...KINDS.map(([k, l]) => [k, tr(l)] as [string, string])]} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: 8, padding: 10, maxHeight: 248, overflow: 'auto' }}>
+              {tiles.map((v) => {
+                const on = bv?.id === v.id
+                return (
+                  <button key={v.id} onClick={() => pickVoice(v)} title={`${tr('Click: choose and listen (click again: stop)')}\n${tr(v.description)}\n${v.credit}`}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, padding: '10px 4px 8px', borderRadius: 10, cursor: 'pointer',
+                      border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, background: on ? 'color-mix(in srgb, var(--accent) 16%, var(--bg-tertiary))' : 'var(--bg-tertiary)',
+                      boxShadow: on ? '0 0 0 1px var(--accent), 0 6px 18px color-mix(in srgb, var(--accent) 30%, transparent)' : 'none', color: 'var(--text-primary)' }}>
+                    <Avatar id={v.id} name={voiceLabel(v)} size={42} />
+                    <span style={{ fontSize: 11.5, fontWeight: 600, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{voiceLabel(v)}</span>
+                    <span style={{ fontSize: 10, color: playing === v.id ? 'var(--accent-light)' : 'var(--text-muted)' }}>{v.gender === 'male' ? '♂' : '♀'} {playing === v.id ? '■' : '▶'}</span>
+                  </button>
+                )
+              })}
+            </div>
+            {style === 'rap' && rapEx.length > 0 && (
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap', padding: '0 12px 10px' }}>
+                <span style={{ ...hint, marginRight: 2 }}>{tr('Rap examples:')}</span>
+                {rapEx.map((x) => <button key={x.file} className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 7px' }} onClick={() => listen(x.file, x.file)}>{playing === x.file ? '■' : '▶'} {tr(x.voice === 'male' ? 'Male' : 'Female')} · {x.bpm} BPM{x.language && x.language !== 'English' ? ` · ${tr(x.language)}` : ''}{/-2$/.test(x.name) ? ' 2' : ''}</button>)}
+              </div>
+            )}
+            {style === 'rap' && <div style={{ ...hint, padding: '0 12px 10px' }}>{tr('Rap is made by the AI singer (ACE-Step 1.5, installed with the music AI); it takes a few minutes. The voice choice only decides male or female. The lyrics come from the lyrics field or, if it is empty, from the notes.')}</div>}
+          </div>
+        )}
+
+        {/* the melody with its syllables, the lyrics, and Sing */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(240px, 300px)', gap: 14, alignItems: 'stretch' }}>
+          <div style={{ ...card, padding: 0, gap: 0, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+              <span style={{ ...label, flex: 1 }}>{tr('Melody and lyrics')}</span>
+              <button className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 8px' }} onClick={() => void singingToMidi('clip')} disabled={!!busy} title={tr('Or sing it: record yourself on an audio track in the Studio (or choose a recording), and the app writes the melody as MIDI.')}>🎙 {tr('My singing (Studio clip) → MIDI')}</button>
+              <button className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 8px' }} onClick={() => void singingToMidi('file')} disabled={!!busy}>{tr('A recording file → MIDI')}</button>
+              <button className="btn btn-ghost" style={{ fontSize: 11, padding: '2px 8px' }} onClick={() => { if (track) useProjectStore.getState().selectTrack(track.id); useUIStore.getState().setActiveView('piano-roll') }} disabled={!track}>{tr('Piano Roll')} ↗</button>
+            </div>
+            <MelodyLane melody={melody} color={track?.color ?? '#8b5cf6'} onLyric={setLyric} />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '8px 12px', borderTop: '1px solid var(--border)' }}>
+              <select value={lang} onChange={(e) => { typed.current = true; setLang(e.target.value) }} style={{ fontSize: 12 }}>
+                {LANGS.filter(([k]) => engine === 'ai' ? k : true).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}
               </select>
-            ) : <div style={{ ...hint, color: 'var(--yellow)' }}>{tr('No MIDI track with notes yet: write a melody in the Piano Roll first.')}</div>}
-            <div style={hint}>{trf('{n} notes. One note per syllable; a note with "+" holds the syllable before it.', { n: melody.length })}</div>
-            <div style={{ ...hint, marginTop: 4 }}>{tr('Or sing it: record yourself on an audio track in the Studio (or choose a recording), and the app writes the melody as MIDI.')}</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button className="btn btn-ghost" onClick={() => void singingToMidi('clip')} disabled={!!busy} title={tr('The audio clip selected in the Studio')}>🎙 {tr('My singing (Studio clip) → MIDI')}</button>
-              <button className="btn btn-ghost" onClick={() => void singingToMidi('file')} disabled={!!busy}>{tr('A recording file → MIDI')}</button>
+              <textarea value={text} onChange={(e) => { typed.current = true; setText(e.target.value) }} rows={2} placeholder={tr('Write the lyrics here…')}
+                style={{ flex: 1, resize: 'vertical', fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 12.5 }}
+                title={engine !== 'ai' ? tr('The lyrics go onto the notes by themselves while you type; correct single syllables under “Notes and syllables”.') : undefined} />
+              {engine !== 'ai' && <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => void putLyrics()} disabled={!melody.length || !text.trim() || !!busy} title={tr('Put the lyrics on the notes again')}>⟳</button>}
             </div>
           </div>
-
-          <div style={card}>
-            <div style={label}>{tr('Lyrics')}</div>
-            <select value={lang} onChange={(e) => { typed.current = true; setLang(e.target.value) }}>
-              {LANGS.filter(([k]) => engine === 'ai' ? k : true).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}
-            </select>
-            <textarea value={text} onChange={(e) => { typed.current = true; setText(e.target.value) }} rows={5} placeholder={tr('Write the lyrics here…')} style={{ resize: 'vertical' }} />
-            {engine !== 'ai' && <div style={hint}>{tr('The lyrics go onto the notes by themselves while you type; correct single syllables under “Notes and syllables”.')}</div>}
-            {engine !== 'ai' && <button className="btn btn-ghost" onClick={() => void putLyrics()} disabled={!melody.length || !text.trim() || !!busy}>{tr('Put the lyrics on the notes again')}</button>}
+          <div style={{ ...card, justifyContent: 'flex-end' }}>
+            {engine === 'builtin' && <div style={{ ...hint, fontSize: 11 }}>{tr('The app’s own voices sing exactly your notes and lyrics. Runs on your processor: about a minute per 5 seconds of singing.')}</div>}
+            {!busy ? (
+              <>
+                <button className="btn btn-primary" style={{ padding: '12px 0', fontSize: 15, fontWeight: 700 }} disabled={!ready} onClick={sing}>🎤 {tr('Sing')}</button>
+                {!ready && <div style={{ ...hint, color: 'var(--yellow)' }}>{greyWhy}</div>}
+              </>
+            ) : (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, gap: 8 }}><span style={{ minWidth: 0 }}>{busy.text}</span><span>{Math.round(busy.pct)} %</span></div>
+                <div style={{ height: 7, background: 'rgba(0,0,0,0.3)', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${busy.pct}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #a78bfa)' }} /></div>
+              </>
+            )}
+            {error && <div style={{ ...hint, color: 'var(--red)' }}>{error}</div>}
+            {notice && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ ...hint, color: 'var(--green)' }}>{notice}</span>
+                <button className="btn btn-ghost" onClick={() => useUIStore.getState().setActiveView('timeline')}>{tr('Open the Studio')}</button>
+              </div>
+            )}
           </div>
-
-          {engine === 'diffsinger' && (
-            <div style={card}>
-              <div style={label}>{tr('Sound')}</div>
-              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5 }}>{tr('Quality')}
-                <select value={steps} onChange={(e) => setSteps(Number(e.target.value))}>{QUALITY.map(([v, l]) => <option key={v} value={v}>{tr(l)}</option>)}</select>
-              </label>
-              {!voice?.models?.pitch && (
-                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5, gap: 10 }}>{tr('Vibrato')}
-                  <input type="range" min={0} max={0.8} step={0.05} value={vibrato} onChange={(e) => setVibrato(Number(e.target.value))} style={{ flex: 1 }} />
-                </label>
-              )}
-            </div>
-          )}
-
-          {!busy ? (
-            <>
-            <button className="btn btn-primary" style={{ padding: '10px 0', fontSize: 14 }} disabled={!ready} onClick={() => void (engine === 'builtin' ? singBuiltin() : engine === 'diffsinger' ? singDiffSinger() : singAi())}>🎤 {tr('Sing')}</button>
-            {!ready && !busy && <div style={{ ...hint, color: 'var(--yellow)' }}>{
-              !melody.length ? tr('Sing is grey: there is no melody yet. Write notes on a MIDI track in the Piano Roll (or turn your singing into MIDI), then choose that track under Melody.')
-              : engine === 'builtin' && offline ? tr('Sing is grey: the AI backend is still starting.')
-              : engine === 'builtin' && builtin?.problem && style !== 'rap' ? tr('Sing is grey: install the singer first (button above).')
-              : engine === 'ai' && !text.trim() ? tr('Sing is grey: write the lyrics first.')
-              : tr('Sing is grey: choose a voice first.')}</div>}
-            </>
-          ) : (
-            <div style={card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}><span>{busy.text}</span><span>{Math.round(busy.pct)} %</span></div>
-              <div style={{ height: 6, background: 'rgba(0,0,0,0.3)', borderRadius: 3, overflow: 'hidden' }}><div style={{ width: `${busy.pct}%`, height: '100%', background: 'var(--accent)' }} /></div>
-            </div>
-          )}
-          {error && <div style={{ ...hint, color: 'var(--red)' }}>{error}</div>}
-          {notice && (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span style={{ ...hint, color: 'var(--green)' }}>{notice}</span>
-              <button className="btn btn-ghost" onClick={() => useUIStore.getState().setActiveView('timeline')}>{tr('Open the Studio')}</button>
-            </div>
-          )}
         </div>
+      </div>
+    </div>
+  )
+}
 
-        {/* the notes with their syllables */}
-        <div style={{ ...card, minWidth: 0 }}>
-          <div style={label}>{tr('Notes and syllables')}</div>
-          {!melody.length ? <div style={hint}>{tr('The notes of the melody appear here.')}</div> : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {melody.slice(0, 400).map((m, i) => (
-                <div key={m.note.id} title={trf('bar {bar}', { bar: Math.floor(m.beat / 4) + 1 })}
-                  style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '4px 5px', borderRadius: 6, border: '1px solid var(--border)', background: m.note.lyric && m.note.lyric !== '+' ? 'rgba(168,85,247,0.12)' : 'rgba(0,0,0,0.15)', width: 74 }}>
-                  <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{i + 1} · {noteName(m.note.pitch)}</span>
-                  <input value={m.note.lyric ?? ''} onChange={(e) => setLyric(m, e.target.value)} placeholder="–" style={{ fontSize: 12, padding: '2px 4px', width: '100%' }} />
-                </div>
-              ))}
+const AVATAR_COLOURS = ['#db2777', '#9333ea', '#2563eb', '#ea580c', '#0891b2', '#dc2626', '#059669', '#ca8a04', '#7c3aed', '#0d9488', '#e11d48', '#4f46e5']
+function Avatar({ id, name, size }: { id: string; name: string; size: number }): React.ReactElement {
+  let h = 0
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return (
+    <span style={{ width: size, height: size, borderRadius: '50%', flexShrink: 0, display: 'grid', placeItems: 'center', fontWeight: 800, fontSize: Math.round(size * 0.38), color: '#fff', background: AVATAR_COLOURS[h % AVATAR_COLOURS.length] }}>
+      {(name.trim()[0] ?? '?').toUpperCase()}
+    </span>
+  )
+}
+
+function Seg<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: Array<[T, string] | [string, string]> }): React.ReactElement {
+  return (
+    <span style={{ display: 'inline-flex', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+      {items.map(([k, l]) => (
+        <button key={k} onClick={() => onChange(k as T)} style={{ border: 'none', padding: '3px 9px', fontSize: 11.5, cursor: 'pointer', background: value === k ? 'var(--accent)' : 'var(--bg-tertiary)', color: value === k ? '#fff' : 'var(--text-secondary)' }}>{l}</button>
+      ))}
+    </span>
+  )
+}
+
+/** a level display in the LCD: moves while a voice plays or the singer works */
+function Meter({ on }: { on: boolean }): React.ReactElement {
+  const [t, setT] = useState(0)
+  useEffect(() => {
+    if (!on) return undefined
+    const id = window.setInterval(() => setT((n) => n + 1), 120)
+    return () => window.clearInterval(id)
+  }, [on])
+  return (
+    <span style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'flex-end', height: 44, flexShrink: 0 }}>
+      {Array.from({ length: 16 }, (_, i) => {
+        const h = on ? 8 + Math.abs(Math.sin(i * 1.3 + t * 0.7)) * 34 : 6 + (i % 3) * 2
+        return <span key={i} style={{ width: 5, height: h, borderRadius: 2, background: on && i < 12 ? '#22d3ee' : '#334155', transition: 'height 0.1s' }} />
+      })}
+    </span>
+  )
+}
+
+/** the melody as note blocks (pitch up, time to the right), each with its syllable to correct right on it */
+function MelodyLane({ melody, color, onLyric }: { melody: SungNote[]; color: string; onLyric: (m: SungNote, lyric: string) => void }): React.ReactElement {
+  if (!melody.length) return <div style={{ ...hint, padding: 16, minHeight: 160 }}>{tr('The notes of the melody appear here.')}</div>
+  const first = Math.floor(melody[0].beat / 4) * 4
+  const last = Math.max(...melody.map((m) => m.beat + m.note.duration))
+  const beats = Math.max(4, Math.ceil((last - first) / 4) * 4)
+  const lo = Math.min(...melody.map((m) => m.note.pitch)), hi = Math.max(...melody.map((m) => m.note.pitch))
+  const span = Math.max(6, hi - lo)
+  const H = 190, NH = 22
+  const x = (b: number): string => `${(b / beats) * 100}%`
+  const y = (p: number): number => 8 + ((hi - p) / span) * (H - NH - 16)
+  return (
+    <div style={{ overflowX: 'auto', background: '#0f1318' }}>
+      <div style={{ position: 'relative', width: '100%', minWidth: beats * 36, height: H }}>
+        {Array.from({ length: beats + 1 }, (_, i) => (
+          <div key={i} style={{ position: 'absolute', left: x(i), top: 0, bottom: 0, width: 1, background: (first + i) % 4 === 0 ? '#2a3340' : '#1b2129' }}>
+            {(first + i) % 4 === 0 && <span style={{ position: 'absolute', left: 3, top: 2, fontSize: 9, color: '#4b5563' }}>{(first + i) / 4 + 1}</span>}
+          </div>
+        ))}
+        {melody.map((m) => {
+          const hold = m.note.lyric === '+'
+          return (
+            <div key={m.note.id} title={`${noteName(m.note.pitch)} · ${trf('bar {bar}', { bar: Math.floor(m.beat / 4) + 1 })}`}
+              style={{ position: 'absolute', left: `calc(${x(m.beat - first)} + 1px)`, top: y(m.note.pitch), width: `calc(${x(m.note.duration)} - 3px)`, minWidth: 18, height: NH, borderRadius: 4,
+                background: hold ? `${color}88` : color, border: `1px solid ${m.note.lyric ? '#ffffffaa' : '#ffffff33'}`, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+              <input value={m.note.lyric ?? ''} onChange={(e) => onLyric(m, e.target.value)} placeholder="–"
+                style={{ all: 'unset', width: '100%', padding: '0 5px', fontSize: 11.5, fontWeight: 700, color: '#fff', textShadow: '0 1px 2px #0008', cursor: 'text' }} />
             </div>
-          )}
-        </div>
+          )
+        })}
       </div>
     </div>
   )

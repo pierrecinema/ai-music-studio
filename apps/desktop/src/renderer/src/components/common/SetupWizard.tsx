@@ -12,15 +12,15 @@ const PACKAGES: Array<{ id: PackageId; title: string; text: string; groups: stri
   { id: 'recommended', title: 'Recommended', text: 'Everything for producing: Studio, stem splitting, Audio → MIDI, mastering, karaoke. Music generation can be added later.',
     groups: BASE, gbCpu: 5, gbGpu: 8, features: ['Studio and mixer', 'Stem Splitter', 'Audio → MIDI', 'Mastering', 'Karaoke'] },
   { id: 'full', title: 'Everything', text: 'Also the music AI (songs with vocals from your lyrics), the built-in singers and the AI instruments. Large: the music model loads on the first song.',
-    groups: [...BASE, 'separator', 'ace15', 'singer', 'aiinst'], gbCpu: 22, gbGpu: 26, features: ['All of "Recommended"', 'Create music (ACE-Step 1.5)', 'Built-in singers', 'AI instruments', 'Fast vocal separation'] },
+    groups: [...BASE, 'separator', 'ace15', 'singer', 'voicechange', 'aiinst'], gbCpu: 25, gbGpu: 29, features: ['All of "Recommended"', 'Create music (ACE-Step 1.5)', 'Built-in singers', 'Songs sung by the built-in voices', 'AI instruments', 'Fast vocal separation'] },
   { id: 'studio', title: 'Studio only', text: 'The DAW, Piano Roll, mixer, VST plugins and sound packs, without any AI. Nothing is installed now; AI engines can be added any time.',
     groups: [], gbCpu: 0, gbGpu: 0, features: ['Studio, Piano Roll, mixer', 'VST plugins', 'Sound packs'] },
 ]
 // the order the installer works in (main/engines.ts installGroups), for the progress
-const ORDER = ['python', 'core', 'torch', 'demucs', 'basicpitch', 'matchering', 'whisper', 'ace15', 'aiinst', 'separator', 'singer']
+const ORDER = ['python', 'core', 'torch', 'demucs', 'basicpitch', 'matchering', 'whisper', 'ace15', 'aiinst', 'separator', 'singer', 'voicechange']
 const NAMES: Record<string, string> = {
   python: 'Python (for the app)', core: 'Core', torch: 'PyTorch', demucs: 'Stem separation', basicpitch: 'Audio → MIDI', matchering: 'Mastering',
-  whisper: 'Lyric timing', separator: 'Fast vocal separation', ace15: 'Music AI (ACE-Step 1.5)', singer: 'Singers', aiinst: 'AI instruments',
+  whisper: 'Lyric timing', separator: 'Fast vocal separation', ace15: 'Music AI (ACE-Step 1.5)', singer: 'Singers', voicechange: 'Voice exchange', aiinst: 'AI instruments',
 }
 const clock = (s: number): string => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 

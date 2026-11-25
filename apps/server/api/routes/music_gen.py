@@ -436,15 +436,16 @@ _start_info: dict[str, dict] = {}      # final file -> what the start alignment 
 
 
 def _revoice(job: dict, wav: str, req: GenerateMusicRequest, label: str, warnings: list[str]) -> str:
-    """The song sung again with a voice of the Vocal Editor. If that fails, the song stays as the model sang it."""
+    """The song sung with a voice of the Vocal Editor (its vocals turned into that voice, services/revoice.py).
+    If that fails, the song stays as the model sang it."""
     from services import revoice
     name = revoice.voice_name(req.singer_voice)
     try:
-        revoice.revoice(wav, req.singer_voice, req.lyrics, 32,
-                        lambda p, t: _stage(job, "finish", f"{label}{name} sings: {t} ({int(p)}%)"),
+        revoice.revoice(wav, req.singer_voice, 25,
+                        lambda p, t: _stage(job, "finish", f"{label}{name} sings: {t}"),
                         lambda: bool(job.get("cancel")))
     except Exception as e:  # noqa: BLE001
-        warnings.append(f"The song could not be sung again by {name}: {e} The song keeps the voice of the music model.")
+        warnings.append(f"The song could not be sung by {name}: {e} The song keeps the voice of the music model.")
     return wav
 
 
@@ -1300,6 +1301,11 @@ def _run_engine_job(job_id: str, req: GenerateMusicRequest) -> None:
 
 @router.post("/generate")
 async def generate_music(req: GenerateMusicRequest):
+    if req.singer_voice and not req.instrumental:
+        # the model sings with a voice of the same sex as the chosen built-in voice: the voice exchange then stays
+        # within one voice range (a woman turned into a man sounded artificial)
+        from services.revoice import voice_gender
+        req.voice = voice_gender(req.singer_voice) or req.voice
     if not req.prompt.strip() and not req.lyrics.strip() and not req.source_track:
         raise HTTPException(400, "Describe the music (style) or provide lyrics.")
     if req.acapella:

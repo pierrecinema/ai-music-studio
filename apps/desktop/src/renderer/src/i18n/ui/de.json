@@ -2073,8 +2073,16 @@
  "Precision: fp32 (any graphics card, more memory)": "Genauigkeit: fp32 (jede Grafikkarte, mehr Speicher)",
  "Women": "Frauen",
  "Men": "Männer",
- "The music model makes the song, then the built-in singer sings it again with this voice (takes a few minutes more; needs the Stem Splitter and the karaoke engine too)": "Das Musikmodell macht den Song, danach singt ihn der eingebaute Sänger mit dieser Stimme neu (dauert ein paar Minuten länger; braucht auch den Stem Splitter und die Karaoke-Erkennung)",
  "Singer (Vocal Editor)": "Sänger (Vocal Editor)",
- "Not installed (Vocal Editor → install the singer)": "Nicht installiert (Vocal Editor → Sänger installieren)",
- "None: the music model sings": "Keiner: das Musikmodell singt"
+ "None: the music model sings": "Keiner: das Musikmodell singt",
+ "The music model makes the song with a singer of the same sex, then its vocals are turned into this voice (a few minutes more per song)": "Das Musikmodell macht den Song mit einem Sänger gleichen Geschlechts, danach wird der Gesang in diese Stimme umgewandelt (ein paar Minuten länger pro Song)",
+ "Not installed: Settings → AI Engines → Voice exchange": "Nicht installiert: Einstellungen → KI-Engines → Stimmumwandlung",
+ "The song is made with a singer of the same sex, then sung in this voice.": "Der Song wird mit einem Sänger gleichen Geschlechts gemacht und dann in dieser Stimme gesungen.",
+ "The voice exchange is not installed yet (Settings → AI Engines → Voice exchange).": "Die Stimmumwandlung ist noch nicht installiert (Einstellungen → KI-Engines → Stimmumwandlung).",
+ "The singer is not installed yet (Settings → AI Engines → Singer).": "Der Sänger ist noch nicht installiert (Einstellungen → KI-Engines → Sänger).",
+ "Voice exchange: a song sung by a built-in voice (Create → Singer)": "Stimmumwandlung: ein Song, gesungen von einer eingebauten Stimme (Create → Sänger)",
+ "The music model makes the song, then its vocals are turned into the voice you chose in Create (Singer). Runs on the processor (about 15 minutes per minute of song) or much faster on an NVIDIA card.": "Das Musikmodell macht den Song, danach wird der Gesang in die Stimme umgewandelt, die du in Create gewählt hast (Sänger). Läuft auf dem Prozessor (etwa 15 Minuten pro Minute Song) oder viel schneller auf einer NVIDIA-Karte.",
+ "Uses the singer's environment (installed with it) plus Seed-VC (GPL-3) and its models (about 2.4 GB).": "Nutzt die Umgebung des Sängers (wird mit installiert) und Seed-VC (GPL-3) mit seinen Modellen (etwa 2,4 GB).",
+ "Songs sung by the built-in voices": "Songs, gesungen von den eingebauten Stimmen",
+ "Voice exchange": "Stimmumwandlung"
 }

@@ -101,6 +101,21 @@ export function singerModels(): string {
   return join(modelsDir(), 'soulx-singer')
 }
 
+// Voice exchange (Seed-VC, GPL-3): turns the vocals of a song into a built-in voice (Create → Singer). It runs in the
+// singer's environment (same PyTorch / Transformers); its code (pinned) and models live next to the models.
+export const SEEDVC_COMMIT = '51383efd921027683c89e5348211d93ff12ac2a8'
+export function seedvcDir(): string {
+  return join(modelsDir(), 'seed-vc')
+}
+
+export function hasVoiceChange(): boolean {
+  const d = seedvcDir()
+  return existsSync(singerPython()) && existsSync(join(d, 'repo', 'inference.py')) &&
+    existsSync(join(d, 'models', 'dit', 'DiT_seed_v2_uvit_whisper_base_f0_44k_bigvgan_pruned_ft_ema_v2.pth')) &&
+    existsSync(join(d, 'models', 'bigvgan', 'bigvgan_generator.pt')) && existsSync(join(d, 'models', 'whisper-small', 'config.json')) &&
+    existsSync(join(d, 'models', 'rmvpe', 'rmvpe.pt')) && existsSync(join(d, 'models', 'campplus', 'campplus_cn_common.bin'))
+}
+
 export function hasSinger(): boolean {
   // whisper-base as plain files (since 0.98.8), or in the Hugging Face cache of an earlier install (that one worked
   // where Windows allowed symbolic links: it must not ask those users to install again)
@@ -320,6 +335,7 @@ export async function getStatus(serverReady: boolean): Promise<EngineStatus> {
   installed.gpuamd = hasDml()
   installed.diffrhythm = hasDr()
   installed.singer = hasSinger()
+  installed.voicechange = hasVoiceChange()
   installed.ace15 = hasAce15()
   installed.separator = hasSep()
   installed.aiinst = hasDdsp()
@@ -510,6 +526,53 @@ async function installSinger(py: PythonCmd | null, torchVariant: string, log: (l
   ].join('\n')
   if (await run(singerPython(), ['-c', script, models], log, { HF_HOME: join(models, 'hf'), HF_HUB_ENABLE_HF_TRANSFER: '0' }) !== 0) {
     return { ok: false, error: 'Downloading the singing model failed (see log). Press Install again: finished parts are kept.' }
+  }
+  return { ok: true }
+}
+
+async function installVoiceChange(py: PythonCmd | null, torchVariant: string, log: (l: string) => void): Promise<{ ok: boolean; error?: string }> {
+  // it runs in the singer's environment: without it, the singer is installed first (its voices are needed anyway)
+  if (!existsSync(singerPython())) {
+    log('The voice exchange needs the singer: installing it first.')
+    const r = await installSinger(py, torchVariant, log)
+    if (!r.ok) return r
+  }
+  log('Step 1/3: packages')
+  if (await run(singerPython(), ['-m', 'pip', 'install', 'munch==4.0.0', 'matplotlib', 'einops'], log) !== 0) {
+    return { ok: false, error: 'Installing the voice exchange packages failed (see log).' }
+  }
+  const d = seedvcDir()
+  const repo = join(d, 'repo')
+  if (!existsSync(join(repo, 'inference.py'))) {
+    log('Step 2/3: Seed-VC (GPL-3) from GitHub')
+    mkdirSync(d, { recursive: true })
+    const zip = join(tmpdir(), 'seed-vc.zip')
+    try { await download(`https://codeload.github.com/Plachtaa/seed-vc/zip/${SEEDVC_COMMIT}`, zip, log) } catch (e) {
+      return { ok: false, error: `Could not fetch Seed-VC from GitHub (${(e as Error).message}).` }
+    }
+    if (await run('tar', ['-xf', zip, '-C', d], log) !== 0) return { ok: false, error: 'Could not unpack Seed-VC.' }
+    try { rmSync(zip, { force: true }) } catch { /* temp */ }
+    const unpacked = join(d, `seed-vc-${SEEDVC_COMMIT}`)
+    if (existsSync(unpacked)) { try { rmSync(repo, { recursive: true, force: true }) } catch { /* none */ } ; renameSync(unpacked, repo) }
+    if (!existsSync(join(repo, 'inference.py'))) return { ok: false, error: 'Seed-VC was unpacked, but its files are not where expected.' }
+  }
+  log('Step 3/3: the voice exchange models (about 2.4 GB)')
+  // plain files (local_dir), no Hugging Face cache: its symbolic links fail on Windows without admin rights
+  const m = join(d, 'models')
+  const script = [
+    'import sys, os',
+    'from huggingface_hub import hf_hub_download, snapshot_download',
+    'm = sys.argv[1]',
+    "hf_hub_download('Plachta/Seed-VC', 'DiT_seed_v2_uvit_whisper_base_f0_44k_bigvgan_pruned_ft_ema_v2.pth', local_dir=os.path.join(m, 'dit'))",
+    "hf_hub_download('Plachta/Seed-VC', 'config_dit_mel_seed_uvit_whisper_base_f0_44k.yml', local_dir=os.path.join(m, 'dit'))",
+    "hf_hub_download('lj1995/VoiceConversionWebUI', 'rmvpe.pt', local_dir=os.path.join(m, 'rmvpe'))",
+    "hf_hub_download('funasr/campplus', 'campplus_cn_common.bin', local_dir=os.path.join(m, 'campplus'))",
+    "snapshot_download('nvidia/bigvgan_v2_44khz_128band_512x', allow_patterns=['config.json', 'bigvgan_generator.pt'], local_dir=os.path.join(m, 'bigvgan'))",
+    "snapshot_download('openai/whisper-small', allow_patterns=['*.json', '*.txt', '*.safetensors'], local_dir=os.path.join(m, 'whisper-small'))",
+    "print('models ready')",
+  ].join('\n')
+  if (await run(singerPython(), ['-c', script, m], log, { HF_HOME: join(d, 'hf'), HF_HUB_ENABLE_HF_TRANSFER: '0' }) !== 0) {
+    return { ok: false, error: 'Downloading the voice exchange models failed (see log). Press Install again: finished parts are kept.' }
   }
   return { ok: true }
 }
@@ -744,11 +807,20 @@ export async function installGroups(
     else if (!py) return { ok: false, error: r.error }
   }
 
-  // the singer alone: only its own environment, the AI backend's environment stays as it is (the backend keeps running)
-  if (groups.length && groups.every((g) => g === 'singer')) {
-    log('=== singer (built-in voices that sing your melody and lyrics) ===')
-    const r = await installSinger(py, torchVariant, log)
-    if (!r.ok) log(r.error ?? 'failed')
+  // the singer and the voice exchange alone: only their own environment, the AI backend's environment stays as it
+  // is (the backend keeps running)
+  if (groups.length && groups.every((g) => g === 'singer' || g === 'voicechange')) {
+    let r: { ok: boolean; error?: string } = { ok: true }
+    if (groups.includes('singer')) {
+      log('=== singer (built-in voices that sing your melody and lyrics) ===')
+      r = await installSinger(py, torchVariant, log)
+      if (!r.ok) { log(r.error ?? 'failed'); return r }
+    }
+    if (groups.includes('voicechange')) {
+      log('=== voicechange (a song sung by a built-in voice) ===')
+      r = await installVoiceChange(py, torchVariant, log)
+      if (!r.ok) log(r.error ?? 'failed')
+    }
     return r
   }
 
@@ -849,6 +921,11 @@ export async function installGroups(
     log('=== singer (built-in voices that sing your melody and lyrics) ===')
     const r = await installSinger(py, torchVariant, log)
     if (!r.ok) { failed.push('singer'); log(r.error ?? 'failed') }
+  }
+  if (groups.includes('voicechange')) {
+    log('=== voicechange (a song sung by a built-in voice) ===')
+    const r = await installVoiceChange(py, torchVariant, log)
+    if (!r.ok) { failed.push('voicechange'); log(r.error ?? 'failed') }
   }
   if (groups.includes('diffrhythm')) {
     log('=== diffrhythm (full songs in one go, needs an NVIDIA card) ===')

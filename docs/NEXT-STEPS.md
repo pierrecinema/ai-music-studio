@@ -28,16 +28,12 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 0. Plan to 1.0: `docs/ROADMAP-1.0.md`. Testing goes by `docs/TESTPLAN.md` (German checklist, the owner fills in results; fix ❌ first).
 
-### Work in progress: Vocal Editor voices in Create (owner, 25.11.2026)
+### Vocal Editor voices in Create (owner, 25.11.2026): built in 0.98.9
 
-A list under Male / Female in Create (grouped women / men) to have the finished song sung by a built-in voice.
-Built but switched off (`REVOICE_READY = false` in CreateMusic.tsx): `services/revoice.py` (Demucs → faster-whisper
-words → pYIN → SoulX) and `singer_voice` in music_gen. Test on an ACE-Step song: whisper recognises sung words badly
-and with the lyrics as prompt it invents repeated lines, so the new voice sang in the wrong places. Next idea: singing
-voice conversion with Seed-VC (GPL-3, f0 model `DiT_seed_v2_uvit_whisper_base_f0_44k`, reference = the voice's
-prompt.wav): no text needed. Owner allowed it (25.11.): Seed-VC tested in the cloud session on a 30 s ACE-Step song (Anna, Carlos with
-auto pitch): timing exact, about 2 min per 30 s on the CPU. Hearing samples sent; waiting for the owner's verdict.
-The owner wants its own dropdown "Singer (Vocal Editor)", not inside Male / Female (done, still switched off).
+Own dropdown "Singer (Vocal Editor)". Voice exchange with Seed-VC (GPL-3, pinned commit in engines.ts SEEDVC_COMMIT,
+f0 model, runs in the singer's venv, `services/seedvc_worker.py`, `services/revoice.py`). The music model is asked for
+a singer of the same sex (a woman turned into a man sounded artificial, owner). A first try with faster-whisper words +
+SoulX re-singing was dropped: sung words were recognised badly.
 
 ### Road to 1.0 (owner, 23.11.2026): in this order
 

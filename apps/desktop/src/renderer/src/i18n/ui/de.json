@@ -2149,5 +2149,7 @@
  "Hide the details": "Details ausblenden",
  "Track": "Spur",
  "Hide settings": "Einstellungen ausblenden",
- "Click a track to see its details here.": "Klick auf eine Spur zeigt hier ihre Details."
+ "Click a track to see its details here.": "Klick auf eine Spur zeigt hier ihre Details.",
+ "The songs are stretched to the new tempo; until then the old tempo plays on.": "Die Songs werden auf das neue Tempo gestreckt; bis dahin läuft das alte Tempo weiter.",
+ "Adjusting to the new tempo…": "Neues Tempo wird angepasst…"
 }

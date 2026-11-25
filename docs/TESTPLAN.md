@@ -899,3 +899,12 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
 | 62.1 | Projekt mit einem Song laden (oder App mit Song im Projekt starten), Studio öffnen, **nicht** Play drücken | Kurz „Audiodateien werden gelesen…“ im Clip, dann erscheint die Wellenform von selbst | | | 0.99.5 |
+
+## 63. Neu in 0.99.6: Abspielposition zurückziehen, Tempo beim Abspielen
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 63.1 | Studio etwas nach rechts gescrollt, die lila Abspielposition nach links über den Rand ziehen (bis ins Menü) und halten | Die Ansicht scrollt mit nach links, die Position wandert zurück bis zum Anfang | | | 0.99.6 |
+| 63.2 | Das Gleiche nach rechts über den Rand | Die Ansicht scrollt mit nach rechts | | | 0.99.6 |
+| 63.3 | Beides während der Song läuft | Beim Loslassen spielt er an der neuen Stelle weiter | | | 0.99.6 |
+| 63.4 | AUTO SYNC an, Song mit Audio läuft, oben BPM ändern (tippen + Enter, oder Mausrad) | Im Studio „Neues Tempo wird angepasst…“, danach läuft der Song im neuen Tempo weiter, ohne Stop/Play | | Dauer ohne NVIDIA notieren | 0.99.6 |

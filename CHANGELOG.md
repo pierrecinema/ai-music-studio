@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.6
+
+### Fixed
+
+- **Dragging the playhead back**: dragged past the left edge of the Studio (even into the menu) it did not go back; now the view scrolls along in both directions while you drag over the edge, and the playhead lands where the view starts.
+- **Changing the tempo while playing**: with synced songs (AUTO SYNC) the new tempo seemed to come only after Stop and Play. Every step of the BPM field (typing, mouse wheel, arrow keys) started stretching the songs again; now the stretch starts once the tempo stays put, and the Studio shows "Adjusting to the new tempo…" until the new tempo plays.
+
 ## 0.99.5
 
 ### Fixed

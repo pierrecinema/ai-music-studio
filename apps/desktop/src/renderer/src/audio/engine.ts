@@ -745,6 +745,7 @@ async function startAt(beat: number, countInBars = 0): Promise<void> {
   if (my !== epoch) return                                        // stopped or restarted meanwhile
   const latest = useProjectStore.getState().project
   lastSignature = structureSignature(latest)
+  playedTempo = tempoKey(latest)
   let when = c.currentTime + 0.06
   if (countInBars > 0) when += scheduleCountIn(c, when + 60 / bpmAt(latest, beat) * Math.round(barAt(latest, beat).length) * countInBars, beat, countInBars)
   const loop = activeLoop(latest)
@@ -844,6 +845,7 @@ export function pause(): void {
   } else {
     useAudioStore.setState({ isPlaying: false, loading: false })
   }
+  useAudioStore.setState({ retiming: false })
   if (useAudioStore.getState().isRecording) void stopRecording()
 }
 
@@ -870,18 +872,28 @@ let restartToken = 0
 // same place. Before, it went silent while stretching, which looked as if pressing Enter in the tempo field stopped it.
 function restartSoon(): void {
   window.clearTimeout(restartTimer)
+  // a new tempo means stretching every synced song again: wait until the tempo stays put (typing, the mouse wheel,
+  // the arrow keys), so not one stretch per step is started (owner: the new tempo came only after Stop and Play)
+  const p0 = useProjectStore.getState().project
+  const tempoChanged = playedTempo !== tempoKey(p0)
+  if (tempoChanged && hasSyncedAudio(p0)) useAudioStore.setState({ retiming: true })
   restartTimer = window.setTimeout(() => {
-    if (!playing || structureSignature(useProjectStore.getState().project) === lastSignature) return
+    if (!playing || structureSignature(useProjectStore.getState().project) === lastSignature) { useAudioStore.setState({ retiming: false }); return }
     const token = ++restartToken
     void (async () => {
       try { await loadAllFiles(useProjectStore.getState().project) } catch { /* startAt reports problems */ }
       if (!playing || token !== restartToken) return
       const beat = currentBeat()
       halt()
-      void startAt(beat)
+      await startAt(beat)
+      if (token === restartToken) useAudioStore.setState({ retiming: false })
     })()
-  }, 90)
+  }, tempoChanged ? 450 : 90)
 }
+
+const tempoKey = (p: Project): string => JSON.stringify([p.bpm, p.tempoMap ?? []])
+const hasSyncedAudio = (p: Project): boolean => p.tracks.some((t) => t.clips.some((c) => c.audioFile && (c.warpBpm || c.warpMarkers?.length)))
+let playedTempo = ''
 
 function applyMix(): void {
   if (!playing || !current || !ctx) return

@@ -868,11 +868,11 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 60.1 | Create → Studio → Erweitert ▾: eine Audiodatei aus dem Explorer auf **Quell-Track** ziehen | Beim Darüberziehen ein gestrichelter Rahmen und „Hier ablegen“; danach steht der Dateiname im Feld | | | 0.99.3 |
-| 60.2 | Das Gleiche bei **Klang-Referenz** | Wie 60.1 | | | 0.99.3 |
-| 60.3 | Einen fertigen Take unten aus „Takes“ auf Quell-Track oder Klang-Referenz ziehen | Der Take wird übernommen (zum Covern oder als Referenz) | | | 0.99.3 |
-| 60.4 | Eine Nicht-Audio-Datei (z. B. .txt) hineinziehen | Rote Meldung „Audiodateien hier ablegen …“, das Feld bleibt wie es war | | | 0.99.3 |
-| 60.5 | Klick auf das Feld | Öffnet wie bisher den Dateidialog | | | 0.99.3 |
+| 60.1 | Create → Studio → Erweitert ▾: eine Audiodatei aus dem Explorer auf **Quell-Track** ziehen | Beim Darüberziehen ein gestrichelter Rahmen und „Hier ablegen“; danach steht der Dateiname im Feld | OK | | 0.99.3 |
+| 60.2 | Das Gleiche bei **Klang-Referenz** | Wie 60.1 | OK | | 0.99.3 |
+| 60.3 | Einen fertigen Take unten aus „Takes“ auf Quell-Track oder Klang-Referenz ziehen | Der Take wird übernommen (zum Covern oder als Referenz) | OK | | 0.99.3 |
+| 60.4 | Eine Nicht-Audio-Datei (z. B. .txt) hineinziehen | Rote Meldung „Audiodateien hier ablegen …“, das Feld bleibt wie es war | OK | | 0.99.3 |
+| 60.5 | Klick auf das Feld | Öffnet wie bisher den Dateidialog | OK | | 0.99.3 |
 
 ## 61. Neu in 0.99.4: Studio im neuen Layout
 
@@ -893,3 +893,9 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 61.13 | ▾ im Detailbereich, dann ▴ Details | Klappt zu und wieder auf, bleibt nach Neustart so | | | 0.99.4 |
 | 61.14 | Piano-Roll oder Mixer unten öffnen | Statt des Detailbereichs das gewohnte Fenster; Audio-Clip-Werkzeuge oben | | | 0.99.4 |
 | 61.15 | Alle Looks | Sieht in Rack, Dunkel, Hell, Swiss, Konsole sauber aus | | | 0.99.4 |
+
+## 62. Neu in 0.99.5: Wellenformen sofort da
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 62.1 | Projekt mit einem Song laden (oder App mit Song im Projekt starten), Studio öffnen, **nicht** Play drücken | Kurz „Audiodateien werden gelesen…“ im Clip, dann erscheint die Wellenform von selbst | | | 0.99.5 |

@@ -310,6 +310,13 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   }, [menu])
   const [, rerender] = useState(0)
   useEffect(() => onBuffersChanged(() => rerender((n) => n + 1)), [])
+  // the audio files of the project are read as soon as the Studio shows them, not only on Play: the waveforms
+  // appear right away (owner: with a song already in the project they came only after pressing Play)
+  useEffect(() => {
+    for (const t of project.tracks) for (const c of [...t.clips, ...(t.takes ?? []).flatMap((l) => l.clips)]) {
+      if (c.audioFile && !bufferOf(c.audioFile) && !failedFiles.has(c.audioFile)) void loadBuffer(c.audioFile)
+    }
+  }, [project.tracks])
 
   const bpm = project.bpm || 120
   const beatWidth = BEAT_WIDTH * zoom
@@ -799,6 +806,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
               <div className={missing ? undefined : 'clip-bar'} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: CLIP_BAR, background: missing ? 'transparent' : track.muted ? `${track.color}77` : track.color, pointerEvents: 'none' }} />
               <div style={{ position: 'absolute', left: 0, right: 0, top: CLIP_BAR, bottom: 0, pointerEvents: 'none' }}>
                 {clip.audioFile && !missing && <Waveform clip={clip} color={track.color} height={Math.max(4, th - 14 - CLIP_BAR)} width={width} warpEdit={warpEdit} trackId={track.id} />}
+                {clip.audioFile && !missing && !bufferOf(clip.audioFile) && <span style={{ position: 'sticky', left: 0, display: 'inline-block', padding: '4px 8px', fontSize: 10.5, color: 'var(--text-muted)' }}>{tr('Reading audio files…')}</span>}
                 {clip.notes && <MiniNotes clip={clip} color={track.color} height={Math.max(4, th - 14 - CLIP_BAR)} />}
               </div>
               <span className={missing ? undefined : 'clip-title'} style={{ position: 'relative', display: 'block', lineHeight: `${CLIP_BAR}px`, fontSize: 10.5, color: missing ? 'var(--red)' : '#0b0f14', fontWeight: 700, padding: clip.audioFile && !missing ? '0 8px 0 14px' : '0 6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none' }}>

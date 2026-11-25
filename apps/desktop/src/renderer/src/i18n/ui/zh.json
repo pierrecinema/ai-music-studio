@@ -2074,5 +2074,7 @@
  "Not measured yet": "尚未测量",
  "Plays your MIDI notes like a real musician: violin, viola, cello, double bass, flute, oboe, clarinet, saxophone, bassoon, trumpet, horn, trombone, tuba, with vibrato, bowing and breath. Runs on the processor, no graphics card needed. Needs Python 3.10 or 3.11.": "像真正的乐手一样演奏你的 MIDI 音符：小提琴、中提琴、大提琴、低音提琴、长笛、双簧管、单簧管、萨克斯、巴松管、小号、圆号、长号、大号，带颤音、运弓和气息。在处理器上运行，无需显卡。需要 Python 3.10 或 3.11。",
  "The AI backend was restarted, so this conversion was lost. Please start it again.": "AI 后端已重启，此次转换已丢失。请重新开始。",
- "Generator": "生成器"
+ "Generator": "生成器",
+ "Drop here": "拖放到这里",
+ "Choose a file or drag an audio file here": "选择文件或将音频文件拖到这里"
 }

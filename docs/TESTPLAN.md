@@ -837,15 +837,15 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 57.1 | Create öffnen | Oben „Create“, Modell mit Statuspunkt, rechts Simple / Studio; links „Song“, rechts „Parameter“, unten „Takes“ und der Render-Balken mit dem großen Erstellen-Knopf | | | 0.99.0 |
-| 57.2 | Text eingeben | Zeilennummern links, [Verse] / [Chorus] farbig; die Knöpfe unten fügen Abschnitte an der Cursorstelle ein | | | 0.99.0 |
-| 57.3 | Mit Musik / Instrumental / A cappella umschalten | Instrumental blendet den Text aus; A cappella wie bisher | | | 0.99.0 |
-| 57.4 | Parameter: Länge, Tempo, Tonart, Stimme, Sänger, Loop, Schritte, Takes, Seed | Alles kompakt rechts; „Erweitert ▾“ öffnet LoRA, Quelle/Referenz, Feineinstellungen, Ausgabe | | | 0.99.0 |
-| 57.5 | Einen Song erzeugen | Oben in den Takes eine Zeile „Neuer Take“ mit Stufen, Prozent und Restzeit; unten der Fortschrittsbalken; der Knopf wird zu „Stopp“ | | | 0.99.0 |
-| 57.6 | Fertigen Take anhören | Wellenform erscheint; Play / Pause; Klick in die Wellenform spielt ab dort; Name umbenennen geht | | | 0.99.0 |
-| 57.7 | → Studio, Mastern, Stems, → MIDI, ⋯ | Funktionieren wie bisher (⋯ öffnet die Datei) | | | 0.99.0 |
-| 57.8 | Simple-Modus | Nur Modell, Loop, Schritte; Text und Stil links bleiben | | | 0.99.0 |
-| 57.9 | Alle Looks (Rack, Dunkel, Hell, Swiss, Konsole) | Sieht in jedem Look sauber aus | | | 0.99.0 |
+| 57.1 | Create öffnen | Oben „Create“, Modell mit Statuspunkt, rechts Simple / Studio; links „Song“, rechts „Parameter“, unten „Takes“ und der Render-Balken mit dem großen Erstellen-Knopf | OK | | 0.99.0 |
+| 57.2 | Text eingeben | Zeilennummern links, [Verse] / [Chorus] farbig; die Knöpfe unten fügen Abschnitte an der Cursorstelle ein | OK | | 0.99.0 |
+| 57.3 | Mit Musik / Instrumental / A cappella umschalten | Instrumental blendet den Text aus; A cappella wie bisher | OK | | 0.99.0 |
+| 57.4 | Parameter: Länge, Tempo, Tonart, Stimme, Sänger, Loop, Schritte, Takes, Seed | Alles kompakt rechts; „Erweitert ▾“ öffnet LoRA, Quelle/Referenz, Feineinstellungen, Ausgabe | OK | | 0.99.0 |
+| 57.5 | Einen Song erzeugen | Oben in den Takes eine Zeile „Neuer Take“ mit Stufen, Prozent und Restzeit; unten der Fortschrittsbalken; der Knopf wird zu „Stopp“ | OK | KI-Text getestet; 95-s-Song in 16:25 min auf der CPU, klingt sehr gut | 0.99.0 |
+| 57.6 | Fertigen Take anhören | Wellenform erscheint; Play / Pause; Klick in die Wellenform spielt ab dort; Name umbenennen geht | OK | | 0.99.0 |
+| 57.7 | → Studio, Mastern, Stems, → MIDI, ⋯ | Funktionieren wie bisher (⋯ öffnet die Datei) | OK | | 0.99.0 |
+| 57.8 | Simple-Modus | Nur Modell, Loop, Schritte; Text und Stil links bleiben | OK | | 0.99.0 |
+| 57.9 | Alle Looks (Rack, Dunkel, Hell, Swiss, Konsole) | Sieht in jedem Look sauber aus | OK | | 0.99.0 |
 
 ## 58. Neu in 0.99.1: Loops als eigener Modus in Create
 
@@ -853,14 +853,23 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 |---|---|---|---|---|---|
 | 58.1 | Create: oben rechts **Einfach / Studio / ⟳ Loops** | Drei Modi; Loops ist sofort sichtbar | | | 0.99.1 |
 | 58.2 | **⟳ Loops** wählen | Text steht auf Instrumental; rechts **Loop-Länge** 1/2/4/8/16 Takte, Tempo (120), Tonart, Takt, Schritte, Takes, Seed, Erweitert; der Knopf heißt „Loop erzeugen“ | | | 0.99.1 |
-| 58.3 | Einen 4-Takt-Loop erzeugen und ins Studio legen, Strg+D | Genau 4 Takte, beginnt auf Schlag 1, wiederholt sich ohne Lücke | | | 0.99.1 |
+| 58.3 | Einen 4-Takt-Loop erzeugen und ins Studio legen, Strg+D | Genau 4 Takte, beginnt auf Schlag 1, wiederholt sich ohne Lücke | OK | 8-Takt-Loop in 8 min auf der CPU, Tempo stimmt, loopt sauber | 0.99.1 |
 | 58.4 | Zurück zu **Studio** | Normale Songs (kein Loop mehr); Länge statt Loop-Länge | | | 0.99.1 |
 
 ## 59. Neu in 0.99.2: alle Sprachen vollständig
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 59.1 | Einstellungen → Allgemein → Sprache | Nur noch English, Deutsch, Français, Español, Italiano, Português, 中文, Русский (kein Japanisch, kein Koreanisch) | | | 0.99.2 |
-| 59.2 | Sprache auf Español (oder Français) stellen, Create, Stem Splitter, Album, Vocal Editor, Setup-Assistent öffnen | Alles in der Sprache, kein Englisch mehr außer Namen und Einheiten | | | 0.99.2 |
-| 59.3 | Zurück auf Deutsch | Alles wieder Deutsch | | | 0.99.2 |
+| 59.1 | Einstellungen → Allgemein → Sprache | Nur noch English, Deutsch, Français, Español, Italiano, Português, 中文, Русский (kein Japanisch, kein Koreanisch) | OK | | 0.99.2 |
+| 59.2 | Sprache auf Español (oder Français) stellen, Create, Stem Splitter, Album, Vocal Editor, Setup-Assistent öffnen | Alles in der Sprache, kein Englisch mehr außer Namen und Einheiten | OK | | 0.99.2 |
+| 59.3 | Zurück auf Deutsch | Alles wieder Deutsch | OK | | 0.99.2 |
 
+## 60. Neu in 0.99.3: Quell- und Referenz-Track hineinziehen
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 60.1 | Create → Studio → Erweitert ▾: eine Audiodatei aus dem Explorer auf **Quell-Track** ziehen | Beim Darüberziehen ein gestrichelter Rahmen und „Hier ablegen“; danach steht der Dateiname im Feld | | | 0.99.3 |
+| 60.2 | Das Gleiche bei **Klang-Referenz** | Wie 60.1 | | | 0.99.3 |
+| 60.3 | Einen fertigen Take unten aus „Takes“ auf Quell-Track oder Klang-Referenz ziehen | Der Take wird übernommen (zum Covern oder als Referenz) | | | 0.99.3 |
+| 60.4 | Eine Nicht-Audio-Datei (z. B. .txt) hineinziehen | Rote Meldung „Audiodateien hier ablegen …“, das Feld bleibt wie es war | | | 0.99.3 |
+| 60.5 | Klick auf das Feld | Öffnet wie bisher den Dateidialog | | | 0.99.3 |

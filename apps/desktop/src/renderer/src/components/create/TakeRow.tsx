@@ -97,7 +97,8 @@ export function TakeRow({ path, name, meta, actions }: {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '30px minmax(150px, 220px) 1fr auto', alignItems: 'center', gap: 12, padding: '8px 12px', borderBottom: '1px solid var(--border-subtle)' }}>
+    <div draggable onDragStart={(e) => { e.dataTransfer.setData('text/ams-path', path); e.dataTransfer.effectAllowed = 'copy' }}
+      style={{ display: 'grid', gridTemplateColumns: '30px minmax(150px, 220px) 1fr auto', alignItems: 'center', gap: 12, padding: '8px 12px', borderBottom: '1px solid var(--border-subtle)' }}>
       <button onClick={toggle} disabled={!url} title={playing ? tr('Pause') : tr('Play')}
         style={{ width: 28, height: 28, borderRadius: 14, border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', fontSize: 11, display: 'grid', placeItems: 'center' }}>
         {playing ? '❚❚' : '▶'}

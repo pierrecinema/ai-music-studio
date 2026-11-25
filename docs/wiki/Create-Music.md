@@ -39,7 +39,7 @@ Length (seconds), BPM, key, time signature. **Auto** leaves it to the model; **C
 Switch on **Create loop**, choose **1, 2, 4, 8 or 16 bars** and the BPM (empty = 120). The result is exactly that long, starts on beat 1 and repeats without a gap or click. It is named like *"Deep house – Loop 124 BPM 4 bars"*. In the [[Studio]], **Ctrl+D** puts copies right behind it, exactly on the bars.
 
 ## Source and reference
-A source track for a cover or remix, and a reference for the sound.
+A source track for a cover or remix, and a reference for the sound. Click the field to choose a file, or drag an audio file from the Explorer, or a finished take from the takes list, onto it.
 
 ## LoRA
 Style or sound add-ons for ACE-Step:

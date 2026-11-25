@@ -878,7 +878,7 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 61.1 | Studio öffnen | Eine Werkzeugleiste in Gruppen: + Spur ▾, Audio importieren, ↖ ✂ 🧲, Raster/Quantisieren, ⟳ Loop, Punch-in/-out, ♩ Einzähler, + Marker, Tempo, Zoom − + ⤢, Master-FX, Exportieren, ⋯ | | | 0.99.4 |
+| 61.1 | Studio öffnen | Eine Werkzeugleiste in Gruppen: + Spur ▾, Audio importieren, ↖ ✂ 🧲, Raster/Quantisieren, ⟳ Loop, Punch-in/-out, ♩ Einzähler, + Marker, Tempo, Zoom − + ⤢, Master-FX, Exportieren, ⋯ | OK | | 0.99.4 |
 | 61.2 | **+ Spur ▾**: Audiospur, MIDI-Spur, Return-Spur Hall / Delay | Jeweils die richtige Spur kommt dazu | OK | | 0.99.4 |
 | 61.3 | **⋯** oben rechts: Kanal, Alle synchronisieren, Beat-Match | Kanal-Ansicht geht auf/zu; Sync und Beat-Match wie bisher | OK | | 0.99.4 |
 | 61.4 | Spurkopf: ● M S klicken | ● rot = scharf, M orange = stumm, S blau = solo | OK | | 0.99.4 |

@@ -2,11 +2,9 @@
 
 Schreib mir wie bisher die Nummer und *geht* oder *geht nicht*. Das Ergebnis trage ich in `docs/TESTPLAN.md` ein.
 
-## A. Neu (0.99.x) (1 Punkte)
+## A. Neu (0.99.x) (0 Punkte)
 
-### 61. Neu in 0.99.4: Studio im neuen Layout
-
-- [ ] **61.1** Studio öffnen → *Eine Werkzeugleiste in Gruppen: + Spur ▾, Audio importieren, ↖ ✂ 🧲, Raster/Quantisieren, ⟳ Loop, Punch-in/-out, ♩ Einzähler, + Marker, Tempo, Zoom − + ⤢, Master-FX, Exportieren, ⋯*
+Alles getestet.
 
 ## B. Muss ein anderer User testen (Mikro, MIDI-Aufnahme, ältere NVIDIA) (5 Punkte)
 

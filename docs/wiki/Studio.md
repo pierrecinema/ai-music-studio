@@ -41,7 +41,7 @@ Under the tracks (when no Piano Roll or Mixer is open below): **Track** (instrum
 **Rename track**, **Duplicate track**, **Show automation**, **Put into a new group (Ctrl+G)** / **Take out of the group** / **Ungroup**, **Delete track**.
 
 ## Playhead
-The blue line shows where the song plays. **Click or double-click** any empty place to move it there, **drag it** (the line or the small triangle on top) to any point, or **click or drag in the bar numbers** of the ruler. It snaps to the grid; hold **Alt** for a free position. While playing, playback jumps there when you let go. **Home** (Ableton) or **Num .** (Cubase) goes back to the start.
+The line in the accent colour shows where the song plays. **Click or double-click** any empty place to move it there, **drag it** (the line or the small triangle on top) to any point, or **click or drag in the bar numbers** of the ruler. It snaps to the grid; hold **Alt** for a free position. Dragged past the left or right edge of the lanes, the view scrolls along (faster the further out). While playing, playback jumps there when you let go. **Changing the tempo while playing:** synced songs are stretched to the new tempo first; the Studio shows *Adjusting to the new tempo…* and the old tempo plays on until then. **Home** (Ableton) or **Num .** (Cubase) goes back to the start.
 
 ## Ruler, markers, tempo
 - Click the ruler to set the playhead. **Right-click the ruler:** time signature from this bar on.

@@ -2097,5 +2097,7 @@
  "Hide the details": "Ocultar os detalhes",
  "Track": "Faixa",
  "Hide settings": "Ocultar ajustes",
- "Click a track to see its details here.": "Clique em uma faixa para ver aqui seus detalhes."
+ "Click a track to see its details here.": "Clique em uma faixa para ver aqui seus detalhes.",
+ "The songs are stretched to the new tempo; until then the old tempo plays on.": "As músicas estão sendo ajustadas ao novo andamento; até lá o andamento antigo continua.",
+ "Adjusting to the new tempo…": "Ajustando ao novo andamento…"
 }

@@ -264,6 +264,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const setZoom = useUIStore((s) => s.setZoom)
   const setActiveView = useUIStore((s) => s.setActiveView)
   const loadingAudio = useAudioStore((s) => s.loading)
+  const retiming = useAudioStore((s) => s.retiming)
   const isRecording = useAudioStore((s) => s.isRecording)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lanesRef = useRef<HTMLDivElement>(null)
@@ -886,6 +887,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         <span style={{ flex: 1 }} />
         {busy && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>{busy}…</span>}
         {loadingAudio && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>{tr('Reading audio files…')}</span>}
+        {retiming && !loadingAudio && <span style={{ fontSize: 11, color: 'var(--accent-light)' }} title={tr('The songs are stretched to the new tempo; until then the old tempo plays on.')}>⟳ {tr('Adjusting to the new tempo…')}</span>}
         {(message ?? notice) && <span style={{ fontSize: 11, color: 'var(--yellow)', maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={message ?? notice ?? ''}>{message ?? notice}</span>}
         <ToolGroup label={tr('Zoom')}>
           <button className="btn btn-ghost" style={{ ...tb, padding: '2px 7px' }} title={tr('Zoom out (Ctrl + wheel)')} onClick={() => setZoom(Math.max(minZoom, +(zoom * 0.8).toFixed(4)))}>−</button>
@@ -1108,18 +1110,36 @@ function Playhead({ scrollRef, beatWidth }: { scrollRef: React.RefObject<HTMLDiv
     if (e.button !== 0) return
     e.preventDefault(); e.stopPropagation()
     const content = e.currentTarget.parentElement
-    if (!content) return
-    const at = (ev: PointerEvent | React.PointerEvent): number =>
+    const el = scrollRef.current
+    if (!content || !el) return
+    const at = (ev: { clientX: number; altKey: boolean }): number =>
       Math.max(0, snapBeat((ev.clientX - content.getBoundingClientRect().left - HEADER_WIDTH) / beatWidth, ev.altKey))
     let last = at(e)
-    const move = (ev: PointerEvent): void => {
-      last = at(ev)
+    let pointer = { clientX: e.clientX, altKey: e.altKey }
+    const put = (): void => {
+      last = at(pointer)
       if (useAudioStore.getState().isPlaying) setDrag(last)
       else useAudioStore.setState({ currentBeat: last })
     }
+    // dragged past the left or right edge of the lanes: the view scrolls along (owner: dragging to the left, even
+    // into the menu, did not move the song back), faster the further out
+    const edge = window.setInterval(() => {
+      const r = el.getBoundingClientRect()
+      const left = r.left + HEADER_WIDTH + 12, right = r.right - 12
+      const d = pointer.clientX < left ? pointer.clientX - left : pointer.clientX > right ? pointer.clientX - right : 0
+      if (!d) return
+      const before = el.scrollLeft
+      el.scrollLeft = Math.max(0, before + Math.sign(d) * Math.min(60, 4 + Math.abs(d) / 3))
+      if (el.scrollLeft !== before) put()
+    }, 30)
+    const move = (ev: PointerEvent): void => { pointer = { clientX: ev.clientX, altKey: ev.altKey }; put() }
     const up = (): void => {
+      window.clearInterval(edge)
       window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up)
       setDrag(null)
+      // at the edge the position is where the view ends (not somewhere hidden under the track headers)
+      const r = el.getBoundingClientRect()
+      if (pointer.clientX < r.left + HEADER_WIDTH) last = Math.max(0, snapBeat(el.scrollLeft / beatWidth, pointer.altKey))
       seek(last)
     }
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)

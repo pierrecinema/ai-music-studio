@@ -887,7 +887,7 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 61.7 | **⋯** im Spurkopf | Menü mit Umbenennen, Effekte, Kanal, Automation, (Takes), Farbe, Löschen | | | 0.99.4 |
 | 61.8 | Clips ansehen | Titelleiste in Spurfarbe, darunter Noten bzw. Wellenform | | | 0.99.4 |
 | 61.9 | Audio-Clip, stark hineinzoomen (Strg + Mausrad, mehrmals +) | Die Wellenform bleibt fein wie im Mastering, bis zu einzelnen Schwingungen; keine Blöcke | | | 0.99.4 |
-| 61.10 | Detailbereich unten: MIDI-Clip anklicken | Links Instrument, Ausgang, Farbe; Mitte die Noten; „In der Piano-Roll öffnen“ geht | | | 0.99.4 |
+| 61.10 | Detailbereich unten: MIDI-Clip anklicken | Seit 0.99.7: die Piano-Roll (siehe 64); links Instrument, Ausgang, Farbe, Effekte | | | 0.99.4 |
 | 61.11 | Detailbereich: Audio-Clip anklicken | Mitte Gain, Tempo, SYNC, MASTER, Fades, WARP und die Wellenform | | | 0.99.4 |
 | 61.12 | Detailbereich rechts: + Effekt…, ein/aus, × | Effekt kommt dazu, lässt sich umgehen und löschen | | | 0.99.4 |
 | 61.13 | ▾ im Detailbereich, dann ▴ Details | Klappt zu und wieder auf, bleibt nach Neustart so | | | 0.99.4 |

@@ -2091,5 +2091,7 @@
  "Not measured yet": "Ещё не измерено",
  "Plays your MIDI notes like a real musician: violin, viola, cello, double bass, flute, oboe, clarinet, saxophone, bassoon, trumpet, horn, trombone, tuba, with vibrato, bowing and breath. Runs on the processor, no graphics card needed. Needs Python 3.10 or 3.11.": "Играет ваши MIDI-ноты как настоящий музыкант: скрипка, альт, виолончель, контрабас, флейта, гобой, кларнет, саксофон, фагот, труба, валторна, тромбон, туба, с вибрато, штрихами и дыханием. Работает на процессоре, видеокарта не нужна. Нужен Python 3.10 или 3.11.",
  "The AI backend was restarted, so this conversion was lost. Please start it again.": "ИИ-бэкенд был перезапущен, поэтому это преобразование потеряно. Запустите его снова.",
- "Generator": "Генератор"
+ "Generator": "Генератор",
+ "Drop here": "Перетащите сюда",
+ "Choose a file or drag an audio file here": "Выберите файл или перетащите сюда аудиофайл"
 }

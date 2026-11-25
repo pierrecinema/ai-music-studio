@@ -149,18 +149,33 @@ function Segmented<T extends string>({ value, onChange, options }: {
   )
 }
 
+const AUDIO_FILE = /\.(wav|mp3|flac|ogg|m4a|aac|aiff?|opus)$/i
+
+// A file of the computer: chosen with the dialog, or dragged in from the Explorer or from the takes below.
 function FilePick({ value, onChange, placeholder }: {
   value: string; onChange: (v: string) => void; placeholder: string
 }): React.ReactElement {
+  const [over, setOver] = useState(false)
+  const [bad, setBad] = useState(false)
   const browse = async () => {
     const paths = await window.api.dialog.openAudio()
     if (paths[0]) onChange(paths[0])
   }
+  const drop = (e: React.DragEvent): void => {
+    e.preventDefault(); e.stopPropagation(); setOver(false)
+    const take = e.dataTransfer.getData('text/ams-path')
+    const f = e.dataTransfer.files[0] as (File & { path?: string }) | undefined
+    const path = take || (f && AUDIO_FILE.test(f.name) ? f.path ?? '' : '')
+    if (path) { onChange(path); setBad(false) } else { setBad(true); window.setTimeout(() => setBad(false), 2500) }
+  }
   return (
-    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-      <button className="btn btn-ghost" onClick={browse} style={{ flex: 1, justifyContent: 'flex-start', overflow: 'hidden' }}>
-        <span className="truncate" style={{ maxWidth: 260 }}>
-          {value ? value.split(/[\\/]/).pop() : placeholder}
+    <div onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setOver(true) }}
+      onDragLeave={() => setOver(false)} onDrop={drop}
+      style={{ display: 'flex', gap: 8, alignItems: 'center', borderRadius: 8, outline: over ? '2px dashed var(--accent)' : 'none', outlineOffset: 2 }}>
+      <button className="btn btn-ghost" onClick={browse} title={tr('Choose a file or drag an audio file here')}
+        style={{ flex: 1, justifyContent: 'flex-start', overflow: 'hidden', borderStyle: value ? undefined : 'dashed' }}>
+        <span className="truncate" style={{ maxWidth: 260, color: bad ? 'var(--danger, #ef4444)' : undefined }}>
+          {bad ? tr('Drop audio files (WAV, MP3, FLAC, OGG, M4A, AIFF).') : over ? tr('Drop here') : value ? value.split(/[\\/]/).pop() : placeholder}
         </span>
       </button>
       {value && <IconBtn title={tr("Clear")} onClick={() => onChange('')}>×</IconBtn>}

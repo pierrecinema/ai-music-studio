@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.3
+
+### New
+
+- **Drag tracks into Create**: an audio file from the Explorer, or a finished take from the takes list, can be dragged onto *Source track* and *Timbre reference* (Advanced); clicking still opens the file dialog.
+
 ## 0.99.2
 
 ### Changed

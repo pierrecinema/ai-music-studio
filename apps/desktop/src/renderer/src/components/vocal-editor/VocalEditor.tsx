@@ -19,7 +19,16 @@ import { minLength, snapBeat } from '../../edit/grid'
 import { create } from 'zustand'
 import { useBeatMatch } from '../../beatmatch/store'
 
-const useVocalJob = create<{ busy: { text: string; pct: number } | null; error: string | null; notice: string | null }>(() => ({ busy: null, error: null, notice: null }))
+const useVocalJob = create<{ busy: { text: string; pct: number } | null; error: string | null; notice: string | null; job: { kind: 'singer' | 'music' | 'a2m'; id: string } | null }>(() => ({ busy: null, error: null, notice: null, job: null }))
+const setRunning = (kind: 'singer' | 'music' | 'a2m', id: string): void => useVocalJob.setState({ job: { kind, id } })
+/** Stop: the running job is cancelled in the backend; the page waits for it to end */
+const stopJob = (): void => {
+  const j = useVocalJob.getState().job
+  if (!j) return
+  const p = j.kind === 'singer' ? api.singer.cancel(j.id) : j.kind === 'music' ? api.music.cancel(j.id) : api.audioToMidi.cancelSong(j.id)
+  void p.catch(() => null)
+  useVocalJob.setState({ busy: { text: tr('Stopping…'), pct: useVocalJob.getState().busy?.pct ?? 0 } })
+}
 
 interface BuiltinVoice { id: string; name: string; singer?: string; styles?: Record<string, string>; description: string; style: string; gender: string; kind?: string; credit: string; demo: string | null }
 
@@ -110,8 +119,8 @@ export function VocalEditor(): React.ReactElement {
   // the work in progress, its result and errors live outside the page: singing goes on (and its track arrives in the
   // Studio) when the page is left meanwhile, and the progress is still shown when it is opened again (owner: after
   // leaving the page while it sang, no vocals arrived)
-  const busy = useVocalJob((s) => s.busy), error = useVocalJob((s) => s.error), notice = useVocalJob((s) => s.notice)
-  const setBusy = (b: { text: string; pct: number } | null): void => useVocalJob.setState({ busy: b })
+  const busy = useVocalJob((s) => s.busy), error = useVocalJob((s) => s.error), notice = useVocalJob((s) => s.notice), runningJob = useVocalJob((s) => s.job)
+  const setBusy = (b: { text: string; pct: number } | null): void => useVocalJob.setState(b ? { busy: b } : { busy: null, job: null })
   const setError = (e: string | null): void => useVocalJob.setState({ error: e })
   const setNotice = (n: string | null): void => useVocalJob.setState({ notice: n })
   const [aiVoice, setAiVoice] = useState('female')
@@ -175,6 +184,7 @@ export function VocalEditor(): React.ReactElement {
     if (!sung) return
     try {
       const { jobId } = await api.singer.builtinRender({ voice: bv.id, notes: sung, lang: lang || 'en', rap: false, style, steps: natural ? 32 : 16, name: `${track?.name ?? 'Vocals'} ${bv.name}` })
+      setRunning('singer', jobId)
       setBusy({ text: tr('Singing…'), pct: 0 })
       if (await poll(() => api.singer.job(jobId))) {
         const j = await api.singer.job(jobId)
@@ -202,6 +212,7 @@ export function VocalEditor(): React.ReactElement {
       setBusy({ text: j.text, pct: j.progress })
       if (j.status === 'done') return true
       if (j.status === 'error') { setError(j.error ?? tr('It did not work.')); return false }
+      if (j.status === 'cancelled') { setError(tr('Stopped.')); return false }
     }
   }
 
@@ -286,6 +297,7 @@ export function VocalEditor(): React.ReactElement {
     if (!sung) return
     try {
       const { jobId } = await api.singer.render({ voice: voice.id, notes: sung, lang: lang || undefined, steps, vibrato, name: `${track?.name ?? 'Vocals'} ${voice.name}` })
+      setRunning('singer', jobId)
       setBusy({ text: tr('Singing…'), pct: 0 })
       if (await poll(() => api.singer.job(jobId))) {
         const j = await api.singer.job(jobId)
@@ -315,6 +327,7 @@ export function VocalEditor(): React.ReactElement {
     try {
       const p = useProjectStore.getState().project
       const { jobId } = await api.audioToMidi.startSong({ filePath: path, separate: false, stem: 'vocals', want: ['vocals'], bpm: p.bpm, quantize: 0.25, strength: 0.5, grid_from_song: false })
+      setRunning('a2m', jobId)
       setBusy({ text: tr('Turning your singing into notes…'), pct: 0 })
       const ok = await poll(async () => { const j = await api.audioToMidi.song(jobId); return { ...j, error: j.error } })
       if (ok) {
@@ -361,6 +374,7 @@ export function VocalEditor(): React.ReactElement {
       useMusicJob.getState().markHandled(jobId)
       useMusicJob.getState().setJob({ id: jobId, status: 'queued', warnings: [], results: [] })
       useMusicJob.getState().track(jobId)
+      setRunning('music', jobId)
       setBusy({ text: tr('The AI singer starts (this takes minutes on a CPU)…'), pct: 0 })
       for (;;) {
         await new Promise((r) => setTimeout(r, 2000))
@@ -563,6 +577,7 @@ export function VocalEditor(): React.ReactElement {
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, gap: 8 }}><span style={{ minWidth: 0 }}>{busy.text}</span><span>{Math.round(busy.pct)} %</span></div>
                 <div style={{ height: 7, background: 'rgba(0,0,0,0.3)', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${busy.pct}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #a78bfa)' }} /></div>
+                {runningJob && <button className="btn btn-ghost" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} onClick={stopJob}>■ {tr('Stop')}</button>}
               </>
             )}
             {error && <div style={{ ...hint, color: 'var(--red)' }}>{error}</div>}

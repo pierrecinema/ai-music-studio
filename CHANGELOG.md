@@ -3,6 +3,14 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.12
+
+### Fixed
+
+- **AI Instruments, no sound in the preview**: the samples of the sound packs (Band, MuseScore General, orchestra) were not decoded before a preview or an AI render's guide was played, so they were silent. They are decoded first now.
+- **AI Instruments, buttons not found**: Preview, The whole band, 3 ideas, Add to the song and AI render are now a bar right under the stage, next to the musician's description; the device is below in the full width.
+- **Vocal Editor, Stop**: while singing (or turning singing into MIDI) a **■ Stop** button ends it.
+
 ## 0.99.11
 
 ### New

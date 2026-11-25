@@ -8,7 +8,7 @@ A melody of a MIDI track is sung with your lyrics. Write the melody in the [[Pia
 - **The display:** the chosen voice and style (for example *ANNA · POP*), with gender, kind of voice, the number of notes, the language and the quality; the level shows the real level of a voice that plays; while the singer works a calm light runs across it instead. Next to it the **style** buttons (Pop, Rock, Ballad, Soul, Rap), *Style effects*, *Best quality* and *▶ {voice} in this style* (for a DiffSinger voice: the voice, import, delete, quality, vibrato; for the AI singer: male / female and a style text).
 - **The voices** as tiles (built-in voices), filtered by *All / Female / Male* and *All / Clear / With vibrato / Powerful*; a click chooses a voice and plays it, a second click stops.
 - **Melody and lyrics:** the notes as blocks (higher notes higher, bars numbered), each with its syllable written on it. **Hold a note and drag it**: sideways moves it in time (on the grid, Alt: free), up / down changes the pitch (you hear it), its right edge changes the length. **Click** a note without dragging to correct its syllable (Enter or a click elsewhere closes it). Below: the language and the lyrics field (the lyrics go onto the notes by themselves while you type; ⟳ puts them on again). *My singing (Studio clip) → MIDI*, *A recording file → MIDI* and *Piano Roll ↗* are in its header.
-- **On the right:** *🎤 Sing* with its progress, and why it is grey when something is missing.
+- **On the right:** *🎤 Sing* with its progress and **■ Stop**, and why it is grey when something is missing.
 
 ## Sing the melody yourself
 

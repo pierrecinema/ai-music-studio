@@ -14,6 +14,7 @@ import { autoStructure } from '../src/renderer/src/lib/lyrics'
 import { installProgress, rapLyrics } from '../src/renderer/src/lib/singer'
 import { snapDrag } from '../src/renderer/src/edit/grid'
 import { armedTrack, inputChannel, pickInput } from '../src/renderer/src/audio/recInput'
+import { minMax } from '../src/renderer/src/audio/wave'
 import { cleanPlugins } from '../src/renderer/src/lib/pluginList'
 import { adjustChain, albumFileName, planLoudness, planTone, toneOf } from '../src/renderer/src/audio/master/album'
 import { defaultChain } from '../src/renderer/src/audio/master/chain'
@@ -577,6 +578,20 @@ check('plugins: null and nameless entries are left out', cleanPlugins([null, { i
   check('rec input: live level channel', inputChannel('in1', 2) === 0 && inputChannel('in2', 2) === 1 && inputChannel('in2', 1) === 0 && inputChannel('stereo', 2) === -1)
   const t = (id: string, type: string, armed?: boolean): Track => ({ id, type, armed }) as unknown as Track
   check('armed track: found, never a group', armedTrack({ tracks: [t('a', 'audio'), t('b', 'midi', true)] } as unknown as Project)?.id === 'b' && !armedTrack({ tracks: [t('g', 'group', true)] } as unknown as Project))
+}
+
+// ── waveforms: lowest / highest sample per column, at every zoom ──
+{
+  const n = 44100, d = new Float32Array(n)
+  for (let i = 0; i < n; i++) d[i] = Math.sin(i / 10) * 0.5
+  d[30000] = 0.9; d[30001] = -0.8
+  const buf = { length: n, sampleRate: 44100, numberOfChannels: 1, getChannelData: () => d }
+  const [lo, hi] = minMax(buf, 0, 1)
+  const [lo2, hi2] = minMax(buf, 30000 / 44100, 30002 / 44100)
+  const [lo3, hi3] = minMax(buf, 0.5, 0.5 + 2 / 44100)
+  check('waveform: whole file finds the single peaks (summary path)', hi === d[30000] && lo === d[30001])
+  check('waveform: zoomed in, sample by sample', hi2 === d[30000] && lo2 === d[30001] && hi3 === Math.max(0, d[22050], d[22051]) && lo3 === Math.min(0, d[22050], d[22051]))
+  check('waveform: outside the file is silent', minMax(buf, 2, 3)[0] === 0 && minMax(buf, 2, 3)[1] === 0)
 }
 
 console.log(`${passed} passed, ${failed} failed`)

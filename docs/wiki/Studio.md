@@ -3,22 +3,26 @@
 The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[Keyboard Shortcuts]]).
 
 ## Toolbar
+One row, the functions in groups (on a narrow window it wraps):
+
 | Button | What it does |
 |---|---|
+| **+ Track ▾** | adds an **audio track**, a **MIDI track** or a **return track** (a shared reverb or delay; every track sends to it with its send knob) |
 | **Import audio…** | wav, mp3, flac, ogg, m4a, aiff onto a track (dragging files from Explorer works too); MIDI files (.mid) become MIDI tracks |
-| **Master FX** | shows the effects on the master (built in or VST plugins, after all tracks); see [[Mixer]] |
-| **+ Audio track / + MIDI track** | adds a track |
-| **+ Return… (Reverb / Delay)** | a shared reverb or delay; every track sends to it with its send knob (effects for one track: **FX** on the track) |
-| **Sync all to … BPM** / **Sync N selected** | brings all audio (or the selected clips, together) in time with the master BPM: [[Beat Matching and Sync]] |
-| **Beat match…** | measures the selected audio clip and offers to sync it |
-| **Tools** | the box in the top bar: ↖ pointer (select, move, trim), ✂ scissors (click a clip to cut it there, or drag over a range, also over several tracks, to cut it out as its own clip; on the grid, Alt: exactly; afterwards the pointer is back), 🧲 grid on / off |
-| **Grid / 🧲 Grid on/off** | grid from 1 bar to 1/64, triplets; the 🧲 button switches the grid off (yellow: everything moves freely, Ctrl+4); hold **Alt** to move freely once. Zoomed in far (up to 16×) the grid is magnetic: clips snap only near a grid line and move steplessly in between, for lining up beats. With the grid off, **← →** move the selected clip by one pixel |
-| **Loop** | loop (cycle) on/off; drag the range in the strip under the markers |
+| **↖ ✂ 🧲** | the tools: ↖ pointer (select, move, trim), ✂ scissors (click a clip to cut it there, or drag over a range, also over several tracks, to cut it out as its own clip; on the grid, Alt: exactly; afterwards the pointer is back), 🧲 grid on / off |
+| **Grid, Quantize, ⚙** | grid from 1 bar to 1/64, triplets; the 🧲 button switches the grid off (yellow: everything moves freely, Ctrl+4); hold **Alt** to move freely once. Zoomed in far (up to 16×) the grid is magnetic: clips snap only near a grid line and move steplessly in between, for lining up beats. With the grid off, **← →** move the selected clip by one pixel |
+| **⟳ Loop** | loop (cycle) on/off; drag the range in the strip under the markers |
 | **Punch in / Punch out** | recording starts / stops at the loop range |
-| **Count-in** | off, 1, 2 or 4 bars of clicks before recording |
+| **♩ (count-in)** | off, 1, 2 or 4 bars of clicks before recording |
 | **+ Marker** | a marker at the playhead |
 | **Tempo** | shows the tempo track (tempo changes during the song) |
-| **Channel** | the channel tab of the selected track: colour, volume, pan, mute/solo, the **instrument** of a MIDI track, effects, sends, group, automation, meter |
+| **Zoom − + ⤢** | zoom out, zoom in (also Ctrl + mouse wheel), the whole song |
+| **Master FX** | shows the effects on the master (built in or VST plugins, after all tracks); see [[Mixer]] |
+| **Export** | quick export of the whole song as WAV or MP3 |
+| **⋯** | **Channel** (the channel tab of the selected track: colour, volume, pan, mute/solo, the **instrument** of a MIDI track, effects, sends, group, automation, meter), **Sync all to … BPM** / **Sync N selected** (brings all audio, or the selected clips together, in time with the master BPM: [[Beat Matching and Sync]]), **Beat match…** (measures the selected audio clip and offers to sync it) |
+
+## Detail area
+Under the tracks (when no Piano Roll or Mixer is open below): **Track** (instrument of a MIDI track, recording input of an audio track, output, colour), **Clip** (the notes of the selected MIDI clip on a small piano-roll grid, *Open in the Piano Roll*; for an audio clip its tools — gain, song tempo, SYNC, MASTER, fades, WARP — and its waveform) and **Effects (inserts)** of the track (on / off, × remove, *+ Effect…*, a VST plugin's name opens its window, *Settings* opens the effects lane). **▾** folds it away, **▴ Details** brings it back.
 
 ## Tracks and clips
 - **Drag** clips to move them (also to another track), drag their edges to trim. **Drag a clip onto the dashed area under the last track** ("+ Drag a clip here for a new track"): a new track is made for it (audio or MIDI).
@@ -28,7 +32,7 @@ The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[K
 - **Track height:** drag the lower edge of a track up or down; double-click the edge for the normal height.
 - **Rename a track:** double-click its name. **Reorder:** drag the `⋮⋮` grip. **Zoom:** Ctrl+mouse wheel.
 - **On the clip** (audio): the white squares at the top corners set the fade in and out (drag inwards), the line across the clip is its volume (drag up or down); double-click resets.
-- **Clip bar** (selected audio clip): gain, fade in/out, **Song tempo** (the tempo the song itself was made at, not the project tempo; correct it only if the measurement is off), **SYNC**, **MASTER**.
+- **Clip tools** (selected audio clip; in the detail area, or above the tracks when it is folded away or a panel is open below): gain, fade in/out, **Song tempo** (the tempo the song itself was made at, not the project tempo; correct it only if the measurement is off), **SYNC**, **MASTER**.
 
 ## Right-click on a clip
 **SYNC to the master BPM** (or **SYNC the N selected clips together**), **Make this the MASTER tempo**, **Split at the playhead**, **Duplicate clip**, **Quantize**, **Consolidate selection (Ctrl+J)**, **Export as MIDI file (.mid)…** (MIDI clips), **Crossfade with the clip before (X)**, **Loop this clip (Ctrl+L)**, **Edit warp markers**, **Split into stems (Demucs)** (progress at the top right, the stems arrive as new tracks in a group), **Delete clip**.
@@ -71,7 +75,10 @@ Right-click a track header, or click the colour strip at its left: pick a colour
 Right-click → *Edit warp markers*: double-click the waveform to set a marker, drag it onto another beat (the audio between is stretched without changing the pitch), Alt+click deletes it.
 
 ## Track header
-The first row shows the whole track name (double-click to rename). The row below shows the type (audio, midi, group, or the VST instrument) and the buttons **●** (arm for recording), **M** (mute), **S** (solo), **FX** (effects lane), **CH** (channel), **A** (automation lanes), **T** (take lanes, after loop recording) and **×** (delete). The third row has (on audio tracks) the recording input, the volume slider and one small send slider per return track.
+The colour strip on the left (click: colour), the whole track name (double-click to rename), the type (Audio, MIDI, group, or the VST instrument) and the buttons **●** (arm for recording), **M** (mute), **S** (solo), **FX** (only when the track has effects: the effects lane) and **⋯** (rename, effects, channel, automation lanes, take lanes, duplicate, group, delete; the same as a right-click). The third row has (on audio tracks) the recording input, the **volume** fader with its value in **dB** (double-click: −1.9 dB), the **pan** knob (drag up / down, double-click: middle) and one small send slider per return track. The level meter is the thin bar on the right edge.
+
+## Clips and waveforms
+A clip has a title bar in the track colour; below it the notes (MIDI) or the waveform (audio). The waveform is drawn from the samples themselves, like in Mastering: each column shows the lowest and highest sample of its time, so it stays detailed at every zoom, down to single waves.
 
 ## Studio and Mixer height
 Drag the divider between the Studio and the [[Mixer]] to any height; double-click resets it.

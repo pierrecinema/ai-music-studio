@@ -7,7 +7,9 @@ import { nanoid } from 'nanoid'
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
 import { useAudioStore } from '../../stores/audio.store'
-import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, peaksOf, PEAKS_PER_SECOND, projectEndBeat, secToBeats, seek } from '../../audio/engine'
+import { minMax } from '../../audio/wave'
+import { dbOf, PanKnob, SquareBtn } from './HeaderParts'
+import { bufferOf, failedFiles, loadBuffer, onBuffersChanged, projectEndBeat, secToBeats, seek } from '../../audio/engine'
 import type { Clip, Track } from '../../types'
 import { makeMaster, retune, runSyncAll, runSyncSelected, syncOne, useBeatMatch } from '../../beatmatch/store'
 import { minLength, snapBeat, snapDrag } from '../../edit/grid'
@@ -20,6 +22,7 @@ import { Ruler } from './Ruler'
 import { Popover, type PopoverSpec } from './Popover'
 import { AutomationHeader, AutomationLane, FxHeader, FxLane, MasterFxBar, MiniMeter, ReturnRow, TakeHeader, TempoLane } from './StudioLanes'
 import { ChannelTab } from './ChannelTab'
+import { StudioDock, useDockOpen } from './StudioDock'
 import { LiveTake } from './LiveTake'
 import { canRecordAudio } from '../../audio/recInput'
 import { TrackInput } from './TrackInput'
@@ -152,8 +155,7 @@ const Waveform = React.memo(function Waveform({ clip, color, height, width, warp
 
   useLayoutEffect(() => {
     const canvas = ref.current
-    const peaks = path ? peaksOf(path) : null
-    if (!canvas || !peaks) return
+    if (!canvas || !path || !bufferOf(path)) return
     let a = 0; let b = width
     const parent = canvas.parentElement
     if (view && parent && width > 4096) {
@@ -163,8 +165,12 @@ const Waveform = React.memo(function Waveform({ clip, color, height, width, warp
       if (b <= a) { a = 0; b = Math.min(width, 1) }
     }
     if (a !== span[0] || b !== span[1]) setSpan([a, b])
-    const w = Math.max(1, Math.min(8192, Math.floor(b - a)))
-    const h = height
+    const buf = bufferOf(path!)
+    if (!buf) return
+    // drawn in device pixels, each column the lowest and highest sample of its time span (like the Mastering view)
+    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    const w = Math.max(1, Math.min(8192, Math.floor((b - a) * dpr)))
+    const h = Math.max(1, Math.round(height * dpr))
     canvas.width = w
     canvas.height = h
     const g = canvas.getContext('2d')
@@ -175,15 +181,14 @@ const Waveform = React.memo(function Waveform({ clip, color, height, width, warp
     const beatsPerPx = clip.duration / Math.max(1e-6, width)
     const b0 = startFileBeat + a * beatsPerPx
     const perPx = ((b - a) * beatsPerPx) / w
+    const gain = clip.gain ?? 1
     for (let x = 0; x < w; x++) {
-      const s0 = srcOfBeat(clip.warpMarkers, b0 + x * perPx, spb) * PEAKS_PER_SECOND
-      const s1 = srcOfBeat(clip.warpMarkers, b0 + (x + 1) * perPx, spb) * PEAKS_PER_SECOND
-      const from = Math.max(0, Math.floor(s0))
-      const to = Math.max(from + 1, Math.floor(s1))
-      let m = 0
-      for (let i = from; i < to && i < peaks.length; i++) if (peaks[i] > m) m = peaks[i]
-      const half = Math.min(mid, Math.max(m > 0.002 ? 1 : 0, m * mid * 0.95))
-      if (half > 0) g.fillRect(x, mid - half, 1, half * 2)
+      const t0 = srcOfBeat(clip.warpMarkers, b0 + x * perPx, spb)
+      const t1 = srcOfBeat(clip.warpMarkers, b0 + (x + 1) * perPx, spb)
+      const [lo, hi] = minMax(buf, t0, t1)
+      const top = Math.max(0, mid - Math.min(1, hi * gain) * mid * 0.95)
+      const bot = Math.min(h, mid - Math.max(-1, lo * gain) * mid * 0.95)
+      if (bot - top >= 0.5 || hi - lo > 0.002) g.fillRect(x, top, 1, Math.max(1, bot - top))
     }
     // the beat grid of a measured clip: one line per beat, a stronger one every fourth beat
     if (clip.warpBpm && clip.gridFirst !== undefined && !clip.warpMarkers?.length) {
@@ -201,14 +206,14 @@ const Waveform = React.memo(function Waveform({ clip, color, height, width, warp
         g.fillRect(x, 0, 1, k % 4 === 0 ? h : Math.round(h * 0.45))
       }
     }
-  }, [path, clip.offset, clip.duration, clip.warpBpm, clip.gridFirst, clip.warpMarkers, width, height, color, version, spb, startFileBeat, view, clip.startTime])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [path, clip.offset, clip.duration, clip.warpBpm, clip.gridFirst, clip.warpMarkers, clip.gain, width, height, color, version, spb, startFileBeat, view, clip.startTime])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!path || !peaksOf(path)) return null
+  if (!path || !bufferOf(path)) return null
   const markers = clip.warpMarkers ?? []
   const pxPerBeat = width / Math.max(1e-6, clip.duration)
   return (
     <>
-      <canvas ref={ref} style={{ position: 'absolute', left: span[0], top: 0, width: Math.max(1, span[1] - span[0]), height: '100%', opacity: 0.75, pointerEvents: 'none' }} />
+      <canvas ref={ref} style={{ position: 'absolute', left: span[0], top: 0, width: Math.max(1, span[1] - span[0]), height: '100%', opacity: 0.9, pointerEvents: 'none' }} />
       {(warpEdit || markers.length > 0) && markers.map((m, i) => {
         const x = (m.beat - startFileBeat) * pxPerBeat
         if (x < -2 || x > width + 2) return null
@@ -294,6 +299,7 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
   const [showMasterFx, setShowMasterFx] = useState(() => { try { return localStorage.getItem('ams-show-master-fx') === '1' } catch { return false } })
   const remember = (k: string, v: boolean): void => { try { localStorage.setItem(k, v ? '1' : '0') } catch { /* storage unavailable */ } }
   const notice = useBeatMatch((s) => s.notice)
+  const [dockOpen, toggleDock] = useDockOpen()
   const [menu, setMenu] = useState<{ x: number; y: number; kind: 'track' | 'clip' | 'take'; trackId: string; clipId?: string; laneId?: string } | null>(null)
   useEffect(() => {
     if (!menu) return undefined
@@ -651,53 +657,52 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
                   onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setRenaming(null); e.stopPropagation() }} />
               ) : (
                 <div className="track-title" onDoubleClick={() => setRenaming(track.id)} title={`${track.name} · ${tr('Double-click to rename')}`}
-                  style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{track.name}</div>
+                  style={{ fontSize: 12.5, fontWeight: 650, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{track.name}</div>
               )}
             </div>
           </div>
-          {/* the name has the whole first row (owner: long names were cut to "Melodie ..."); type and buttons below */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-            <div style={{ flex: 1, minWidth: 0, fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isGroup ? `group · ${childCount(track)} tracks` : track.instrument?.vst ? `${track.type} · ${track.instrument.vst.name}` : track.type}{track.takes?.length ? ` · ${track.takes.length} takes` : ''}</div>
+          {/* row 1 above: name; row 2: type, ● M S and ⋯ (the rest: FX, channel, automation, takes, delete); row 3: fader, dB, pan */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 9.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              title={isGroup ? `group · ${childCount(track)} tracks` : track.instrument?.vst ? `${track.type} · ${track.instrument.vst.name}` : track.type}>
+              <span style={{ border: '1px solid var(--border-mid)', borderRadius: 3, padding: '0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{isGroup ? tr('Group') : track.type === 'midi' ? 'MIDI' : track.type === 'audio' ? 'Audio' : track.type}</span>
+              {' '}{isGroup ? `${childCount(track)}` : track.instrument?.vst ? track.instrument.vst.name : ''}{track.takes?.length ? ` · ${track.takes.length} takes` : ''}
+            </span>
             {isGroup && (
-              <button onClick={(e) => { e.stopPropagation(); openGroup(track) }} style={{ ...tinyBtn, color: track.height !== undefined ? 'var(--accent-light)' : 'var(--text-muted)' }}
+              <button onClick={(e) => { e.stopPropagation(); openGroup(track) }} style={{ ...tinyBtn, width: 22, height: 20, color: track.height !== undefined ? 'var(--accent-light)' : 'var(--text-muted)' }}
                 title={tr('Show the stems large / normal (or double-click the group)')}>⇕</button>
             )}
             {!isGroup && (
               // record arm: the recording (Record button, Ctrl+R) goes to this track; only one track is armed
-              <button onClick={(e) => { e.stopPropagation(); for (const t of project.tracks) if (t.armed && t.id !== track.id) updateTrack(t.id, { armed: false }); updateTrack(track.id, { armed: !track.armed }); selectTrack(track.id) }}
+              <SquareBtn on={!!track.armed} onColor={isRecording ? '#dc2626' : '#b91c1c'} color="#ef4444" glow={!!track.armed && isRecording}
                 title={track.armed ? tr('Armed for recording: Record (Ctrl+R) records on this track. Click to disarm') : tr('Arm for recording: Record (Ctrl+R) records on this track')}
-                style={{ ...tinyBtn, color: track.armed ? '#fff' : '#ef4444', background: track.armed ? (isRecording ? '#dc2626' : '#b91c1c') : undefined, borderRadius: 3, boxShadow: track.armed && isRecording ? '0 0 8px #ef4444' : undefined }}>●</button>
+                onClick={() => { for (const t of project.tracks) if (t.armed && t.id !== track.id) updateTrack(t.id, { armed: false }); updateTrack(track.id, { armed: !track.armed }); selectTrack(track.id) }}>●</SquareBtn>
             )}
-            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { muted: !track.muted }) }} style={{ ...tinyBtn, color: track.muted ? '#f59e0b' : 'var(--text-muted)' }} title={tr('Mute')}>M</button>
-            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { soloed: !track.soloed }) }} style={{ ...tinyBtn, color: track.soloed ? 'var(--accent-light)' : 'var(--text-muted)' }} title={tr('Solo')}>S</button>
-            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showFx: !track.showFx }) }} title={tr('Effects of this track (EQ, compressor, delay, reverb, filter)')}
-              style={{ ...tinyBtn, color: track.showFx ? 'var(--accent-light)' : track.fx?.length ? '#22c55e' : 'var(--text-muted)' }}>FX</button>
-            {!isGroup && (
-              <button onClick={(e) => { e.stopPropagation(); selectTrack(track.id); setShowChannel(true); remember('ams-show-channel', true) }}
-                style={{ ...tinyBtn, color: showChannel && selectedTrackId === track.id ? 'var(--accent-light)' : track.instrument?.vst ? '#22c55e' : 'var(--text-muted)' }}
-                title={track.type === 'midi' ? tr('Channel of this track: instrument (VST instruments such as Dexed), effects, sends') : tr('Channel of this track: effects, sends')}>{tr('CH')}</button>
+            <SquareBtn on={!!track.muted} onColor="#b45309" title={tr('Mute')} onClick={() => updateTrack(track.id, { muted: !track.muted })}>M</SquareBtn>
+            <SquareBtn on={!!track.soloed} onColor="#0e7490" title={tr('Solo')} onClick={() => updateTrack(track.id, { soloed: !track.soloed })}>S</SquareBtn>
+            {(track.fx?.length ?? 0) > 0 && (
+              <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showFx: !track.showFx }) }} title={tr('Effects of this track (EQ, compressor, delay, reverb, filter)')}
+                style={{ ...tinyBtn, width: 22, height: 20, color: track.showFx ? 'var(--accent-light)' : '#22c55e' }}>FX</button>
             )}
-            <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, toggleAutomationLanes(track)) }}
-              style={{ ...tinyBtn, color: openLanes(track).length ? 'var(--accent-light)' : Object.values(track.automation ?? {}).some((l) => l?.length) ? '#eab308' : 'var(--text-muted)' }}
-              title={tr('Show / hide the automation lane (volume, pan, sends)')}>A</button>
-            {(track.takes?.length ?? 0) > 0 && (
-              <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, { showTakes: !track.showTakes }) }} style={{ ...tinyBtn, color: track.showTakes ? 'var(--accent-light)' : 'var(--text-muted)' }} title={tr('Show / hide the take lanes')}>T</button>
-            )}
-            <button onClick={(e) => { e.stopPropagation(); removeTrack(track.id) }} style={{ ...tinyBtn, color: 'var(--text-muted)' }} title={tr('Delete track (Ctrl+Z brings it back)')}>×</button>
+            <button onClick={(e) => { e.stopPropagation(); selectTrack(track.id); setMenu({ x: e.clientX, y: e.clientY, kind: 'track', trackId: track.id }) }}
+              title={tr('More: effects, channel, automation, takes, colour, delete')} style={{ ...tinyBtn, width: 22, height: 20, fontSize: 12 }}>⋯</button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
             {canRecordAudio(track) && <TrackInput track={track} />}
-            <input type="range" min={0} max={1} step={0.01} value={track.volume} title={tr('Volume')} onClick={(e) => e.stopPropagation()}
-              onChange={(e) => updateTrack(track.id, { volume: parseFloat(e.target.value) })} style={{ width: 62, accentColor: track.color }} />
+            <input type="range" min={0} max={1} step={0.01} value={track.volume} title={`${tr('Volume')}: ${dbOf(track.volume)} dB`} onClick={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => { e.stopPropagation(); updateTrack(track.id, { volume: 0.8 }) }}
+              onChange={(e) => updateTrack(track.id, { volume: parseFloat(e.target.value) })} style={{ flex: 1, minWidth: 40, accentColor: track.color }} />
+            <span style={{ fontSize: 10, fontFamily: 'ui-monospace, Consolas, monospace', color: 'var(--text-secondary)', width: 38, textAlign: 'right', flexShrink: 0 }}>{dbOf(track.volume)}</span>
+            <PanKnob value={track.pan ?? 0} color={track.color} onChange={(v) => updateTrack(track.id, { pan: v })} />
             {returns.map((r, k) => (
               <label key={r.id} title={`Send to ${r.name}`} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: 9, color: 'var(--text-muted)' }}>
                 {String.fromCharCode(65 + k)}
-                <input type="range" min={0} max={1} step={0.01} value={track.sends?.[r.id] ?? 0} style={{ width: 30, accentColor: '#0ea5e9' }}
+                <input type="range" min={0} max={1} step={0.01} value={track.sends?.[r.id] ?? 0} style={{ width: 26, accentColor: '#0ea5e9' }}
                   onChange={(e) => useProjectStore.getState().setSend(track.id, r.id, Number(e.target.value))} />
               </label>
             ))}
           </div>
-          <div style={{ marginTop: 3 }}><MiniMeter id={track.id} /></div>
+          <div style={{ position: 'absolute', right: 3, top: 6, bottom: 6, width: 4 }}><MiniMeter id={track.id} vertical /></div>
         </>
       )
       const kids = isGroup ? project.tracks.filter((t) => t.parentId === track.id) : []
@@ -745,8 +750,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           }}
           style={{
             width: HEADER_WIDTH, flexShrink: 0, position: 'sticky', left: 0, zIndex: 4, boxSizing: 'border-box',
-            borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', borderLeft: `3px solid ${track.color}`, boxShadow: row.kind === 'track' && track.armed ? `inset 0 0 0 1px ${isRecording ? '#ef4444' : '#ef444466'}` : undefined,
-            padding: row.kind === 'track' ? `6px 8px 4px ${8 + (row.depth ?? 0) * 12}px` : 0, cursor: row.kind === 'track' ? 'pointer' : 'default',
+            borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', borderLeft: `5px solid ${track.color}`, boxShadow: row.kind === 'track' && track.armed ? `inset 0 0 0 1px ${isRecording ? '#ef4444' : '#ef444466'}` : undefined,
+            padding: row.kind === 'track' ? `5px 12px 3px ${8 + (row.depth ?? 0) * 12}px` : 0, cursor: row.kind === 'track' ? 'pointer' : 'default',
             // always opaque: the selected colour is see-through in some looks, and clips scrolled under the header showed
             // through it (owner: a clicked clip covered the track header)
             backgroundColor: row.kind === 'track' ? (track.type === 'group' ? 'var(--bg-panel)' : 'var(--bg-secondary)') : 'var(--bg-primary)',
@@ -787,12 +792,16 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
               onDoubleClick={(e) => clipDoubleClick(e, track, clip, width)}
               style={{
                 position: 'absolute', left: clip.startTime * beatWidth, top: 6, width, height: th - 12, boxSizing: 'border-box',
-                background: missing ? 'rgba(239,68,68,0.15)' : `${track.color}${sel ? '55' : '33'}`,
-                border: `1px solid ${warpEdit ? '#facc15' : sel ? '#fff' : track.color + '88'}`, borderRadius: 4, overflow: 'hidden', cursor: tool === 'scissors' ? 'crosshair' : 'grab', userSelect: 'none'
+                background: missing ? 'rgba(239,68,68,0.15)' : `${track.color}${sel ? '44' : '26'}`,
+                border: `1px solid ${warpEdit ? '#facc15' : sel ? '#fff' : track.color + 'aa'}`, borderRadius: 5, overflow: 'hidden', cursor: tool === 'scissors' ? 'crosshair' : 'grab', userSelect: 'none'
               }}>
-              {clip.audioFile && !missing && <Waveform clip={clip} color={track.color} height={th - 14} width={width} warpEdit={warpEdit} trackId={track.id} />}
-              {clip.notes && <MiniNotes clip={clip} color={track.color} height={th - 14} />}
-              <span className={missing ? undefined : 'clip-title'} style={{ position: 'relative', fontSize: 11, color: missing ? 'var(--red)' : '#fff', fontWeight: 600, padding: clip.audioFile && !missing ? '2px 8px 2px 14px' : '2px 8px', whiteSpace: 'nowrap', textShadow: '0 1px 2px #000a', pointerEvents: 'none' }}>
+              {/* the clip: a title bar in the track colour, below it the waveform or the notes (0.99.4) */}
+              <div className={missing ? undefined : 'clip-bar'} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: CLIP_BAR, background: missing ? 'transparent' : track.muted ? `${track.color}77` : track.color, pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', left: 0, right: 0, top: CLIP_BAR, bottom: 0, pointerEvents: 'none' }}>
+                {clip.audioFile && !missing && <Waveform clip={clip} color={track.color} height={Math.max(4, th - 14 - CLIP_BAR)} width={width} warpEdit={warpEdit} trackId={track.id} />}
+                {clip.notes && <MiniNotes clip={clip} color={track.color} height={Math.max(4, th - 14 - CLIP_BAR)} />}
+              </div>
+              <span className={missing ? undefined : 'clip-title'} style={{ position: 'relative', display: 'block', lineHeight: `${CLIP_BAR}px`, fontSize: 10.5, color: missing ? 'var(--red)' : '#0b0f14', fontWeight: 700, padding: clip.audioFile && !missing ? '0 8px 0 14px' : '0 6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none' }}>
                 {missing ? `Missing: ${clip.name ?? clip.audioFile}` : `${clip.name ?? (clip.notes ? `${clip.notes.length} notes` : 'Clip')}${clip.warpBpm ? ` · synced from ${Math.round(clip.warpBpm)} BPM` : ''}${clip.warpMarkers?.length ? ` · ${clip.warpMarkers.length} warp markers` : ''}`}
               </span>
               <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: HANDLE, cursor: 'ew-resize' }} />
@@ -819,6 +828,10 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
     )
   }
 
+  const clipInspector = (sel: { trackId: string; clip: Clip }): React.ReactElement => (
+    <ClipInspector trackId={sel.trackId} clip={sel.clip} bpm={bpm} warpEdit={warpClip === sel.clip.id} onWarpEdit={(on) => setWarpClip(on ? sel.clip.id : null)} />
+  )
+
   const toolbarBtn = (label: string, title: string, onClick: () => void, active = false, disabled = false): React.ReactElement => (
     <button className={`btn ${active ? 'btn-primary' : 'btn-ghost'}`} style={tb} title={tr(title)} disabled={disabled} onClick={onClick}>{tr(label)}</button>
   )
@@ -830,60 +843,68 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
       onDrop={(e) => void onDrop(e)}
       style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', borderBottom: '1px solid var(--border)', position: 'relative', ...rootStyle }}
     >
-      {/* toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '4px 8px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 }}>
-        <button className="btn btn-ghost" style={tb} onClick={async () => setMessage((await pickAndImport({ trackId: selectedTrackId ?? undefined })).join(' ') || null)}>{tr('Import audio…')}</button>
-        {(['audio', 'midi'] as const).map((t) => (
-          <button key={t} className="btn btn-ghost" style={tb} onClick={() => addTrack(t)}>+ {t === 'audio' ? tr('Audio') : 'MIDI'} {tr('track')}</button>
-        ))}
-        <select value="" style={{ ...tb, padding: '2px 4px' }} title={tr('Return tracks: one reverb or delay that many tracks share through their send knobs')}
-          onChange={(e) => { if (e.target.value) addReturn(e.target.value as 'reverb' | 'delay'); e.target.value = ''; e.target.blur() }}>
-          <option value="">{tr('+ Return…')}</option><option value="reverb">{tr('Reverb')}</option><option value="delay">{tr('Delay')}</option>
-        </select>
-        <button className="btn btn-ghost" style={tb} disabled={syncing || !project.tracks.some((t) => t.clips.some((c) => c.audioFile))}
-          title={selAudio.length > 1 ? tr('The selected clips: stretch each to the master BPM and start them together, beat 1 of each on the same bar') : tr('Measure all audio clips and bring every one in time with the master BPM')}
-          onClick={async () => { setSyncing(true); setMessage(null); await (selAudio.length > 1 ? runSyncSelected(selAudio) : runSyncAll()); setSyncing(false) }}>
-          {syncing ? tr('Syncing…') : selAudio.length > 1 ? trf('Sync {n} selected to {bpm} BPM', { n: selAudio.length, bpm: project.bpm }) : trf('Sync all to {bpm} BPM', { bpm: project.bpm })}
-        </button>
-        <button className="btn btn-ghost" style={tb} disabled={!selectedAudioClip}
-          title={selectedAudioClip ? tr('Measure the tempo of the selected audio and bring it in time with the project') : tr('Select an audio clip first')}
-          onClick={() => selectedAudioClip && void useBeatMatch.getState().propose(selectedAudioClip.trackId, selectedAudioClip.clip.id, selectedAudioClip.clip.audioFile!, selectedAudioClip.clip.name ?? 'Audio', false, true)}>
-          {tr('Beat match…')}
-        </button>
-        <GridControls noSnap />
-        <span style={{ width: 1, height: 18, background: 'var(--border)' }} />
-        {toolbarBtn('Loop', 'Loop on / off (Ableton: loop switch, Cubase: cycle, Num /). Drag in the strip under the markers to set the range.', toggleLoop, !!loop?.enabled)}
-        {toolbarBtn('Punch in', 'Punch in (Cubase I): recording starts at the start of the loop range', () => togglePunch('punchIn'), !!project.punchIn)}
-        {toolbarBtn('Punch out', 'Punch out (Cubase O): recording stops at the end of the loop range', () => togglePunch('punchOut'), !!project.punchOut)}
-        <label style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 3 }} title={tr('Count-in: bars of clicks before recording starts')}>{tr('Count-in')}
-          <select value={String(project.countIn ?? 0)} style={{ fontSize: 11 }} onChange={(e) => { useProjectStore.getState().updateProject({ countIn: Number(e.target.value) }); e.target.blur() }}>
-            <option value="0">{tr('off')}</option><option value="1">{tr('1 bar')}</option><option value="2">{tr('2 bars')}</option><option value="4">{tr('4 bars')}</option>
+      {/* toolbar: one row, the functions in groups (0.99.4) */}
+      <div className="studio-toolbar" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '5px 8px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 }}>
+        <ToolGroup>
+          <select value="" className="btn btn-primary" style={{ ...tb, fontWeight: 600, cursor: 'pointer', appearance: 'none', paddingRight: 10 }} title={tr('Add a track: audio, MIDI or a return track (one reverb or delay that many tracks share through their send knobs)')}
+            onChange={(e) => { const v = e.target.value; if (v === 'audio' || v === 'midi') addTrack(v); else if (v) addReturn(v as 'reverb' | 'delay'); e.target.value = ''; e.target.blur() }}>
+            <option value="">+ {tr('Track')} ▾</option>
+            <option value="audio">{tr('Audio track')}</option>
+            <option value="midi">{tr('MIDI track')}</option>
+            <option value="reverb">{tr('Return track')}: {tr('Reverb')}</option>
+            <option value="delay">{tr('Return track')}: {tr('Delay')}</option>
           </select>
-        </label>
-        {toolbarBtn('+ Marker', 'Add a marker at the playhead (Cubase: Insert). Right-click the ruler for time signatures.', addMarkerAtPlayhead)}
-        {toolbarBtn('Tempo', 'Show / hide the tempo track (tempo changes during the song)', () => { setShowTempo(!showTempo); remember('ams-show-tempo', !showTempo) }, showTempo || hasTempoChanges(project))}
-        {toolbarBtn('Channel', 'Show / hide the channel tab of the selected track (Cubase 15)', () => { setShowChannel(!showChannel); remember('ams-show-channel', !showChannel) }, showChannel)}
-        {toolbarBtn('Master FX', 'Show / hide the effects on the master (built in or VST plugins, after all tracks)', () => { setShowMasterFx(!showMasterFx); remember('ams-show-master-fx', !showMasterFx) }, showMasterFx || !!project.masterFx?.length)}
-        {toolbarBtn('Export', 'Quick export: the whole song as WAV or MP3', () => window.dispatchEvent(new CustomEvent(EXPORT_EVENT)))}
-        {/* the tools: one box, with room for more */}
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '1px 4px', border: '1px solid var(--border-mid)', borderRadius: 6, background: 'var(--bg-tertiary)' }}>
-          <span style={{ fontSize: 9.5, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginRight: 2 }}>{tr('Tools')}</span>
+          <button className="btn btn-ghost" style={tb} onClick={async () => setMessage((await pickAndImport({ trackId: selectedTrackId ?? undefined })).join(' ') || null)}>{tr('Import audio…')}</button>
+        </ToolGroup>
+        <ToolGroup>
           <button className={`btn ${tool === 'pointer' ? 'btn-primary' : 'btn-ghost'}`} style={{ ...tb, padding: '2px 7px' }} title={tr('Pointer: select, move and trim clips')} onClick={() => setTool('pointer')}>↖</button>
           <button className={`btn ${tool === 'scissors' ? 'btn-primary' : 'btn-ghost'}`} style={{ ...tb, padding: '2px 7px' }} title={tr('Scissors: click a clip to cut it there, or drag over a range (also over several tracks) to cut it out as its own clip. On the grid; Alt: exactly. Afterwards the pointer is back.')} onClick={() => setTool(tool === 'scissors' ? 'pointer' : 'scissors')}>✂</button>
           <SnapButton />
-        </span>
+        </ToolGroup>
+        <ToolGroup><GridControls noSnap /></ToolGroup>
+        <ToolGroup>
+          {toolbarBtn('⟳ Loop', 'Loop on / off (Ableton: loop switch, Cubase: cycle, Num /). Drag in the strip under the markers to set the range.', toggleLoop, !!loop?.enabled)}
+          {toolbarBtn('Punch in', 'Punch in (Cubase I): recording starts at the start of the loop range', () => togglePunch('punchIn'), !!project.punchIn)}
+          {toolbarBtn('Punch out', 'Punch out (Cubase O): recording stops at the end of the loop range', () => togglePunch('punchOut'), !!project.punchOut)}
+          <select value={String(project.countIn ?? 0)} style={{ ...tb, padding: '2px 4px' }} title={tr('Count-in: bars of clicks before recording starts')}
+            onChange={(e) => { useProjectStore.getState().updateProject({ countIn: Number(e.target.value) }); e.target.blur() }}>
+            <option value="0">♩ {tr('off')}</option><option value="1">♩ {tr('1 bar')}</option><option value="2">♩ {tr('2 bars')}</option><option value="4">♩ {tr('4 bars')}</option>
+          </select>
+        </ToolGroup>
+        <ToolGroup>
+          {toolbarBtn('+ Marker', 'Add a marker at the playhead (Cubase: Insert). Right-click the ruler for time signatures.', addMarkerAtPlayhead)}
+          {toolbarBtn('Tempo', 'Show / hide the tempo track (tempo changes during the song)', () => { setShowTempo(!showTempo); remember('ams-show-tempo', !showTempo) }, showTempo || hasTempoChanges(project))}
+        </ToolGroup>
         <span style={{ flex: 1 }} />
         {busy && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>{busy}…</span>}
         {loadingAudio && <span style={{ fontSize: 11, color: 'var(--accent-light)' }}>{tr('Reading audio files…')}</span>}
-        {(message ?? notice) && <span style={{ fontSize: 11, color: 'var(--yellow)', maxWidth: 520, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={message ?? notice ?? ''}>{message ?? notice}</span>}
-        <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{tr('Zoom')}</span>
-        <input type="range" min={minZoom} max={MAX_ZOOM} step={0.01} value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: 70, accentColor: 'var(--accent)' }} />
-        <button className="btn btn-ghost" style={{ ...tb, padding: '2px 7px' }} title={tr('Show the whole song (and a few bars after its end)')} onClick={() => { setZoom(fitZoom()); if (scrollRef.current) scrollRef.current.scrollLeft = 0 }}>⤢</button>
+        {(message ?? notice) && <span style={{ fontSize: 11, color: 'var(--yellow)', maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={message ?? notice ?? ''}>{message ?? notice}</span>}
+        <ToolGroup label={tr('Zoom')}>
+          <button className="btn btn-ghost" style={{ ...tb, padding: '2px 7px' }} title={tr('Zoom out (Ctrl + wheel)')} onClick={() => setZoom(Math.max(minZoom, +(zoom * 0.8).toFixed(4)))}>−</button>
+          <button className="btn btn-ghost" style={{ ...tb, padding: '2px 7px' }} title={tr('Zoom in (Ctrl + wheel)')} onClick={() => setZoom(Math.min(MAX_ZOOM, +(zoom * 1.25).toFixed(4)))}>+</button>
+          <button className="btn btn-ghost" style={{ ...tb, padding: '2px 7px' }} title={tr('Show the whole song (and a few bars after its end)')} onClick={() => { setZoom(fitZoom()); if (scrollRef.current) scrollRef.current.scrollLeft = 0 }}>⤢</button>
+        </ToolGroup>
+        <ToolGroup>
+          {toolbarBtn('Master FX', 'Show / hide the effects on the master (built in or VST plugins, after all tracks)', () => { setShowMasterFx(!showMasterFx); remember('ams-show-master-fx', !showMasterFx) }, showMasterFx || !!project.masterFx?.length)}
+          {toolbarBtn('Export', 'Quick export: the whole song as WAV or MP3', () => window.dispatchEvent(new CustomEvent(EXPORT_EVENT)))}
+          <select value="" style={{ ...tb, padding: '2px 8px', width: 30, appearance: 'none', textAlign: 'center', cursor: 'pointer', background: showChannel ? 'var(--accent-dim)' : undefined }} title={tr('More: channel tab, bring audio in time with the project tempo')} disabled={syncing}
+            onChange={async (e) => {
+              const v = e.target.value; e.target.value = ''; e.target.blur()
+              if (v === 'channel') { setShowChannel(!showChannel); remember('ams-show-channel', !showChannel) }
+              if (v === 'sync') { setSyncing(true); setMessage(null); await (selAudio.length > 1 ? runSyncSelected(selAudio) : runSyncAll()); setSyncing(false) }
+              if (v === 'match' && selectedAudioClip) void useBeatMatch.getState().propose(selectedAudioClip.trackId, selectedAudioClip.clip.id, selectedAudioClip.clip.audioFile!, selectedAudioClip.clip.name ?? 'Audio', false, true)
+            }}>
+            <option value="">⋯</option>
+            <option value="channel">{showChannel ? '✓ ' : ''}{tr('Channel')} · {tr('Show / hide the channel tab of the selected track (Cubase 15)')}</option>
+            <option value="sync" disabled={!project.tracks.some((t) => t.clips.some((c) => c.audioFile))}>{selAudio.length > 1 ? trf('Sync {n} selected to {bpm} BPM', { n: selAudio.length, bpm: project.bpm }) : trf('Sync all to {bpm} BPM', { bpm: project.bpm })}</option>
+            <option value="match" disabled={!selectedAudioClip}>{tr('Beat match…')}{selectedAudioClip ? '' : ` (${tr('Select an audio clip first')})`}</option>
+          </select>
+        </ToolGroup>
       </div>
 
       {showMasterFx && <MasterFxBar />}
-      {selectedAudioClip && <ClipInspector trackId={selectedAudioClip.trackId} clip={selectedAudioClip.clip} bpm={bpm} warpEdit={warpClip === selectedAudioClip.clip.id}
-        onWarpEdit={(on) => setWarpClip(on ? selectedAudioClip.clip.id : null)} />}
+      {/* the tools of a selected audio clip: in the detail area when it is open, else here */}
+      {selectedAudioClip && !(fill && dockOpen) && clipInspector(selectedAudioClip)}
       {cutOut && cutOut.some((id) => project.tracks.some((t) => t.clips.some((c) => c.id === id))) && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px', borderBottom: '1px solid var(--border)', background: 'rgba(250,204,21,0.12)', fontSize: 12, color: 'var(--text-primary)' }}>
           <b>✂ {trf('Cut out: {n} clip(s), selected.', { n: cutOut.length })}</b>
@@ -975,6 +996,8 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
         </ViewportCtx.Provider>
         {showChannel && <ChannelTab onClose={() => { setShowChannel(false); remember('ams-show-channel', false) }} />}
       </div>
+      {/* the detail area: only when no other panel (piano roll, mixer …) is open under the Studio */}
+      {fill && !empty && <StudioDock palette={TRACK_PALETTE} open={dockOpen} toggle={toggleDock} clipTools={selectedAudioClip ? clipInspector(selectedAudioClip) : null} />}
 
       {menu && (
         <div onPointerDown={(e) => e.stopPropagation()}
@@ -998,9 +1021,11 @@ export function Timeline({ fill = false }: { fill?: boolean }): React.ReactEleme
           {(menu.kind === 'track'
             ? [
               { label: 'Rename track', run: () => setRenaming(menu.trackId) },
+              { label: 'Effects (FX)', run: () => { const t = project.tracks.find((x) => x.id === menu.trackId); updateTrack(menu.trackId, { showFx: !t?.showFx }) } },
+              ...(project.tracks.find((t) => t.id === menu.trackId)?.type !== 'group' ? [{ label: 'Channel (instrument, effects, sends)', run: () => { selectTrack(menu.trackId); setShowChannel(true); remember('ams-show-channel', true) } }] : []),
+              { label: 'Show / hide the automation lane (volume, pan, sends)', run: () => { const t = project.tracks.find((x) => x.id === menu.trackId); if (t) updateTrack(t.id, toggleAutomationLanes(t)) } },
+              ...((project.tracks.find((t) => t.id === menu.trackId)?.takes?.length ?? 0) > 0 ? [{ label: 'Show / hide the take lanes', run: () => { const t = project.tracks.find((x) => x.id === menu.trackId); updateTrack(menu.trackId, { showTakes: !t?.showTakes }) } }] : []),
               { label: 'Duplicate track', run: () => { selectTrack(menu.trackId); runAction('edit.duplicate') } },
-              { label: 'Show automation (volume and pan)', run: () => updateTrack(menu.trackId, { autoLanes: ['volume', 'pan'], showAutomation: null }) },
-              { label: 'Effects (FX)', run: () => updateTrack(menu.trackId, { showFx: true }) },
               ...(project.tracks.find((t) => t.id === menu.trackId)?.type === 'group'
                 ? [{ label: 'Ungroup (keep the tracks)', run: () => useProjectStore.getState().ungroup(menu.trackId) }]
                 : [{ label: 'Put into a new group (Ctrl+G)', run: () => useProjectStore.getState().groupTracks([menu.trackId]) },
@@ -1207,12 +1232,24 @@ function MiniNotes({ clip, color, height }: { clip: Clip; color: string; height:
       {notes.map((n) => (
         <div key={n.id ?? nanoid()} style={{
           position: 'absolute', left: `${(n.startTime / clip.duration) * 100}%`, width: `${Math.max(0.5, (n.duration / clip.duration) * 100)}%`,
-          top: ((hi - n.pitch) / span) * (h - 6) + 14, height: 3, background: color, borderRadius: 1
+          top: ((hi - n.pitch) / span) * Math.max(2, h - 6) + 2, height: Math.max(2, Math.min(4, h / span)), background: color, borderRadius: 1
         }} />
       ))}
     </div>
   )
 }
+
+// a group of toolbar buttons in one frame, with an optional small label
+function ToolGroup({ label, children }: { label?: string; children: React.ReactNode }): React.ReactElement {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 4px', border: '1px solid var(--border-mid)', borderRadius: 7, background: 'var(--bg-tertiary)' }}>
+      {label && <span style={{ fontSize: 9.5, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 3px' }}>{label}</span>}
+      {children}
+    </span>
+  )
+}
+
+const CLIP_BAR = 15                  // the title bar of a clip
 
 const tb: React.CSSProperties = { fontSize: 11, padding: '3px 10px', whiteSpace: 'nowrap' }
 

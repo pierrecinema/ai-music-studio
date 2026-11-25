@@ -609,19 +609,20 @@ export function ReturnRow({ r }: { r: ReturnTrack }): React.ReactElement {
 }
 
 // a tiny level meter for headers
-export function MiniMeter({ id }: { id: string }): React.ReactElement {
+export function MiniMeter({ id, vertical }: { id: string; vertical?: boolean }): React.ReactElement {
   const fill = useRef<HTMLDivElement>(null)
   React.useEffect(() => {
     let raf = 0
     let lvl = 0
     const loop = (): void => {
       lvl = Math.max(trackLevel(id), lvl * 0.85)
-      if (fill.current) fill.current.style.width = `${Math.min(100, lvl * 100)}%`
+      if (fill.current) fill.current.style[vertical ? 'height' : 'width'] = `${Math.min(100, lvl * 100)}%`
       raf = requestAnimationFrame(loop)
     }
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
-  }, [id])
+  }, [id, vertical])
+  if (vertical) return <div style={{ position: 'relative', height: '100%', width: '100%', background: 'var(--bg-primary)', borderRadius: 2, overflow: 'hidden' }}><div ref={fill} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 0, background: 'linear-gradient(0deg, #22c55e, #a3e635 70%, #facc15)' }} /></div>
   return <div style={{ height: 3, background: 'var(--bg-primary)', borderRadius: 2, overflow: 'hidden' }}><div ref={fill} style={{ height: '100%', width: 0, background: '#22c55e' }} /></div>
 }
 

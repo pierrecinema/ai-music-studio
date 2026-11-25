@@ -3,6 +3,14 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.4
+
+### Changed
+
+- **A new Studio layout**: one toolbar in groups (+ Track ▾, import, tools, grid, loop / punch / count-in, marker and tempo, zoom, Master FX, export, ⋯ for channel and sync); track headers with a colour strip, large ● M S buttons, a volume fader with its value in dB, a pan knob and a level meter; clips with a title bar in the track colour and their notes or waveform below.
+- **Detail area under the Studio**: the selected track (instrument, input, output, colour), its clip (the notes on a small piano-roll grid, or the waveform with gain, tempo, fades and warp) and its effects. It can be folded away.
+- **Detailed waveforms at every zoom**: audio clips are drawn from the samples like in Mastering (lowest and highest sample per pixel), no more blocks when zoomed in.
+
 ## 0.99.3
 
 ### New

@@ -305,24 +305,23 @@ function ProgressPanel({ job }: { job: MusicJob }): React.ReactElement {
   )
 }
 
-// A voice of the Vocal Editor for the whole song (one compact list, grouped into women and men): the music model
+// A voice of the Vocal Editor for the whole song (its own compact list, apart from Male / Female): the music model
 // makes the song, then the built-in singer sings it again with this voice (services/revoice.py)
 // work in progress (24.11.2026): switched on once the voice exchange sounds good (see docs/NEXT-STEPS.md)
 const REVOICE_READY = false
 interface SingerVoice { id: string; name: string; singer?: string; gender: string; description: string }
-function SingerVoiceSelect({ value, gender, onChange }: { value: string; gender: 'any' | 'male' | 'female'; onChange: (v: string) => void }): React.ReactElement | null {
+function SingerVoiceSelect({ value, onChange }: { value: string; onChange: (v: string) => void }): React.ReactElement | null {
   const [list, setList] = useState<{ voices: SingerVoice[]; problem: string | null } | null>(null)
   useEffect(() => { api.singer.builtin().then((b) => setList(b as { voices: SingerVoice[]; problem: string | null })).catch(() => setList(null)) }, [])
   if (!list || !list.voices.length) return null
   const label = (v: SingerVoice): string => `${v.singer ?? v.name}${v.id.endsWith('-2') ? ' 2' : ''} · ${v.description}`
   const groups: Array<['female' | 'male', string]> = [['female', tr('Women')], ['male', tr('Men')]]
-  const shown = groups.filter(([g]) => gender === 'any' || g === gender || list.voices.some((v) => v.id === value && v.gender === g))
   return (
-    <div style={{ marginTop: 6 }}>
+    <div>
       <select value={value} onChange={(e) => onChange(e.target.value)} disabled={!!list.problem && !value} style={{ width: '100%' }}
         title={list.problem ? tr(list.problem) : tr('The music model makes the song, then the built-in singer sings it again with this voice (takes a few minutes more; needs the Stem Splitter and the karaoke engine too)')}>
-        <option value="">{list.problem ? tr('Singer from the Vocal Editor: not installed') : tr('Singer: the music model’s own voice')}</option>
-        {shown.map(([g, name]) => (
+        <option value="">{list.problem ? tr('Not installed (Vocal Editor → install the singer)') : tr('None: the music model sings')}</option>
+        {groups.map(([g, name]) => (
           <optgroup key={g} label={name}>
             {list.voices.filter((v) => v.gender === g).map((v) => <option key={v.id} value={v.id}>{label(v)}</option>)}
           </optgroup>
@@ -714,8 +713,12 @@ export function CreateMusic(): React.ReactElement {
                   <Field name={tr("Voice")}>
                     <Segmented value={p.voice} onChange={(v) => set('voice', v)}
                       options={[{ value: 'any', label: tr("Any") }, { value: 'male', label: tr("Male") }, { value: 'female', label: tr("Female") }]} />
-                    {REVOICE_READY && <SingerVoiceSelect value={p.singerVoice ?? ''} gender={p.voice} onChange={(v) => set('singerVoice', v)} />}
                   </Field>
+                  {REVOICE_READY && (
+                    <Field name={tr("Singer (Vocal Editor)")}>
+                      <SingerVoiceSelect value={p.singerVoice ?? ''} onChange={(v) => set('singerVoice', v)} />
+                    </Field>
+                  )}
                 </>
               )}
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>

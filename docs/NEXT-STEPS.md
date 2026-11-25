@@ -35,8 +35,9 @@ Built but switched off (`REVOICE_READY = false` in CreateMusic.tsx): `services/r
 words → pYIN → SoulX) and `singer_voice` in music_gen. Test on an ACE-Step song: whisper recognises sung words badly
 and with the lyrics as prompt it invents repeated lines, so the new voice sang in the wrong places. Next idea: singing
 voice conversion with Seed-VC (GPL-3, f0 model `DiT_seed_v2_uvit_whisper_base_f0_44k`, reference = the voice's
-prompt.wav): no text needed. Running it in the cloud session was blocked (third-party code plus model downloads);
-waiting for the owner's decision.
+prompt.wav): no text needed. Owner allowed it (25.11.): Seed-VC tested in the cloud session on a 30 s ACE-Step song (Anna, Carlos with
+auto pitch): timing exact, about 2 min per 30 s on the CPU. Hearing samples sent; waiting for the owner's verdict.
+The owner wants its own dropdown "Singer (Vocal Editor)", not inside Male / Female (done, still switched off).
 
 ### Road to 1.0 (owner, 23.11.2026): in this order
 

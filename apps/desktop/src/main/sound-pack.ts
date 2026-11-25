@@ -5,6 +5,7 @@
 //   MuseScore General (S. Christian Collins, MIT; parts public domain / CC0) – every GM instrument, SoundFont 3
 //   Salamander Grand Piano V3 (Alexander Holm, CC BY 3.0) – grand piano, 4 velocity layers
 //   VSCO-2 Community Edition (Versilian Studios, CC0) – violin and cello sections, French horn, trombone
+//   Band: Sonic Pi drum kit (CC0) and electric bass / electric, acoustic, nylon guitar (tonejs-instruments, MIT)
 import { app, ipcMain, BrowserWindow } from 'electron'
 import { createHash } from 'crypto'
 import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'fs'
@@ -22,7 +23,7 @@ interface PackSpec {
   kind: 'sf2' | 'multi'
   main?: string                                   // sf2 / sf3: the bank file inside the pack folder
   tarballs: Tarball[]
-  keep: (path: string) => string | null           // a file of the tarball -> where it goes in the pack folder (null: dropped)
+  keep: (path: string, tarball: number) => string | null   // a file of tarball n -> where it goes in the pack folder (null: dropped)
 }
 
 const npm = (pkg: string, ver: string, sha512: string): Tarball => {
@@ -65,6 +66,28 @@ export const PACKS: PackSpec[] = [
       const m = p.match(/^package\/VSCO-2-CE\/((?:Strings\/Violin Section\/susVib|Strings\/Cello Section\/susvib|Brass\/F Horn\/sus|Brass\/Tenor Trombone\/sus)\/[^/]+\.wav)$/)
       if (m) return m[1]
       return p === 'package/VSCO-2-CE/LICENSE' ? 'LICENSE.txt' : null
+    },
+  },
+  {
+    id: 'band', name: 'Band (drums, bass, guitars)', what: 'A recorded drum kit (kick, snare, hi-hats, toms, cymbals, soft and hard), electric bass, electric, acoustic and nylon guitar: the AI band plays them',
+    licence: 'Drums: CC0 (Sonic Pi samples); bass and guitars: MIT (tonejs-instruments)',
+    downloadMb: 47, diskMb: 20, kind: 'multi',
+    tarballs: [
+      npm('supersonic-scsynth-samples', '0.99.0', '4491s7ip0USC2EyfhLPmcBWVqzaWjrgxHUenlD8iArmKMHAAkOiT/j7LQpslNUOjHhO6Z8iSh3Xjvh7QrE61Uw=='),
+      npm('tonejs-instrument-bass-electric-mp3', '1.1.2', 'S/dDtLMnyfS4+izpBAZBwHHKwJ2j6lOy+h6iFxQlQETUeHomtvTuQxs/UR8VYpQ7FEAeYgFVdjE1LPpeI3wL/w=='),
+      npm('tonejs-instrument-guitar-electric-mp3', '1.1.1', 'DMA0dq6KI5lMA3Eo32kbKfMKgtDwWCNzXnlzhh+p5KTsY+84ySCsSbpeVU66wqcdXEOp+7zPvRzb0GorMDvP5A=='),
+      npm('tonejs-instrument-guitar-acoustic-mp3', '1.1.2', '+24Jd7q2IVeR+y0yxB9oaujXFv/1gpfzbbLn3FZBQ6Fw0AWDO1CI8qM0l4YCN/4w60/cZMIT5laQ3PYB/ZN6jQ=='),
+      npm('tonejs-instrument-guitar-nylon-mp3', '1.1.1', 'HXSTXWo+vXY9J20xoq4Z9gYpy6loZT0uj/WRzkMU5UP7WKjZC5pz0nQtDm2ySrtC9LpiGneSrX550a1FziUScw=='),
+    ],
+    // the same file name (package/A2.mp3) comes from several tarballs: they are told apart by the tarball's number
+    keep: (p, k) => {
+      if (k === 0) {
+        const m = p.match(/^package\/samples\/(drum_[a-z_]+)\.flac$/)
+        if (m) return `drums/${m[1]}.flac`
+        return p === 'package/LICENSE' ? 'LICENSE.txt' : null
+      }
+      const m = p.match(/^package\/([A-G]s?\d)\.mp3$/)
+      return m ? `${['', 'bass', 'egtr', 'agtr', 'ngtr'][k]}/${m[1]}.mp3` : null
     },
   },
 ]
@@ -136,7 +159,7 @@ async function install(p: PackSpec, win: BrowserWindow | null): Promise<{ ok: bo
       if (createHash('sha512').update(tgz).digest('base64') !== tb.sha512) throw new Error('The download is damaged (checksum does not match). Please try again.')
       say(`Unpacking${part}…`, Math.round(((k + 1) / p.tarballs.length) * 100))
       for (const [from, data] of untar(gunzipSync(tgz))) {
-        const to = p.keep(from)
+        const to = p.keep(from, k)
         if (!to) continue
         const f = join(tmp, ...to.split('/'))
         mkdirSync(join(f, '..'), { recursive: true })

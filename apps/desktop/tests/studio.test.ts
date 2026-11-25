@@ -15,6 +15,7 @@ import { installProgress, rapLyrics } from '../src/renderer/src/lib/singer'
 import { snapDrag } from '../src/renderer/src/edit/grid'
 import { armedTrack, inputChannel, pickInput } from '../src/renderer/src/audio/recInput'
 import { minMax } from '../src/renderer/src/audio/wave'
+import { buildMultiBank } from '../src/renderer/src/audio/soundbank'
 import { cleanPlugins } from '../src/renderer/src/lib/pluginList'
 import { adjustChain, albumFileName, planLoudness, planTone, toneOf } from '../src/renderer/src/audio/master/album'
 import { defaultChain } from '../src/renderer/src/audio/master/chain'
@@ -592,6 +593,19 @@ check('plugins: null and nameless entries are left out', cleanPlugins([null, { i
   check('waveform: whole file finds the single peaks (summary path)', hi === d[30000] && lo === d[30001])
   check('waveform: zoomed in, sample by sample', hi2 === d[30000] && lo2 === d[30001] && hi3 === Math.max(0, d[22050], d[22051]) && lo3 === Math.min(0, d[22050], d[22051]))
   check('waveform: outside the file is silent', minMax(buf, 2, 3)[0] === 0 && minMax(buf, 2, 3)[1] === 0)
+}
+
+// ── the Band sound pack: bass and guitars by note name, the drum kit by GM key ──
+{
+  const files = ['bass/As1.mp3', 'bass/E2.mp3', 'egtr/A2.mp3', 'egtr/C4.mp3', 'agtr/D3.mp3', 'ngtr/G3.mp3', 'drums/drum_bass_hard.flac', 'drums/drum_bass_soft.flac', 'drums/drum_snare_hard.flac', 'drums/drum_cymbal_closed.flac', 'drums/drum_cymbal_open.flac']
+  const b = buildMultiBank('band', files)
+  const bass = b.presets.get('0:33')
+  check('band pack: bass, guitars and a drum kit', !!bass && !!b.presets.get('0:27') && !!b.presets.get('0:25') && !!b.presets.get('0:24') && !!b.presets.get('128:0'))
+  check('band pack: A#1 is note 34', !!bass && b.samples[bass.zones[0].sample].root === 34)
+  const kit = b.presets.get('128:0')!
+  const kick = kit.zones.filter((z) => z.keyLo === 36)
+  check('band pack: kick soft / hard by velocity, unpitched', kick.length === 2 && kick[0].gen.get(58) === 36 && b.samples[kick.find((z) => z.velHi === 127)!.sample].file === 'drums/drum_bass_hard.flac')
+  check('band pack: hi-hats cut each other, missing samples are left out', kit.zones.some((z) => z.keyLo === 42 && z.gen.get(57) === 1) && !kit.zones.some((z) => z.keyLo === 45))
 }
 
 console.log(`${passed} passed, ${failed} failed`)

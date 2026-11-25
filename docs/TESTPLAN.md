@@ -847,3 +847,12 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 57.8 | Simple-Modus | Nur Modell, Loop, Schritte; Text und Stil links bleiben | | | 0.99.0 |
 | 57.9 | Alle Looks (Rack, Dunkel, Hell, Swiss, Konsole) | Sieht in jedem Look sauber aus | | | 0.99.0 |
 
+## 58. Neu in 0.99.1: Loops als eigener Modus in Create
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 58.1 | Create: oben rechts **Einfach / Studio / ⟳ Loops** | Drei Modi; Loops ist sofort sichtbar | | | 0.99.1 |
+| 58.2 | **⟳ Loops** wählen | Text steht auf Instrumental; rechts **Loop-Länge** 1/2/4/8/16 Takte, Tempo (120), Tonart, Takt, Schritte, Takes, Seed, Erweitert; der Knopf heißt „Loop erzeugen“ | | | 0.99.1 |
+| 58.3 | Einen 4-Takt-Loop erzeugen und ins Studio legen, Strg+D | Genau 4 Takte, beginnt auf Schlag 1, wiederholt sich ohne Lücke | | | 0.99.1 |
+| 58.4 | Zurück zu **Studio** | Normale Songs (kein Loop mehr); Länge statt Loop-Länge | | | 0.99.1 |
+

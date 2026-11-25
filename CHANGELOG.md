@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.1
+
+### Changed
+
+- **Loops is a mode of its own in Create** (next to Simple and Studio, one of the main functions): loop length 1, 2, 4, 8 or 16 bars, tempo (120 to start with), key, time, and all settings of the Studio mode; instrumental to start with. Simple and Studio make songs.
+
 ## 0.99.0
 
 ### Changed

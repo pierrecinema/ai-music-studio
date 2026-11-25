@@ -2117,5 +2117,9 @@
  "loop": "Loop",
  "s": "s",
  "take": "Take",
- "takes": "Takes"
+ "takes": "Takes",
+ "Loops": "Loops",
+ "Simple and Studio make songs; Loops makes loops of exactly 1 to 16 bars that repeat without a gap": "Einfach und Studio machen Songs; Loops macht Loops von genau 1 bis 16 Takten, die sich ohne Lücke wiederholen",
+ "The loop keeps the tempo the model really played; in the Studio it is stretched to the project tempo, so every copy is exactly the chosen bars long.": "Der Loop behält das Tempo, das das Modell wirklich gespielt hat; im Studio wird er auf das Projekttempo gestreckt, so ist jede Kopie genau so viele Takte lang wie gewählt.",
+ "Loop length": "Loop-Länge"
 }

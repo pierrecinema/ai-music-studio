@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.8
+
+### New
+
+- **Piano Roll with the keyboard below**: a switch in the Piano Roll's toolbar turns the view: **Keys left** (as before) or **🎹 Keys below**, the keyboard across the bottom like a real piano with the notes coming down onto the keys (time runs upwards). Drawing, moving, lengthening (top edge), selecting, erasing and recording work the same; playing notes light up on the keys. The choice is remembered; also in the Piano Roll under the Studio.
+- Draw, Select and Erase in the Piano Roll are translated.
+
 ## 0.99.7
 
 ### Changed

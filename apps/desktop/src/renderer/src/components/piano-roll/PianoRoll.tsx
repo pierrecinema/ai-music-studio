@@ -12,6 +12,8 @@ import { tr, trf } from '../../i18n/tr'
 import { exportMidiClip, pickAndImport } from '../timeline/Timeline'
 
 const NOTE_HEIGHT = 14
+const KEY_WIDTH = 16           // turned view: one column per note, the keyboard across the bottom
+const KEYS_HEIGHT = 56
 const PIANO_WIDTH = 56
 const BEAT_WIDTH = 80
 const TOTAL_PITCHES = 128
@@ -61,6 +63,10 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
   const rootRef = useRef<HTMLDivElement>(null)
   const [scrollX, setScrollX] = useState(0)
   const velDrag = useRef<{ ids: string[]; orig: Map<string, number>; startY: number; abs: boolean } | null>(null)
+  // the view: keys on the left and time to the right (as before), or turned: the keyboard across the bottom and the
+  // notes coming down onto it, time running upwards (owner, 25.11.2026). Remembered.
+  const [turned, setTurned] = useState(() => { try { return localStorage.getItem('ams-piano-turned') === '1' } catch { return false } })
+  const turn = (on: boolean): void => { setTurned(on); try { localStorage.setItem('ams-piano-turned', on ? '1' : '0') } catch { /* storage unavailable */ } }
 
   const track = project.tracks.find((t) => t.id === selectedTrackId)
   const clip = track?.clips.find((c) => c.id === selectedClipId && !c.audioFile) ?? track?.clips.find((c) => !c.audioFile)
@@ -75,15 +81,22 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
     if (!el) return
     const pitches = notes.map((n) => n.pitch)
     const centre = pitches.length ? (Math.min(...pitches) + Math.max(...pitches)) / 2 : 60
-    el.scrollTop = Math.max(0, (TOTAL_PITCHES - 1 - centre) * NOTE_HEIGHT - el.clientHeight / 2)
-    // only when another clip or track is shown
+    if (turned) {
+      el.scrollLeft = Math.max(0, centre * KEY_WIDTH - el.clientWidth / 2)
+      el.scrollTop = el.scrollHeight                      // the start of the clip is at the bottom, on the keys
+    } else el.scrollTop = Math.max(0, (TOTAL_PITCHES - 1 - centre) * NOTE_HEIGHT - el.clientHeight / 2)
+    // only when another clip or track is shown, or the view is turned
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clip?.id])
+  }, [clip?.id, turned])
 
   const snap = (b: number, free: boolean): number => snapBeat(b, free, 'floor')    // free = Alt held, or Snap is off
 
   const pointer = (e: { clientX: number; clientY: number }): { beat: number; pitch: number } => {
     const rect = gridRef.current!.getBoundingClientRect()
+    if (turned) return {
+      beat: Math.max(0, gridBeats - (e.clientY - rect.top) / beatWidth),
+      pitch: Math.max(0, Math.min(TOTAL_PITCHES - 1, Math.floor((e.clientX - rect.left) / KEY_WIDTH)))
+    }
     return {
       beat: Math.max(0, (e.clientX - rect.left) / beatWidth),
       pitch: Math.max(0, Math.min(TOTAL_PITCHES - 1, TOTAL_PITCHES - 1 - Math.floor((e.clientY - rect.top) / NOTE_HEIGHT)))
@@ -152,7 +165,7 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
     if (!keepGroup) select(note.id)
     void previewNote(note.pitch, note.velocity, track)
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const nearEnd = e.clientX > rect.right - EDGE
+    const nearEnd = turned ? e.clientY < rect.top + EDGE : e.clientX > rect.right - EDGE   // the end of a note: its right edge (turned: its top)
     const group = keepGroup && !nearEnd ? new Map(notes.filter((n) => sel.has(n.id)).map((n) => [n.id, { ...n }])) : undefined
     drag.current = { noteId: note.id, kind: nearEnd ? 'resize' : 'move', startX: e.clientX, startY: e.clientY, orig: { ...note }, moved: false, group }
   }
@@ -181,7 +194,8 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
       if (!d || !track || !clip) return
       if (!d.moved && Math.abs(e.clientX - d.startX) + Math.abs(e.clientY - d.startY) < 3) return
       d.moved = true
-      const dBeats = (e.clientX - d.startX) / beatWidth
+      const dBeats = turned ? (d.startY - e.clientY) / beatWidth : (e.clientX - d.startX) / beatWidth
+      const dPitchOf = (): number => (turned ? Math.round((e.clientX - d.startX) / KEY_WIDTH) : -Math.round((e.clientY - d.startY) / NOTE_HEIGHT))
       if (d.kind === 'resize') {
         const dur = Math.max(minLength(), snapBeat(d.orig.duration + dBeats, e.altKey))
         lastLength.current = dur
@@ -190,13 +204,13 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
         // several notes: same shift in time and pitch for all of them
         const minStart = Math.min(...[...d.group.values()].map((n) => n.startTime))
         const shift = Math.max(-minStart, snapBeat(d.orig.startTime + dBeats, e.altKey) - d.orig.startTime)
-        const dPitch = -Math.round((e.clientY - d.startY) / NOTE_HEIGHT)
+        const dPitch = dPitchOf()
         for (const [id, n] of d.group) {
           updateNote(track.id, clip.id, id, { startTime: n.startTime + shift, pitch: Math.max(0, Math.min(127, n.pitch + dPitch)) })
         }
       } else {
         const start = Math.max(0, snapBeat(d.orig.startTime + dBeats, e.altKey))
-        const dPitch = -Math.round((e.clientY - d.startY) / NOTE_HEIGHT)
+        const dPitch = dPitchOf()
         const pitch = Math.max(0, Math.min(127, d.orig.pitch + dPitch))
         if (pitch !== (drag.current as NoteDrag & { lastPitch?: number }).lastPitch) {
           (drag.current as NoteDrag & { lastPitch?: number }).lastPitch = pitch
@@ -215,9 +229,9 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
       pendingNote.current = null
       if (pn) { drawNoteAt(pn); return }                // a click with the draw tool: a note
       // notes inside the frame
-      const bx0 = Math.min(f.x0, f.x1) / beatWidth, bx1 = Math.max(f.x0, f.x1) / beatWidth
-      const py0 = TOTAL_PITCHES - 1 - Math.floor(Math.max(f.y0, f.y1) / NOTE_HEIGHT)
-      const py1 = TOTAL_PITCHES - 1 - Math.floor(Math.min(f.y0, f.y1) / NOTE_HEIGHT)
+      const [bx0, bx1, py0, py1] = turned
+        ? [gridBeats - Math.max(f.y0, f.y1) / beatWidth, gridBeats - Math.min(f.y0, f.y1) / beatWidth, Math.floor(Math.min(f.x0, f.x1) / KEY_WIDTH), Math.floor(Math.max(f.x0, f.x1) / KEY_WIDTH)]
+        : [Math.min(f.x0, f.x1) / beatWidth, Math.max(f.x0, f.x1) / beatWidth, TOTAL_PITCHES - 1 - Math.floor(Math.max(f.y0, f.y1) / NOTE_HEIGHT), TOTAL_PITCHES - 1 - Math.floor(Math.min(f.y0, f.y1) / NOTE_HEIGHT)]
       const inside = notes.filter((n) => n.startTime < bx1 && n.startTime + n.duration > bx0 && n.pitch >= py0 && n.pitch <= py1).map((n) => n.id)
       selectMany(e.shiftKey ? [...new Set([...sel, ...inside])] : inside)
     }
@@ -225,7 +239,7 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
     window.addEventListener('pointerup', onUp)
     return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [track, clip, beatWidth, updateNote, notes, sel])
+  }, [track, clip, beatWidth, updateNote, notes, sel, turned, gridBeats])
 
   // the frame while it is drawn (a ref too: the move handler must see it without waiting for a render)
   const frameRef = useRef<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
@@ -276,7 +290,7 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
         {(['draw', 'select', 'erase'] as const).map((t) => (
           <button key={t} onClick={() => setTool(t)}
             style={{ padding: '3px 10px', borderRadius: 4, border: '1px solid var(--border)', background: tool === t ? 'var(--accent)' : 'var(--bg-primary)', color: tool === t ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11 }}>
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {tr(t === 'draw' ? 'Draw' : t === 'select' ? 'Select' : 'Erase')}
           </button>
         ))}
         <GridControls compact={compact} />
@@ -321,12 +335,80 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
           )
         })()}
         <div style={{ flex: 1 }} />
+        <span style={{ display: 'inline-flex', border: '1px solid var(--border)', borderRadius: 5, overflow: 'hidden' }} title={tr('View: keys on the left (time to the right) or the keyboard across the bottom (the notes come down onto the keys)')}>
+          {([false, true] as const).map((t) => (
+            <button key={String(t)} onClick={() => turn(t)}
+              style={{ padding: '3px 8px', border: 'none', background: turned === t ? 'var(--accent)' : 'var(--bg-primary)', color: turned === t ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 11, whiteSpace: 'nowrap' }}>
+              {t ? `🎹 ${tr('Keys below')}` : `${tr('Keys left')}`}
+            </button>
+          ))}
+        </span>
         {!compact && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr('Zoom')}</span>}
         <input type="range" min={0.25} max={4} step={0.25} value={zoom} title={tr('Zoom')} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: compact ? 60 : 80, accentColor: 'var(--accent)' }} />
         <span style={{ fontSize: 11, color: 'var(--text-secondary)', width: 28 }}>{zoom}x</span>
       </div>
 
-      {/* one scroll area: the keys scroll together with the notes, so rows always line up */}
+      {turned ? (
+        // turned: one column per note, the keyboard across the bottom, time running upwards (the notes come down onto the keys)
+        <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+          <div style={{ width: TOTAL_PITCHES * KEY_WIDTH, position: 'relative' }}>
+            <div ref={gridRef} onPointerDown={onGridDown}
+              style={{ height: gridBeats * beatWidth, position: 'relative', cursor: tool === 'draw' ? 'crosshair' : 'default', touchAction: 'none' }}>
+              {Array.from({ length: TOTAL_PITCHES }, (_, pitch) => (
+                <div key={pitch} data-bg="1" style={{
+                  position: 'absolute', left: pitch * KEY_WIDTH, top: 0, bottom: 0, width: KEY_WIDTH, boxSizing: 'border-box',
+                  background: isBlack(pitch) ? 'rgba(0,0,0,0.3)' : pitch % 12 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent',
+                  borderRight: '1px solid rgba(255,255,255,0.05)'
+                }} />
+              ))}
+              {Array.from({ length: Math.ceil(gridBeats) + 1 }, (_, i) => (
+                <div key={i} data-bg="1" style={{ position: 'absolute', top: (gridBeats - i) * beatWidth, left: 0, right: 0, height: 1, background: i % 4 === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)' }} />
+              ))}
+              {clip && (
+                <div style={{ position: 'absolute', top: (gridBeats - clipBeats) * beatWidth, left: 0, right: 0, height: 2, background: 'color-mix(in srgb, var(--accent) 60%, transparent)', pointerEvents: 'none' }} title={tr('End of the clip')} />
+              )}
+              {notes.map((note) => (
+                <div key={note.id} onPointerDown={(e) => onNoteDown(e, note)} title={noteName(note.pitch)}
+                  style={{
+                    position: 'absolute', left: note.pitch * KEY_WIDTH + 1, top: (gridBeats - note.startTime - note.duration) * beatWidth + 1,
+                    width: KEY_WIDTH - 2, height: Math.max(note.duration * beatWidth - 2, 6), boxSizing: 'border-box',
+                    background: `${track.color}${sel.has(note.id) ? 'ff' : 'cc'}`,
+                    border: `1px solid ${sel.has(note.id) ? '#fff' : track.color}`, borderRadius: 3,
+                    cursor: tool === 'erase' ? 'not-allowed' : 'grab', overflow: 'hidden', opacity: 0.45 + (note.velocity / 127) * 0.55
+                  }}>
+                  <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: EDGE, cursor: 'ns-resize' }} />
+                </div>
+              ))}
+              {frame && (
+                <div style={{ position: 'absolute', left: Math.min(frame.x0, frame.x1), top: Math.min(frame.y0, frame.y1), width: Math.abs(frame.x1 - frame.x0), height: Math.abs(frame.y1 - frame.y0),
+                  border: '1px solid var(--accent-light)', background: 'color-mix(in srgb, var(--accent) 15%, transparent)', pointerEvents: 'none', zIndex: 4 }} />
+              )}
+              {clip && playheadX >= 0 && playheadX <= gridWidth && (
+                <div style={{ position: 'absolute', top: (gridBeats - (beat - clipStart)) * beatWidth, left: 0, right: 0, height: 2, background: 'var(--accent)', pointerEvents: 'none', zIndex: 2 }} />
+              )}
+            </div>
+            {/* the keyboard: stays at the bottom while the notes scroll */}
+            <div style={{ position: 'sticky', bottom: 0, height: KEYS_HEIGHT, zIndex: 3, display: 'flex', borderTop: '2px solid var(--border-mid)', background: '#111' }}>
+              {Array.from({ length: TOTAL_PITCHES }, (_, pitch) => {
+                const black = isBlack(pitch)
+                const lit = clip && notes.some((n) => n.pitch === pitch && beat - clipStart >= n.startTime && beat - clipStart < n.startTime + n.duration) && useAudioStore.getState().isPlaying
+                return (
+                  <div key={pitch}
+                    onPointerDown={(e) => { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); noteOn(pitch, 100) }}
+                    onPointerUp={() => noteOff(pitch)} onPointerCancel={() => noteOff(pitch)}
+                    title={`${noteName(pitch)} · ${tr('Play this note. While recording (● or Ctrl+R), what you play here becomes notes in the clip.')}`}
+                    style={{ width: KEY_WIDTH, flexShrink: 0, boxSizing: 'border-box', cursor: 'pointer', position: 'relative', borderRight: '1px solid #444',
+                      background: black ? 'linear-gradient(#f4f4f4 0 0) bottom / 100% 40% no-repeat, #1b1b1b' : '#f4f4f4' }}>
+                    {lit && <div style={{ position: 'absolute', inset: 0, background: track.color, opacity: 0.85 }} />}
+                    {pitch % 12 === 0 && <span style={{ position: 'absolute', bottom: 2, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#555' }}>{noteName(pitch)}</span>}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      ) : (
+      <>
       <div ref={scrollRef} onScroll={(e) => setScrollX((e.target as HTMLDivElement).scrollLeft)} style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
         <div style={{ display: 'flex', width: PIANO_WIDTH + gridWidth, height: TOTAL_PITCHES * NOTE_HEIGHT, position: 'relative' }}>
           <div style={{ width: PIANO_WIDTH, flexShrink: 0, position: 'sticky', left: 0, zIndex: 3, borderRight: '1px solid var(--border)' }}>
@@ -389,8 +471,11 @@ export function PianoRoll({ compact = false }: { compact?: boolean } = {}): Reac
         </div>
       </div>
 
+      </>
+      )}
+
       {/* velocity lane: one bar per note, drag a bar up or down (selected notes move together) */}
-      {clip && (
+      {clip && !turned && (
         <div style={{ height: VEL_HEIGHT, flexShrink: 0, display: 'flex', borderTop: '1px solid var(--border)', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
           <div style={{ width: PIANO_WIDTH, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--text-secondary)', padding: '4px 3px', boxSizing: 'border-box', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', wordBreak: 'break-word', lineHeight: 1.15 }}>
             <span>{tr('Velocity')}</span>

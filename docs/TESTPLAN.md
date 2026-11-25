@@ -851,10 +851,10 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 58.1 | Create: oben rechts **Einfach / Studio / ⟳ Loops** | Drei Modi; Loops ist sofort sichtbar | | | 0.99.1 |
-| 58.2 | **⟳ Loops** wählen | Text steht auf Instrumental; rechts **Loop-Länge** 1/2/4/8/16 Takte, Tempo (120), Tonart, Takt, Schritte, Takes, Seed, Erweitert; der Knopf heißt „Loop erzeugen“ | | | 0.99.1 |
+| 58.1 | Create: oben rechts **Einfach / Studio / ⟳ Loops** | Drei Modi; Loops ist sofort sichtbar | OK | | 0.99.1 |
+| 58.2 | **⟳ Loops** wählen | Text steht auf Instrumental; rechts **Loop-Länge** 1/2/4/8/16 Takte, Tempo (120), Tonart, Takt, Schritte, Takes, Seed, Erweitert; der Knopf heißt „Loop erzeugen“ | OK | | 0.99.1 |
 | 58.3 | Einen 4-Takt-Loop erzeugen und ins Studio legen, Strg+D | Genau 4 Takte, beginnt auf Schlag 1, wiederholt sich ohne Lücke | OK | 8-Takt-Loop in 8 min auf der CPU, Tempo stimmt, loopt sauber | 0.99.1 |
-| 58.4 | Zurück zu **Studio** | Normale Songs (kein Loop mehr); Länge statt Loop-Länge | | | 0.99.1 |
+| 58.4 | Zurück zu **Studio** | Normale Songs (kein Loop mehr); Länge statt Loop-Länge | OK | | 0.99.1 |
 
 ## 59. Neu in 0.99.2: alle Sprachen vollständig
 
@@ -878,43 +878,55 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 61.1 | Studio öffnen | Eine Werkzeugleiste in Gruppen: + Spur ▾, Audio importieren, ↖ ✂ 🧲, Raster/Quantisieren, ⟳ Loop, Punch-in/-out, ♩ Einzähler, + Marker, Tempo, Zoom − + ⤢, Master-FX, Exportieren, ⋯ | | | 0.99.4 |
-| 61.2 | **+ Spur ▾**: Audiospur, MIDI-Spur, Return-Spur Hall / Delay | Jeweils die richtige Spur kommt dazu | | | 0.99.4 |
-| 61.3 | **⋯** oben rechts: Kanal, Alle synchronisieren, Beat-Match | Kanal-Ansicht geht auf/zu; Sync und Beat-Match wie bisher | | | 0.99.4 |
-| 61.4 | Spurkopf: ● M S klicken | ● rot = scharf, M orange = stumm, S blau = solo | | | 0.99.4 |
-| 61.5 | Fader ziehen, Doppelklick | Wert in dB daneben; Doppelklick = −1,9 dB | | | 0.99.4 |
-| 61.6 | Pan-Regler nach oben/unten ziehen, Doppelklick | Panorama ändert sich hörbar; Doppelklick = Mitte | | | 0.99.4 |
-| 61.7 | **⋯** im Spurkopf | Menü mit Umbenennen, Effekte, Kanal, Automation, (Takes), Farbe, Löschen | | | 0.99.4 |
-| 61.8 | Clips ansehen | Titelleiste in Spurfarbe, darunter Noten bzw. Wellenform | | | 0.99.4 |
-| 61.9 | Audio-Clip, stark hineinzoomen (Strg + Mausrad, mehrmals +) | Die Wellenform bleibt fein wie im Mastering, bis zu einzelnen Schwingungen; keine Blöcke | | | 0.99.4 |
-| 61.10 | Detailbereich unten: MIDI-Clip anklicken | Links Instrument, Ausgang, Farbe; Mitte die Noten; „In der Piano-Roll öffnen“ geht | | | 0.99.4 |
-| 61.11 | Detailbereich: Audio-Clip anklicken | Mitte Gain, Tempo, SYNC, MASTER, Fades, WARP und die Wellenform | | | 0.99.4 |
-| 61.12 | Detailbereich rechts: + Effekt…, ein/aus, × | Effekt kommt dazu, lässt sich umgehen und löschen | | | 0.99.4 |
-| 61.13 | ▾ im Detailbereich, dann ▴ Details | Klappt zu und wieder auf, bleibt nach Neustart so | | | 0.99.4 |
-| 61.14 | Piano-Roll oder Mixer unten öffnen | Statt des Detailbereichs das gewohnte Fenster; Audio-Clip-Werkzeuge oben | | | 0.99.4 |
-| 61.15 | Alle Looks | Sieht in Rack, Dunkel, Hell, Swiss, Konsole sauber aus | | | 0.99.4 |
+| 61.1 | Studio öffnen | Eine Werkzeugleiste in Gruppen: + Spur ▾, Audio importieren, ↖ ✂ 🧲, Raster/Quantisieren, ⟳ Loop, Punch-in/-out, ♩ Einzähler, + Marker, Tempo, Zoom − + ⤢, Master-FX, Exportieren, ⋯ | OK | | 0.99.4 |
+| 61.2 | **+ Spur ▾**: Audiospur, MIDI-Spur, Return-Spur Hall / Delay | Jeweils die richtige Spur kommt dazu | OK | | 0.99.4 |
+| 61.3 | **⋯** oben rechts: Kanal, Alle synchronisieren, Beat-Match | Kanal-Ansicht geht auf/zu; Sync und Beat-Match wie bisher | OK | | 0.99.4 |
+| 61.4 | Spurkopf: ● M S klicken | ● rot = scharf, M orange = stumm, S blau = solo | OK | | 0.99.4 |
+| 61.5 | Fader ziehen, Doppelklick | Wert in dB daneben; Doppelklick = −1,9 dB | OK | | 0.99.4 |
+| 61.6 | Pan-Regler nach oben/unten ziehen, Doppelklick | Panorama ändert sich hörbar; Doppelklick = Mitte | OK | | 0.99.4 |
+| 61.7 | **⋯** im Spurkopf | Menü mit Umbenennen, Effekte, Kanal, Automation, (Takes), Farbe, Löschen | OK | | 0.99.4 |
+| 61.8 | Clips ansehen | Titelleiste in Spurfarbe, darunter Noten bzw. Wellenform | OK | | 0.99.4 |
+| 61.9 | Audio-Clip, stark hineinzoomen (Strg + Mausrad, mehrmals +) | Die Wellenform bleibt fein wie im Mastering, bis zu einzelnen Schwingungen; keine Blöcke | OK | | 0.99.4 |
+| 61.10 | Detailbereich unten: MIDI-Clip anklicken | Seit 0.99.7: die Piano-Roll (siehe 64); links Instrument, Ausgang, Farbe, Effekte | OK | | 0.99.4 |
+| 61.11 | Detailbereich: Audio-Clip anklicken | Mitte Gain, Tempo, SYNC, MASTER, Fades, WARP und die Wellenform | OK | | 0.99.4 |
+| 61.12 | Detailbereich rechts: + Effekt…, ein/aus, × | Effekt kommt dazu, lässt sich umgehen und löschen | OK | | 0.99.4 |
+| 61.13 | ▾ im Detailbereich, dann ▴ Details | Klappt zu und wieder auf, bleibt nach Neustart so | OK | | 0.99.4 |
+| 61.14 | Piano-Roll oder Mixer unten öffnen | Statt des Detailbereichs das gewohnte Fenster; Audio-Clip-Werkzeuge oben | OK | | 0.99.4 |
+| 61.15 | Alle Looks | Sieht in Rack, Dunkel, Hell, Swiss, Konsole sauber aus | OK | | 0.99.4 |
 
 ## 62. Neu in 0.99.5: Wellenformen sofort da
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 62.1 | Projekt mit einem Song laden (oder App mit Song im Projekt starten), Studio öffnen, **nicht** Play drücken | Kurz „Audiodateien werden gelesen…“ im Clip, dann erscheint die Wellenform von selbst | | | 0.99.5 |
+| 62.1 | Projekt mit einem Song laden (oder App mit Song im Projekt starten), Studio öffnen, **nicht** Play drücken | Kurz „Audiodateien werden gelesen…“ im Clip, dann erscheint die Wellenform von selbst | OK | | 0.99.5 |
 
 ## 63. Neu in 0.99.6: Abspielposition zurückziehen, Tempo beim Abspielen
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 63.1 | Studio etwas nach rechts gescrollt, die lila Abspielposition nach links über den Rand ziehen (bis ins Menü) und halten | Die Ansicht scrollt mit nach links, die Position wandert zurück bis zum Anfang | | | 0.99.6 |
-| 63.2 | Das Gleiche nach rechts über den Rand | Die Ansicht scrollt mit nach rechts | | | 0.99.6 |
-| 63.3 | Beides während der Song läuft | Beim Loslassen spielt er an der neuen Stelle weiter | | | 0.99.6 |
-| 63.4 | AUTO SYNC an, Song mit Audio läuft, oben BPM ändern (tippen + Enter, oder Mausrad) | Im Studio „Neues Tempo wird angepasst…“, danach läuft der Song im neuen Tempo weiter, ohne Stop/Play | | Dauer ohne NVIDIA notieren | 0.99.6 |
+| 63.1 | Studio etwas nach rechts gescrollt, die lila Abspielposition nach links über den Rand ziehen (bis ins Menü) und halten | Die Ansicht scrollt mit nach links, die Position wandert zurück bis zum Anfang | OK | | 0.99.6 |
+| 63.2 | Das Gleiche nach rechts über den Rand | Die Ansicht scrollt mit nach rechts | OK | | 0.99.6 |
+| 63.3 | Beides während der Song läuft | Beim Loslassen spielt er an der neuen Stelle weiter | OK | | 0.99.6 |
+| 63.4 | AUTO SYNC an, Song mit Audio läuft, oben BPM ändern (tippen + Enter, oder Mausrad) | Im Studio „Neues Tempo wird angepasst…“, danach läuft der Song im neuen Tempo weiter, ohne Stop/Play | OK | Dauer ohne NVIDIA notieren | 0.99.6 |
 
 ## 64. Neu in 0.99.7: Piano-Roll im Studio
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 64.1 | Studio, eine MIDI-Spur / einen MIDI-Clip anklicken | Unten erscheint die Piano-Roll des Clips; links Instrument, Ausgang, Farbe und Effekte | | | 0.99.7 |
-| 64.2 | In dieser Piano-Roll Noten zeichnen, verschieben, löschen | Wirkt sofort, der Clip oben zeigt die Noten | | | 0.99.7 |
-| 64.3 | ● Rec in der Piano-Roll unten | Aufnahme wie in der großen Piano-Roll | | | 0.99.7 |
-| 64.4 | Den oberen Rand des Detailbereichs nach oben/unten ziehen, Doppelklick | Höhe ändert sich, bleibt nach Neustart; Doppelklick = normale Höhe | | | 0.99.7 |
-| 64.5 | Eine Audiospur anklicken | Wieder Clip-Werkzeuge mit Wellenform und rechts die Effekte | | | 0.99.7 |
+| 64.1 | Studio, eine MIDI-Spur / einen MIDI-Clip anklicken | Unten erscheint die Piano-Roll des Clips; links Instrument, Ausgang, Farbe und Effekte | OK | | 0.99.7 |
+| 64.2 | In dieser Piano-Roll Noten zeichnen, verschieben, löschen | Wirkt sofort, der Clip oben zeigt die Noten | OK | | 0.99.7 |
+| 64.3 | ● Rec in der Piano-Roll unten | Aufnahme wie in der großen Piano-Roll | OK | | 0.99.7 |
+| 64.4 | Den oberen Rand des Detailbereichs nach oben/unten ziehen, Doppelklick | Höhe ändert sich, bleibt nach Neustart; Doppelklick = normale Höhe | OK | | 0.99.7 |
+| 64.5 | Eine Audiospur anklicken | Wieder Clip-Werkzeuge mit Wellenform und rechts die Effekte | OK | | 0.99.7 |
+
+## 65. Neu in 0.99.8: Piano-Roll mit Tastatur unten
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 65.1 | Piano-Roll öffnen, oben rechts **🎹 Tasten unten** | Tastatur waagrecht unten wie ein Klavier, die Noten stehen darüber und laufen von oben auf die Tasten zu; Taktanfang unten | | | 0.99.8 |
+| 65.2 | Mit Zeichnen klicken, eine Note oben am Rand länger ziehen, Noten verschieben (hoch/runter = Zeit, seitlich = Tonhöhe) | Wirkt wie in der normalen Ansicht | | | 0.99.8 |
+| 65.3 | Auswählen: Rahmen ziehen; Löschen-Werkzeug | Rahmen wählt die Noten darin; Löschen entfernt Noten | | | 0.99.8 |
+| 65.4 | Auf die Tasten unten klicken; ● Rec und auf den Tasten spielen | Man hört die Töne; bei der Aufnahme werden sie Noten | | | 0.99.8 |
+| 65.5 | Abspielen | Die Abspiellinie läuft nach oben, gespielte Noten leuchten auf den Tasten | | | 0.99.8 |
+| 65.6 | Zurück auf **Tasten links**, App neu starten | Normale Ansicht; die gewählte Ansicht bleibt nach Neustart | | | 0.99.8 |
+| 65.7 | Studio: MIDI-Spur anklicken, unten in der Piano-Roll umschalten | Geht dort genauso | | | 0.99.8 |

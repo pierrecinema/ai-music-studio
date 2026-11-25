@@ -65,7 +65,7 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 | **Library** | Songs, loops, stems and samples with tempo and tags; search by name, tag or BPM; export as WAV, AIFF, FLAC or MP3 | |
 | **AI Chat** | Music assistant for chords, lyrics and ideas | Claude, ChatGPT, Grok, or free and local with Ollama |
 | **Hardware** | Runs on the CPU; faster on NVIDIA (CUDA) and AMD / Intel graphics cards (DirectML) | PyTorch |
-| **Languages** | The whole app in English, German, French, Spanish, Italian, Portuguese, Russian and Chinese; menus in Japanese and Korean | |
+| **Languages** | The whole app in English, German, French, Spanish, Italian, Portuguese, Russian and Chinese | |
 
 ### Coming soon
 
@@ -242,7 +242,6 @@ pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 Switch language in **Settings → General → Language**:
 - Fully translated: English, Deutsch, Français, Español, Italiano, Português, Русский, 中文
-- Menus only so far: 日本語, 한국어
 - How to add or improve a translation: [docs/TRANSLATING.md](docs/TRANSLATING.md)
 
 ## Code signing policy

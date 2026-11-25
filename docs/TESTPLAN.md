@@ -856,3 +856,11 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 58.3 | Einen 4-Takt-Loop erzeugen und ins Studio legen, Strg+D | Genau 4 Takte, beginnt auf Schlag 1, wiederholt sich ohne Lücke | | | 0.99.1 |
 | 58.4 | Zurück zu **Studio** | Normale Songs (kein Loop mehr); Länge statt Loop-Länge | | | 0.99.1 |
 
+## 59. Neu in 0.99.2: alle Sprachen vollständig
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 59.1 | Einstellungen → Allgemein → Sprache | Nur noch English, Deutsch, Français, Español, Italiano, Português, 中文, Русский (kein Japanisch, kein Koreanisch) | | | 0.99.2 |
+| 59.2 | Sprache auf Español (oder Français) stellen, Create, Stem Splitter, Album, Vocal Editor, Setup-Assistent öffnen | Alles in der Sprache, kein Englisch mehr außer Namen und Einheiten | | | 0.99.2 |
+| 59.3 | Zurück auf Deutsch | Alles wieder Deutsch | | | 0.99.2 |
+

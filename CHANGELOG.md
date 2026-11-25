@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.2
+
+### Changed
+
+- **Every language complete**: about 540 texts of the newer functions were still English in Spanish, French, Italian, Portuguese and Chinese (360 in Russian); they are translated now. Only names and units stay as they are.
+- **Japanese and Korean removed**: only their menu was translated; the app offers the languages that are complete (English, German, French, Spanish, Italian, Portuguese, Russian, Chinese). If one of them was chosen, the app starts in English.
+
 ## 0.99.1
 
 ### Changed

@@ -36,7 +36,7 @@ Karaoke Export, Video Composer and Cloud Rendering (Pro): **decide**: hidden in 
 
 - **Help in the app:** the manual and wiki inside the app, in the chosen language, a "?" on each page that opens its part.
 - **First start guide:** three steps: install an AI engine, make a first song, open it in the Studio. A demo project to try at once.
-- **Translations:** fill Japanese and Korean; the mastering assistant's texts in all languages.
+- **Translations:** all languages complete (Japanese and Korean removed in 0.99.2); the mastering assistant's texts in all languages.
 - **Crash and error reports:** errors written to the log with one click "send report" (opens a GitHub issue with the log, nothing sent automatically).
 - **Autosave and recovery:** project saved every few minutes; after a crash the app offers the last state.
 

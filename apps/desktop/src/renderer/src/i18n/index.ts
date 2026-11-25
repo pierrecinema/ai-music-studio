@@ -8,8 +8,6 @@ import es from './locales/es.json'
 import it from './locales/it.json'
 import pt from './locales/pt.json'
 import zh from './locales/zh.json'
-import ja from './locales/ja.json'
-import ko from './locales/ko.json'
 import ru from './locales/ru.json'
 
 i18n
@@ -23,8 +21,6 @@ i18n
       it: { translation: it },
       pt: { translation: pt },
       zh: { translation: zh },
-      ja: { translation: ja },
-      ko: { translation: ko },
       ru: { translation: ru }
     },
     lng: localStorage.getItem('ams-language') ?? 'en',

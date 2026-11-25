@@ -73,7 +73,7 @@ Nach der Installation die App neu starten, damit sie die neuen Programme im PATH
 
 - **Einstellungen → Plugins** (ab 0.50): VST3- und VST2-Plugins mit 64 und 32 Bit (ein 32-Bit-Plugin läuft in einem eigenen 32-Bit-Plugin-Host; welches ein Plugin braucht, erkennt die App selbst). Die üblichen Ordner werden immer durchsucht, auch die unter *Programme (x86)*; eigene Ordner kommen mit *Add folder…* dazu. **Search for plugins** sucht (beim ersten Start einmal von selbst). In der Liste bestimmt das Häkchen, welche Plugins in der App erscheinen. Jedes Plugin wird einzeln geprüft; stürzt eines dabei ab, wird es übersprungen und unten aufgeführt.
 - **Einstellungen → Audio** (ab 0.51): wie in anderen DAWs. *Audio-Gerät:* Treiber **Windows** oder **ASIO / andere Treiber** (über den Plugin-Host: ASIO, Windows Audio oder DirectSound, Gerät, Ausgänge, Abtastrate, Puffer und **ASIO-Bedienfeld**; für den Mainboard-Sound ASIO4ALL oder FlexASIO installieren; Vorschauen in Bibliothek und Erstellen bleiben auf dem Windows-Gerät), Eingangsgerät für Aufnahmen, Ausgangsgerät (gilt überall in der App, *Neu suchen* nach dem Einstecken). *Abtastrate* der Wiedergabe und des Exports. *Latenz:* Puffergröße mit echter Ein-, Ausgangs- und Gesamt-Latenz, Treiberfehler-Kompensation (verschiebt Aufnahmen früher). *Test:* Testton an/aus mit Lautstärke und Frequenz, simulierte CPU-Belastung.
-- **Einstellungen → Allgemein**: Sprache. Ab 0.40 ist die ganze App übersetzt: Deutsch, Englisch, Französisch, Spanisch, Italienisch, Portugiesisch, Russisch (ab 0.86) und Chinesisch. Bei Japanisch und Koreanisch ist vorerst nur das Menü übersetzt, der Rest bleibt Englisch.
+- **Einstellungen → Allgemein**: Sprache. Ab 0.40 ist die ganze App übersetzt: Deutsch, Englisch, Französisch, Spanisch, Italienisch, Portugiesisch, Russisch (ab 0.86) und Chinesisch.
 - **Einstellungen → Erscheinungsbild**: das Aussehen der App: **Dunkel**, **Hell**, **Analog-Pult** (Holz, Bernstein, leuchtende Anzeige), **Swiss** (Schwarz-Weiß, große Schrift, Menü als Leiste unten) oder **Hardware-Rack** (graue Gerätefronten, breites grünes LCD, Menü an der Seite als Rack-Tasten, im Studio rechts ein Effekt-Rack mit Drehknöpfen für die gewählte Spur).
 
 ## 3. Funktionen
@@ -445,5 +445,4 @@ Getestet ist die Verbindung mit dem offiziellen MCP-Python-Client (Verbindung, W
 - **Vocal Editor, AI Instruments, Karaoke Export und Video Composer** sind im Menü abgeblendet und zeigen „Coming soon“: Sie sind noch nicht fertig und kommen mit einem späteren Update.
 - Die Engines (ACE-Step, Matchering, Whisper, MuScriptor) sind eingebunden, aber noch nicht auf allen Hardware-Kombinationen erprobt.
 - Eine LoRA pro Durchgang.
-- Japanisch und Koreanisch: nur das Menü ist übersetzt, alles andere erscheint auf Englisch.
 - Der Installer ist nicht signiert (SmartScreen-Hinweis).

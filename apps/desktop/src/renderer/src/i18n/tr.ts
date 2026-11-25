@@ -6,13 +6,11 @@ import de from './ui/de.json'
 import es from './ui/es.json'
 import fr from './ui/fr.json'
 import it from './ui/it.json'
-import ja from './ui/ja.json'
-import ko from './ui/ko.json'
 import pt from './ui/pt.json'
 import ru from './ui/ru.json'
 import zh from './ui/zh.json'
 
-const TABLES: Record<string, Record<string, string>> = { de, es, fr, it, ja, ko, pt, ru, zh }
+const TABLES: Record<string, Record<string, string>> = { de, es, fr, it, pt, ru, zh }
 
 // keys are stored with their white space folded to single spaces (texts in JSX may run over several lines)
 const fold = (s: string): string => s.replace(/\s+/g, ' ')

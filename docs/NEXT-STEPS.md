@@ -72,8 +72,7 @@ after his trip); the plugin-host crash on the first scan still lacks a user log;
 
 - **0.50.0: VST plugins, VST3 and VST2 at the same time:** host, scan, Settings → Plugins list with ticks, plugin
   windows, plugins in the Studio inserts, on the master and in the Mastering chain.
-- **Translations:** Japanese and Korean tables (`i18n/ui/ja.json`, `ko.json`) are still empty: only the menu is
-  translated. The mastering assistant writes its suggestions in German or English only. See `docs/TRANSLATING.md`.
+- **Translations:** Japanese and Korean were removed in 0.99.2 (owner: only complete languages). The mastering assistant writes its suggestions in German or English only. See `docs/TRANSLATING.md`.
 - **Done in 0.60.0:** ASIO output through the plugin host, VST instruments on MIDI tracks, free instruments (Dexed, Surge XT), Hardware rack look rebuilt. Next: test them with the owner (TESTPLAN section 11); Swiss rebuilt in 0.70.0; the Analog console look was removed in 0.70.1 (owner did not like it).
 - **(done) 0.60.0: Settings → Audio, sound cards (owner, 17.11.2026):** more options for the audio output: choose the sound card
   / output device, other driver types such as **ASIO** (also WASAPI exclusive), buffer size and sample rate per device,

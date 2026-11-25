@@ -1,51 +1,12 @@
 # Offene Tests (Stand 25.11.2026, Version 0.99.7)
 
-Schreib mir wie bisher die Nummer und *geht* oder *geht nicht*. Was du schon getestet, aber nie gemeldet hast, kannst du einfach mit *geht* abhaken. Das Ergebnis trage ich in `docs/TESTPLAN.md` ein.
+Schreib mir wie bisher die Nummer und *geht* oder *geht nicht*. Das Ergebnis trage ich in `docs/TESTPLAN.md` ein.
 
-## A. Neu von heute (0.99.1–0.99.7) – zuerst (28 Punkte)
-
-### 58. Neu in 0.99.1: Loops als eigener Modus in Create
-
-- [ ] **58.1** Create: oben rechts **Einfach / Studio / ⟳ Loops** → *Drei Modi; Loops ist sofort sichtbar*
-- [ ] **58.2** **⟳ Loops** wählen → *Text steht auf Instrumental; rechts **Loop-Länge** 1/2/4/8/16 Takte, Tempo (120), Tonart, Takt, Schritte, Takes, Seed, Erweitert; der Knopf heißt „Loop erzeugen“*
-- [ ] **58.4** Zurück zu **Studio** → *Normale Songs (kein Loop mehr); Länge statt Loop-Länge*
+## A. Neu (0.99.x) (1 Punkte)
 
 ### 61. Neu in 0.99.4: Studio im neuen Layout
 
 - [ ] **61.1** Studio öffnen → *Eine Werkzeugleiste in Gruppen: + Spur ▾, Audio importieren, ↖ ✂ 🧲, Raster/Quantisieren, ⟳ Loop, Punch-in/-out, ♩ Einzähler, + Marker, Tempo, Zoom − + ⤢, Master-FX, Exportieren, ⋯*
-- [ ] **61.2** **+ Spur ▾**: Audiospur, MIDI-Spur, Return-Spur Hall / Delay → *Jeweils die richtige Spur kommt dazu*
-- [ ] **61.3** **⋯** oben rechts: Kanal, Alle synchronisieren, Beat-Match → *Kanal-Ansicht geht auf/zu; Sync und Beat-Match wie bisher*
-- [ ] **61.4** Spurkopf: ● M S klicken → *● rot = scharf, M orange = stumm, S blau = solo*
-- [ ] **61.5** Fader ziehen, Doppelklick → *Wert in dB daneben; Doppelklick = −1,9 dB*
-- [ ] **61.6** Pan-Regler nach oben/unten ziehen, Doppelklick → *Panorama ändert sich hörbar; Doppelklick = Mitte*
-- [ ] **61.7** **⋯** im Spurkopf → *Menü mit Umbenennen, Effekte, Kanal, Automation, (Takes), Farbe, Löschen*
-- [ ] **61.8** Clips ansehen → *Titelleiste in Spurfarbe, darunter Noten bzw. Wellenform*
-- [ ] **61.9** Audio-Clip, stark hineinzoomen (Strg + Mausrad, mehrmals +) → *Die Wellenform bleibt fein wie im Mastering, bis zu einzelnen Schwingungen; keine Blöcke*
-- [ ] **61.10** Detailbereich unten: MIDI-Clip anklicken → *Seit 0.99.7: die Piano-Roll (siehe 64); links Instrument, Ausgang, Farbe, Effekte*
-- [ ] **61.11** Detailbereich: Audio-Clip anklicken → *Mitte Gain, Tempo, SYNC, MASTER, Fades, WARP und die Wellenform*
-- [ ] **61.12** Detailbereich rechts: + Effekt…, ein/aus, × → *Effekt kommt dazu, lässt sich umgehen und löschen*
-- [ ] **61.13** ▾ im Detailbereich, dann ▴ Details → *Klappt zu und wieder auf, bleibt nach Neustart so*
-- [ ] **61.14** Piano-Roll oder Mixer unten öffnen → *Statt des Detailbereichs das gewohnte Fenster; Audio-Clip-Werkzeuge oben*
-- [ ] **61.15** Alle Looks → *Sieht in Rack, Dunkel, Hell, Swiss, Konsole sauber aus*
-
-### 62. Neu in 0.99.5: Wellenformen sofort da
-
-- [ ] **62.1** Projekt mit einem Song laden (oder App mit Song im Projekt starten), Studio öffnen, **nicht** Play drücken → *Kurz „Audiodateien werden gelesen…“ im Clip, dann erscheint die Wellenform von selbst*
-
-### 63. Neu in 0.99.6: Abspielposition zurückziehen, Tempo beim Abspielen
-
-- [ ] **63.1** Studio etwas nach rechts gescrollt, die lila Abspielposition nach links über den Rand ziehen (bis ins Menü) und halten → *Die Ansicht scrollt mit nach links, die Position wandert zurück bis zum Anfang*
-- [ ] **63.2** Das Gleiche nach rechts über den Rand → *Die Ansicht scrollt mit nach rechts*
-- [ ] **63.3** Beides während der Song läuft → *Beim Loslassen spielt er an der neuen Stelle weiter*
-- [ ] **63.4** AUTO SYNC an, Song mit Audio läuft, oben BPM ändern (tippen + Enter, oder Mausrad) → *Im Studio „Neues Tempo wird angepasst…“, danach läuft der Song im neuen Tempo weiter, ohne Stop/Play* (Dauer ohne NVIDIA notieren)
-
-### 64. Neu in 0.99.7: Piano-Roll im Studio
-
-- [ ] **64.1** Studio, eine MIDI-Spur / einen MIDI-Clip anklicken → *Unten erscheint die Piano-Roll des Clips; links Instrument, Ausgang, Farbe und Effekte*
-- [ ] **64.2** In dieser Piano-Roll Noten zeichnen, verschieben, löschen → *Wirkt sofort, der Clip oben zeigt die Noten*
-- [ ] **64.3** ● Rec in der Piano-Roll unten → *Aufnahme wie in der großen Piano-Roll*
-- [ ] **64.4** Den oberen Rand des Detailbereichs nach oben/unten ziehen, Doppelklick → *Höhe ändert sich, bleibt nach Neustart; Doppelklick = normale Höhe*
-- [ ] **64.5** Eine Audiospur anklicken → *Wieder Clip-Werkzeuge mit Wellenform und rechts die Effekte*
 
 ## B. Muss ein anderer User testen (Mikro, MIDI-Aufnahme, ältere NVIDIA) (5 Punkte)
 

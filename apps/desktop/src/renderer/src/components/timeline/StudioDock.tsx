@@ -11,9 +11,11 @@ import { TrackInput } from './TrackInput'
 import { canRecordAudio } from '../../audio/recInput'
 import { INSERT_LABEL } from '../../audio/fx'
 import { tr } from '../../i18n/tr'
+import { PianoRoll } from '../piano-roll/PianoRoll'
 import type { Clip, Track } from '../../types'
 
-export const DOCK_HEIGHT = 196
+export const DOCK_HEIGHT = 300
+const DOCK_MIN = 150, DOCK_MAX = 640
 
 const head: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0,
@@ -28,6 +30,16 @@ export function useDockOpen(): [boolean, () => void] {
 }
 
 export function StudioDock({ palette, clipTools, open, toggle }: { palette: string[]; clipTools?: React.ReactNode; open: boolean; toggle: () => void }): React.ReactElement {
+  // the height: drag the upper edge (remembered)
+  const [height, setHeight] = useState(() => { try { return Math.max(DOCK_MIN, Math.min(DOCK_MAX, Number(localStorage.getItem('ams-studio-dock-h')) || DOCK_HEIGHT)) } catch { return DOCK_HEIGHT } })
+  const resize = (e: React.PointerEvent): void => {
+    e.preventDefault()
+    const y0 = e.clientY, h0 = height
+    let h = h0
+    const move = (ev: PointerEvent): void => { h = Math.max(DOCK_MIN, Math.min(DOCK_MAX, h0 + y0 - ev.clientY)); setHeight(h) }
+    const up = (): void => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); try { localStorage.setItem('ams-studio-dock-h', String(Math.round(h))) } catch { /* storage unavailable */ } }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
+  }
   const project = useProjectStore((s) => s.project)
   const trackId = useProjectStore((s) => s.selectedTrackId)
   const clipId = useProjectStore((s) => s.selectedClipId)
@@ -42,27 +54,32 @@ export function StudioDock({ palette, clipTools, open, toggle }: { palette: stri
       </div>
     )
   }
+  const midi = track?.type === 'midi'
   return (
-    <div style={{ height: DOCK_HEIGHT, flexShrink: 0, display: 'grid', gridTemplateColumns: 'minmax(170px, 250px) minmax(0, 1fr) minmax(170px, 300px)', borderTop: '1px solid var(--border-mid)', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height, flexShrink: 0, display: 'grid', gridTemplateColumns: 'minmax(170px, 250px) minmax(0, 1fr) minmax(170px, 300px)', borderTop: '1px solid var(--border-mid)', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+      <div onPointerDown={resize} onDoubleClick={() => { setHeight(DOCK_HEIGHT); try { localStorage.removeItem('ams-studio-dock-h') } catch { /* storage unavailable */ } }}
+        title={tr('Drag: height of the details · double-click: normal height')}
+        style={{ position: 'absolute', left: 0, right: 0, top: -3, height: 7, cursor: 'ns-resize', zIndex: 5 }} />
       {/* the track */}
       <div style={{ borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <div style={head}>
           <span onClick={toggle} title={tr('Hide the details')} style={{ cursor: 'pointer' }}>▾</span>
           {tr('Track')}{track ? <b style={{ color: 'var(--text-primary)', letterSpacing: 0, textTransform: 'none', overflow: 'hidden', textOverflow: 'ellipsis' }}>· {track.name}</b> : null}
         </div>
-        {track ? <TrackPart track={track} palette={palette} groupName={project.tracks.find((t) => t.id === track.parentId)?.name} /> : (
+        {track ? <div style={{ overflow: 'auto', minHeight: 0 }}>
+          <TrackPart track={track} palette={palette} groupName={project.tracks.find((t) => t.id === track.parentId)?.name} />
+          {midi && <><div style={{ ...head, borderTop: '1px solid var(--border)' }}>{tr('Effects (inserts)')}</div><FxPart track={track} /></>}
+        </div> : (
           <div style={{ padding: 12, fontSize: 11.5, color: 'var(--text-muted)' }}>{tr('Click a track to see its details here.')}</div>
         )}
       </div>
-      {/* the clip */}
+      {/* the clip: on a MIDI track the Piano Roll itself (owner, 25.11.2026), else the waveform and its tools */}
+      {midi ? (
+        <div style={{ gridColumn: '2 / 4', display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, overflow: 'hidden' }}><PianoRoll compact /></div>
+      ) : (
       <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <div style={head}>
           {tr('Clip')}{clip ? <b style={{ color: 'var(--text-primary)', letterSpacing: 0, textTransform: 'none' }}>· {clip.name ?? tr('Clip')}</b> : null}
-          <span style={{ flex: 1 }} />
-          {clip?.notes && (
-            <button className="btn btn-ghost" style={{ fontSize: 10.5, padding: '1px 8px', letterSpacing: 0, textTransform: 'none' }} onClick={() => useUIStore.getState().setActiveView('piano-roll')}
-              title={tr('Edit the notes in the Piano Roll (or double-click the clip)')}>{tr('Open in the Piano Roll')} ↗</button>
-          )}
         </div>
         {clip && track ? (
           <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -73,11 +90,12 @@ export function StudioDock({ palette, clipTools, open, toggle }: { palette: stri
           <div style={{ padding: 12, fontSize: 11.5, color: 'var(--text-muted)' }}>{tr('Click a clip to see its notes or its waveform here.')}</div>
         )}
       </div>
-      {/* the effects */}
-      <div style={{ borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      )}
+      {/* the effects (on a MIDI track: under the track, the Piano Roll takes the room) */}
+      {!midi && <div style={{ borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <div style={head}>{tr('Effects (inserts)')}</div>
         {track ? <FxPart track={track} /> : null}
-      </div>
+      </div>}
     </div>
   )
 }

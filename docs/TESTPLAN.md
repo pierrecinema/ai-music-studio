@@ -908,3 +908,13 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 63.2 | Das Gleiche nach rechts über den Rand | Die Ansicht scrollt mit nach rechts | | | 0.99.6 |
 | 63.3 | Beides während der Song läuft | Beim Loslassen spielt er an der neuen Stelle weiter | | | 0.99.6 |
 | 63.4 | AUTO SYNC an, Song mit Audio läuft, oben BPM ändern (tippen + Enter, oder Mausrad) | Im Studio „Neues Tempo wird angepasst…“, danach läuft der Song im neuen Tempo weiter, ohne Stop/Play | | Dauer ohne NVIDIA notieren | 0.99.6 |
+
+## 64. Neu in 0.99.7: Piano-Roll im Studio
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 64.1 | Studio, eine MIDI-Spur / einen MIDI-Clip anklicken | Unten erscheint die Piano-Roll des Clips; links Instrument, Ausgang, Farbe und Effekte | | | 0.99.7 |
+| 64.2 | In dieser Piano-Roll Noten zeichnen, verschieben, löschen | Wirkt sofort, der Clip oben zeigt die Noten | | | 0.99.7 |
+| 64.3 | ● Rec in der Piano-Roll unten | Aufnahme wie in der großen Piano-Roll | | | 0.99.7 |
+| 64.4 | Den oberen Rand des Detailbereichs nach oben/unten ziehen, Doppelklick | Höhe ändert sich, bleibt nach Neustart; Doppelklick = normale Höhe | | | 0.99.7 |
+| 64.5 | Eine Audiospur anklicken | Wieder Clip-Werkzeuge mit Wellenform und rechts die Effekte | | | 0.99.7 |

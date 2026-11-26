@@ -19,7 +19,7 @@ Alles getestet.
 - [ ] **54.3** Mit „fp32“ einen Song erzeugen → *Läuft (braucht mehr Speicher, evtl. langsamer)* (User testet (Owner hat keine NVIDIA-Karte))
 - [ ] **54.4** User mit GTX 980: einen Song erzeugen (Einfach und Studio) → *Kein CUBLAS- oder „unable to find an engine“-Fehler mehr; der Song wird fertig* (User testet (Owner hat keine NVIDIA-Karte))
 
-## C. Ältere Punkte ohne eingetragenes Ergebnis – vor RC 1.0 einmal durchgehen (108 Punkte)
+## C. Ältere Punkte ohne eingetragenes Ergebnis (108 Punkte) – der Owner hat am 26.11.2026 gesagt: getestet, muss nicht mehr durchgegangen werden
 
 ### 13. Neu in 0.71.0: Automation von Plugin-Reglern, Presets
 

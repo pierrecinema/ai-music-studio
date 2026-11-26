@@ -2244,5 +2244,22 @@
  "{n} stems": "{n} 个分轨",
  "▶ Play all": "▶ 全部播放",
  "✦ Recommended": "✦ 推荐",
- "⤓ Save as file…": "⤓ 保存为文件…"
+ "⤓ Save as file…": "⤓ 保存为文件…",
+ "All parts, chords and tempo": "所有声部、和弦和速度",
+ "Convert: {goal}": "转换:{goal}",
+ "Kick, snare, hi-hat": "底鼓、军鼓、踩镲",
+ "One clean bass line": "一条干净的贝斯线",
+ "Only the voice line": "只有人声旋律",
+ "Put this part into the Studio": "将此声部放入工作室",
+ "The app splits the song and picks the right engine for each part.": "应用会拆分歌曲,并为每个声部选择合适的引擎。",
+ "Tick the instruments yourself": "自己勾选乐器",
+ "What should become MIDI?": "要把什么转成 MIDI?",
+ "stoppable at any time": "可随时停止",
+ "✦ recommended": "✦ 推荐",
+ "Bassline": "贝斯线",
+ "Choose parts": "选择声部",
+ "Drum pattern": "鼓点节奏",
+ "More options": "更多选项",
+ "Result": "结果",
+ "Sure": "可信度"
 }

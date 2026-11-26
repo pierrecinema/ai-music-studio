@@ -1021,3 +1021,20 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 71.10 | Unten: Alle Stems ins Studio, Alle Stems → MIDI, Remix exportieren | Wie bisher | | | 0.99.14 |
 | 71.11 | Name, Tags, **In der Bibliothek speichern**, **Stems exportieren…** | Wie bisher | | | 0.99.14 |
 | 71.12 | Alle Looks | Sieht sauber aus | | | 0.99.14 |
+
+## 72. Neu in 0.99.15: neues Audio → MIDI (Ziel zuerst, Ergebnis als Tabelle)
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 72.1 | Audio → MIDI ohne Song öffnen | Große Ablagefläche mit Erklärung, „Datei wählen…“ und „Gewählter Studio-Clip“; Song hineinziehen geht | | | 0.99.15 |
+| 72.2 | Song laden | Frage „Was soll zu MIDI werden?“ mit 5 Karten: Ganzer Song (empfohlen), Melodie, Basslinie, Drum-Muster, Teile wählen | | | 0.99.15 |
+| 72.3 | Karte anklicken | Sie wird hervorgehoben, der Knopf heißt „Umwandeln: …“; bei „Teile wählen“ erscheinen die Instrumente zum Ankreuzen | | | 0.99.15 |
+| 72.4 | Umwandeln (ganzer Song) | Fortschrittsbalken mit Text und Prozent, „Abbrechen“ bricht ab | | Dauer notieren | 0.99.15 |
+| 72.5 | Ergebnis | Tempo, Tonart, Länge, erster Takt, Akkorde; darunter eine Tabelle mit einer Zeile pro Teil (Noten, Vorschau, Instrument, Sicher, Anhören, Studio-Haken) | | | 0.99.15 |
+| 72.6 | Nur „Melodie“, „Basslinie“, „Drum-Muster“ umwandeln | Es erscheint nur dieser Teil | | | 0.99.15 |
+| 72.7 | ▶ / ■ in einer Zeile, Instrument wechseln, Haken entfernen | Hört den Stem; Instrument gilt im Studio; abgehakter Teil kommt nicht mit | | | 0.99.15 |
+| 72.8 | Mehr Optionen (Tempo-Hinweis, „Zuerst in Instrumente trennen“) | Wie bisher | | | 0.99.15 |
+| 72.9 | Ins Studio: Optionen und „… Spuren ins Studio übernehmen“ | Spuren, Tempo, Akkordspur, Marker wie bisher | | | 0.99.15 |
+| 72.10 | Aus dem Stem-Trenner „Alle Stems → MIDI“ | Seite öffnet mit den Stems, Umwandeln geht | | | 0.99.15 |
+| 72.11 | Song wechseln, ein neuer Song auf die Seite ziehen | Ersetzt den alten, altes Ergebnis weg | | | 0.99.15 |
+| 72.12 | Alle Looks | Sieht sauber aus | | | 0.99.15 |

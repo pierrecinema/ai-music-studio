@@ -43,8 +43,8 @@ SoulX re-singing was dropped: sung words were recognised badly.
    professional audio software (see "Talking with the owner"), check every screen in the browser preview.
 3. **0.99.x: fix every open bug** (owner, 23.11.2026): all fixes go into 0.99.1, 0.99.2 … until the test plan has no ❌.
    Then **RC 1.0** (release candidate): fixes only, nothing new any more. The owner said on 26.11.2026 that the old test points (sections 13–51) were tested before and need not be gone through again.
-4. **New screenshots** for README and wiki: **done** (26.11.2026, rack look, all pages; README lists everything the app does, wiki Home rewritten). **Version 1.0.0 is prepared** (pull request open, not merged on purpose): the owner releases it on 27.11.2026 together with the new video: merge the pull request, then the release starts by itself.
-5. **New promo video** (scripts and earlier versions on the branch `promo`; v4 was the last one) with the owner's
+4. **New screenshots** for README and wiki: **done** (26.11.2026, rack look, all pages; README lists everything the app does, wiki Home rewritten). **Version 1.0.0 was released on 26.11.2026** and the owner installed it.
+5. **New promo video** (owner, 26.11.2026: the AI steps (make a song, split stems, sing) as screenshots with captions; everything else as a real screen recording with a visible mouse, scripted with Playwright on the browser preview, sound added with ffmpeg; the owner's own sounds) (scripts and earlier versions on the branch `promo`; v4 was the last one) with the owner's
    sounds, plus a new YouTube text.
 6. After 1.0: Linux version (AppImage), the posts in forums and blogs (list below), SignPath reapplication.
 

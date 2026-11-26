@@ -404,7 +404,7 @@ export function Mixer(): React.ReactElement {
         <span style={{ fontSize: 18, fontWeight: 800, color: C.text }}>{tr('Mixer')}</span>
         <span style={{ fontSize: 11, color: C.label, border: '1px solid #2a3340', borderRadius: 999, padding: '2px 9px' }}>{trf('{n} tracks · {r} returns', { n: shown.length, r: returns.length })}</span>
         <span style={{ flex: 1 }} />
-        {issues.length > 0 && <span style={{ fontSize: 11, color: '#fde68a', border: '1px solid #a16207', borderRadius: 999, padding: '2px 9px' }}>⚠ {trf('{n} suggestions', { n: issues.length })}</span>}
+        {issues.length > 0 && <span style={{ fontSize: 11, color: '#fde68a', border: '1px solid #a16207', borderRadius: 999, padding: '2px 9px' }}>⚠ {issues.length === 1 ? tr('1 suggestion') : trf('{n} suggestions', { n: issues.length })}</span>}
         <button disabled={!!busy} onClick={issues.length > 1 ? takeAll : () => void analyse()} style={{ border: 'none', borderRadius: 999, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'linear-gradient(90deg, #7c3aed, #db2777)', color: '#fff', opacity: busy ? 0.6 : 1 }}>
           ✦ {issues.length > 1 ? tr('Balance the whole mix') : tr('Measure my mix')}
         </button>

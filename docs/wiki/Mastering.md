@@ -84,6 +84,9 @@ own chain under a name.
 
 ## Album
 
+![Album mastering: the songs on one timeline](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/album-mastering.png)
+
+
 Switch the page from *One song* to **💿 Album** to master an album or EP as a whole.
 
 1. **Drag audio files** from the Explorer onto the album view, or **+ Add songs…** (or **+ All open songs**), and put them in order by dragging a song (⋮⋮) or with ▲ ▼; × takes a song off the album. A click on a name opens that song on its own page (its chain, editing, meters).

@@ -1,5 +1,8 @@
 # Keyboard Shortcuts
 
+![Settings, Shortcuts](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/settings-shortcuts.png)
+
+
 Choose the layout in [[Settings]] → Shortcuts: **Ableton Live 12** or **Cubase**. Shortcuts do not act while you type in a text field (function keys excepted). In the [[Piano Roll]], Ctrl+A selects all notes; elsewhere in the [[Studio]] it selects all clips.
 
 **Your own keys:** the column **Yours** in Settings → Shortcuts. Press **+ Key** in the row of an action, then the keys. Only keys that are not used yet (by the chosen layout or your other keys) are accepted. A key that is taken is refused with the action that uses it. Your keys work in addition to the layout; **×** removes one, **Esc** cancels.

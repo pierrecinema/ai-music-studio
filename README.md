@@ -6,7 +6,7 @@
 
 **🎬 [Watch the 0.60 tour on YouTube (2 minutes)](https://youtu.be/FTNmsRxWuy4)**
 
-**Free, open-source AI music studio for Windows:** make songs, seamless loops and stems with AI on your own PC, and arrange them in a full studio (DAW) with mixer, piano roll and automation. No account, no subscription. The AI assistant works with Claude, ChatGPT, Grok or completely free and local with Ollama.
+**Free, open-source AI music studio for Windows:** make songs, seamless loops and stems with AI on your own PC, split songs into stems, turn audio into MIDI, sing your melodies with AI voices, play AI instruments, mix and master, and arrange it all in a full studio (DAW) with piano roll, mixer, automation and VST plugins. No account, no subscription. The AI assistant works with Claude, ChatGPT, Gemini, Grok or completely free and local with Ollama.
 
 ## Easy Windows installation
 
@@ -45,79 +45,97 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 - 0.97: album mastering with a professional album player; 0.96: 39 built-in singing voices with styles and rap.
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
-## Features
+## What is in the app
 
-### Studio (DAW): available now
+Everything below works today, on your own PC, without an account. The menu on the left of the app, from top to bottom:
 
-A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** or **Cubase** (Settings → Shortcuts).
+| Menu | What you can do |
+|---|---|
+| **✨ Create Music** | Songs from a style description and lyrics (with vocals, instrumental or a cappella), seamless loops of 1–16 bars that start on beat 1, in *Simple*, *Studio* or *Loops* mode. Lyrics editor with section buttons, auto structure and AI lyrics; the built-in singers of the Vocal Editor can sing your song; three 10-second voice previews; LoRA styles (import, search on Hugging Face, train your own); a source or reference song by drag and drop; several takes with waveforms, seeds and a queue. Every take goes to the Studio, Mastering, the Stem Splitter or Audio → MIDI with one click. |
+| **🎵 Library** | Every song, loop, stem and sample with tempo, tags and its prompt; search by name, tag or BPM (`120-130`); favourites; your Ableton library and other sample folders; export as WAV 16/24/32 bit, AIFF, FLAC or MP3; *Start on beat 1*; to the Studio, Mastering, Stem Splitter or MIDI. |
+| **⊞ Studio** | The arrangement (DAW): audio and MIDI tracks, drag and drop from the Library or Explorer, loop range, markers, tempo and time-signature track, snap grid with a magnet, scissors tool, warp markers, AUTO SYNC of everything to the project tempo, multi-select, copy / paste / duplicate, clip fades and gain, volume / pan / plugin automation lanes, return tracks with sends, group tracks, track colours, undo / redo, save and open projects. Recording: arm tracks, count-in, punch in / out, loop recording with comping, audio input choice, MIDI keyboard recording. The **Piano Roll sits right under the tracks**; the effects of the selected track are rack modules with knobs at the right. VST3 / VST2 effects (64-bit and 32-bit) and instruments on tracks and the master, ASIO output. Shortcuts of Ableton Live 12 or Cubase. |
+| **🎹 Piano Roll** | Draw, select, move, quantize (strength, swing) and erase notes, velocity lane, note length, **keys on the left or a keyboard below with the notes coming down**, record from the screen keys or a MIDI keyboard, import and export MIDI files. |
+| **🎤 Vocal Editor** | Your MIDI melody sung with your lyrics: **39 built-in voices of 20 singers with names**, in the styles Pop, Rock, Ballad, Soul and Rap; hear every voice and every style first; the syllables sit right on the notes; DiffSinger voices for exact notes; the finished vocal lands on a new track with the style's effects. |
+| **🎻 AI Instruments** | A stage with six musicians: **Composer** (writes a MIDI song), **Drummer**, **Bass player** and **Guitarist** (a virtual band that follows your chords), **Orchestra** (13 AI-played instruments) and **AI soloist**. Preview before it goes into the song, *3 ideas*, *Add the whole band*, and *AI render* for a real-sounding recording. Sound packs with recorded instruments (Band, GeneralUser GS, MuseScore General, Salamander piano, VSCO-2 orchestra). |
+| **🎚 Mixer** | A card per track (name in the track colour, M / S, fader with LED meter, pan, sends, effects, output), the master and its loudness against a target (streaming −14, podcast −16, loud −9, broadcast −23 LUFS), returns, and the **mix assistant**: it measures every track and the whole mix and suggests levels, panning and low-end fixes, each with its reason and a *Do it* button, or *Balance the whole mix* in one click (Ctrl+Z takes it back). |
+| **✂ Stem Splitter** | Splits a song into vocals, drums, bass, piano, guitar and the rest (Demucs; fast vocals-plus-instrumental and 4-stem modes on AMD, Intel and NVIDIA graphics cards). The song as a waveform on top, **every stem in its own lane** with M, S, volume, *hear only this stem* and → MIDI / Studio / Mastering; remix export (karaoke without vocals, a version without drums); save to the Library or export every stem for any DAW. |
+| **♪ Audio → MIDI** | A whole song, or just its melody, bassline or drums, becomes editable MIDI: each part with the method that suits it (one-voice lines for vocals and bass, chords for piano and guitar, kick / snare / hi-hat for drums), on the bars and beats of the song, with its tempo, key and chords. A table shows every part with note preview, instrument and how sure the detection is; into the Studio with an optional chord track and chord markers. |
+| **◎ Mastering** | A full mastering workspace: an AI assistant that measures the song against the genre and suggests settings with reasons; EQ, dynamic EQ, compressor, multiband, saturation / exciter, stereo, true-peak limiter to a loudness target, master gain; cut, fade, normalise; LUFS / true peak / spectrum / goniometer before and after with same-loudness A/B; reference match; **album mastering** (several songs on one timeline, even loudness, transitions); export in 8 formats with metadata. |
+| **💬 AI Chat** | A music assistant for chords, lyrics and ideas that can also use the app (make a track, add notes, change the tempo). Claude, ChatGPT, Gemini, Grok, Ollama or a local server (LM Studio, KoboldCpp, llama.cpp). |
+| **⚙ Settings** | Language (English, German, French, Spanish, Italian, Portuguese, Russian, Chinese), VST plugins, AI keys, **AI Engines** (install the local models with one click), hardware rating of your PC, models folder and disk space, shortcuts, audio (devices, ASIO, sample rate, buffer, test tone, CPU load, sound packs), MIDI devices with ready mappings and MIDI learn, four looks, updates. |
 
-- **Arrangement:** audio and MIDI tracks, drag and drop from the Library or Explorer, multi-select, copy / cut / paste, duplicate (Ctrl+D lines up loops without a gap), split, consolidate, crossfades
-- **Timing:** loop range in the ruler, markers and cycle markers, tempo and time-signature track, snap to grid, warp markers, AUTO SYNC of imported audio to the project tempo
-- **Recording:** count-in, punch in / out, loop recording into take lanes with comping
-- **VST plugins:** your VST3 and VST2 effects (64-bit and 32-bit) on every track, with their own windows; Settings → Plugins finds them
-- **Mixing:** mixer with faders, pan, mute, solo and live level meters, volume and pan automation lanes, reverb and delay return tracks with sends, group tracks, a channel tab per track
-- **Piano Roll:** draw, move and quantize MIDI notes
-- **Right in the Studio:** split a clip into stems from the right-click menu, quick export of the song
-- **Projects:** save and open, undo / redo
+**Also:** the top bar with File menu, transport, BPM, AUTO SYNC, metronome and time signature; a **setup assistant** that installs the AI engines for you on the first start; automatic updates; and an **MCP server** so AI agents can use the whole app (`http://127.0.0.1:38765/mcp`). It runs on the CPU and is faster on NVIDIA (CUDA) and AMD / Intel graphics cards (DirectML), also on 8 GB VRAM / 12 GB RAM PCs. [Every menu and function in detail: the wiki.](https://github.com/pierrecinema/ai-music-studio/wiki)
 
-### AI: available now
+### Technology
 
-| Feature | What it does | Technology |
-|---|---|---|
-| **Create music** | Songs from a style description and lyrics; vocals with ACE-Step, instrumentals with MusicGen; a cappella mode; every track starts on beat 1 | ACE-Step 1.5 / v1, MusicGen, DiffRhythm |
-| **Create loop** | Exactly 1–16 bars, starts on beat 1, repeats seamlessly, named with tempo and bars | own loop cutter on the beat grid |
-| **Stem Splitter** | Vocals, drums, bass, piano, guitar and more; a stem mixer (solo, mute, volume) with remix export, e.g. karaoke without vocals; saved to the Library and exported for any DAW | Meta Demucs (htdemucs_ft) |
-| **Audio → MIDI** | The melody of a stem as notes on a MIDI track, opened in the Piano Roll | Spotify basic-pitch |
-| **Mastering** | Full mastering workspace: an AI assistant that measures the song and suggests settings per genre; EQ, dynamic EQ, compressor, multiband, saturation / exciter, stereo, true-peak limiter to a loudness target, master gain fader; cut, fade and normalise; LUFS / true peak / spectrum / goniometer before and after; export in 8 formats with metadata; reference match | own DSP (Web Audio worklets), Matchering, ffmpeg |
-| **Library** | Songs, loops, stems and samples with tempo and tags; search by name, tag or BPM; export as WAV, AIFF, FLAC or MP3 | |
-| **AI Chat** | Music assistant for chords, lyrics and ideas | Claude, ChatGPT, Grok, or free and local with Ollama |
-| **Hardware** | Runs on the CPU; faster on NVIDIA (CUDA) and AMD / Intel graphics cards (DirectML) | PyTorch |
-| **Languages** | The whole app in English, German, French, Spanish, Italian, Portuguese, Russian and Chinese | |
+| Part | Technology |
+|---|---|
+| Songs, loops | ACE-Step 1.5 / v1, MusicGen, DiffRhythm; own loop cutter on the beat grid |
+| Stems | Meta Demucs (htdemucs_ft), fast vocal separation on the graphics card |
+| Audio → MIDI | Spotify basic-pitch, NMF drum transcription, own tempo, key and chord detection |
+| Singing | SoulX-Singer and VocalSet voices, DiffSinger, ACE-Step 1.5 for rap |
+| AI instruments | MIDI-DDSP, ACE-Step cover, recorded sound packs |
+| Mastering | own DSP (Web Audio worklets), Matchering, ffmpeg |
+| Plugins | JUCE plugin host for VST3 / VST2 |
 
 ### Coming soon
 
+These menu items are dimmed in the app and open a *Coming soon* page.
+
 | Feature | What it will do |
 |---|---|
-| **Instrument plugins, plugins on the master and in Mastering** | VST effects work in the Studio tracks since 0.50; instruments and the master follow |
-| **Vocal Editor** | AI singing from notes and lyrics, voice cloning |
-| **AI Instruments** | AI-played instruments for your MIDI tracks |
 | **Karaoke Export** | Word timing, .lrc files and lyric videos |
 | **Video Composer** | Music that follows the cuts of your video |
 | **Cloud Rendering (Pro)** | Optional: render on fast NVIDIA cards in the cloud. Everything above stays free and local. |
 
 ## Screenshots
 
-*Shown with demo content: example songs, a demo project and a PC without AI engines installed yet. All pages below the first picture are shown in the Hardware rack look.*
+*Shown with demo content: example songs and a demo project, in the Hardware rack look (the first picture in the standard Dark look).*
 
-<img src="docs/screenshots/layout-dark.png" alt="Studio" width="100%">
-**Studio** – arrangement with loop and markers, volume automation, tempo-synced loops pasted one after the other, MIDI tracks with the free instruments Dexed and Surge XT and a reverb return track.
+<img src="docs/screenshots/studio-pianoroll.png" alt="Studio with the Piano Roll under the tracks" width="100%">
+**Studio** – tracks with waveforms and MIDI clips, loop and markers, volume automation, the Piano Roll right under the tracks, the track's instrument and effects at the right.
 
 <img src="docs/screenshots/studio.png" alt="Studio in the Hardware rack look" width="100%">
-**The same Studio in the Hardware rack look** – the selected track's effects (EQ, compressor, reverb) as rack modules with knobs at the right.
-
-<img src="docs/screenshots/studio-tools.png" alt="Studio tools" width="100%">
-**Studio tools** – pointer, scissors (click to cut, drag to cut out a range over several tracks) and the grid magnet; zoom up to 16× with a magnetic grid for lining up beats.
-
-<img src="docs/screenshots/vocal-editor.png" alt="Vocal Editor" width="100%">
-**Vocal Editor** – 39 built-in voices with names sing your MIDI melody and lyrics; click a voice to hear it, hear it in every style (Pop, Rock, Ballad, Soul) and pick the style, whose way of singing and effects go onto the new vocal track. Rap by the AI singer.
-
-<img src="docs/screenshots/album-mastering.png" alt="Album mastering" width="100%">
-**Album mastering** – the songs of an album on one timeline with their waveforms: measure, even out loudness and tone, hear the transitions and export everything at once.
-
-<img src="docs/screenshots/setup-assistant.png" alt="Setup assistant" width="100%">
-**Setup assistant** – on the first start: checks the computer, offers *Recommended*, *Everything* or *Studio only*, and installs with one click (it sets up its own Python if needed).
+**Studio, effects** – the selected track's effects (EQ, compressor, reverb) as rack modules with knobs.
 
 <img src="docs/screenshots/create-studio.png" alt="Create music" width="100%">
-**Create music** – describe the style, write lyrics, pick a model and make a song or a seamless loop (1–16 bars). Simple and Studio mode.
+**Create music** – describe the style, write lyrics, pick a model and make a song or a seamless loop (1–16 bars). Simple, Studio and Loops mode.
 
 <img src="docs/screenshots/library.png" alt="Library" width="100%">
-**Library** – every created song and loop is kept with its tempo; loops are named like "Deep house – Loop 124 BPM 4 bars".
+**Library** – every created song and loop is kept with its tempo, tags and prompt; stems and sample folders have their own tabs.
+
+<img src="docs/screenshots/piano-roll.png" alt="Piano Roll" width="100%">
+**Piano Roll** – draw, move and quantize notes; the keys on the left or a keyboard below with the notes coming down.
+
+<img src="docs/screenshots/vocal-editor.png" alt="Vocal Editor" width="100%">
+**Vocal Editor** – 39 built-in voices with names sing your MIDI melody and lyrics; hear a voice and every style (Pop, Rock, Ballad, Soul, Rap) before you sing.
+
+<img src="docs/screenshots/instruments.png" alt="AI Instruments" width="100%">
+**AI Instruments** – a stage with a composer, drummer, bass player, guitarist, orchestra and AI soloist; click a musician, hear it, get three ideas, add it to the song or render it as a real recording.
+
+<img src="docs/screenshots/mixer.png" alt="Mixer" width="100%">
+**Mixer** – a card per track, the master with its loudness against a target, returns and the mix assistant with one-click suggestions.
+
+<img src="docs/screenshots/stem-splitter.png" alt="Stem Splitter" width="100%">
+**Stem Splitter** – the song on top, every stem in its own lane with M, S, volume, hear-only and → MIDI / Studio / Mastering.
+
+<img src="docs/screenshots/audio-to-midi.png" alt="Audio to MIDI" width="100%">
+**Audio → MIDI** – say what should become MIDI (whole song, melody, bassline, drums); every part with note preview, instrument and how sure the detection is.
 
 <img src="docs/screenshots/mastering.png" alt="Mastering" width="100%">
 **Mastering** – waveform before and after with a marked region to cut, fade or change the volume; meters before and after (loudness, true peak, spectrum, goniometer), same-loudness A/B and export in every format.
 
 <img src="docs/screenshots/mastering-assistant.png" alt="Mastering assistant" width="100%">
 **Mastering assistant** – measures tone balance per octave, dynamics, stereo and loudness against the genre and suggests settings, each with its reason; apply all with one click and compare.
+
+<img src="docs/screenshots/album-mastering.png" alt="Album mastering" width="100%">
+**Album mastering** – the songs of an album on one timeline: measure, even out loudness and tone, hear the transitions and export everything at once.
+
+<img src="docs/screenshots/setup-assistant.png" alt="Setup assistant" width="100%">
+**Setup assistant** – on the first start: checks the computer, offers *Recommended*, *Everything* or *Studio only*, and installs with one click (it sets up its own Python if needed).
+
+<img src="docs/screenshots/ai-chat.png" alt="AI Chat" width="100%">
+**AI Chat** – Claude, ChatGPT, Gemini, Grok or a local model as a music assistant that can also make songs and tracks.
 
 ### Looks
 
@@ -137,17 +155,15 @@ A full arrangement studio in the app, with the shortcuts of **Ableton Live 12** 
 <img src="docs/screenshots/layout-rack.png" alt="Look: Hardware rack" width="100%">
 **Hardware rack** – grey device fronts with screws, a wide green LCD for position and tempo, the menu at the side as rack keys, the selected track's effects as rack modules with knobs at the right.
 
+### Settings
+
 | | |
 |---|---|
-| <img src="docs/screenshots/piano-roll.png" alt="Piano Roll" width="100%"><br>**Piano Roll** – draw, move and quantize MIDI notes | <img src="docs/screenshots/mixer.png" alt="Mixer" width="100%"><br>**Mixer** – faders, pan, mute/solo, level meters, master |
-| <img src="docs/screenshots/instruments.png" alt="AI Instruments" width="100%"><br>**AI Instruments** – song generator, band and orchestral AI instruments for MIDI tracks (click one to hear it) | <img src="docs/screenshots/mixer.png" alt="Mixer" width="100%"><br>**Mixer** – SSL-style channel strips |
-| <img src="docs/screenshots/stem-splitter.png" alt="Stem Splitter" width="100%"><br>**Stem Splitter** – vocals, drums, bass and more with Demucs | <img src="docs/screenshots/mastering-chain.png" alt="Mastering chain" width="100%"><br>**Mastering chain** – EQ, compressor, multiband, stereo, limiter with loudness target, master gain fader |
-| <img src="docs/screenshots/karaoke.png" alt="Karaoke Export" width="100%"><br>**Karaoke Export** – word timing, .lrc and lyric videos (coming soon) | <img src="docs/screenshots/video-composer.png" alt="Video Composer" width="100%"><br>**Video Composer** – music that follows the cuts of a video (coming soon) |
-| <img src="docs/screenshots/ai-chat.png" alt="AI Chat" width="100%"><br>**AI Chat** – Claude, ChatGPT, Gemini, Grok or a local model as a music assistant that can also make songs | <img src="docs/screenshots/settings-ai-engines.png" alt="Settings → AI Engines" width="100%"><br>**Settings → AI Engines** – install the local AI models with one click |
-| <img src="docs/screenshots/settings-hardware.png" alt="Settings → Hardware" width="100%"><br>**Settings → Hardware** – what this PC can run, and how fast | <img src="docs/screenshots/settings-models.png" alt="Settings → Models" width="100%"><br>**Settings → Models** – downloaded models, sizes and the models folder |
-| <img src="docs/screenshots/settings-shortcuts.png" alt="Settings → Shortcuts" width="100%"><br>**Settings → Shortcuts** – Ableton Live 12 or Cubase key layout | <img src="docs/screenshots/settings-ai.png" alt="Settings → AI" width="100%"><br>**Settings → AI** – Claude, ChatGPT, Gemini, Grok, Ollama or a local server for the AI chat |
-| <img src="docs/screenshots/settings-general.png" alt="Settings → General" width="100%"><br>**Settings → General** – language (VST plugins: Settings → Plugins) | <img src="docs/screenshots/settings-audio.png" alt="Settings → Audio" width="100%"><br>**Settings → Audio** – export sample rate (44.1 kHz for platforms) and buffer size |
-| <img src="docs/screenshots/settings-appearance.png" alt="Settings → Appearance" width="100%"><br>**Settings → Appearance** – Dark, Light, Swiss or Hardware rack | <img src="docs/screenshots/settings-updates.png" alt="Settings → Updates" width="100%"><br>**Settings → Updates** – automatic updates from GitHub releases |
+| <img src="docs/screenshots/settings-ai-engines.png" alt="Settings → AI Engines" width="100%"><br>**AI Engines** – install the local AI models with one click | <img src="docs/screenshots/settings-hardware.png" alt="Settings → Hardware" width="100%"><br>**Hardware** – what this PC can run, and how fast |
+| <img src="docs/screenshots/settings-audio.png" alt="Settings → Audio" width="100%"><br>**Audio** – devices, export sample rate, buffer size and sound packs | <img src="docs/screenshots/settings-plugins.png" alt="Settings → Plugins" width="100%"><br>**Plugins** – your VST3 and VST2 plugins, found automatically |
+| <img src="docs/screenshots/settings-models.png" alt="Settings → Models" width="100%"><br>**Models** – downloaded models, sizes and the models folder | <img src="docs/screenshots/settings-ai.png" alt="Settings → AI" width="100%"><br>**AI** – Claude, ChatGPT, Gemini, Grok, Ollama or a local server for the AI chat |
+| <img src="docs/screenshots/settings-shortcuts.png" alt="Settings → Shortcuts" width="100%"><br>**Shortcuts** – Ableton Live 12 or Cubase key layout | <img src="docs/screenshots/settings-general.png" alt="Settings → General" width="100%"><br>**General** – language |
+| <img src="docs/screenshots/settings-appearance.png" alt="Settings → Appearance" width="100%"><br>**Appearance** – Dark, Light, Swiss or Hardware rack | <img src="docs/screenshots/settings-updates.png" alt="Settings → Updates" width="100%"><br>**Updates** – automatic updates from GitHub releases |
 
 **Found a problem?** ([guide, German](docs/TESTING.md)) Reports are very welcome, especially from PCs with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 

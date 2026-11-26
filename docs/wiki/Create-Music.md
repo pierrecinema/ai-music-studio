@@ -1,5 +1,8 @@
 # Create Music ✨
 
+![Create Music](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/create-studio.png)
+
+
 Make songs and loops with AI on your own PC. Three modes at the top right: **Simple** (style, lyrics, Create), **Studio** (all settings) and **⟳ Loops** (loops of exactly 1 to 16 bars, with all settings of the Studio mode). Every result is saved to the [[Library]] at once.
 
 ## The page

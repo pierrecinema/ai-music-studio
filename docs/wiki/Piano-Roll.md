@@ -1,5 +1,8 @@
 # Piano Roll ♪
 
+![Piano Roll](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/piano-roll.png)
+
+
 Edit the notes of a MIDI clip. Open it with a double-click on a MIDI clip (or Shift+Tab / F12 in Ableton layout, Ctrl+E in Cubase layout). Double-click an empty MIDI track to make a clip first.
 
 | Action | How |

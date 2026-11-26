@@ -1,5 +1,8 @@
 # AI Instruments
 
+![AI Instruments stage](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/instruments.png)
+
+
 Musicians for your song (menu **🎻 AI Instruments**, new in 0.80).
 
 ## The stage (0.99.11)

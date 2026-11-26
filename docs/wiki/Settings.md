@@ -1,5 +1,10 @@
 # Settings ⚙
 
+![Settings, AI Engines](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/settings-ai-engines.png)
+
+![Settings, Audio](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/settings-audio.png)
+
+
 Open with the gear at the bottom of the left menu (Ableton layout: Ctrl+,). Close with ✕, **Esc** or the gear again.
 
 | Tab | What is there |

@@ -1,5 +1,8 @@
 # Library 🎵
 
+![Library](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/library.png)
+
+
 Everything you made or collected, kept with its tempo. Files are stored in `Music\AI Music Studio`. Three tabs:
 
 ## My tracks

@@ -1,5 +1,8 @@
 # Installation and Setup
 
+![The setup assistant](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/setup-assistant.png)
+
+
 ## Install the app
 
 1. Download `AIMusicStudio-Setup-<version>.exe` from the [latest release](https://github.com/pierrecinema/ai-music-studio/releases/latest).

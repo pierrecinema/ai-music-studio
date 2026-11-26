@@ -1,8 +1,8 @@
 # Studio ⊞
 
-![Studio with the Piano Roll under the tracks](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/studio-pianoroll.png)
+![Studio with the Piano Roll under the tracks](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/studio-pianoroll-v1.png)
 
-![The selected track's effects as rack modules](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/studio.png)
+![The selected track's effects as rack modules](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/studio-v1.png)
 
 
 The arrangement view (DAW), with the shortcuts of Ableton Live 12 or Cubase ([[Keyboard Shortcuts]]).

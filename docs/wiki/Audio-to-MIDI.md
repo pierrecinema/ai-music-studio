@@ -1,6 +1,6 @@
 # Audio → MIDI
 
-![Audio to MIDI](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/audio-to-midi.png)
+![Audio to MIDI](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/audio-to-midi-v1.png)
 
 
 Turns a whole song (for example one made with [[Create Music]]) into MIDI tracks you can edit in the [[Piano Roll]] and play with any instrument: the sound packs or a VST instrument.

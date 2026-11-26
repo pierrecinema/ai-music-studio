@@ -1,6 +1,6 @@
 # Vocal Editor
 
-![Vocal Editor](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/vocal-editor.png)
+![Vocal Editor](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/vocal-editor-v1.png)
 
 
 A melody of a MIDI track is sung with your lyrics. Write the melody in the [[Piano Roll]] (one note per syllable), or turn a sung line into MIDI with [[Audio to MIDI]], then open *Vocal Editor* in the sidebar.

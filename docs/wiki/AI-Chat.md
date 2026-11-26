@@ -1,6 +1,6 @@
 # AI Chat 💬
 
-![AI Chat](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/ai-chat.png)
+![AI Chat](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/ai-chat-v1.png)
 
 
 A music assistant for chords, lyrics, song structure, mixing tips and ideas, **that can use the app**: ask it to make a song ("make me an afro house track with female vocals") and it starts the music AI itself with the model chosen in Create music; the progress shows in the chat, and the finished song can go to the Studio with one click (it is in the Library too). It can also check a job, list LoRAs, split stems, master a track and suggest chords. Choose the provider in [[Settings]] → AI:

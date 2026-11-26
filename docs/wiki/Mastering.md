@@ -4,7 +4,7 @@ A mastering workspace: drop a song in, hear it through a mastering chain, compar
 loudness, see every measurement before and after, and export it in any format. Everything runs in the app (no
 plugin needed); what you hear while playing is exactly what is written to the file.
 
-![Mastering: waveform with a marked region, edit bar and meters](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/mastering.png)
+![Mastering: waveform with a marked region, edit bar and meters](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/mastering-v1.png)
 
 ## Open a song
 - **Drag** audio files (WAV, MP3, FLAC, OGG, M4A, AIFF) from the Explorer onto the page, or press **Open…**.
@@ -36,7 +36,7 @@ Drag in the waveform to mark a region, then in the **Edit** bar:
 
 ## Assistant
 
-![The assistant: measurements against the genre and its suggestions](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/mastering-assistant.png)
+![The assistant: measurements against the genre and its suggestions](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/mastering-assistant-v1.png)
 
 **✨ Analyse & suggest** measures the song: tone balance in eight bands (sub bass to air), dynamics (crest factor), stereo (bass width, correlation), clipping and silence. It compares the tone balance with a **Style** (Techno / House, Afro House, Trance / EDM, Pop, Hip-hop, Rock, Soul / R&B, Funk, Acoustic, Podcast) or with a **Reference song**, shows the bands (purple: song, green: target) and lists proposals with their reason (e.g. "Low mids +8 dB above Techno: band 1 at 300 Hz −4 dB"). Press **Apply** on a proposal to use just that one, or tick several and press **✓ Apply all ticked** (top right); the loudness target is reached afterwards, the page switches to *After* and a green box lists what was applied. The bars then show the **master** (purple), the original as a grey outline and the target in green. **Analyse the master again** starts a second round on the master; its EQ proposals add to what is set. **↶ Undo suggestions** brings the chain from before back. It works with measurements and rules, without internet, in a few seconds.
 
@@ -84,7 +84,7 @@ own chain under a name.
 
 ## Album
 
-![Album mastering: the songs on one timeline](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/album-mastering.png)
+![Album mastering: the songs on one timeline](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/album-mastering-v1.png)
 
 
 Switch the page from *One song* to **💿 Album** to master an album or EP as a whole.

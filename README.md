@@ -84,78 +84,78 @@ These menu items are dimmed in the app and open a *Coming soon* page.
 
 *Shown with demo content: example songs and a demo project, in the Hardware rack look (the first picture in the standard Dark look).*
 
-<img src="docs/screenshots/studio-pianoroll.png" alt="Studio with the Piano Roll under the tracks" width="100%">
+<img src="docs/screenshots/studio-pianoroll-v1.png" alt="Studio with the Piano Roll under the tracks" width="100%">
 **Studio** – tracks with waveforms and MIDI clips, loop and markers, volume automation, the Piano Roll right under the tracks, the track's instrument and effects at the right.
 
-<img src="docs/screenshots/studio.png" alt="Studio in the Hardware rack look" width="100%">
+<img src="docs/screenshots/studio-v1.png" alt="Studio in the Hardware rack look" width="100%">
 **Studio, effects** – the selected track's effects (EQ, compressor, reverb) as rack modules with knobs.
 
-<img src="docs/screenshots/create-studio.png" alt="Create music" width="100%">
+<img src="docs/screenshots/create-studio-v1.png" alt="Create music" width="100%">
 **Create music** – describe the style, write lyrics, pick a model and make a song or a seamless loop (1–16 bars). Simple, Studio and Loops mode.
 
-<img src="docs/screenshots/library.png" alt="Library" width="100%">
+<img src="docs/screenshots/library-v1.png" alt="Library" width="100%">
 **Library** – every created song and loop is kept with its tempo, tags and prompt; stems and sample folders have their own tabs.
 
-<img src="docs/screenshots/piano-roll.png" alt="Piano Roll" width="100%">
+<img src="docs/screenshots/piano-roll-v1.png" alt="Piano Roll" width="100%">
 **Piano Roll** – draw, move and quantize notes; the keys on the left or a keyboard below with the notes coming down.
 
-<img src="docs/screenshots/vocal-editor.png" alt="Vocal Editor" width="100%">
+<img src="docs/screenshots/vocal-editor-v1.png" alt="Vocal Editor" width="100%">
 **Vocal Editor** – 39 built-in voices with names sing your MIDI melody and lyrics; hear a voice and every style (Pop, Rock, Ballad, Soul, Rap) before you sing.
 
-<img src="docs/screenshots/instruments.png" alt="AI Instruments" width="100%">
+<img src="docs/screenshots/instruments-v1.png" alt="AI Instruments" width="100%">
 **AI Instruments** – a stage with a composer, drummer, bass player, guitarist, orchestra and AI soloist; click a musician, hear it, get three ideas, add it to the song or render it as a real recording.
 
-<img src="docs/screenshots/mixer.png" alt="Mixer" width="100%">
+<img src="docs/screenshots/mixer-v1.png" alt="Mixer" width="100%">
 **Mixer** – a card per track, the master with its loudness against a target, returns and the mix assistant with one-click suggestions.
 
-<img src="docs/screenshots/stem-splitter.png" alt="Stem Splitter" width="100%">
+<img src="docs/screenshots/stem-splitter-v1.png" alt="Stem Splitter" width="100%">
 **Stem Splitter** – the song on top, every stem in its own lane with M, S, volume, hear-only and → MIDI / Studio / Mastering.
 
-<img src="docs/screenshots/audio-to-midi.png" alt="Audio to MIDI" width="100%">
+<img src="docs/screenshots/audio-to-midi-v1.png" alt="Audio to MIDI" width="100%">
 **Audio → MIDI** – say what should become MIDI (whole song, melody, bassline, drums); every part with note preview, instrument and how sure the detection is.
 
-<img src="docs/screenshots/mastering.png" alt="Mastering" width="100%">
+<img src="docs/screenshots/mastering-v1.png" alt="Mastering" width="100%">
 **Mastering** – waveform before and after with a marked region to cut, fade or change the volume; meters before and after (loudness, true peak, spectrum, goniometer), same-loudness A/B and export in every format.
 
-<img src="docs/screenshots/mastering-assistant.png" alt="Mastering assistant" width="100%">
+<img src="docs/screenshots/mastering-assistant-v1.png" alt="Mastering assistant" width="100%">
 **Mastering assistant** – measures tone balance per octave, dynamics, stereo and loudness against the genre and suggests settings, each with its reason; apply all with one click and compare.
 
-<img src="docs/screenshots/album-mastering.png" alt="Album mastering" width="100%">
+<img src="docs/screenshots/album-mastering-v1.png" alt="Album mastering" width="100%">
 **Album mastering** – the songs of an album on one timeline: measure, even out loudness and tone, hear the transitions and export everything at once.
 
-<img src="docs/screenshots/setup-assistant.png" alt="Setup assistant" width="100%">
+<img src="docs/screenshots/setup-assistant-v1.png" alt="Setup assistant" width="100%">
 **Setup assistant** – on the first start: checks the computer, offers *Recommended*, *Everything* or *Studio only*, and installs with one click (it sets up its own Python if needed).
 
-<img src="docs/screenshots/ai-chat.png" alt="AI Chat" width="100%">
+<img src="docs/screenshots/ai-chat-v1.png" alt="AI Chat" width="100%">
 **AI Chat** – Claude, ChatGPT, Gemini, Grok or a local model as a music assistant that can also make songs and tracks.
 
 ### Looks
 
 *Settings → Appearance* has four looks. Here is the same Studio project in each of them:
 
-<img src="docs/screenshots/looks-all.png" alt="The Studio in all four looks" width="100%">
+<img src="docs/screenshots/looks-all-v1.png" alt="The Studio in all four looks" width="100%">
 
-<img src="docs/screenshots/layout-dark.png" alt="Look: Dark" width="100%">
+<img src="docs/screenshots/layout-dark-v1.png" alt="Look: Dark" width="100%">
 **Dark** – the standard look.
 
-<img src="docs/screenshots/layout-light.png" alt="Look: Light" width="100%">
+<img src="docs/screenshots/layout-light-v1.png" alt="Look: Light" width="100%">
 **Light** – the same layout on a light background.
 
-<img src="docs/screenshots/layout-swiss.png" alt="Look: Swiss" width="100%">
+<img src="docs/screenshots/layout-swiss-v1.png" alt="Look: Swiss" width="100%">
 **Swiss** – white and black, big heavy numbers for position and tempo, the transport as big black blocks, large capital track names, no rounded corners, orange as the only colour, the menu as a bar along the bottom.
 
-<img src="docs/screenshots/layout-rack.png" alt="Look: Hardware rack" width="100%">
+<img src="docs/screenshots/layout-rack-v1.png" alt="Look: Hardware rack" width="100%">
 **Hardware rack** – grey device fronts with screws, a wide green LCD for position and tempo, the menu at the side as rack keys, the selected track's effects as rack modules with knobs at the right.
 
 ### Settings
 
 | | |
 |---|---|
-| <img src="docs/screenshots/settings-ai-engines.png" alt="Settings → AI Engines" width="100%"><br>**AI Engines** – install the local AI models with one click | <img src="docs/screenshots/settings-hardware.png" alt="Settings → Hardware" width="100%"><br>**Hardware** – what this PC can run, and how fast |
-| <img src="docs/screenshots/settings-audio.png" alt="Settings → Audio" width="100%"><br>**Audio** – devices, export sample rate, buffer size and sound packs | <img src="docs/screenshots/settings-plugins.png" alt="Settings → Plugins" width="100%"><br>**Plugins** – your VST3 and VST2 plugins, found automatically |
-| <img src="docs/screenshots/settings-models.png" alt="Settings → Models" width="100%"><br>**Models** – downloaded models, sizes and the models folder | <img src="docs/screenshots/settings-ai.png" alt="Settings → AI" width="100%"><br>**AI** – Claude, ChatGPT, Gemini, Grok, Ollama or a local server for the AI chat |
-| <img src="docs/screenshots/settings-shortcuts.png" alt="Settings → Shortcuts" width="100%"><br>**Shortcuts** – Ableton Live 12 or Cubase key layout | <img src="docs/screenshots/settings-general.png" alt="Settings → General" width="100%"><br>**General** – language |
-| <img src="docs/screenshots/settings-appearance.png" alt="Settings → Appearance" width="100%"><br>**Appearance** – Dark, Light, Swiss or Hardware rack | <img src="docs/screenshots/settings-updates.png" alt="Settings → Updates" width="100%"><br>**Updates** – automatic updates from GitHub releases |
+| <img src="docs/screenshots/settings-ai-engines-v1.png" alt="Settings → AI Engines" width="100%"><br>**AI Engines** – install the local AI models with one click | <img src="docs/screenshots/settings-hardware-v1.png" alt="Settings → Hardware" width="100%"><br>**Hardware** – what this PC can run, and how fast |
+| <img src="docs/screenshots/settings-audio-v1.png" alt="Settings → Audio" width="100%"><br>**Audio** – devices, export sample rate, buffer size and sound packs | <img src="docs/screenshots/settings-plugins-v1.png" alt="Settings → Plugins" width="100%"><br>**Plugins** – your VST3 and VST2 plugins, found automatically |
+| <img src="docs/screenshots/settings-models-v1.png" alt="Settings → Models" width="100%"><br>**Models** – downloaded models, sizes and the models folder | <img src="docs/screenshots/settings-ai-v1.png" alt="Settings → AI" width="100%"><br>**AI** – Claude, ChatGPT, Gemini, Grok, Ollama or a local server for the AI chat |
+| <img src="docs/screenshots/settings-shortcuts-v1.png" alt="Settings → Shortcuts" width="100%"><br>**Shortcuts** – Ableton Live 12 or Cubase key layout | <img src="docs/screenshots/settings-general-v1.png" alt="Settings → General" width="100%"><br>**General** – language |
+| <img src="docs/screenshots/settings-appearance-v1.png" alt="Settings → Appearance" width="100%"><br>**Appearance** – Dark, Light, Swiss or Hardware rack | <img src="docs/screenshots/settings-updates-v1.png" alt="Settings → Updates" width="100%"><br>**Updates** – automatic updates from GitHub releases |
 
 **Found a problem?** ([guide, German](docs/TESTING.md)) Reports are very welcome, especially from PCs with **NVIDIA cards**: open *Feedback → Record a detailed log*, reproduce the problem, then attach the saved log to a GitHub issue. Nothing is sent automatically.
 

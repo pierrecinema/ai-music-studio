@@ -1,6 +1,6 @@
 # Mixer 🎚
 
-![Mixer with the mix assistant](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/mixer.png)
+![Mixer with the mix assistant](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/mixer-v1.png)
 
 
 A full page since 0.99.13: a **card for every track**, the **master**, and on the right the **loudness**, the **mix assistant** and the **returns**. With many tracks the cards scroll sideways (scroll bar at the bottom, or the mouse wheel over the cards); the master stays next to them. Changes are heard at once while playing.

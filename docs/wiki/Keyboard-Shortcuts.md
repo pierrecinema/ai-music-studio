@@ -1,6 +1,6 @@
 # Keyboard Shortcuts
 
-![Settings, Shortcuts](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/settings-shortcuts.png)
+![Settings, Shortcuts](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/settings-shortcuts-v1.png)
 
 
 Choose the layout in [[Settings]] → Shortcuts: **Ableton Live 12** or **Cubase**. Shortcuts do not act while you type in a text field (function keys excepted). In the [[Piano Roll]], Ctrl+A selects all notes; elsewhere in the [[Studio]] it selects all clips.

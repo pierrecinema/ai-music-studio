@@ -4,7 +4,7 @@
 
 🎬 [Tour on YouTube](https://youtu.be/FTNmsRxWuy4) · ⬇ [Download the latest version](https://github.com/pierrecinema/ai-music-studio/releases/latest) · 🐞 [Report a problem](https://github.com/pierrecinema/ai-music-studio/issues)
 
-![The Studio in the Hardware rack look](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/studio-pianoroll.png)
+![The Studio in the Hardware rack look](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/studio-pianoroll-v1.png)
 
 ## What is in version 1.0
 

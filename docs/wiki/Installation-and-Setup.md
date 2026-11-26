@@ -1,6 +1,6 @@
 # Installation and Setup
 
-![The setup assistant](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/setup-assistant.png)
+![The setup assistant](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/setup-assistant-v1.png)
 
 
 ## Install the app

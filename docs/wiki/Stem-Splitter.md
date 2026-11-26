@@ -1,6 +1,6 @@
 # Stem Splitter ✂
 
-![Stem Splitter with a lane per stem](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/stem-splitter.png)
+![Stem Splitter with a lane per stem](https://raw.githubusercontent.com/pierrecinema/ai-music-studio/main/docs/screenshots/stem-splitter-v1.png)
 
 
 Split a song into its parts (stems): vocals, drums, bass, piano, guitar, other.

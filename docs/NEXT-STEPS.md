@@ -26,6 +26,11 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ## Tonight / next session
 
+### To do with the next release (owner, 26.11.2026)
+
+- Clean up the old **VST3 Bridge Plugin**: `packages/vst-bridge` lists `.cpp` files that do not exist (only headers are there), and the README sections "Build the VST3 Bridge Plugin" and the architecture tree still mention it. Remove the package and the README / docs mentions (the working VST host is `packages/plugin-host`), or finish it; check that no workflow builds it.
+
+
 0. Plan to 1.0: `docs/ROADMAP-1.0.md`. Testing goes by `docs/TESTPLAN.md` (German checklist, the owner fills in results; fix ❌ first).
 
 ### Vocal Editor voices in Create (owner, 25.11.2026): built in 0.98.9

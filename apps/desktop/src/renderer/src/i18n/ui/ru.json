@@ -2248,5 +2248,18 @@
  "{peak} dBTP": "{peak} dBTP",
  "Podcast, quiet (−16 LUFS)": "Подкаст, тихо (−16 LUFS)",
  "Loud (−9 LUFS)": "Громко (−9 LUFS)",
- "Broadcast (−23 LUFS)": "Вещание (−23 LUFS)"
+ "Broadcast (−23 LUFS)": "Вещание (−23 LUFS)",
+ "Balanced is the best mix of quality and speed for most songs.": "«Сбалансированный» — лучший компромисс между качеством и скоростью для большинства песен.",
+ "Change song": "Сменить песню",
+ "Hear only this stem": "Слушать только эту дорожку",
+ "More: MIDI, Studio, Mastering": "Ещё: MIDI, студия, мастеринг",
+ "Original": "Оригинал",
+ "Save this stem as a file": "Сохранить эту дорожку как файл",
+ "The song is split into its parts: vocals, drums, bass and the rest. Then you hear them together, mix them and use them in the Studio.": "Песня разделяется на части: вокал, ударные, бас и остальное. Потом вы слушаете их вместе, микшируете и используете в студии.",
+ "drag a song here to replace it": "Перетащите песню сюда, чтобы заменить",
+ "split into {n} stems": "разделено на {n} дорожек",
+ "{n} stems": "{n} дорожек",
+ "▶ Play all": "▶ Играть всё",
+ "✦ Recommended": "✦ Рекомендуется",
+ "⤓ Save as file…": "⤓ Сохранить как файл…"
 }

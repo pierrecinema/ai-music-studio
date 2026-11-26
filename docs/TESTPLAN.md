@@ -993,14 +993,31 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 70.1 | Mixer öffnen (Projekt mit mehreren Spuren) | Eine eigene Seite: Karten für jede Spur, daneben der Master, rechts Lautheit, Mix-Assistent, Returns | | | 0.99.13 |
-| 70.2 | Auf einer Karte: Fader ziehen, Pan drehen, M und S | Wie bisher, beim Abspielen sofort zu hören; Pegel läuft | | | 0.99.13 |
-| 70.3 | Sends: den Regler „Hall A“ einer Spur aufdrehen | Der Hall dieser Spur wird lauter | | | 0.99.13 |
-| 70.4 | **FX**-Knopf einer Spur | Öffnet die Effekte der Spur im Studio | | | 0.99.13 |
-| 70.5 | Returns rechts: Pegel, M, **+ Hall**, **+ Delay**, × | Funktioniert; neuer Return erscheint auch bei den Karten als Send | | | 0.99.13 |
-| 70.6 | **✦ Meinen Mix messen** (Song mit Gesang, Schlagzeug, Bass, Instrumenten) | Fortschritt „… wird gemessen“, danach LUFS-Anzeige und Vorschläge mit Begründung | | Dauer notieren | 0.99.13 |
-| 70.7 | Bei einem Vorschlag **Machen** | Fader / Pan ändert sich wie beschrieben; Strg+Z nimmt es zurück | | | 0.99.13 |
-| 70.8 | **✦ Ganzen Mix ausbalancieren** | Alle Vorschläge werden übernommen, die ⚠-Hinweise auf den Karten verschwinden | | | 0.99.13 |
-| 70.9 | Abspielen vor und nach dem Ausbalancieren | Der Mix klingt ausgewogener (Gesang obenauf, Bass und Schlagzeug im Verhältnis) | | Eindruck notieren | 0.99.13 |
-| 70.10 | Ziel-Lautheit umstellen | Die Marke auf dem Balken wandert | | | 0.99.13 |
-| 70.11 | Alle Looks | Sieht sauber aus | | | 0.99.13 |
+| 70.1 | Mixer öffnen (Projekt mit mehreren Spuren) | Eine eigene Seite: Karten für jede Spur, daneben der Master, rechts Lautheit, Mix-Assistent, Returns | OK | | 0.99.13 |
+| 70.2 | Auf einer Karte: Fader ziehen, Pan drehen, M und S | Wie bisher, beim Abspielen sofort zu hören; Pegel läuft | OK | | 0.99.13 |
+| 70.3 | Sends: den Regler „Hall A“ einer Spur aufdrehen | Der Hall dieser Spur wird lauter | OK | | 0.99.13 |
+| 70.4 | **FX**-Knopf einer Spur | Öffnet die Effekte der Spur im Studio | OK | | 0.99.13 |
+| 70.5 | Returns rechts: Pegel, M, **+ Hall**, **+ Delay**, × | Funktioniert; neuer Return erscheint auch bei den Karten als Send | OK | | 0.99.13 |
+| 70.6 | **✦ Meinen Mix messen** (Song mit Gesang, Schlagzeug, Bass, Instrumenten) | Fortschritt „… wird gemessen“, danach LUFS-Anzeige und Vorschläge mit Begründung | OK | Dauer notieren | 0.99.13 |
+| 70.7 | Bei einem Vorschlag **Machen** | Fader / Pan ändert sich wie beschrieben; Strg+Z nimmt es zurück | OK | | 0.99.13 |
+| 70.8 | **✦ Ganzen Mix ausbalancieren** | Alle Vorschläge werden übernommen, die ⚠-Hinweise auf den Karten verschwinden | OK | | 0.99.13 |
+| 70.9 | Abspielen vor und nach dem Ausbalancieren | Der Mix klingt ausgewogener (Gesang obenauf, Bass und Schlagzeug im Verhältnis) | OK | Eindruck notieren | 0.99.13 |
+| 70.10 | Ziel-Lautheit umstellen | Die Marke auf dem Balken wandert | OK | | 0.99.13 |
+| 70.11 | Alle Looks | Sieht sauber aus | OK | | 0.99.13 |
+
+## 71. Neu in 0.99.14: neuer Stem-Splitter (Spuren unter dem Song)
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 71.1 | Stem-Trenner ohne Song öffnen | Große Ablagefläche mit kurzer Erklärung; Song hineinziehen oder anklicken | | | 0.99.14 |
+| 71.2 | Song laden | Oben die Wellenform des Originals, Name und Länge in der Kopfzeile, Hinweis „✦ Empfohlen: Ausgewogen · 4 Stems“, darunter Modell und Stems | | | 0.99.14 |
+| 71.3 | Anderen Song auf die Seite ziehen oder **Song wechseln** | Der neue Song ersetzt den alten, alte Ergebnisse verschwinden | | | 0.99.14 |
+| 71.4 | **✂ Stems trennen** | Fortschrittsbalken mit Prozent, Text und Restzeit; **✕ Abbrechen** oben rechts bricht ab | | Dauer notieren | 0.99.14 |
+| 71.5 | Nach dem Trennen | Unter dem Original eine Spur pro Stem mit Farbe, Name, M, S, Wellenform, Lautstärke, ▶ und ⋯ | | | 0.99.14 |
+| 71.6 | **▶ Alles abspielen**, in eine Wellenform klicken / ziehen | Alle Stems laufen zusammen; die weiße Linie läuft durch alle Spuren; Klick springt | | | 0.99.14 |
+| 71.7 | M, S und Lautstärke einer Spur | Hörbar wie bisher; stumme Spur wird blass | | | 0.99.14 |
+| 71.8 | ▶ an einer Spur | Nur dieser Stem ist zu hören; nochmal drücken stoppt | | | 0.99.14 |
+| 71.9 | ⋯ an einer Spur: → MIDI, → Studio, Mastering, Als Datei speichern | Jeder Punkt funktioniert wie vorher | | | 0.99.14 |
+| 71.10 | Unten: Alle Stems ins Studio, Alle Stems → MIDI, Remix exportieren | Wie bisher | | | 0.99.14 |
+| 71.11 | Name, Tags, **In der Bibliothek speichern**, **Stems exportieren…** | Wie bisher | | | 0.99.14 |
+| 71.12 | Alle Looks | Sieht sauber aus | | | 0.99.14 |

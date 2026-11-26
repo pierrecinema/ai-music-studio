@@ -6,7 +6,7 @@ import { api } from '../../lib/api'
 import { useProjectStore } from '../../stores/project.store'
 import { useUIStore } from '../../stores/ui.store'
 import { ExportDialog } from '../common/ExportDialog'
-import { WaveformSeek } from '../common/WaveformSeek'
+import { StemWave } from './StemWave'
 import { tr, trf } from '../../i18n/tr'
 
 // The stems of one split, played together: Solo, Mute and volume per stem, a remix of the audible stems
@@ -36,6 +36,7 @@ export function StemMixer({ stems, colors, labels, title, source }: Props): Reac
   const [notice, setNotice] = useState<string | null>(null)
   const [noticeView, setNoticeView] = useState<'piano-roll' | 'timeline'>('piano-roll')   // where the notice's button leads
   const [exporting, setExporting] = useState<{ path: string; name: string } | null>(null)
+  const [menu, setMenu] = useState<string | null>(null)   // the lane whose ⋯ menu is open
 
   const ctx = useRef<AudioContext | null>(null)
   const buffers = useRef<Record<string, AudioBuffer>>({})
@@ -207,67 +208,76 @@ export function StemMixer({ stems, colors, labels, title, source }: Props): Reac
   const mmss = (s: number): string => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
   const small: React.CSSProperties = { fontSize: 11, padding: '3px 8px', minWidth: 26 }
 
+  // the ▶ of a lane: hear only this stem (again: stop and hear everything)
+  const hearOnly = (n: string): void => {
+    const only = strips[n].solo && names.every((m) => m === n || !strips[m].solo)
+    if (only && playing) { stop(); set(n, { solo: false }); return }
+    setStrips((st) => Object.fromEntries(names.map((m) => [m, { ...st[m], solo: m === n }])))
+    void playFrom(pos >= length ? 0 : pos)
+  }
+  const seek = (v: number): void => { setPos(v); if (playing) void playFrom(v) }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {/* transport */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', maxWidth: 720 }}>
-        <button className="btn btn-primary" style={{ minWidth: 92 }} disabled={loading}
-          onClick={() => (playing ? stop() : void playFrom(pos >= length ? 0 : pos))}>
-          {loading ? tr('Loading…') : playing ? tr('■ Stop') : tr('▶ Play')}
-        </button>
-        <div style={{ flex: 1 }}>
-          <WaveformSeek fileKey={`stems:${names.map((n) => stems[n]).join('|')}`} buffers={loaded}
-            position={() => ({ time: pos, duration: length })}
-            onSeek={(v) => { setPos(v); if (playing) void playFrom(v) }} />
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: 720 }}>
-        <button className="btn btn-ghost" title={tr('Turn all stems into MIDI tracks: Audio → MIDI page, with tempo, key and chords')}
-          onClick={() => void import('../../stores/stemHandoff').then((m) => m.sendToAudioToMidi(source ?? '', Object.fromEntries(names.map((n) => [n, stems[n]]))))}>🎼 {tr('All stems → MIDI')}</button>
-      </div>
-
-      {/* one strip per stem */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: 720 }}>
+      {/* one lane per stem: its waveform, Solo / Mute, volume */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {names.map((n) => {
           const s = strips[n]
           const on = audible(n)
+          const c = colors[n] ?? '#888'
+          const only = s.solo && names.every((m) => m === n || !strips[m].solo)
           return (
-            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8,
-              border: `1px solid ${colors[n] ?? 'var(--border-mid)'}`, background: 'var(--bg-secondary)', opacity: on ? 1 : 0.5 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: colors[n] ?? '#888', flexShrink: 0 }} />
-              <span style={{ width: 90, fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{labels[n] ?? n}</span>
-              <button className="btn btn-ghost" style={{ ...small, background: s.solo ? '#ca8a04' : undefined, color: s.solo ? 'white' : undefined }}
-                title={tr('Solo: hear only the soloed stems')} onClick={() => set(n, { solo: !s.solo })}>S</button>
-              <button className="btn btn-ghost" style={{ ...small, background: s.mute ? 'var(--red)' : undefined, color: s.mute ? 'white' : undefined }}
+            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 10, position: 'relative',
+              border: '1px solid var(--border)', borderLeft: `4px solid ${c}`, background: 'var(--bg-secondary)' }}>
+              <span style={{ width: 92, fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{labels[n] ?? n}</span>
+              <button className="btn btn-ghost" style={{ ...small, background: s.mute ? '#b45309' : undefined, color: s.mute ? 'white' : undefined, fontWeight: 800 }}
                 title={tr('Mute: leave this stem out (also in the remix)')} onClick={() => set(n, { mute: !s.mute })}>M</button>
-              <input type="range" min={0} max={1.5} step={0.01} value={s.volume} style={{ flex: 1 }} title={tr('Volume')}
+              <button className="btn btn-ghost" style={{ ...small, background: s.solo ? '#0e7490' : undefined, color: s.solo ? 'white' : undefined, fontWeight: 800 }}
+                title={tr('Solo: hear only the soloed stems')} onClick={() => set(n, { solo: !s.solo })}>S</button>
+              <StemWave buffer={loaded ? (loaded[names.indexOf(n)] ?? null) : null} color={c} height={40} time={pos} onSeek={seek} dim={!on} />
+              <input type="range" min={0} max={1.5} step={0.01} value={s.volume} style={{ width: 90 }} title={`${tr('Volume')}: ${Math.round(s.volume * 100)} %`}
                 onChange={(e) => set(n, { volume: Number(e.target.value) })} onDoubleClick={() => set(n, { volume: 1 })} />
-              <span style={{ width: 40, fontSize: 11, color: 'var(--text-muted)', textAlign: 'right' }}>{Math.round(s.volume * 100)} %</span>
-              {n !== 'drums' && (
-                <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={busy !== null}
-                  title={tr('Turn this stem into MIDI notes on a new track (Piano Roll)')} onClick={() => void toMidi(n)}>
-                  {busy === n ? tr('Converting…') : tr('→ MIDI')}
-                </button>
+              <button className="btn btn-ghost" style={{ ...small, borderRadius: '50%', width: 28, height: 28, padding: 0, background: only && playing ? c : undefined, color: only && playing ? 'white' : undefined }}
+                title={tr('Hear only this stem')} onClick={() => hearOnly(n)}>{only && playing ? '■' : '▶'}</button>
+              <button className="btn btn-ghost" style={{ ...small, padding: '3px 9px' }} title={tr('More: MIDI, Studio, Mastering')} onClick={() => setMenu(menu === n ? null : n)}>⋯</button>
+              {menu === n && (
+                <div style={{ position: 'absolute', right: 10, top: 'calc(100% - 4px)', zIndex: 20, display: 'flex', flexDirection: 'column', gap: 2, padding: 6, borderRadius: 8,
+                  background: 'var(--bg-primary)', border: '1px solid var(--border)', boxShadow: '0 6px 20px #0008', minWidth: 190 }}
+                  onMouseLeave={() => setMenu(null)}>
+                  {n !== 'drums' && (
+                    <button className="btn btn-ghost" style={{ fontSize: 11, textAlign: 'left' }} disabled={busy !== null}
+                      title={tr('Turn this stem into MIDI notes on a new track (Piano Roll)')} onClick={() => { setMenu(null); void toMidi(n) }}>
+                      {busy === n ? tr('Converting…') : tr('→ MIDI')}
+                    </button>
+                  )}
+                  <button className="btn btn-ghost" style={{ fontSize: 11, textAlign: 'left' }} title={tr('Put this stem on a new track in the Studio')}
+                    onClick={() => { setMenu(null); void toStudio(n) }}>{tr('→ Studio')}</button>
+                  <button className="btn btn-ghost" style={{ fontSize: 11, textAlign: 'left' }} title={tr('Open this stem in Mastering (e.g. the instrumental)')}
+                    onClick={() => { setMenu(null); sendToMastering(stems[n], `${title} – ${labels[n] ?? n}`) }}>{tr('Mastering')}</button>
+                  <button className="btn btn-ghost" style={{ fontSize: 11, textAlign: 'left' }} title={tr('Save this stem as a file')}
+                    onClick={() => { setMenu(null); setExporting({ path: stems[n], name: `${title} – ${labels[n] ?? n}` }) }}>{tr('⤓ Save as file…')}</button>
+                </div>
               )}
-              <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Put this stem on a new track in the Studio')} onClick={() => void toStudio(n)}>{tr('→ Studio')}</button>
-              <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Open this stem in Mastering (e.g. the instrumental)')}
-                onClick={() => sendToMastering(stems[n], `${title} – ${labels[n] ?? n}`)}>{tr('Mastering')}</button>
             </div>
           )
         })}
       </div>
 
+      {/* transport and what to do with the stems */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button className="btn btn-primary" disabled={busy !== null || loading} title={tr('Every stem on its own track in the Studio (in one group), with the levels and mutes set here')} onClick={() => void toStudio()}>
+        <button className="btn btn-primary" style={{ minWidth: 100 }} disabled={loading}
+          onClick={() => (playing ? stop() : void playFrom(pos >= length ? 0 : pos))}>
+          {loading ? tr('Loading…') : playing ? tr('■ Stop') : tr('▶ Play all')}
+        </button>
+        <span style={{ fontSize: 12, fontFamily: 'ui-monospace, Consolas, monospace', color: 'var(--text-secondary)', minWidth: 80 }}>{mmss(pos)} / {mmss(length)}</span>
+        <button className="btn btn-ghost" disabled={busy !== null || loading} title={tr('Every stem on its own track in the Studio (in one group), with the levels and mutes set here')} onClick={() => void toStudio()}>
           {tr('All stems into the Studio')}
         </button>
-        <button className="btn btn-primary" disabled={busy !== null || names.every((n) => !audible(n))} onClick={() => void exportRemix()}>
+        <button className="btn btn-ghost" title={tr('Turn all stems into MIDI tracks: Audio → MIDI page, with tempo, key and chords')}
+          onClick={() => void import('../../stores/stemHandoff').then((m) => m.sendToAudioToMidi(source ?? '', Object.fromEntries(names.map((n) => [n, stems[n]]))))}>🎼 {tr('All stems → MIDI')}</button>
+        <button className="btn btn-ghost" disabled={busy !== null || names.every((n) => !audible(n))} title={tr('Mixes the stems you hear, at these levels: mute Vocals for a karaoke version, Drums for a version without drums.')} onClick={() => void exportRemix()}>
           {busy === 'remix' ? tr('Mixing…') : tr('Export remix…')}
         </button>
-        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-          {tr('Mixes the stems you hear, at these levels: mute Vocals for a karaoke version, Drums for a version without drums.')}
-        </span>
       </div>
 
       {error && <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>}

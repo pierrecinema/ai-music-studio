@@ -2296,5 +2296,22 @@
  "{n} stems": "{n} Stems",
  "▶ Play all": "▶ Alles abspielen",
  "✦ Recommended": "✦ Empfohlen",
- "⤓ Save as file…": "⤓ Als Datei speichern …"
+ "⤓ Save as file…": "⤓ Als Datei speichern …",
+ "All parts, chords and tempo": "Alle Teile, Akkorde und Tempo",
+ "Convert: {goal}": "Umwandeln: {goal}",
+ "Kick, snare, hi-hat": "Bassdrum, Snare, Hi-Hat",
+ "One clean bass line": "Eine saubere Basslinie",
+ "Only the voice line": "Nur die Gesangslinie",
+ "Put this part into the Studio": "Diesen Teil ins Studio übernehmen",
+ "The app splits the song and picks the right engine for each part.": "Die App zerlegt den Song und wählt für jeden Teil die passende Engine.",
+ "Tick the instruments yourself": "Instrumente selbst ankreuzen",
+ "What should become MIDI?": "Was soll zu MIDI werden?",
+ "stoppable at any time": "jederzeit abbrechbar",
+ "✦ recommended": "✦ empfohlen",
+ "Bassline": "Basslinie",
+ "Choose parts": "Teile wählen",
+ "Drum pattern": "Drum-Muster",
+ "More options": "Weitere Optionen",
+ "Result": "Ergebnis",
+ "Sure": "Sicher"
 }

@@ -2244,5 +2244,22 @@
  "{n} stems": "{n} stems",
  "▶ Play all": "▶ Tocar tudo",
  "✦ Recommended": "✦ Recomendado",
- "⤓ Save as file…": "⤓ Salvar como arquivo…"
+ "⤓ Save as file…": "⤓ Salvar como arquivo…",
+ "All parts, chords and tempo": "Todas as partes, acordes e andamento",
+ "Convert: {goal}": "Converter: {goal}",
+ "Kick, snare, hi-hat": "Bumbo, caixa, hi-hat",
+ "One clean bass line": "Uma linha de baixo limpa",
+ "Only the voice line": "Só a linha da voz",
+ "Put this part into the Studio": "Colocar esta parte no Estúdio",
+ "The app splits the song and picks the right engine for each part.": "O app divide a música e escolhe o motor certo para cada parte.",
+ "Tick the instruments yourself": "Marque você mesmo os instrumentos",
+ "What should become MIDI?": "O que deve virar MIDI?",
+ "stoppable at any time": "pode ser parado a qualquer momento",
+ "✦ recommended": "✦ recomendado",
+ "Bassline": "Linha de baixo",
+ "Choose parts": "Escolher partes",
+ "Drum pattern": "Padrão de bateria",
+ "More options": "Mais opções",
+ "Result": "Resultado",
+ "Sure": "Confiança"
 }

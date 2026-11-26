@@ -63,6 +63,7 @@ export function AudioToMidi(): React.ReactElement {
   const [stemsIn, setStemsIn] = useState<Record<string, string> | null>(null)    // stems sent from the Stem Splitter
   const [separate, setSeparate] = useState(true)
   const [kind, setKind] = useState('other')
+  const [goal, setGoal] = useState('song')       // what should become MIDI: the whole song, one part, or parts picked by hand
   const [want, setWant] = useState<string[]>(STEMS.map((s) => s.id))
   const [grid, setGrid] = useState(0.25)
   const [strength, setStrength] = useState(0.6)
@@ -163,165 +164,203 @@ export function AudioToMidi(): React.ReactElement {
   const busy = !!job
   const toggle = (id: string): void => setWant((w) => (w.includes(id) ? w.filter((x) => x !== id) : [...w, id]))
 
-  return (
-    <div style={{ height: '100%', overflow: 'auto', padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>{tr('Audio → MIDI')}</div>
-        <div style={hint}>{tr('A whole song becomes MIDI tracks you can edit and play with any instrument: split into instruments, each turned into notes with the method that suits it, on the bars and beats of the song, with its tempo, key and chords.')}</div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 380px) 1fr', gap: 16, alignItems: 'start' }}>
-        {/* source and settings */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={card}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0] as (File & { path?: string }) | undefined; if (f?.path) { setFile(f.path); setStemsIn(null); setRes(null) } }}>
-            <div style={label}>{tr('Song')}</div>
-            <div style={{ fontSize: 13, color: file ? 'var(--text-primary)' : 'var(--text-muted)', wordBreak: 'break-all' }}>
-              {stemsIn ? trf('{n} stems from the Stem Splitter', { n: Object.keys(stemsIn).length }) : file ? file.split(/[\\/]/).pop() : tr('Drop an audio file here, or:')}
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn btn-ghost" onClick={() => void choose()} disabled={busy}>{tr('Choose a file…')}</button>
-              <button className="btn btn-ghost" onClick={fromClip} disabled={busy} title={tr('The audio clip selected in the Studio')}>{tr('Selected Studio clip')}</button>
-            </div>
-          </div>
+  const goals: Array<{ id: string; icon: string; title: string; text: string; parts: string[] }> = [
+    { id: 'song', icon: '🎼', title: tr('Whole song'), text: tr('All parts, chords and tempo'), parts: STEMS.map((x) => x.id) },
+    { id: 'vocals', icon: '🎤', title: tr('Melody'), text: tr('Only the voice line'), parts: ['vocals'] },
+    { id: 'bass', icon: '🎸', title: tr('Bassline'), text: tr('One clean bass line'), parts: ['bass'] },
+    { id: 'drums', icon: '🥁', title: tr('Drum pattern'), text: tr('Kick, snare, hi-hat'), parts: ['drums'] },
+    { id: 'custom', icon: '☑', title: tr('Choose parts'), text: tr('Tick the instruments yourself'), parts: want },
+  ]
+  const pickGoal = (id: string): void => {
+    setGoal(id)
+    const g = goals.find((x) => x.id === id)
+    if (g && id !== 'custom') setWant(g.parts)
+  }
+  const goalTitle = goals.find((x) => x.id === goal)?.title ?? ''
+  const fileName = stemsIn ? trf('{n} stems from the Stem Splitter', { n: Object.keys(stemsIn).length }) : file ? (file.split(/[\\/]/).pop() ?? file) : ''
+  const th: React.CSSProperties = { ...label, padding: '8px 12px', textAlign: 'left', fontWeight: 700 }
+  const dropHandlers = {
+    onDragOver: (e: React.DragEvent) => e.preventDefault(),
+    onDrop: (e: React.DragEvent) => { e.preventDefault(); if (busy) return; const f = e.dataTransfer.files[0] as (File & { path?: string }) | undefined; if (f?.path) { setFile(f.path); setStemsIn(null); setRes(null); setError(null) } },
+  }
 
-          <div style={card}>
-            <div style={label}>{tr('Instruments')}</div>
-            {!stemsIn && (
-              <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5 }}>
-                <input type="checkbox" checked={separate} onChange={(e) => setSeparate(e.target.checked)} disabled={busy} />
-                <span><b>{tr('Split into instruments first')}</b> <span style={hint}>{tr('(recommended for a whole song; needs Demucs)')}</span></span>
-              </label>
-            )}
-            {separate || stemsIn ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {STEMS.map((s) => (
-                  <label key={s.id} style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
-                    <input type="checkbox" checked={want.includes(s.id)} onChange={() => toggle(s.id)} disabled={busy} />
-                    <span style={{ width: 8, height: 8, borderRadius: 2, background: s.color }} />{tr(s.label)}
+  return (
+    <div style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column' }} {...dropHandlers}>
+      {/* top bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 50, padding: '0 20px', borderBottom: '1px solid var(--border)', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{tr('Audio → MIDI')}</div>
+        {fileName && <span style={chip}>{fileName}</span>}
+        <span style={{ flex: 1 }} />
+        {(file || stemsIn) && !busy && <>
+          <button className="btn btn-ghost" onClick={fromClip} title={tr('The audio clip selected in the Studio')}>{tr('Selected Studio clip')}</button>
+          <button className="btn btn-ghost" onClick={() => void choose()}>{tr('Change song')}</button>
+        </>}
+      </div>
+
+      <div style={{ padding: '18px 28px 28px', display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 1180, width: '100%', alignSelf: 'center' }}>
+        {!file && !stemsIn ? (
+          <div onClick={() => void choose()} style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '52px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, cursor: 'pointer', background: 'var(--bg-secondary)' }}>
+            <span style={{ fontSize: 36 }}>🎼</span>
+            <span style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 600 }}>{tr('Drop an audio file here, or:')}</span>
+            <div style={{ display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
+              <button className="btn btn-primary" onClick={() => void choose()}>{tr('Choose a file…')}</button>
+              <button className="btn btn-ghost" onClick={fromClip} title={tr('The audio clip selected in the Studio')}>{tr('Selected Studio clip')}</button>
+            </div>
+            <span style={{ ...hint, maxWidth: 620, textAlign: 'center' }}>{tr('A whole song becomes MIDI tracks you can edit and play with any instrument: split into instruments, each turned into notes with the method that suits it, on the bars and beats of the song, with its tempo, key and chords.')}</span>
+            {error && <span style={{ ...hint, color: 'var(--red)' }}>{error}</span>}
+          </div>
+        ) : (
+          <>
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>{tr('What should become MIDI?')}</div>
+              <div style={hint}>{tr('The app splits the song and picks the right engine for each part.')}</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
+              {goals.map((g) => {
+                const on = goal === g.id
+                return (
+                  <button key={g.id} disabled={busy} onClick={() => pickGoal(g.id)} style={{ textAlign: 'left', padding: 14, borderRadius: 10, cursor: busy ? 'default' : 'pointer', color: 'var(--text-primary)',
+                    border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, background: on ? 'rgba(139,92,246,0.14)' : 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ fontSize: 24 }}>{g.icon}</span>
+                    <b style={{ fontSize: 14 }}>{g.title}</b>
+                    <span style={hint}>{g.text}</span>
+                    {g.id === 'song' && <span style={{ alignSelf: 'flex-start', fontSize: 10, padding: '2px 9px', borderRadius: 999, background: 'linear-gradient(90deg,#7c3aed,#db2777)', color: '#fff', fontWeight: 700 }}>{tr('✦ recommended')}</span>}
+                  </button>
+                )
+              })}
+            </div>
+            {goal === 'custom' && (
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '4px 2px' }}>
+                {STEMS.map((x) => (
+                  <label key={x.id} style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5 }}>
+                    <input type="checkbox" checked={want.includes(x.id)} onChange={() => toggle(x.id)} disabled={busy} />
+                    <span style={{ width: 8, height: 8, borderRadius: 2, background: x.color }} />{tr(x.label)}
                   </label>
                 ))}
               </div>
-            ) : (
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5 }}>
-                {tr('This audio is:')}
-                <select value={kind} onChange={(e) => setKind(e.target.value)} disabled={busy}>
-                  {STEMS.map((s) => <option key={s.id} value={s.id}>{tr(s.label)}</option>)}
-                </select>
-              </label>
             )}
-          </div>
 
-          <div style={card}>
-            <div style={label}>{tr('Timing')}</div>
-            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5 }}>
-              {tr('Quantize to')}
-              <select value={grid} onChange={(e) => setGrid(Number(e.target.value))} disabled={busy}>
-                {GRIDS.map(([v, l]) => <option key={v} value={v}>{tr(l)}</option>)}
-              </select>
-            </label>
-            {grid > 0 && (
-              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5, gap: 10 }}>
-                {tr('Strength')}
-                <input type="range" min={0.1} max={1} step={0.05} value={strength} onChange={(e) => setStrength(Number(e.target.value))} disabled={busy} style={{ flex: 1 }} />
-                <span style={{ width: 36, textAlign: 'right' }}>{Math.round(strength * 100)}%</span>
+            {/* convert */}
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              {!busy
+                ? <button className="btn btn-primary" style={{ padding: '10px 24px', fontSize: 14 }} disabled={!file && !stemsIn} onClick={() => void run()}>{trf('Convert: {goal}', { goal: goalTitle })}</button>
+                : <button className="btn btn-ghost" style={{ padding: '10px 24px', fontSize: 14 }} onClick={cancel}>✕ {tr('Cancel')}</button>}
+              <span style={hint}>{tr('stoppable at any time')}</span>
+              <span style={{ flex: 1 }} />
+              <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12 }}>{tr('Quantize to')}
+                <select value={grid} onChange={(e) => setGrid(Number(e.target.value))} disabled={busy}>{GRIDS.map(([v, l]) => <option key={v} value={v}>{tr(l)}</option>)}</select>
               </label>
-            )}
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5 }}>
-              <input type="checkbox" checked={useHint} onChange={(e) => setUseHint(e.target.checked)} disabled={busy} />
-              {trf('The tempo is near the project tempo ({bpm} BPM)', { bpm: project.bpm })}
-            </label>
-            <div style={hint}>{tr('Without it the tempo is found freely; a slow song may then be read at double speed.')}</div>
-          </div>
-
-          {!busy ? (
-            <button className="btn btn-primary" style={{ padding: '10px 0', fontSize: 14 }} disabled={!file && !stemsIn} onClick={() => void run()}>{tr('Convert to MIDI')}</button>
-          ) : (
-            <div style={card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}><span>{job.text}</span><span>{Math.round(job.progress)} %</span></div>
-              <div style={{ height: 6, background: 'rgba(0,0,0,0.3)', borderRadius: 3, overflow: 'hidden' }}><div style={{ width: `${job.progress}%`, height: '100%', background: 'var(--accent)' }} /></div>
-              <button className="btn btn-ghost" onClick={cancel}>✕ {tr('Cancel')}</button>
+              {grid > 0 && (
+                <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12 }}>{tr('Strength')}
+                  <input type="range" min={0.1} max={1} step={0.05} value={strength} onChange={(e) => setStrength(Number(e.target.value))} disabled={busy} style={{ width: 90 }} />
+                  <span style={{ width: 34 }}>{Math.round(strength * 100)}%</span>
+                </label>
+              )}
             </div>
-          )}
-          {error && <div style={{ ...hint, color: 'var(--red)' }}>{error}</div>}
-        </div>
+            {busy && job && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ height: 8, background: 'var(--bg-secondary)', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${job.progress}%`, height: '100%', background: 'linear-gradient(90deg,#7c3aed,#db2777)', transition: 'width 0.5s' }} /></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)' }}><span>{job.text}</span><b>{Math.round(job.progress)} %</b></div>
+              </div>
+            )}
+            {error && <div style={{ ...hint, color: 'var(--red)' }}>{error}</div>}
+            <details style={{ ...hint }}>
+              <summary style={{ cursor: 'pointer' }}>{tr('More options')}</summary>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 0 0 4px' }}>
+                {!stemsIn && (
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5 }}>
+                    <input type="checkbox" checked={separate} onChange={(e) => setSeparate(e.target.checked)} disabled={busy} />
+                    <span><b>{tr('Split into instruments first')}</b> <span style={hint}>{tr('(recommended for a whole song; needs Demucs)')}</span></span>
+                  </label>
+                )}
+                {!separate && !stemsIn && (
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5 }}>{tr('This audio is:')}
+                    <select value={kind} onChange={(e) => setKind(e.target.value)} disabled={busy}>{STEMS.map((x) => <option key={x.id} value={x.id}>{tr(x.label)}</option>)}</select>
+                  </label>
+                )}
+                <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5 }}>
+                  <input type="checkbox" checked={useHint} onChange={(e) => setUseHint(e.target.checked)} disabled={busy} />
+                  {trf('The tempo is near the project tempo ({bpm} BPM)', { bpm: project.bpm })}
+                </label>
+                <div style={hint}>{tr('Without it the tempo is found freely; a slow song may then be read at double speed.')}</div>
+              </div>
+            </details>
+          </>
+        )}
 
         {/* the result */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
-          {!res && !busy && (
-            <div style={{ ...card, alignItems: 'flex-start' }}>
-              <div style={label}>{tr('How it works')}</div>
-              <ol style={{ ...hint, margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <li>{tr('The song is split into vocals, bass, drums, piano, guitar and the rest.')}</li>
-                <li>{tr('Vocals and bass become one-voice lines (no doubled or overtone notes), piano, guitar and keys become chords, drums become kick, snare and hi-hat hits.')}</li>
-                <li>{tr('Tempo, the first beat of the bars, the key and the chords are found in the song, and the notes are put on the bars and beats.')}</li>
-                <li>{tr('You choose which parts go into the Studio and which instrument plays each one.')}</li>
-              </ol>
-            </div>
-          )}
-          {res && (
-            <>
-              <div style={{ ...card, flexDirection: 'row', flexWrap: 'wrap', gap: 18, alignItems: 'center' }}>
-                <Stat k={tr('Tempo')} v={`${res.bpm} BPM`} />
-                <Stat k={tr('Key')} v={`${res.key}`} sub={trf('or {key}', { key: res.relativeKey })} />
-                <Stat k={tr('Length')} v={trf('{n} bars', { n: bars })} />
-                <Stat k={tr('First bar at')} v={`${res.firstBeat.toFixed(2)} s`} />
-              </div>
+        {res && (
+          <>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {[[tr('Tempo'), `${res.bpm} BPM`, ''], [tr('Key'), res.key, trf('or {key}', { key: res.relativeKey })], [tr('Length'), trf('{n} bars', { n: bars }), ''], [tr('First bar at'), `${res.firstBeat.toFixed(2)} s`, '']].map(([k, v, sub]) => (
+                <div key={k} style={{ padding: '8px 14px', borderRadius: 9, background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}><Stat k={k} v={v} sub={sub || undefined} /></div>
+              ))}
               {res.chords.length > 0 && (
-                <div style={card}>
-                  <div style={label}>{tr('Chords')}</div>
-                  <div style={{ display: 'flex', gap: 3, overflowX: 'auto', paddingBottom: 4 }}>
+                <div style={{ flex: 1, minWidth: 240, padding: '8px 12px', borderRadius: 9, background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                  <div style={{ ...label, marginBottom: 5 }}>{tr('Chords')}</div>
+                  <div style={{ display: 'flex', gap: 3, overflowX: 'auto', paddingBottom: 3 }}>
                     {res.chords.slice(0, 64).map((c, i) => (
                       <div key={i} title={trf('bar {bar}', { bar: Math.floor(c.beat / 4) + 1 })}
-                        style={{ flex: `0 0 ${Math.max(34, c.beats * 14)}px`, padding: '5px 6px', borderRadius: 5, background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)', fontSize: 12, fontWeight: 700, opacity: 0.5 + 0.5 * c.confidence }}>{c.name}</div>
+                        style={{ flex: `0 0 ${Math.max(34, c.beats * 14)}px`, padding: '3px 6px', borderRadius: 4, background: '#1a1530', border: '1px solid #3a2f63', color: '#ddd6fe', fontSize: 11.5, fontWeight: 700, opacity: 0.5 + 0.5 * c.confidence }}>{c.name}</div>
                     ))}
                   </div>
                 </div>
               )}
-              {res.parts.map((p) => (
-                <div key={p.stem} style={{ ...card, borderLeft: `3px solid ${colorOf(p.stem)}`, opacity: pick[p.stem] ? 1 : 0.55 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <input type="checkbox" checked={!!pick[p.stem]} onChange={(e) => setPick({ ...pick, [p.stem]: e.target.checked })} />
-                    <b style={{ fontSize: 14 }}>{tr(p.name)}</b>
-                    <span style={hint}>{trf('{n} notes', { n: p.notes.length })} · {p.method}</span>
-                    <span style={{ ...hint, display: 'flex', alignItems: 'center', gap: 5 }} title={tr('How sure the detection is (average of the notes); faint notes in the preview are less sure')}>
-                      {tr('Confidence')}
-                      <span style={{ width: 60, height: 5, background: 'rgba(0,0,0,0.3)', borderRadius: 3, overflow: 'hidden' }}><span style={{ display: 'block', width: `${p.confidence * 100}%`, height: '100%', background: p.confidence > 0.75 ? 'var(--green)' : p.confidence > 0.5 ? 'var(--yellow)' : 'var(--orange)' }} /></span>
-                    </span>
-                    <span style={{ flex: 1 }} />
-                    <span style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-                      <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Listen to this stem')} onClick={() => void import('../../audio/engine').then((m) => m.previewSample(p.audio))}>▶</button>
-                      <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Stop')} onClick={() => void import('../../audio/engine').then((m) => m.stopPreview())}>■</button>
-                      <select value={prog[p.stem] ?? p.program} onChange={(e) => setProg({ ...prog, [p.stem]: Number(e.target.value) })} style={{ fontSize: 12, maxWidth: 190 }} title={tr('The instrument that plays this part in the Studio')}>
-                        {PACK_INSTRUMENTS.map((g) => <optgroup key={g.group} label={tr(g.group)}>{g.items.map(([v, l]) => <option key={v} value={v}>{tr(l)}</option>)}</optgroup>)}
-                      </select>
-                    </span>
-                  </div>
-                  <NotePreview part={p} bars={bars} />
-                </div>
-              ))}
-              {res.skipped.length > 0 && <div style={hint}>{trf('Left out (nearly silent in this song): {list}', { list: res.skipped.join(', ') })}</div>}
-              <div style={card}>
-                <div style={label}>{tr('Into the Studio')}</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 12.5 }}>
-                  <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}><input type="checkbox" checked={setTempo} onChange={(e) => setSetTempo(e.target.checked)} />{trf('Set the project tempo to {bpm} BPM', { bpm: res.bpm })}</label>
-                  <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}><input type="checkbox" checked={withAudio} onChange={(e) => setWithAudio(e.target.checked)} disabled={!file} />{tr('The original song too (muted, to compare)')}</label>
-                  <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}><input type="checkbox" checked={chordTrack} onChange={(e) => setChordTrack(e.target.checked)} />{tr('A chord track (the detected chords)')}</label>
-                  <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}><input type="checkbox" checked={chordMarkers} onChange={(e) => setChordMarkers(e.target.checked)} />{tr('Chord names as markers')}</label>
-                  <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}>{tr('From bar')}<input type="number" min={1} value={startBar} onChange={(e) => setStartBar(Math.max(1, Number(e.target.value) || 1))} style={{ width: 64 }} /></label>
-                </div>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <button className="btn btn-primary" onClick={toStudio} disabled={!Object.values(pick).some(Boolean) && !chordTrack}>{trf('Put {n} tracks into the Studio', { n: res.parts.filter((p) => pick[p.stem]).length + (chordTrack ? 1 : 0) })}</button>
-                  {notice && <><span style={{ ...hint, color: 'var(--green)' }}>{notice}</span><button className="btn btn-ghost" onClick={() => useUIStore.getState().setActiveView('timeline')}>{tr('Open the Studio')}</button></>}
-                </div>
+            </div>
+            <div>
+              <div style={{ ...label, marginBottom: 6 }}>{tr('Result')}</div>
+              <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+                  <thead><tr>
+                    <th style={th}>{tr('Part')}</th><th style={th}>{tr('Notes')}</th><th style={{ ...th, width: '28%' }}>{tr('Preview')}</th><th style={th}>{tr('Instrument')}</th>
+                    <th style={th} title={tr('How sure the detection is (average of the notes); faint notes in the preview are less sure')}>{tr('Sure')}</th><th style={th}>{tr('Listen')}</th><th style={th}>{tr('Studio')}</th>
+                  </tr></thead>
+                  <tbody>
+                    {res.parts.map((p) => (
+                      <tr key={p.stem} style={{ borderTop: '1px solid var(--border)', opacity: pick[p.stem] ? 1 : 0.5 }}>
+                        <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}><span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', background: colorOf(p.stem), marginRight: 8 }} /><b>{tr(p.name)}</b></td>
+                        <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{p.notes.length}<div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{p.method}</div></td>
+                        <td style={{ padding: '8px 12px' }}><NotePreview part={p} bars={bars} /></td>
+                        <td style={{ padding: '8px 12px' }}>
+                          <select value={prog[p.stem] ?? p.program} onChange={(e) => setProg({ ...prog, [p.stem]: Number(e.target.value) })} style={{ fontSize: 12, maxWidth: 190 }} title={tr('The instrument that plays this part in the Studio')}>
+                            {PACK_INSTRUMENTS.map((g) => <optgroup key={g.group} label={tr(g.group)}>{g.items.map(([v, l]) => <option key={v} value={v}>{tr(l)}</option>)}</optgroup>)}
+                          </select>
+                        </td>
+                        <td style={{ padding: '8px 12px', whiteSpace: 'nowrap', color: p.confidence > 0.75 ? 'var(--green)' : p.confidence > 0.5 ? 'var(--yellow)' : 'var(--orange)', fontWeight: 700 }}>{Math.round(p.confidence * 100)} %</td>
+                        <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
+                          <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Listen to this stem')} onClick={() => void import('../../audio/engine').then((m) => m.previewSample(p.audio))}>▶</button>{' '}
+                          <button className="btn btn-ghost" style={{ fontSize: 11 }} title={tr('Stop')} onClick={() => void import('../../audio/engine').then((m) => m.stopPreview())}>■</button>
+                        </td>
+                        <td style={{ padding: '8px 12px' }}><input type="checkbox" checked={!!pick[p.stem]} onChange={(e) => setPick({ ...pick, [p.stem]: e.target.checked })} title={tr('Put this part into the Studio')} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </>
-          )}
-        </div>
+              {res.skipped.length > 0 && <div style={{ ...hint, marginTop: 6 }}>{trf('Left out (nearly silent in this song): {list}', { list: res.skipped.join(', ') })}</div>}
+            </div>
+            <div style={card}>
+              <div style={label}>{tr('Into the Studio')}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 6, fontSize: 12.5 }}>
+                <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}><input type="checkbox" checked={setTempo} onChange={(e) => setSetTempo(e.target.checked)} />{trf('Set the project tempo to {bpm} BPM', { bpm: res.bpm })}</label>
+                <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}><input type="checkbox" checked={withAudio} onChange={(e) => setWithAudio(e.target.checked)} disabled={!file} />{tr('The original song too (muted, to compare)')}</label>
+                <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}><input type="checkbox" checked={chordTrack} onChange={(e) => setChordTrack(e.target.checked)} />{tr('A chord track (the detected chords)')}</label>
+                <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}><input type="checkbox" checked={chordMarkers} onChange={(e) => setChordMarkers(e.target.checked)} />{tr('Chord names as markers')}</label>
+                <label style={{ display: 'flex', gap: 7, alignItems: 'center' }}>{tr('From bar')}<input type="number" min={1} value={startBar} onChange={(e) => setStartBar(Math.max(1, Number(e.target.value) || 1))} style={{ width: 64 }} /></label>
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button className="btn btn-primary" onClick={toStudio} disabled={!Object.values(pick).some(Boolean) && !chordTrack}>{trf('Put {n} tracks into the Studio', { n: res.parts.filter((p) => pick[p.stem]).length + (chordTrack ? 1 : 0) })}</button>
+                {notice && <><span style={{ ...hint, color: 'var(--green)' }}>{notice}</span><button className="btn btn-ghost" onClick={() => useUIStore.getState().setActiveView('timeline')}>{tr('Open the Studio')}</button></>}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
 }
+
+const chip: React.CSSProperties = { fontSize: 11, padding: '3px 9px', borderRadius: 999, border: '1px solid var(--border)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }
 
 function Stat({ k, v, sub }: { k: string; v: string; sub?: string }): React.ReactElement {
   return (

@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.15
+
+### New
+
+- **A new Audio → MIDI page**: you first say what should become MIDI (*Whole song*, *Melody*, *Bassline*, *Drum pattern* or *Choose parts*), then press **Convert**. The result is a clean table, one row per part, with the number of notes, a note preview, the instrument, how sure the detection is, ▶ / ■ to listen and a tick for the Studio; above it the tempo, key, length and chords. Quantize and its strength sit next to the button, the rest is under *More options*. Empty page: a big drop area; a new song dragged onto the page replaces the old one.
+
 ## 0.99.14
 
 ### New

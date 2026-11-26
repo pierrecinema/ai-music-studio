@@ -2261,5 +2261,22 @@
  "{n} stems": "{n} дорожек",
  "▶ Play all": "▶ Играть всё",
  "✦ Recommended": "✦ Рекомендуется",
- "⤓ Save as file…": "⤓ Сохранить как файл…"
+ "⤓ Save as file…": "⤓ Сохранить как файл…",
+ "All parts, chords and tempo": "Все партии, аккорды и темп",
+ "Convert: {goal}": "Конвертировать: {goal}",
+ "Kick, snare, hi-hat": "Бочка, малый барабан, хет",
+ "One clean bass line": "Одна чистая партия баса",
+ "Only the voice line": "Только вокальная линия",
+ "Put this part into the Studio": "Поместить эту партию в студию",
+ "The app splits the song and picks the right engine for each part.": "Приложение разделяет песню и выбирает подходящий движок для каждой партии.",
+ "Tick the instruments yourself": "Отметьте инструменты сами",
+ "What should become MIDI?": "Что превратить в MIDI?",
+ "stoppable at any time": "можно остановить в любой момент",
+ "✦ recommended": "✦ рекомендуется",
+ "Bassline": "Партия баса",
+ "Choose parts": "Выбрать партии",
+ "Drum pattern": "Ритм ударных",
+ "More options": "Ещё параметры",
+ "Result": "Результат",
+ "Sure": "Уверенность"
 }

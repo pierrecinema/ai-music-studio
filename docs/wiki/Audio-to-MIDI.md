@@ -2,6 +2,10 @@
 
 Turns a whole song (for example one made with [[Create Music]]) into MIDI tracks you can edit in the [[Piano Roll]] and play with any instrument: the sound packs or a VST instrument.
 
+## The page
+
+First choose what should become MIDI: **Whole song** (all parts, chords and tempo; recommended), **Melody** (only the voice line), **Bassline**, **Drum pattern**, or **Choose parts** (tick the instruments yourself). Then press **Convert: …**; a progress bar shows the steps and **✕ Cancel** stops at any time. *Quantize to* and *Strength* sit next to the button, *More options* holds the tempo hint and *Split into instruments first*. The result is a table: one row per part with the number of notes, a note preview, the instrument, how sure the detection is, ▶ / ■ to listen and a tick for the Studio.
+
 ## How it works
 
 1. **Split into instruments:** the song is split into vocals, bass, drums, piano, guitar and the rest (Demucs, 6 stems). Stems already split in the [[Stem Splitter]] can be used directly: *All stems → MIDI* there.

@@ -980,11 +980,11 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 69.1 | KI-Instrumente, Schlagzeuger anklicken | Gleich unter der Bühne: links die Erklärung, rechts die Knöpfe Vorhören, Die ganze Band, 3 Ideen, In den Song einfügen, Einfügen und KI-Rendern; das Gerät darunter | | | 0.99.12 |
-| 69.2 | Schlagzeuger / Bassist / Gitarrist: ▶ Vorhören | Man hört die ersten 4 Takte (mit dem Paket „Band“: echtes Schlagzeug, Bass, Gitarre) | | | 0.99.12 |
-| 69.3 | ▶ Die ganze Band | Alle drei zusammen | | | 0.99.12 |
-| 69.4 | ✦ 3 Ideen, ▶ anhören, Nehmen | Drei Spielweisen, Nehmen stellt das Gerät so ein | | | 0.99.12 |
-| 69.5 | + In den Song einfügen | Neue MIDI-Spur im Studio | | | 0.99.12 |
-| 69.6 | ✦ Einfügen und KI-Rendern | Fortschritt unter den Knöpfen, am Ende neue Audiospur „… (AI)“ | | Dauer notieren; Knopf grau = ACE-Step nicht installiert | 0.99.12 |
-| 69.7 | Vocal Editor: Singen, dann ■ Stopp | Hört auf, Meldung „Gestoppt.“, keine neue Spur | | | 0.99.12 |
-| 69.8 | KI-Solist: ▶ Noten anhören | Man hört die Noten der Spur | | | 0.99.12 |
+| 69.1 | KI-Instrumente, Schlagzeuger anklicken | Gleich unter der Bühne: links die Erklärung, rechts die Knöpfe Vorhören, Die ganze Band, 3 Ideen, In den Song einfügen, Einfügen und KI-Rendern; das Gerät darunter | OK | | 0.99.12 |
+| 69.2 | Schlagzeuger / Bassist / Gitarrist: ▶ Vorhören | Man hört die ersten 4 Takte (mit dem Paket „Band“: echtes Schlagzeug, Bass, Gitarre) | OK | | 0.99.12 |
+| 69.3 | ▶ Die ganze Band | Alle drei zusammen | OK | | 0.99.12 |
+| 69.4 | ✦ 3 Ideen, ▶ anhören, Nehmen | Drei Spielweisen, Nehmen stellt das Gerät so ein | OK | | 0.99.12 |
+| 69.5 | + In den Song einfügen | Neue MIDI-Spur im Studio | OK | | 0.99.12 |
+| 69.6 | ✦ Einfügen und KI-Rendern | Fortschritt unter den Knöpfen, am Ende neue Audiospur „… (AI)“ | OK | Dauer notieren; Knopf grau = ACE-Step nicht installiert | 0.99.12 |
+| 69.7 | Vocal Editor: Singen, dann ■ Stopp | Hört auf, Meldung „Gestoppt.“, keine neue Spur | OK | | 0.99.12 |
+| 69.8 | KI-Solist: ▶ Noten anhören | Man hört die Noten der Spur | OK | | 0.99.12 |

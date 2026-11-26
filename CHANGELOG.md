@@ -3,6 +3,12 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.14
+
+### New
+
+- **A new Stem Splitter**: your song is drawn as a waveform at the top, and after the split every stem gets its own coloured lane under it with its waveform, **M** / **S**, volume, **▶** (hear only this stem) and a **⋯** menu (→ MIDI, → Studio, Mastering, save as file). One white play line runs through all lanes; click or drag anywhere to jump. The page shows the recommended setting (*Balanced · 4 stems*), the split has a progress bar with the time left and a **✕ Cancel** button, and a new song dragged onto the page replaces the old one. Name, tags and saving to the Library are in one row below the lanes.
+
 ## 0.99.13
 
 ### New

@@ -2231,5 +2231,18 @@
  "{peak} dBTP": "{peak} dBTP",
  "Podcast, quiet (−16 LUFS)": "播客，较轻（−16 LUFS）",
  "Loud (−9 LUFS)": "响亮（−9 LUFS）",
- "Broadcast (−23 LUFS)": "广播（−23 LUFS）"
+ "Broadcast (−23 LUFS)": "广播（−23 LUFS）",
+ "Balanced is the best mix of quality and speed for most songs.": "对大多数歌曲来说,“均衡”是质量与速度的最佳折中。",
+ "Change song": "更换歌曲",
+ "Hear only this stem": "只听这个分轨",
+ "More: MIDI, Studio, Mastering": "更多:MIDI、工作室、母带",
+ "Original": "原曲",
+ "Save this stem as a file": "将此分轨保存为文件",
+ "The song is split into its parts: vocals, drums, bass and the rest. Then you hear them together, mix them and use them in the Studio.": "歌曲会被拆分为人声、鼓、贝斯和其余部分。之后可以一起试听、混音,并在工作室中使用。",
+ "drag a song here to replace it": "拖入歌曲即可替换",
+ "split into {n} stems": "已拆分为 {n} 个分轨",
+ "{n} stems": "{n} 个分轨",
+ "▶ Play all": "▶ 全部播放",
+ "✦ Recommended": "✦ 推荐",
+ "⤓ Save as file…": "⤓ 保存为文件…"
 }

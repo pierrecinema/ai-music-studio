@@ -2231,5 +2231,18 @@
  "{peak} dBTP": "{peak} dBTP",
  "Podcast, quiet (−16 LUFS)": "Podcast, baixo (−16 LUFS)",
  "Loud (−9 LUFS)": "Alto (−9 LUFS)",
- "Broadcast (−23 LUFS)": "Transmissão (−23 LUFS)"
+ "Broadcast (−23 LUFS)": "Transmissão (−23 LUFS)",
+ "Balanced is the best mix of quality and speed for most songs.": "«Equilibrado» é a melhor mistura de qualidade e velocidade para a maioria das músicas.",
+ "Change song": "Trocar música",
+ "Hear only this stem": "Ouvir só este stem",
+ "More: MIDI, Studio, Mastering": "Mais: MIDI, Estúdio, Masterização",
+ "Original": "Original",
+ "Save this stem as a file": "Salvar este stem como arquivo",
+ "The song is split into its parts: vocals, drums, bass and the rest. Then you hear them together, mix them and use them in the Studio.": "A música é dividida em suas partes: voz, bateria, baixo e o resto. Depois você as ouve juntas, mistura e usa no Estúdio.",
+ "drag a song here to replace it": "Arraste uma música aqui para substituí-la",
+ "split into {n} stems": "dividido em {n} stems",
+ "{n} stems": "{n} stems",
+ "▶ Play all": "▶ Tocar tudo",
+ "✦ Recommended": "✦ Recomendado",
+ "⤓ Save as file…": "⤓ Salvar como arquivo…"
 }

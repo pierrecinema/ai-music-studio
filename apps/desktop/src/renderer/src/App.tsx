@@ -200,7 +200,7 @@ export default function App(): React.ReactElement {
 
   // These views need room: they use the whole main area instead of the strip under the timeline
   const panelHeight = useUIStore((st) => st.panelHeight)
-  const FULL_VIEWS = ['create', 'library', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'audio-to-midi', 'video-composer', 'ai-chat', 'vocal-editor', 'instruments', 'cloud']
+  const FULL_VIEWS = ['create', 'library', 'mixer', 'settings', 'mastering', 'karaoke', 'stem-splitter', 'audio-to-midi', 'video-composer', 'ai-chat', 'vocal-editor', 'instruments', 'cloud']
   const panel = renderPanel()
   const fullView = FULL_VIEWS.includes(activeView)
 

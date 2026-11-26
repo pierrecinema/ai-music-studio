@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 0.99.13
+
+### New
+
+- **A new Mixer** (a page of its own): a card for every track with its name in the track colour, M / S, the fader with the LED meter, pan, a send slider per reverb / delay, the effects and where it goes; the master next to them; on the right the master loudness, the mix assistant and the returns (add, level, mute, remove).
+- **Mix assistant**: *✦ Measure my mix* plays every track offline (first minute, without effects and sends), measures each one and the whole mix (LUFS, true peak, how much sits below 140 Hz) and suggests, with a reason and a **Do it** button: lift the vocals, balance bass and drums, lift a track that is far too quiet, spread instruments from the middle, take low end out of the drums, lower the master when there is no headroom. **✦ Balance the whole mix** takes all of them; Ctrl+Z takes them back. Tracks with a suggestion show a ⚠ hint on their card. The loudness of the mix is shown against your target (streaming −14, podcast −16, loud −9, broadcast −23 LUFS).
+
 ## 0.99.12
 
 ### Fixed

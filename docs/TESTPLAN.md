@@ -980,11 +980,27 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 
 | Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
 |---|---|---|---|---|---|
-| 69.1 | KI-Instrumente, Schlagzeuger anklicken | Gleich unter der Bühne: links die Erklärung, rechts die Knöpfe Vorhören, Die ganze Band, 3 Ideen, In den Song einfügen, Einfügen und KI-Rendern; das Gerät darunter | | | 0.99.12 |
-| 69.2 | Schlagzeuger / Bassist / Gitarrist: ▶ Vorhören | Man hört die ersten 4 Takte (mit dem Paket „Band“: echtes Schlagzeug, Bass, Gitarre) | | | 0.99.12 |
-| 69.3 | ▶ Die ganze Band | Alle drei zusammen | | | 0.99.12 |
-| 69.4 | ✦ 3 Ideen, ▶ anhören, Nehmen | Drei Spielweisen, Nehmen stellt das Gerät so ein | | | 0.99.12 |
-| 69.5 | + In den Song einfügen | Neue MIDI-Spur im Studio | | | 0.99.12 |
-| 69.6 | ✦ Einfügen und KI-Rendern | Fortschritt unter den Knöpfen, am Ende neue Audiospur „… (AI)“ | | Dauer notieren; Knopf grau = ACE-Step nicht installiert | 0.99.12 |
-| 69.7 | Vocal Editor: Singen, dann ■ Stopp | Hört auf, Meldung „Gestoppt.“, keine neue Spur | | | 0.99.12 |
-| 69.8 | KI-Solist: ▶ Noten anhören | Man hört die Noten der Spur | | | 0.99.12 |
+| 69.1 | KI-Instrumente, Schlagzeuger anklicken | Gleich unter der Bühne: links die Erklärung, rechts die Knöpfe Vorhören, Die ganze Band, 3 Ideen, In den Song einfügen, Einfügen und KI-Rendern; das Gerät darunter | OK | | 0.99.12 |
+| 69.2 | Schlagzeuger / Bassist / Gitarrist: ▶ Vorhören | Man hört die ersten 4 Takte (mit dem Paket „Band“: echtes Schlagzeug, Bass, Gitarre) | OK | | 0.99.12 |
+| 69.3 | ▶ Die ganze Band | Alle drei zusammen | OK | | 0.99.12 |
+| 69.4 | ✦ 3 Ideen, ▶ anhören, Nehmen | Drei Spielweisen, Nehmen stellt das Gerät so ein | OK | | 0.99.12 |
+| 69.5 | + In den Song einfügen | Neue MIDI-Spur im Studio | OK | | 0.99.12 |
+| 69.6 | ✦ Einfügen und KI-Rendern | Fortschritt unter den Knöpfen, am Ende neue Audiospur „… (AI)“ | OK | Dauer notieren; Knopf grau = ACE-Step nicht installiert | 0.99.12 |
+| 69.7 | Vocal Editor: Singen, dann ■ Stopp | Hört auf, Meldung „Gestoppt.“, keine neue Spur | OK | | 0.99.12 |
+| 69.8 | KI-Solist: ▶ Noten anhören | Man hört die Noten der Spur | OK | | 0.99.12 |
+
+## 70. Neu in 0.99.13: neuer Mixer mit Mix-Assistent
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 70.1 | Mixer öffnen (Projekt mit mehreren Spuren) | Eine eigene Seite: Karten für jede Spur, daneben der Master, rechts Lautheit, Mix-Assistent, Returns | | | 0.99.13 |
+| 70.2 | Auf einer Karte: Fader ziehen, Pan drehen, M und S | Wie bisher, beim Abspielen sofort zu hören; Pegel läuft | | | 0.99.13 |
+| 70.3 | Sends: den Regler „Hall A“ einer Spur aufdrehen | Der Hall dieser Spur wird lauter | | | 0.99.13 |
+| 70.4 | **FX**-Knopf einer Spur | Öffnet die Effekte der Spur im Studio | | | 0.99.13 |
+| 70.5 | Returns rechts: Pegel, M, **+ Hall**, **+ Delay**, × | Funktioniert; neuer Return erscheint auch bei den Karten als Send | | | 0.99.13 |
+| 70.6 | **✦ Meinen Mix messen** (Song mit Gesang, Schlagzeug, Bass, Instrumenten) | Fortschritt „… wird gemessen“, danach LUFS-Anzeige und Vorschläge mit Begründung | | Dauer notieren | 0.99.13 |
+| 70.7 | Bei einem Vorschlag **Machen** | Fader / Pan ändert sich wie beschrieben; Strg+Z nimmt es zurück | | | 0.99.13 |
+| 70.8 | **✦ Ganzen Mix ausbalancieren** | Alle Vorschläge werden übernommen, die ⚠-Hinweise auf den Karten verschwinden | | | 0.99.13 |
+| 70.9 | Abspielen vor und nach dem Ausbalancieren | Der Mix klingt ausgewogener (Gesang obenauf, Bass und Schlagzeug im Verhältnis) | | Eindruck notieren | 0.99.13 |
+| 70.10 | Ziel-Lautheit umstellen | Die Marke auf dem Balken wandert | | | 0.99.13 |
+| 70.11 | Alle Looks | Sieht sauber aus | | | 0.99.13 |

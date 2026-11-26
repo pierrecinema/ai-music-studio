@@ -15,6 +15,7 @@ import { installProgress, rapLyrics } from '../src/renderer/src/lib/singer'
 import { snapDrag } from '../src/renderer/src/edit/grid'
 import { armedTrack, inputChannel, pickInput } from '../src/renderer/src/audio/recInput'
 import { minMax } from '../src/renderer/src/audio/wave'
+import { applyDeltas, lowShare, roleOf, suggest as mixSuggest, type TrackStat } from '../src/renderer/src/audio/mixAssist'
 import { buildMultiBank } from '../src/renderer/src/audio/soundbank'
 import { cleanPlugins } from '../src/renderer/src/lib/pluginList'
 import { adjustChain, albumFileName, planLoudness, planTone, toneOf } from '../src/renderer/src/audio/master/album'
@@ -606,6 +607,33 @@ check('plugins: null and nameless entries are left out', cleanPlugins([null, { i
   const kick = kit.zones.filter((z) => z.keyLo === 36)
   check('band pack: kick soft / hard by velocity, unpitched', kick.length === 2 && kick[0].gen.get(58) === 36 && b.samples[kick.find((z) => z.velHi === 127)!.sample].file === 'drums/drum_bass_hard.flac')
   check('band pack: hi-hats cut each other, missing samples are left out', kit.zones.some((z) => z.keyLo === 42 && z.gen.get(57) === 1) && !kit.zones.some((z) => z.keyLo === 45))
+}
+
+// ── the mix assistant: roles, low-end share, suggestions, taking a gain change ──
+{
+  check('mix assistant: roles by name and sound', roleOf({ name: 'Gesang', type: 'audio' }) === 'vocal' && roleOf({ name: 'x', type: 'midi', sound: 'drums' }) === 'drums' && roleOf({ name: 'Bass 1', type: 'midi' }) === 'bass' && roleOf({ name: 'Keys', type: 'midi' }) === 'music')
+  const sr = 44100, n = 44100
+  const low = new Float32Array(n), high = new Float32Array(n)
+  for (let i = 0; i < n; i++) { low[i] = Math.sin((2 * Math.PI * 60 * i) / sr); high[i] = Math.sin((2 * Math.PI * 4000 * i) / sr) }
+  check('mix assistant: low share of a 60 Hz and a 4 kHz tone', lowShare(low, sr) > 0.8 && lowShare(high, sr) < 0.05)
+  const st = (id: string, role: TrackStat['role'], lufs: number, o: Partial<TrackStat> = {}): TrackStat => ({ id, name: id, role, lufs, low: 0.1, volume: 1, pan: 0, ...o })
+  const say = (en: string, v?: Record<string, string | number>): string => (v ? Object.entries(v).reduce((t, [k, x]) => t.replace(`{${k}}`, String(x)), en) : en)
+  const a = mixSuggest([st('voc', 'vocal', -24), st('drm', 'drums', -16, { low: 0.6 }), st('bas', 'bass', -16, { low: 0.7 }), st('gtr', 'music', -18), st('key', 'music', -18)], { lufs: -14, truePeak: 0.5 }, -14, say)
+  check('mix assistant: vocals too quiet, instruments in the middle, low end, no headroom', a.some((x) => x.id === 'vocal' && (x.deltas?.voc ?? 0) > 6) && a.some((x) => x.id === 'pan' && x.tracks.length === 2) && a.some((x) => x.id === 'low' && x.eq?.track === 'drm') && a.some((x) => x.id === 'peak' && (x.masterDb ?? 0) < -3))
+  const b = mixSuggest([st('voc', 'vocal', -14), st('drm', 'drums', -16), st('bas', 'bass', -16), st('gtr', 'music', -17, { pan: -0.4 })], { lufs: -14, truePeak: -3 }, -14, say)
+  check('mix assistant: a balanced mix has nothing to change', b.length === 0)
+  const c = mixSuggest([st('bas', 'bass', -8), st('drm', 'drums', -20)], null, -14, say)
+  check('mix assistant: a bass far above the drums is lowered', c.some((x) => x.id === 'bass-loud' && (x.deltas?.bas ?? 0) < -8))
+  // taking a gain change: the fader's end is 0 dB, so a lift that would pass it moves everything down instead
+  const mk = (id: string, volume: number): Track => ({ id, name: id, type: 'audio', color: '#fff', volume, pan: 0, muted: false, soloed: false, clips: [] }) as Track
+  const before = useProjectStore.getState().project
+  useProjectStore.getState().setProject({ ...before, tracks: [mk('a', 1), mk('b', 0.5)] })
+  applyDeltas({ b: 6.02 })                              // b would reach 1.0 (0 dB): both stay
+  const t1 = useProjectStore.getState().project.tracks
+  applyDeltas({ a: 6.02 })                              // a would be 2.0: everything moves down by half
+  const t2 = useProjectStore.getState().project.tracks
+  check('mix assistant: a lift past 0 dB moves everything down and keeps the balance', Math.abs(t1[1].volume - 1) < 0.01 && Math.abs(t2[0].volume - 1) < 0.01 && Math.abs(t2[1].volume - 0.5) < 0.01)
+  useProjectStore.getState().setProject(before)
 }
 
 console.log(`${passed} passed, ${failed} failed`)

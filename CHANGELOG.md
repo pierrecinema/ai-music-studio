@@ -3,6 +3,25 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 1.0.0
+
+The first stable version. Everything in the menu works, except the three items that are still marked *Coming soon* (Karaoke Export, Video Composer, Cloud Rendering).
+
+### What 1.0 brings together
+
+- **A new look for every page since 0.99:** the **Studio** with the Piano Roll right under the tracks, the **Create** page, the **Vocal Editor** (39 built-in voices in five styles), **AI Instruments** on a stage (composer, drummer, bass player, guitarist, orchestra, AI soloist), a new **Mixer** with the mix assistant, the **Stem Splitter** with a lane per stem, **Audio → MIDI** with goal cards and a result table.
+- **Recording, plugins and sound:** recording in the Studio (audio and MIDI, count-in, punch, comping), VST3 / VST2 effects and instruments, ASIO output, recorded sound packs for MIDI tracks.
+- **Mastering:** a full workspace with an assistant, album mastering, export in eight formats.
+- **Easy start:** a setup assistant installs the AI engines with one click, the app updates itself, and it speaks eight languages.
+
+### Fixed
+
+- The Mixer said "1 suggestions"; it now says "1 suggestion" (in every language).
+
+### Documentation
+
+- New screenshots of every page in the final layout, a README that lists everything the app can do, and a rewritten wiki start page with a picture on every page.
+
 ## 0.99.15
 
 ### New

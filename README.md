@@ -29,20 +29,12 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 0.98 (release candidate): easy first install
+### New in 1.0: the first stable version
 
-- **Setup assistant on the first start**: it checks the computer (graphics card, memory, free space) and installs *Recommended*, *Everything* or *Studio only* with one click, with clear progress and the time left. No Python to install by hand: the app sets up its own when needed.
-- **0.99.15, a new Audio → MIDI**: say what should become MIDI (whole song, melody, bassline, drums), convert, and get a clean table of parts with note preview, instrument and how sure the detection is.
-- **0.99.14, a new Stem Splitter**: the song as a waveform on top, every stem in its own coloured lane under it (M, S, volume, hear only this stem, → MIDI / Studio / Mastering), one play line through all of them.
-- **0.99.13, a new Mixer**: a card per track, the master loudness and a mix assistant that measures your mix and suggests levels, panning and low-end fixes you can take with one click.
-- **0.99.11–0.99.12, AI Instruments on a stage**: a click on a musician opens their device with preview, AI ideas and AI render (real sound); new sound pack *Band* (recorded drums, bass and guitars).
-- **0.99.9–0.99.10, a new Vocal Editor**: a display with the voice and style, all voices as tiles, the melody with its syllables right on the notes (drag the notes to move them).
-- **0.99.4–0.99.8, a new Studio**: the Piano Roll right under the tracks (keys on the left, or a keyboard below with the notes coming down), toolbar in groups, clearer track headers (● M S, fader in dB, pan), coloured clips, a detail area for track, clip and effects, and waveforms as detailed as in Mastering at every zoom, shown as soon as the Studio opens.
-- **0.99.3, drag and drop in Create**: drag an audio file or a finished take onto the source track or the timbre reference.
-- **0.99.0, a new Create page**: song and lyrics editor on the left, parameters on the right, takes with waveforms below, a fixed render bar.
-- **0.98.9, your song in a built-in voice**: choose one of the Vocal Editor's voices in Create (Singer) and the song is sung in it (voice exchange).
-- **0.98.4–0.98.5, recording in the Studio**: arm a track (red ●), see the take grow while you record, choose the input device and input per audio track (In 1+2 stereo, In 1 or In 2 mono), and MIDI recording without crackles.
-- 0.97: album mastering with a professional album player; 0.96: 39 built-in singing voices with styles and rap.
+- **Every page has a new look** since 0.99: the Studio with the Piano Roll under the tracks, Create, the Vocal Editor with 39 built-in voices, AI Instruments on a stage, a Mixer with a mix assistant, the Stem Splitter with a lane per stem, and Audio → MIDI with goal cards and a result table.
+- **Everything works together:** a song from Create goes to the Stem Splitter, Audio → MIDI, Mastering or the Studio with one click; the stems become tracks, the melody is sung by an AI voice, the mix is checked by the assistant and mastered.
+- **Easy start:** the setup assistant installs the AI engines with one click, the app updates itself, and it speaks eight languages.
+- Still coming: Karaoke Export, Video Composer and Cloud Rendering (Pro).
 - Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ## What is in the app

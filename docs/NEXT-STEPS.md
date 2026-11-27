@@ -26,6 +26,11 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ## Tonight / next session
 
+### Idea: YuE as an optional engine (user request, 27.11.2026)
+
+A user asked for "YuE2" (no model of that name found; YuE by HKUST / M-A-P exists). Already listed as "planned" in `apps/server/services/music_engines.py`. Needs a lot of VRAM (about 16–24 GB for short pieces, more for full songs), so only as an optional engine for big GPUs; ACE-Step 1.5 covers lyrics to song on small PCs. Check the weight license first (code Apache 2.0, weights reported as Apache 2.0 or CC BY-NC 4.0). Ask the user for a link to "YuE2" and for a tester with 24 GB or more. A GitHub issue tracks it.
+
+
 ### To do with the next release (owner, 26.11.2026)
 
 - Clean up the old **VST3 Bridge Plugin**: `packages/vst-bridge` lists `.cpp` files that do not exist (only headers are there), and the README sections "Build the VST3 Bridge Plugin" and the architecture tree still mention it. Remove the package and the README / docs mentions (the working VST host is `packages/plugin-host`), or finish it; check that no workflow builds it.

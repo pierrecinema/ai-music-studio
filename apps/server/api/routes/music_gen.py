@@ -316,6 +316,8 @@ def _get_pipeline(choice: str = "auto", force_fp32: bool = False):
             torch.cuda.empty_cache()
     import acestep.pipeline_ace_step as _mod  # type: ignore
     from acestep.pipeline_ace_step import ACEStepPipeline  # type: ignore
+    from services.audio_save import patch_torchaudio_save
+    patch_torchaudio_save()       # torchaudio 2.9+ saves through TorchCodec: without it ACE-Step failed when saving the song
 
     _mod.tqdm = _tracked          # live step counter for the UI
 
@@ -1367,9 +1369,13 @@ async def engines():
     from services.music_engines import catalog
     import asyncio
     m = await asyncio.to_thread(detect_machine, os.environ.get("AMS_ACESTEP_DIR"))
-    from services.music_engines import recommend
+    from services.music_engines import recommend, ace15_python
     from services.music_engines import dml_engines, dml_python
-    return {"engines": catalog(m), "recommended": recommend(m), "gpu_path": dml_python() is not None,
+    rec = recommend(m)
+    import importlib.util
+    if rec == "ace-step" and importlib.util.find_spec("acestep") is None and ace15_python() is not None:
+        rec = "ace-step-1.5"       # ACE-Step v1 is not installed but 1.5 is: do not start the Create page on the missing one
+    return {"engines": catalog(m, rec), "recommended": rec, "gpu_path": dml_python() is not None,
             "gpu_models": sorted(dml_engines())}
 
 

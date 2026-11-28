@@ -3,6 +3,13 @@
 What changed in each version of AI Music Studio. The release workflow puts the section of the released version
 on its GitHub release page, so every version needs a `## <version>` section here before it is released.
 
+## 1.0.1
+
+### Fixed
+
+- **ACE-Step v1: songs failed at the very end with "TorchCodec is required for save_with_torchcodec".** New PyTorch versions (torchaudio 2.9 and newer) save audio through TorchCodec, and ACE-Step v1 saves its songs that way. The app now saves with a fallback that does not need TorchCodec, so the song is kept (GitHub issue #171).
+- **Create page starts on a model that is installed:** if ACE-Step v1 is not installed but ACE-Step 1.5 is, the Create page now starts on ACE-Step 1.5 instead of showing "Engine not installed" (GitHub issues #168, #170).
+
 ## 1.0.0
 
 The first stable version. Everything in the menu works, except the three items that are still marked *Coming soon* (Karaoke Export, Video Composer, Cloud Rendering).

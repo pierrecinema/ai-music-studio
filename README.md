@@ -29,10 +29,14 @@ AI Music Studio is free and stays free, made in my spare time. If it saves you t
 
 ## What's new
 
-### New in 1.0: the first stable version
+### New in 1.0.1: fixes for ACE-Step
+
+- **ACE-Step v1 songs no longer fail when saving** on PCs with a new PyTorch (the "TorchCodec is required" error).
+- **The Create page starts on a model that is installed**, so you do not land on "Engine not installed" when only ACE-Step 1.5 is installed.
+
+### 1.0: the first stable version
 
 - **Every page has a new look** since 0.99: the Studio with the Piano Roll under the tracks, Create, the Vocal Editor with 39 built-in voices, AI Instruments on a stage, a Mixer with a mix assistant, the Stem Splitter with a lane per stem, and Audio → MIDI with goal cards and a result table.
-- **Everything works together:** a song from Create goes to the Stem Splitter, Audio → MIDI, Mastering or the Studio with one click; the stems become tracks, the melody is sung by an AI voice, the mix is checked by the assistant and mastered.
 - **Easy start:** the setup assistant installs the AI engines with one click, the app updates itself, and it speaks eight languages.
 - Still coming: Karaoke Export, Video Composer and Cloud Rendering (Pro).
 - Full history: [CHANGELOG.md](CHANGELOG.md).

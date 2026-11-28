@@ -26,6 +26,16 @@ Kept for the next working session (also read by Claude: see CLAUDE.md). State: v
 
 ## Tonight / next session
 
+### Idea: YuE as an optional engine (user request, 27.11.2026)
+
+A user asked for "YuE2" (no model of that name found; YuE by HKUST / M-A-P exists). Already listed as "planned" in `apps/server/services/music_engines.py`. Needs a lot of VRAM (about 16–24 GB for short pieces, more for full songs), so only as an optional engine for big GPUs; ACE-Step 1.5 covers lyrics to song on small PCs. Check the weight license first (code Apache 2.0, weights reported as Apache 2.0 or CC BY-NC 4.0). Ask the user for a link to "YuE2" and for a tester with 24 GB or more. A GitHub issue tracks it.
+
+
+### To do with the next release (owner, 26.11.2026)
+
+- Clean up the old **VST3 Bridge Plugin**: `packages/vst-bridge` lists `.cpp` files that do not exist (only headers are there), and the README sections "Build the VST3 Bridge Plugin" and the architecture tree still mention it. Remove the package and the README / docs mentions (the working VST host is `packages/plugin-host`), or finish it; check that no workflow builds it.
+
+
 0. Plan to 1.0: `docs/ROADMAP-1.0.md`. Testing goes by `docs/TESTPLAN.md` (German checklist, the owner fills in results; fix ❌ first).
 
 ### Vocal Editor voices in Create (owner, 25.11.2026): built in 0.98.9
@@ -43,8 +53,8 @@ SoulX re-singing was dropped: sung words were recognised badly.
    professional audio software (see "Talking with the owner"), check every screen in the browser preview.
 3. **0.99.x: fix every open bug** (owner, 23.11.2026): all fixes go into 0.99.1, 0.99.2 … until the test plan has no ❌.
    Then **RC 1.0** (release candidate): fixes only, nothing new any more. The owner said on 26.11.2026 that the old test points (sections 13–51) were tested before and need not be gone through again.
-4. **New screenshots** for README and wiki: **done** (26.11.2026, rack look, all pages; README lists everything the app does, wiki Home rewritten). **Version 1.0.0 is prepared** (pull request open, not merged on purpose): the owner releases it on 27.11.2026 together with the new video: merge the pull request, then the release starts by itself.
-5. **New promo video** (scripts and earlier versions on the branch `promo`; v4 was the last one) with the owner's
+4. **New screenshots** for README and wiki: **done** (26.11.2026, rack look, all pages; README lists everything the app does, wiki Home rewritten). **Version 1.0.0 was released on 26.11.2026** and the owner installed it.
+5. **New promo video** (owner, 26.11.2026: the AI steps (make a song, split stems, sing) as screenshots with captions; everything else as a real screen recording with a visible mouse, scripted with Playwright on the browser preview, sound added with ffmpeg; the owner's own sounds) (scripts and earlier versions on the branch `promo`; v4 was the last one) with the owner's
    sounds, plus a new YouTube text.
 6. After 1.0: Linux version (AppImage), the posts in forums and blogs (list below), SignPath reapplication.
 

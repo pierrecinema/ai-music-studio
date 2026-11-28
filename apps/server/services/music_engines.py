@@ -129,8 +129,8 @@ def recommend(m: Machine) -> str:
     return "musicgen-small"
 
 
-def catalog(m: Machine) -> list[dict]:
-    rec = recommend(m)
+def catalog(m: Machine, rec: str | None = None) -> list[dict]:
+    rec = rec or recommend(m)
     out = []
     for e in ENGINES:
         d = rate(e, m)

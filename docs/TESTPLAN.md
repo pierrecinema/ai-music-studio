@@ -1038,3 +1038,10 @@ Mit Mikrofon oder Audio-Interface und MIDI-Keyboard.
 | 72.10 | Aus dem Stem-Trenner „Alle Stems → MIDI“ | Seite öffnet mit den Stems, Umwandeln geht | | | 0.99.15 |
 | 72.11 | Song wechseln, ein neuer Song auf die Seite ziehen | Ersetzt den alten, altes Ergebnis weg | | | 0.99.15 |
 | 72.12 | Alle Looks | Sieht sauber aus | | | 0.99.15 |
+
+## 73. Neu in 1.0.1: ACE-Step speichern ohne TorchCodec, Create startet auf installiertem Modell
+
+| Nr. | Schritt | Erwartet | Ergebnis | Notiz | Version |
+|---|---|---|---|---|---|
+| 73.1 | Create: ACE-Step v1 (3.5B) wählen, einen kurzen Song erzeugen (NVIDIA, neue PyTorch-Version) | Der Song wird fertig und liegt in den Takes; kein Fehler „TorchCodec is required“ | | Braucht einen PC mit ACE-Step v1 (Nutzer aus Issue #171) | 1.0.1 |
+| 73.2 | Nur ACE-Step 1.5 installiert (ohne v1): Create zum ersten Mal öffnen | Das Modell steht auf ACE-Step 1.5, nicht auf „Engine not installed“ | | | 1.0.1 |
